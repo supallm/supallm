@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://github.com/supallm/supallm"><img src="" alt="Supallm"></a>
+  <a href="https://github.com/supallm/supallm"><img src="https://github.com/user-attachments/assets/a848e92f-8f20-43d5-a1e1-e89e68772945" alt="Supallm"></a>
 </p>
 
 <p align="center">
