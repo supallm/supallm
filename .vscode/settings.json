@@ -4,5 +4,8 @@
   "[handlebars]": {
     "editor.formatOnSave": false
   },
-  "cSpell.words": ["hookform", "nextui", "Signup"]
+  "cSpell.words": ["hookform", "nextui", "Signup"],
+  "[go]": {
+    "editor.defaultFormatter": "golang.go"
+  }
 }

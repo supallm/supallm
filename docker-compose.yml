@@ -1,0 +1,50 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: supallm-pg
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - supallm_data:/var/lib/postgresql/data
+      - ./backend/sql/schemas.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    networks:
+      - supallm-network
+    command:
+      - "postgres"
+      - "-c"
+      - "shared_buffers=1GB"
+      - "-c"
+      - "maintenance_work_mem=1GB"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: supallm-api
+    env_file:
+      - .env
+    ports:
+      - "${HTTP_PORT:-8080}:80"
+    volumes:
+      - ./backend:/src
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - supallm-network
+
+volumes:
+  supallm_data:
+
+networks:
+  supallm-network:
+    driver: bridge

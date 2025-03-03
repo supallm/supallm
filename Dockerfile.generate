@@ -1,0 +1,13 @@
+FROM golang:1.24-bullseye AS generator
+
+RUN apt-get update && apt-get install -y git && \
+    go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@latest
+
+WORKDIR /utils
+COPY ./openapi .
+
+FROM generator AS generator-oapi
+RUN ./genoapi.sh
+
+FROM scratch AS oapi
+COPY --from=generator-oapi /utils/gen ./gen

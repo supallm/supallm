@@ -1,0 +1,14 @@
+FROM golang:1.24-bullseye
+
+RUN apt-get update && apt-get install -y git
+RUN go install github.com/cespare/reflex@latest
+RUN go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.6
+
+WORKDIR /src
+COPY go.mod .
+COPY go.sum .
+COPY scripts/start.sh .
+RUN go mod download
+
+EXPOSE 80
+ENTRYPOINT ["reflex", "-r", "(\\.go$|go\\.mod)", "-s", "--", "sh", "./scripts/start.sh"]
