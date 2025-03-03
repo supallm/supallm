@@ -5,11 +5,11 @@ import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { BrainCircuit } from "lucide-react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { BrainCircuit, FileSliders, Users } from "lucide-react";
 import { FC, PropsWithChildren } from "react";
-import { useAppConfig } from "@/hooks/use-app-config";
 import { useAppConfigStore } from "@/core/store/app-config";
+import { Spacer } from "@/components/spacer";
 
 const code = `import { streamText } from 'supallm';
 import { openai } from '@supallm/openai';
@@ -45,28 +45,39 @@ export const OverviewPage: FC<PropsWithChildren<{}>> = () => {
           This page will help you get started with your new project.
         </p>
         <div className="flex flex-col gap-4 mt-20">
-          <Card>
+          <Card className="bg-gradient-to-r from-slate-50 via-white to-green-50">
             <CardContent className="space-y-4">
               <div>
                 <h1 className="text-lg font-medium flex items-center">
                   <Badge variant={"outline"} className="mr-2">
                     Step 1
                   </Badge>
-                  Add your first LLM provider
+                  Configure your AI model
                 </h1>
                 <p className="text-md text-muted-foreground">
                   Start by adding your first LLM provider. Then you can call it
                   directly by your frontend using the Supallm frontend sdk.
                 </p>
               </div>
-              <div>
-                <Button variant="outline" size={"sm"}>
-                  <BrainCircuit /> Add LLM provider
+              <div className="space-x-4">
+                <Button
+                  variant="outline"
+                  size={"sm"}
+                  className="cursor-pointer"
+                >
+                  <BrainCircuit /> Add your first LLM provider
+                </Button>
+                <Button
+                  variant="outline"
+                  size={"sm"}
+                  className="cursor-pointer"
+                >
+                  <FileSliders /> Configure your model
                 </Button>
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="bg-gradient-to-r from-slate-50 via-white to-green-50">
             <CardContent className="space-y-4">
               <div>
                 <h1 className="text-lg font-medium flex items-center">
@@ -94,6 +105,43 @@ export const OverviewPage: FC<PropsWithChildren<{}>> = () => {
                   code={code}
                 />
               </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Spacer direction="vertical" size="md" />
+
+        <h1 className="text-lg pb-3 font-medium">Explore our other products</h1>
+
+        <div className="flex gap-4">
+          <Card className="bg-gradient-to-r from-slate-50 via-white to-slate-50">
+            <CardHeader>
+              <h1 className="text-md font-medium flex items-center">
+                <Users className="mr-2 w-4 h-4" /> Authentication
+              </h1>
+            </CardHeader>
+            <CardContent className="space-x-2">
+              <Button variant="outline" size={"sm"} className="cursor-pointer">
+                Explore Auth
+              </Button>
+              <Button variant="outline" size={"sm"} className="cursor-pointer">
+                View Docs
+              </Button>
+            </CardContent>
+          </Card>
+          <Card className="bg-gradient-to-r from-slate-50 via-white to-slate-50 grow-0">
+            <CardHeader>
+              <h1 className="text-md font-medium flex items-center">
+                <Users className="mr-2 w-4 h-4" /> Quotas
+              </h1>
+            </CardHeader>
+            <CardContent className="space-x-2">
+              <Button variant="outline" size={"sm"} className="cursor-pointer">
+                Explore Auth
+              </Button>
+              <Button variant="outline" size={"sm"} className="cursor-pointer">
+                View Docs
+              </Button>
             </CardContent>
           </Card>
         </div>

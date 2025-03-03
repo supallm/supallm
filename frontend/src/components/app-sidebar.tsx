@@ -45,14 +45,14 @@ const items = [
     icon: BrainCircuit,
   },
   {
+    title: "Models",
+    url: "#",
+    icon: FileSliders,
+  },
+  {
     title: "Authentication",
     url: "#",
     icon: Users,
-  },
-  {
-    title: "System prompts",
-    url: "#",
-    icon: FileSliders,
   },
   {
     title: "Settings",
