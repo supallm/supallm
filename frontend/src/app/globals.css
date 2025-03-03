@@ -127,3 +127,17 @@
     @apply bg-background text-foreground;
   }
 }
+
+.animate-scale {
+  animation: scale 2.2s infinite;
+}
+
+@keyframes scale {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}

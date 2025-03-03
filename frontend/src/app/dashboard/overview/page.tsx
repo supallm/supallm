@@ -1,3 +1,5 @@
+"use client";
+
 import { CodeBlock } from "@/components/ui/code-block";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
@@ -6,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { BrainCircuit } from "lucide-react";
 import { FC, PropsWithChildren } from "react";
+import { useAppConfig } from "@/hooks/use-app-config";
+import { useAppConfigStore } from "@/core/store/app-config";
 
 const code = `import { streamText } from 'supallm';
 import { openai } from '@supallm/openai';
@@ -24,9 +28,15 @@ stream.on('data', (data) => {
 `;
 
 export const OverviewPage: FC<PropsWithChildren<{}>> = () => {
+  const { currentProject } = useAppConfigStore();
+
+  if (!currentProject) {
+    throw new Error("Project must be defined");
+  }
+
   return (
     <div className="pb-15">
-      <PageHeader title="My project name" noBorder />
+      <PageHeader title={currentProject.name} noBorder />
       <PageContainer>
         <h1 className="text-lg pb-3 font-medium">
           Welcome to your new project

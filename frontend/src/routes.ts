@@ -5,3 +5,7 @@ export const OverviewRoute = {
 export const LLMProvidersRoute = {
   path: () => `/dashboard/llm-providers`,
 };
+
+export const NoProjectRoute = {
+  path: () => `/new-project`,
+};
