@@ -1,0 +1,6 @@
+package: http
+generate:
+  fiber-server: true
+output: ./gen/openapi-server.gen.go
+output-options:
+  skip-prune: true

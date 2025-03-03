@@ -1,0 +1,270 @@
+openapi: 3.0.0
+
+info:
+  title: SupALLM API
+  version: "0.0.1"
+
+paths:
+  /providers:
+    get:
+      summary: List all providers
+      operationId: listProviders
+      responses:
+        "200":
+          description: List of providers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Provider"
+    post:
+      summary: "Create a provider"
+      operationId: createProvider
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProviderRequest"
+      responses:
+        "201":
+          description: "Provider created"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Provider"
+  /providers/{id}:
+    get:
+      summary: "Get a provider by ID"
+      operationId: getProvider
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: "Provider details"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Provider"
+    delete:
+      summary: "Delete a provider"
+      operationId: deleteProvider
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: "Provider deleted"
+  /auth:
+    get:
+      summary: "Get authentication"
+      operationId: getAuth
+      responses:
+        "200":
+          description: "Authentication configuration"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Auth"
+    put:
+      summary: "Update authentication"
+      operationId: updateAuth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAuthRequest"
+      responses:
+        "200":
+          description: "Authentication updated"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Auth"
+  /system-prompts:
+    get:
+      summary: "List system prompts"
+      operationId: listSystemPrompts
+      responses:
+        "200":
+          description: List of system prompts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SystemPrompt"
+    post:
+      summary: "Create a system prompt"
+      operationId: createSystemPrompt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSystemPromptRequest"
+      responses:
+        "201":
+          description: "System prompt created"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SystemPrompt"
+  /generateText:
+    post:
+      summary: "Generate text (HTTP blocking)"
+      operationId: generateText
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TextGenerationRequest"
+      responses:
+        "200":
+          description: "Generated text"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  text:
+                    type: string
+  /streamText:
+    post:
+      summary: "Generate text in streaming (SSE)"
+      operationId: streamText
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TextGenerationRequest"
+      responses:
+        "200":
+          description: "Flux de texte g\xE9n\xE9r\xE9"
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                example: 'data: {''text'': ''Hello world''}\n\n'
+components:
+  schemas:
+    Provider:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        provider:
+          type: string
+          enum:
+            - openai
+            - anthropic
+        apiKey:
+          type: string
+      required:
+        - id
+        - name
+        - provider
+        - apiKey
+    CreateProviderRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        provider:
+          type: string
+          enum:
+            - openai
+            - anthropic
+        apiKey:
+          type: string
+      required:
+        - name
+        - provider
+        - apiKey
+    Auth:
+      type: object
+      properties:
+        provider:
+          type: string
+          enum:
+            - supabase
+        config:
+          $ref: "#/components/schemas/SupabaseAuthConfig"
+      required:
+        - provider
+        - config
+    UpdateAuthRequest:
+      type: object
+      properties:
+        provider:
+          type: string
+          enum:
+            - supabase
+        config:
+          $ref: "#/components/schemas/SupabaseAuthConfig"
+      required:
+        - provider
+        - config
+    SupabaseAuthConfig:
+      type: object
+      properties:
+        url:
+          type: string
+        key:
+          type: string
+      required:
+        - url
+        - key
+    SystemPrompt:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        prompt:
+          type: string
+      required:
+        - id
+        - name
+        - prompt
+    CreateSystemPromptRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        prompt:
+          type: string
+      required:
+        - name
+        - prompt
+    TextGenerationRequest:
+      type: object
+      properties:
+        provider:
+          type: string
+          enum:
+            - openai
+            - anthropic
+        prompt:
+          type: string
+      required:
+        - provider
+        - prompt
