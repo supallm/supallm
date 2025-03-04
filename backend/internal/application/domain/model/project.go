@@ -29,7 +29,11 @@ func NewProject(id uuid.UUID, userID uuid.UUID, name string) (*Project, error) {
 		return nil, errs.ErrReqInvalid{Field: "name", Reason: "name is required"}
 	}
 
-	return &Project{ID: id, UserID: userID, Name: name}, nil
+	return &Project{
+		ID:     id,
+		UserID: userID,
+		Name:   name,
+	}, nil
 }
 
 func (p *Project) UpdateName(name string) error {
@@ -39,4 +43,18 @@ func (p *Project) UpdateName(name string) error {
 
 	p.Name = name
 	return nil
+}
+
+func (p *Project) GetModelAndProvider(modelSlug slug.Slug) (*Model, *LLMProvider, error) {
+	model, err := p.getModel(modelSlug)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	provider, err := p.getProviderFromModel(model.Model)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return model, provider, nil
 }

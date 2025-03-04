@@ -20,8 +20,8 @@ type AuthProvider struct {
 
 type Model struct {
 	ID           uuid.UUID
+	ProviderId   uuid.UUID
 	Slug         slug.Slug
-	Provider     LLMProvider
 	Model        string
 	SystemPrompt string
 }

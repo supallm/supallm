@@ -22,7 +22,7 @@ func (q *Queries) deleteLLMProvider(ctx context.Context, id uuid.UUID) error {
 }
 
 const llmProvidersByProjectId = `-- name: llmProvidersByProjectId :many
-SELECT id, project_id, name, provider_type, api_key, created_at, updated_at
+SELECT id, project_id, name, provider_type, api_key_encrypted, api_key_obfuscated, created_at, updated_at
 FROM llm_providers
 WHERE project_id = $1
 `
@@ -41,7 +41,8 @@ func (q *Queries) llmProvidersByProjectId(ctx context.Context, projectID uuid.UU
 			&i.ProjectID,
 			&i.Name,
 			&i.ProviderType,
-			&i.ApiKey,
+			&i.ApiKeyEncrypted,
+			&i.ApiKeyObfuscated,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -56,16 +57,17 @@ func (q *Queries) llmProvidersByProjectId(ctx context.Context, projectID uuid.UU
 }
 
 const storeLLMProvider = `-- name: storeLLMProvider :exec
-INSERT INTO llm_providers (id, project_id, name, provider_type, api_key)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO llm_providers (id, project_id, name, provider_type, api_key_encrypted, api_key_obfuscated)
+VALUES ($1, $2, $3, $4, $5, $6)
 `
 
 type storeLLMProviderParams struct {
-	ID           uuid.UUID `json:"id"`
-	ProjectID    uuid.UUID `json:"project_id"`
-	Name         string    `json:"name"`
-	ProviderType string    `json:"provider_type"`
-	ApiKey       string    `json:"api_key"`
+	ID               uuid.UUID `json:"id"`
+	ProjectID        uuid.UUID `json:"project_id"`
+	Name             string    `json:"name"`
+	ProviderType     string    `json:"provider_type"`
+	ApiKeyEncrypted  string    `json:"api_key_encrypted"`
+	ApiKeyObfuscated string    `json:"api_key_obfuscated"`
 }
 
 func (q *Queries) storeLLMProvider(ctx context.Context, arg storeLLMProviderParams) error {
@@ -74,28 +76,31 @@ func (q *Queries) storeLLMProvider(ctx context.Context, arg storeLLMProviderPara
 		arg.ProjectID,
 		arg.Name,
 		arg.ProviderType,
-		arg.ApiKey,
+		arg.ApiKeyEncrypted,
+		arg.ApiKeyObfuscated,
 	)
 	return err
 }
 
 const upsertLLMProvider = `-- name: upsertLLMProvider :exec
-INSERT INTO llm_providers (id, project_id, name, provider_type, api_key)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO llm_providers (id, project_id, name, provider_type, api_key_encrypted, api_key_obfuscated)
+VALUES ($1, $2, $3, $4, $5, $6)
 ON CONFLICT (id) 
 DO UPDATE SET
     name = EXCLUDED.name,
     provider_type = EXCLUDED.provider_type,
-    api_key = EXCLUDED.api_key,
+    api_key_encrypted = EXCLUDED.api_key_encrypted,
+    api_key_obfuscated = EXCLUDED.api_key_obfuscated,
     updated_at = NOW()
 `
 
 type upsertLLMProviderParams struct {
-	ID           uuid.UUID `json:"id"`
-	ProjectID    uuid.UUID `json:"project_id"`
-	Name         string    `json:"name"`
-	ProviderType string    `json:"provider_type"`
-	ApiKey       string    `json:"api_key"`
+	ID               uuid.UUID `json:"id"`
+	ProjectID        uuid.UUID `json:"project_id"`
+	Name             string    `json:"name"`
+	ProviderType     string    `json:"provider_type"`
+	ApiKeyEncrypted  string    `json:"api_key_encrypted"`
+	ApiKeyObfuscated string    `json:"api_key_obfuscated"`
 }
 
 func (q *Queries) upsertLLMProvider(ctx context.Context, arg upsertLLMProviderParams) error {
@@ -104,7 +109,8 @@ func (q *Queries) upsertLLMProvider(ctx context.Context, arg upsertLLMProviderPa
 		arg.ProjectID,
 		arg.Name,
 		arg.ProviderType,
-		arg.ApiKey,
+		arg.ApiKeyEncrypted,
+		arg.ApiKeyObfuscated,
 	)
 	return err
 }

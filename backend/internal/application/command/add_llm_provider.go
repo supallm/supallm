@@ -9,6 +9,7 @@ import (
 	"github.com/supallm/core/internal/application/domain/model"
 	"github.com/supallm/core/internal/application/domain/repository"
 	"github.com/supallm/core/internal/pkg/errs"
+	"github.com/supallm/core/internal/pkg/secret"
 )
 
 type AddLLMProviderCommand struct {
@@ -16,7 +17,7 @@ type AddLLMProviderCommand struct {
 	ProjectID    uuid.UUID
 	Name         string
 	ProviderType model.LLMProviderType
-	APIKey       model.ApiKey
+	APIKey       secret.ApiKey
 }
 
 type AddLLMProviderHandler struct {

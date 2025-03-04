@@ -6,16 +6,16 @@ import (
 	"os"
 
 	"github.com/google/uuid"
-	"github.com/supallm/core/internal/application/domain/model"
 	"github.com/supallm/core/internal/application/domain/repository"
 	"github.com/supallm/core/internal/pkg/errs"
+	"github.com/supallm/core/internal/pkg/secret"
 )
 
 type UpdateLLMProviderCommand struct {
 	ID        uuid.UUID
 	ProjectID uuid.UUID
 	Name      string
-	APIKey    model.ApiKey
+	APIKey    secret.ApiKey
 }
 
 type UpdateLLMProviderHandler struct {

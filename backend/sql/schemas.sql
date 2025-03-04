@@ -13,7 +13,8 @@ CREATE TABLE IF NOT EXISTS llm_providers (
     project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
     provider_type VARCHAR(50) NOT NULL,
-    api_key VARCHAR(255) NOT NULL,
+    api_key_encrypted VARCHAR(255) NOT NULL,
+    api_key_obfuscated VARCHAR(255) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     CONSTRAINT llm_providers_name_project_unique UNIQUE (name, project_id)
@@ -25,7 +26,7 @@ CREATE TABLE IF NOT EXISTS models (
     provider_id UUID NOT NULL REFERENCES llm_providers(id) ON DELETE CASCADE,
     slug VARCHAR(100) NOT NULL,
     llm_model VARCHAR(100) NOT NULL,
-    system_prompt TEXT,
+    system_prompt TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     CONSTRAINT models_slug_project_unique UNIQUE (slug, project_id)

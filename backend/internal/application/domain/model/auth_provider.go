@@ -3,9 +3,15 @@ package model
 import (
 	"errors"
 	"fmt"
+
+	"github.com/supallm/core/internal/pkg/secret"
 )
 
 type AuthProviderType string
+
+func (t AuthProviderType) String() string {
+	return string(t)
+}
 
 const (
 	AuthProviderSupabase AuthProviderType = "supabase"
@@ -15,11 +21,12 @@ const (
 type AuthProvider interface {
 	GetType() AuthProviderType
 	Validate() error
+	Config() map[string]any
 }
 
 type SupabaseAuthProvider struct {
 	URL string
-	Key ApiKey
+	Key secret.ApiKey
 }
 
 func (s SupabaseAuthProvider) GetType() AuthProviderType {
@@ -36,9 +43,16 @@ func (s SupabaseAuthProvider) Validate() error {
 	return nil
 }
 
+func (s SupabaseAuthProvider) Config() map[string]any {
+	return map[string]any{
+		"url": s.URL,
+		"key": s.Key,
+	}
+}
+
 type ClerkAuthProvider struct {
-	PublishableKey string
-	SecretKey      string
+	PublishableKey secret.ApiKey
+	SecretKey      secret.ApiKey
 }
 
 func (c ClerkAuthProvider) GetType() AuthProviderType {
@@ -55,35 +69,54 @@ func (c ClerkAuthProvider) Validate() error {
 	return nil
 }
 
-func (p *Project) NewAuthProvider(providerType AuthProviderType, config map[string]any) error {
+func (c ClerkAuthProvider) Config() map[string]any {
+	return map[string]any{
+		"publishable_key": c.PublishableKey,
+		"secret_key":      c.SecretKey,
+	}
+}
+
+func UnmarshalAuthProvider(providerType AuthProviderType, config map[string]any) (AuthProvider, error) {
 	switch providerType {
 	case AuthProviderSupabase:
-		url, _ := config["url"].(string)
-		key, _ := config["key"].(string)
-		provider := SupabaseAuthProvider{
+		url, ok := config["url"].(string)
+		if !ok {
+			return nil, errors.New("url is required")
+		}
+		key, ok := config["key"].(string)
+		if !ok {
+			return nil, errors.New("key is required")
+		}
+		return SupabaseAuthProvider{
 			URL: url,
-			Key: ApiKey(key),
-		}
-		if err := provider.Validate(); err != nil {
-			return err
-		}
-		p.AuthProvider = provider
-		return nil
-
+			Key: secret.ApiKey(key),
+		}, nil
 	case AuthProviderClerk:
-		publishableKey, _ := config["publishable_key"].(string)
-		secretKey, _ := config["secret_key"].(string)
-		provider := ClerkAuthProvider{
-			PublishableKey: publishableKey,
-			SecretKey:      secretKey,
+		publishableKey, ok := config["publishable_key"].(string)
+		if !ok {
+			return nil, errors.New("publishable key is required")
 		}
-		if err := provider.Validate(); err != nil {
-			return err
+		secretKey, ok := config["secret_key"].(string)
+		if !ok {
+			return nil, errors.New("secret key is required")
 		}
-		p.AuthProvider = provider
-		return nil
-
+		return ClerkAuthProvider{
+			PublishableKey: secret.ApiKey(publishableKey),
+			SecretKey:      secret.ApiKey(secretKey),
+		}, nil
 	default:
-		return fmt.Errorf("unsupported auth provider type: %s", providerType)
+		return nil, fmt.Errorf("unsupported auth provider type: %s", providerType)
 	}
+}
+
+func (p *Project) NewAuthProvider(providerType AuthProviderType, config map[string]any) error {
+	ap, err := UnmarshalAuthProvider(providerType, config)
+	if err != nil {
+		return err
+	}
+	if err := ap.Validate(); err != nil {
+		return err
+	}
+	p.AuthProvider = ap
+	return nil
 }

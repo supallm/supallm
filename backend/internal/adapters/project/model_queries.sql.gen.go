@@ -9,7 +9,6 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const deleteAllModelsByProjectId = `-- name: deleteAllModelsByProjectId :exec
@@ -73,12 +72,12 @@ VALUES ($1, $2, $3, $4, $5, $6)
 `
 
 type storeModelParams struct {
-	ID           uuid.UUID   `json:"id"`
-	ProjectID    uuid.UUID   `json:"project_id"`
-	ProviderID   uuid.UUID   `json:"provider_id"`
-	Slug         string      `json:"slug"`
-	LlmModel     string      `json:"llm_model"`
-	SystemPrompt pgtype.Text `json:"system_prompt"`
+	ID           uuid.UUID `json:"id"`
+	ProjectID    uuid.UUID `json:"project_id"`
+	ProviderID   uuid.UUID `json:"provider_id"`
+	Slug         string    `json:"slug"`
+	LlmModel     string    `json:"llm_model"`
+	SystemPrompt string    `json:"system_prompt"`
 }
 
 func (q *Queries) storeModel(ctx context.Context, arg storeModelParams) error {
@@ -105,12 +104,12 @@ DO UPDATE SET
 `
 
 type upsertModelParams struct {
-	ID           uuid.UUID   `json:"id"`
-	ProjectID    uuid.UUID   `json:"project_id"`
-	ProviderID   uuid.UUID   `json:"provider_id"`
-	Slug         string      `json:"slug"`
-	LlmModel     string      `json:"llm_model"`
-	SystemPrompt pgtype.Text `json:"system_prompt"`
+	ID           uuid.UUID `json:"id"`
+	ProjectID    uuid.UUID `json:"project_id"`
+	ProviderID   uuid.UUID `json:"provider_id"`
+	Slug         string    `json:"slug"`
+	LlmModel     string    `json:"llm_model"`
+	SystemPrompt string    `json:"system_prompt"`
 }
 
 func (q *Queries) upsertModel(ctx context.Context, arg upsertModelParams) error {

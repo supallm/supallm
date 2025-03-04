@@ -53,6 +53,10 @@ type (
 	}
 )
 
+func (p Prompt) String() string {
+	return string(p)
+}
+
 const (
 	RequestStatusPending   RequestStatus = "pending"
 	RequestStatusCompleted RequestStatus = "completed"

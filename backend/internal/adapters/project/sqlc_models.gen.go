@@ -10,13 +10,14 @@ import (
 )
 
 type LlmProvider struct {
-	ID           uuid.UUID          `json:"id"`
-	ProjectID    uuid.UUID          `json:"project_id"`
-	Name         string             `json:"name"`
-	ProviderType string             `json:"provider_type"`
-	ApiKey       string             `json:"api_key"`
-	CreatedAt    pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+	ID               uuid.UUID          `json:"id"`
+	ProjectID        uuid.UUID          `json:"project_id"`
+	Name             string             `json:"name"`
+	ProviderType     string             `json:"provider_type"`
+	ApiKeyEncrypted  string             `json:"api_key_encrypted"`
+	ApiKeyObfuscated string             `json:"api_key_obfuscated"`
+	CreatedAt        pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt        pgtype.Timestamptz `json:"updated_at"`
 }
 
 type Model struct {
@@ -25,7 +26,7 @@ type Model struct {
 	ProviderID   uuid.UUID          `json:"provider_id"`
 	Slug         string             `json:"slug"`
 	LlmModel     string             `json:"llm_model"`
-	SystemPrompt pgtype.Text        `json:"system_prompt"`
+	SystemPrompt string             `json:"system_prompt"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
 }

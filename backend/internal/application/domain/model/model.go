@@ -8,7 +8,7 @@ import (
 type Model struct {
 	ID           uuid.UUID
 	Slug         slug.Slug
-	Provider     *LLMProvider
+	ProviderId   uuid.UUID
 	Model        LLMModel
 	SystemPrompt Prompt
 }
@@ -26,7 +26,7 @@ func (p *Project) AddModel(id uuid.UUID, slug slug.Slug, llmProviderId uuid.UUID
 	model := Model{
 		ID:           id,
 		Slug:         slug,
-		Provider:     provider,
+		ProviderId:   llmProviderId,
 		Model:        llmModel,
 		SystemPrompt: systemPrompt,
 	}
@@ -48,7 +48,7 @@ func (p *Project) RemoveModel(slug slug.Slug) error {
 	return nil
 }
 
-func (p *Project) GetModel(slug slug.Slug) (*Model, error) {
+func (p *Project) getModel(slug slug.Slug) (*Model, error) {
 	model, ok := p.Models[slug]
 	if !ok {
 		return nil, ErrModelNotFound
@@ -58,7 +58,7 @@ func (p *Project) GetModel(slug slug.Slug) (*Model, error) {
 }
 
 func (p *Project) UpdateModel(slug slug.Slug, llmProviderId uuid.UUID, llmModel LLMModel, systemPrompt Prompt) error {
-	model, err := p.GetModel(slug)
+	model, err := p.getModel(slug)
 	if err != nil {
 		return err
 	}
@@ -72,7 +72,7 @@ func (p *Project) UpdateModel(slug slug.Slug, llmProviderId uuid.UUID, llmModel 
 		return ErrLLMModelNotSupported
 	}
 
-	model.Provider = provider
+	model.ProviderId = llmProviderId
 	model.Model = llmModel
 	model.SystemPrompt = systemPrompt
 	return nil

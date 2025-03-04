@@ -13,8 +13,18 @@ import (
 
 var envKey = []byte(os.Getenv("SECRET_KEY"))
 
+type ApiKey string
+
+func (a ApiKey) String() string {
+	return string(a)
+}
+
+func (a ApiKey) Obfuscate() string {
+	return a.String()[:4] + "..." + a.String()[len(a.String())-4:]
+}
+
 // EncryptData encrypts data using AES-GCM
-func EncryptData(plaintext string, key ...[]byte) (string, error) {
+func (a ApiKey) Encrypt(key ...[]byte) (string, error) {
 	k := envKey
 	if len(key) >= 1 {
 		k = key[0]
@@ -35,12 +45,12 @@ func EncryptData(plaintext string, key ...[]byte) (string, error) {
 		return "", err
 	}
 
-	ciphertext := aesGCM.Seal(nonce, nonce, []byte(plaintext), nil)
+	ciphertext := aesGCM.Seal(nonce, nonce, []byte(a), nil)
 	return hex.EncodeToString(ciphertext), nil
 }
 
 // DecryptData decrypts data using AES-GCM
-func DecryptData(encrypted string, key ...[]byte) (string, error) {
+func Decrypt(encrypted string, key ...[]byte) (ApiKey, error) {
 	k := envKey
 	if len(key) >= 1 {
 		k = key[0]
@@ -73,7 +83,7 @@ func DecryptData(encrypted string, key ...[]byte) (string, error) {
 		return "", err
 	}
 
-	return string(plaintext), nil
+	return ApiKey(plaintext), nil
 }
 
 func deriveKey(baseKey []byte) []byte {

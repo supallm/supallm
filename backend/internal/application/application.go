@@ -5,7 +5,9 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/supallm/core/internal/adapters/llm"
 	"github.com/supallm/core/internal/adapters/project"
+	"github.com/supallm/core/internal/adapters/session"
 	"github.com/supallm/core/internal/application/command"
 	"github.com/supallm/core/internal/application/query"
 	"github.com/supallm/core/internal/pkg/config"
@@ -54,7 +56,8 @@ func New(
 	}
 
 	projectRepo := project.NewRepository(ctx, pool)
-	// sessionRepo := session.NewRepository(ctx, pool)
+	sessionRepo := session.NewRepository(ctx, pool)
+	llmRegistry := llm.NewProviderRegistry()
 
 	app := &App{
 		Commands: &Commands{
@@ -70,8 +73,7 @@ func New(
 			UpdateLLMProvider: command.NewUpdateLLMProviderHandler(projectRepo),
 			RemoveLLMProvider: command.NewRemoveLLMProviderHandler(projectRepo),
 
-			// GenerateText: command.NewGenerateTextHandler(projectRepo, sessionRepo, nil),
-			// StreamText:   command.NewStreamTextHandler(projectRepo, sessionRepo, nil),
+			GenerateText: command.NewGenerateTextHandler(projectRepo, sessionRepo, llmRegistry),
 		},
 		Queries: &Queries{
 			GetProject:    query.NewGetProjectHandler(projectRepo),

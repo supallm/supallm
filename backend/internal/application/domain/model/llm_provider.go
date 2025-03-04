@@ -2,12 +2,21 @@ package model
 
 import (
 	"github.com/google/uuid"
+	"github.com/supallm/core/internal/pkg/secret"
 )
 
 type (
 	LLMProviderType string
 	LLMModel        string
 )
+
+func (t LLMProviderType) String() string {
+	return string(t)
+}
+
+func (t LLMModel) String() string {
+	return string(t)
+}
 
 const (
 	ProviderTypeOpenAI    LLMProviderType = "openai"
@@ -37,10 +46,10 @@ type LLMProvider struct {
 	ID     uuid.UUID
 	Name   string
 	Type   LLMProviderType
-	APIKey ApiKey
+	APIKey secret.ApiKey
 }
 
-func newLLMProvider(id uuid.UUID, name string, providerType LLMProviderType, apiKey ApiKey) (*LLMProvider, error) {
+func newLLMProvider(id uuid.UUID, name string, providerType LLMProviderType, apiKey secret.ApiKey) (*LLMProvider, error) {
 	return &LLMProvider{
 		ID:     id,
 		Name:   name,
@@ -59,7 +68,7 @@ func (c *Project) getProvider(id uuid.UUID) (*LLMProvider, error) {
 	return nil, ErrProviderNotFound
 }
 
-func (p *Project) AddProvider(id uuid.UUID, name string, providerType LLMProviderType, apiKey ApiKey) error {
+func (p *Project) AddProvider(id uuid.UUID, name string, providerType LLMProviderType, apiKey secret.ApiKey) error {
 	provider, err := newLLMProvider(id, name, providerType, apiKey)
 	if err != nil {
 		return err
@@ -79,7 +88,7 @@ func (p *Project) RemoveProvider(providerID uuid.UUID) error {
 	return ErrProviderNotFound
 }
 
-func (p *Project) UpdateProvider(id uuid.UUID, name string, apiKey ApiKey) error {
+func (p *Project) UpdateProvider(id uuid.UUID, name string, apiKey secret.ApiKey) error {
 	provider, err := p.getProvider(id)
 	if err != nil {
 		return err
@@ -88,4 +97,13 @@ func (p *Project) UpdateProvider(id uuid.UUID, name string, apiKey ApiKey) error
 	provider.Name = name
 	provider.APIKey = apiKey
 	return nil
+}
+
+func (p *Project) getProviderFromModel(model LLMModel) (*LLMProvider, error) {
+	for _, provider := range p.LLMProviders {
+		if _, ok := ProviderModels[provider.Type][model]; ok {
+			return &provider, nil
+		}
+	}
+	return nil, ErrProviderNotFound
 }

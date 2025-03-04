@@ -22,3 +22,15 @@ type LLMSessionRepository interface {
 	Update(ctx context.Context, session *model.LLMSession) error
 	Delete(ctx context.Context, id uuid.UUID) error
 }
+
+// LLMProvider defines the interface for interacting with LLM providers
+type LLMProvider interface {
+	GenerateText(ctx context.Context, request *model.LLMRequest) (*model.LLMResponse, error)
+	StreamText(ctx context.Context, request *model.LLMRequest) (<-chan struct{}, error)
+	VerifyKey(ctx context.Context, key string) error
+}
+
+// ProviderRegistry defines the interface for interacting with provider registries
+type ProviderRegistry interface {
+	GetLLM(provider *model.LLMProvider) (LLMProvider, error)
+}
