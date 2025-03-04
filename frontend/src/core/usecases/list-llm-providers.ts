@@ -1,17 +1,15 @@
 import { LLMProviderService } from "@/core/interfaces";
 import { LLMProvider } from "../entities/llm-provider";
-import { getLLMProviders } from "../store/llm-providers";
+import { setLLMProviders } from "../store/llm-providers";
 
 export class ListLLMProvidersUsecase {
   constructor(private readonly llmProviderService: LLMProviderService) {}
 
   async execute(projectId: string): Promise<LLMProvider[]> {
-    const providers = getLLMProviders();
+    const providers = await this.llmProviderService.listAll(projectId);
 
-    if (providers.length) {
-      return providers;
-    }
+    setLLMProviders(providers);
 
-    return this.llmProviderService.listAll(projectId);
+    return providers;
   }
 }
