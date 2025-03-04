@@ -1,4 +1,6 @@
-import { Slash } from "lucide-react";
+"use client";
+
+import { BookIcon, MessageCircleQuestion, Slash } from "lucide-react";
 import Logo from "./logo";
 import {
   Breadcrumb,
@@ -7,20 +9,31 @@ import {
   BreadcrumbLink,
   BreadcrumbSeparator,
 } from "./ui/breadcrumb";
+import { useOrganization, useOrganizationList } from "@clerk/nextjs";
+import { Skeleton } from "./ui/skeleton";
+import { useAppConfig } from "@/hooks/use-app-config";
+import { Button } from "./ui/button";
+import { IconQuestionMark } from "@tabler/icons-react";
 
 const OrganizationBreadcrumb = () => {
+  const { organization, isLoaded: organizationLoaded } = useOrganization();
+
+  const { currentProject, isLoading: currentProjectLoading } = useAppConfig();
+
   return (
     <div>
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href="/">Home</BreadcrumbLink>
+            {(organizationLoaded && organization?.name) ?? "Personal account"}
+            {!organizationLoaded && <Skeleton className="h-4 w-24" />}
           </BreadcrumbItem>
           <BreadcrumbSeparator>
             <Slash />
           </BreadcrumbSeparator>
           <BreadcrumbItem>
-            <BreadcrumbLink href="/components">Components</BreadcrumbLink>
+            {!currentProjectLoading && currentProject?.name}
+            {currentProjectLoading && <Skeleton className="h-4 w-24" />}
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
@@ -35,7 +48,18 @@ export const TopNav = () => {
         <Logo width={30} height={30} />
       </div>
 
-      <OrganizationBreadcrumb />
+      <div className="grow">
+        <OrganizationBreadcrumb />
+      </div>
+
+      <div className="px-3 space-x-2">
+        <Button variant={"outline"} size="xs" startContent={<BookIcon />}>
+          Documentation
+        </Button>
+        <Button variant={"icon"} size="xs">
+          <MessageCircleQuestion className="size-4" />
+        </Button>
+      </div>
     </div>
   );
 };

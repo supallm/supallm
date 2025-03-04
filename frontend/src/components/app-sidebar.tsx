@@ -1,12 +1,10 @@
+"use client";
+
 import {
-  Brain,
   BrainCircuit,
-  Calendar,
   ChevronUp,
   FileSliders,
   Home,
-  Inbox,
-  Search,
   Settings,
   User2,
   Users,
@@ -31,6 +29,7 @@ import {
 } from "./ui/dropdown-menu";
 import { LLMProvidersRoute, OverviewRoute } from "@/routes";
 import Link from "next/link";
+import { useAuth } from "@clerk/nextjs";
 
 // Menu items.
 const items = [
@@ -62,6 +61,8 @@ const items = [
 ];
 
 export function AppSidebar() {
+  const { signOut } = useAuth();
+
   return (
     <Sidebar>
       <SidebarContent>
@@ -104,7 +105,7 @@ export function AppSidebar() {
                   <span>Billing</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <span>Sign out</span>
+                  <span onClick={() => signOut()}>Sign out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
