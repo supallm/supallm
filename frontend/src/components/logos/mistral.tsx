@@ -18,8 +18,8 @@ export const Mistral: FC<{ width: number; height: number }> = ({
         height="32"
         fill="#FFCD00"
         stroke="#636363"
-        stroke-opacity="0.2"
-        stroke-width="0.5"
+        strokeOpacity="0.2"
+        strokeWidth="0.5"
       />
       <rect
         x="143"
@@ -28,8 +28,8 @@ export const Mistral: FC<{ width: number; height: number }> = ({
         height="32"
         fill="#FFCD00"
         stroke="#636363"
-        stroke-opacity="0.2"
-        stroke-width="0.5"
+        strokeOpacity="0.2"
+        strokeWidth="0.5"
       />
       <rect
         x="15"
@@ -38,8 +38,8 @@ export const Mistral: FC<{ width: number; height: number }> = ({
         height="32"
         fill="#FFA400"
         stroke="#636363"
-        stroke-opacity="0.2"
-        stroke-width="0.5"
+        strokeOpacity="0.2"
+        strokeWidth="0.5"
       />
       <rect
         x="47"
@@ -48,8 +48,8 @@ export const Mistral: FC<{ width: number; height: number }> = ({
         height="32"
         fill="#FFA400"
         stroke="#636363"
-        stroke-opacity="0.2"
-        stroke-width="0.5"
+        strokeOpacity="0.2"
+        strokeWidth="0.5"
       />
       <rect
         x="111"
@@ -58,8 +58,8 @@ export const Mistral: FC<{ width: number; height: number }> = ({
         height="32"
         fill="#FFA400"
         stroke="#636363"
-        stroke-opacity="0.2"
-        stroke-width="0.5"
+        strokeOpacity="0.2"
+        strokeWidth="0.5"
       />
       <rect
         x="143"
@@ -68,8 +68,8 @@ export const Mistral: FC<{ width: number; height: number }> = ({
         height="32"
         fill="#FFA400"
         stroke="#636363"
-        stroke-opacity="0.2"
-        stroke-width="0.5"
+        strokeOpacity="0.2"
+        strokeWidth="0.5"
       />
       <rect
         x="15"
@@ -78,8 +78,8 @@ export const Mistral: FC<{ width: number; height: number }> = ({
         height="32"
         fill="#FF7100"
         stroke="#636363"
-        stroke-opacity="0.2"
-        stroke-width="0.5"
+        strokeOpacity="0.2"
+        strokeWidth="0.5"
       />
       <rect
         x="47"
@@ -88,8 +88,8 @@ export const Mistral: FC<{ width: number; height: number }> = ({
         height="32"
         fill="#FF7100"
         stroke="#636363"
-        stroke-opacity="0.2"
-        stroke-width="0.5"
+        strokeOpacity="0.2"
+        strokeWidth="0.5"
       />
       <rect
         x="79"
@@ -98,8 +98,8 @@ export const Mistral: FC<{ width: number; height: number }> = ({
         height="32"
         fill="#FF7100"
         stroke="#636363"
-        stroke-opacity="0.2"
-        stroke-width="0.5"
+        strokeOpacity="0.2"
+        strokeWidth="0.5"
       />
       <rect
         x="111"
@@ -108,8 +108,8 @@ export const Mistral: FC<{ width: number; height: number }> = ({
         height="32"
         fill="#FF7100"
         stroke="#636363"
-        stroke-opacity="0.2"
-        stroke-width="0.5"
+        strokeOpacity="0.2"
+        strokeWidth="0.5"
       />
       <rect
         x="143"
@@ -118,8 +118,8 @@ export const Mistral: FC<{ width: number; height: number }> = ({
         height="32"
         fill="#FF7100"
         stroke="#636363"
-        stroke-opacity="0.2"
-        stroke-width="0.5"
+        strokeOpacity="0.2"
+        strokeWidth="0.5"
       />
       <rect
         x="15"
@@ -128,8 +128,8 @@ export const Mistral: FC<{ width: number; height: number }> = ({
         height="32"
         fill="#FF4902"
         stroke="#636363"
-        stroke-opacity="0.2"
-        stroke-width="0.5"
+        strokeOpacity="0.2"
+        strokeWidth="0.5"
       />
       <rect
         x="79"
@@ -138,8 +138,8 @@ export const Mistral: FC<{ width: number; height: number }> = ({
         height="32"
         fill="#FF4902"
         stroke="#636363"
-        stroke-opacity="0.2"
-        stroke-width="0.5"
+        strokeOpacity="0.2"
+        strokeWidth="0.5"
       />
       <rect
         x="143"
@@ -148,8 +148,8 @@ export const Mistral: FC<{ width: number; height: number }> = ({
         height="32"
         fill="#FF4902"
         stroke="#636363"
-        stroke-opacity="0.2"
-        stroke-width="0.5"
+        strokeOpacity="0.2"
+        strokeWidth="0.5"
       />
       <rect
         x="15"
@@ -158,8 +158,8 @@ export const Mistral: FC<{ width: number; height: number }> = ({
         height="32"
         fill="#FF0006"
         stroke="#636363"
-        stroke-opacity="0.2"
-        stroke-width="0.5"
+        strokeOpacity="0.2"
+        strokeWidth="0.5"
       />
       <rect
         x="143"
@@ -168,8 +168,8 @@ export const Mistral: FC<{ width: number; height: number }> = ({
         height="32"
         fill="#FF0006"
         stroke="#636363"
-        stroke-opacity="0.2"
-        stroke-width="0.5"
+        strokeOpacity="0.2"
+        strokeWidth="0.5"
       />
       <rect y="1" width="16" height="160" fill="black" />
       <rect x="63" y="97" width="16" height="32" fill="black" />
