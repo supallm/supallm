@@ -40,7 +40,7 @@ func (o *OpenAI) getClient(slug slug.Slug, apiKey string) (*openai.Client, error
 }
 
 func (o *OpenAI) GenerateText(ctx context.Context, request *model.LLMRequest) (*model.LLMResponse, error) {
-	_, err := o.getClient(request.Model.Slug, request.Model.Provider.APIKey)
+	_, err := o.getClient(request.Model.Slug, request.Model.Provider.APIKey.String())
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func (o *OpenAI) GenerateText(ctx context.Context, request *model.LLMRequest) (*
 }
 
 func (o *OpenAI) StreamText(ctx context.Context, request *model.LLMRequest) (<-chan struct{}, error) {
-	_, err := o.getClient(request.Model.Slug, request.Model.Provider.APIKey)
+	_, err := o.getClient(request.Model.Slug, request.Model.Provider.APIKey.String())
 	if err != nil {
 		return nil, err
 	}

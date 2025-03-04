@@ -37,10 +37,10 @@ type LLMProvider struct {
 	ID     uuid.UUID
 	Name   string
 	Type   LLMProviderType
-	APIKey string
+	APIKey ApiKey
 }
 
-func newLLMProvider(id uuid.UUID, name string, providerType LLMProviderType, apiKey string) (*LLMProvider, error) {
+func newLLMProvider(id uuid.UUID, name string, providerType LLMProviderType, apiKey ApiKey) (*LLMProvider, error) {
 	return &LLMProvider{
 		ID:     id,
 		Name:   name,
@@ -59,7 +59,7 @@ func (c *Project) getProvider(id uuid.UUID) (*LLMProvider, error) {
 	return nil, ErrProviderNotFound
 }
 
-func (p *Project) AddProvider(id uuid.UUID, name string, providerType LLMProviderType, apiKey string) error {
+func (p *Project) AddProvider(id uuid.UUID, name string, providerType LLMProviderType, apiKey ApiKey) error {
 	provider, err := newLLMProvider(id, name, providerType, apiKey)
 	if err != nil {
 		return err
@@ -79,7 +79,7 @@ func (p *Project) RemoveProvider(providerID uuid.UUID) error {
 	return ErrProviderNotFound
 }
 
-func (p *Project) UpdateProvider(id uuid.UUID, name string, apiKey string) error {
+func (p *Project) UpdateProvider(id uuid.UUID, name string, apiKey ApiKey) error {
 	provider, err := p.getProvider(id)
 	if err != nil {
 		return err

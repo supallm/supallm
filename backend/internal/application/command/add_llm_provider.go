@@ -16,7 +16,7 @@ type AddLLMProviderCommand struct {
 	ProjectID    uuid.UUID
 	Name         string
 	ProviderType model.LLMProviderType
-	APIKey       string
+	APIKey       model.ApiKey
 }
 
 type AddLLMProviderHandler struct {

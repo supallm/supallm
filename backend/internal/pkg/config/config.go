@@ -32,6 +32,8 @@ type (
 )
 
 func Load(ctx context.Context) Config {
+	mustGet("SECRET_KEY")
+
 	postgresURL := fmt.Sprintf("postgres://%s:%s@%s:%s/%s",
 		mustGet("POSTGRES_USER"),
 		mustGet("POSTGRES_PASSWORD"),

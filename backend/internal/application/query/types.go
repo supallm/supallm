@@ -27,8 +27,8 @@ type Model struct {
 }
 
 type LLMProvider struct {
-	ID       uuid.UUID
-	Name     string
-	Provider string
-	ApiKey   string
+	ID               uuid.UUID
+	Name             string
+	Provider         string
+	ObfuscatedApiKey string
 }

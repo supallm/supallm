@@ -19,7 +19,7 @@ type AuthProvider interface {
 
 type SupabaseAuthProvider struct {
 	URL string
-	Key string
+	Key ApiKey
 }
 
 func (s SupabaseAuthProvider) GetType() AuthProviderType {
@@ -62,7 +62,7 @@ func (p *Project) NewAuthProvider(providerType AuthProviderType, config map[stri
 		key, _ := config["key"].(string)
 		provider := SupabaseAuthProvider{
 			URL: url,
-			Key: key,
+			Key: ApiKey(key),
 		}
 		if err := provider.Validate(); err != nil {
 			return err

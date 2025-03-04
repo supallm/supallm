@@ -39,7 +39,7 @@ func (a *Anthropic) getClient(slug slug.Slug, apiKey string) (*anthropic.Client,
 }
 
 func (a *Anthropic) GenerateText(ctx context.Context, request *model.LLMRequest) (*model.LLMResponse, error) {
-	_, err := a.getClient(request.Model.Slug, request.Model.Provider.APIKey)
+	_, err := a.getClient(request.Model.Slug, request.Model.Provider.APIKey.String())
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func (a *Anthropic) GenerateText(ctx context.Context, request *model.LLMRequest)
 }
 
 func (a *Anthropic) StreamText(ctx context.Context, request *model.LLMRequest) (<-chan struct{}, error) {
-	_, err := a.getClient(request.Model.Slug, request.Model.Provider.APIKey)
+	_, err := a.getClient(request.Model.Slug, request.Model.Provider.APIKey.String())
 	if err != nil {
 		return nil, err
 	}
