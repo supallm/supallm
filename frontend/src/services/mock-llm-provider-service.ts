@@ -16,6 +16,7 @@ export class MockLLMProviderService implements LLMProviderService {
       id: crypto.randomUUID(),
       providerType: data.providerType,
       name: data.name,
+      apiKeyPreview: data.apiKey.slice(0, 4) + "...",
     };
 
     return createdProvider;
@@ -29,5 +30,17 @@ export class MockLLMProviderService implements LLMProviderService {
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     return [];
+  }
+
+  async patch(
+    id: string,
+    data: {
+      name: string;
+      apiKey: string | undefined;
+    },
+  ) {
+    const authToken = await getAuthToken();
+
+    await new Promise((resolve) => setTimeout(resolve, 2000));
   }
 }

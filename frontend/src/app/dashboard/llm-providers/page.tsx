@@ -80,12 +80,7 @@ const ProjectPage = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {Object.entries(llmProviders).map(([key, value]) => (
-                <LLMProviderCard
-                  onEdit={() => {}}
-                  key={key}
-                  name={value.name}
-                  providerType={value.providerType}
-                />
+                <LLMProviderCard onEdit={() => {}} key={key} provider={value} />
               ))}
             </div>
           </div>

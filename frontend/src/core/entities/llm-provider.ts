@@ -12,6 +12,7 @@ export type LLMProvider = {
   id: string;
   providerType: LLMProviderName;
   name: string;
+  apiKeyPreview: string;
 };
 
 export const LLMProviderNameLabelMap: Record<LLMProviderName, string> = {

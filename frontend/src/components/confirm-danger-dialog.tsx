@@ -79,7 +79,7 @@ export const ConfirmDangerDialog: FC<
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger>{children}</DialogTrigger>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>

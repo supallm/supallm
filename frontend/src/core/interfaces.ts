@@ -13,4 +13,11 @@ export interface LLMProviderService {
     apiKey: string;
     providerType: LLMProviderName;
   }) => Promise<LLMProvider>;
+  patch: (
+    id: string,
+    data: {
+      name: string;
+      apiKey: string | undefined;
+    },
+  ) => Promise<void>;
 }
