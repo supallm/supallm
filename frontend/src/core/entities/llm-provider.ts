@@ -10,9 +10,8 @@ export type LLMProviderName = (typeof LLMProviderNames)[number];
 
 export type LLMProvider = {
   id: string;
-  provider: LLMProviderName;
+  providerType: LLMProviderName;
   name: string;
-  description: string;
 };
 
 export const LLMProviderNameLabelMap: Record<LLMProviderName, string> = {

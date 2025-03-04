@@ -68,7 +68,7 @@ export const AddLLMProviderDialog: FC<{
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "My provider",
+      name: "",
       apiKey: "",
       providerType: "openai",
     },
@@ -81,6 +81,7 @@ export const AddLLMProviderDialog: FC<{
       apiKey: values.apiKey,
       providerType: values.providerType,
     });
+    reset();
     onOpenChange(false);
   }
 

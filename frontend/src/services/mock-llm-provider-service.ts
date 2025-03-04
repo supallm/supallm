@@ -3,8 +3,6 @@ import { LLMProviderService } from "@/core/interfaces";
 import { getAuthToken } from "@/lib/auth";
 
 export class MockLLMProviderService implements LLMProviderService {
-  private providers: LLMProvider[] = [];
-
   async create(data: {
     name: string;
     apiKey: string;
@@ -12,23 +10,15 @@ export class MockLLMProviderService implements LLMProviderService {
   }): Promise<LLMProvider> {
     const authToken = await getAuthToken();
 
-    console.log("create", data, authToken);
-
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    this.providers.push({
+    const createdProvider = {
       id: crypto.randomUUID(),
-      provider: "openai",
-      name: "My provider",
-      description: "Mock Provider",
-    });
-
-    return {
-      id: "1",
-      provider: "openai",
-      name: "My provider",
-      description: "Mock Provider",
+      providerType: data.providerType,
+      name: data.name,
     };
+
+    return createdProvider;
   }
 
   async listAll(projectId: string): Promise<LLMProvider[]> {
@@ -38,6 +28,6 @@ export class MockLLMProviderService implements LLMProviderService {
 
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    return this.providers;
+    return [];
   }
 }

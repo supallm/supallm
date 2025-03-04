@@ -84,7 +84,7 @@ const ProjectPage = () => {
                   onEdit={() => {}}
                   key={key}
                   name={value.name}
-                  providerType={value.provider}
+                  providerType={value.providerType}
                 />
               ))}
             </div>
