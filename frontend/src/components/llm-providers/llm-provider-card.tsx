@@ -9,11 +9,12 @@ import {
 } from "@/core/entities/llm-provider";
 import { ProviderLogo } from "../logos/provider-logo";
 
-import { Cog, EllipsisIcon, Trash, Trash2 } from "lucide-react";
+import { Cog, Trash2 } from "lucide-react";
 import { ConfirmDangerDialog } from "../confirm-danger-dialog";
 import { TriggerConfirmButton } from "../trigger-confirm-button";
-import { ConfirmDialog } from "../confirm-dialog";
 import { EditLLMProviderDialog } from "../edit-llm-provider-dialog";
+import { hookifyFunction } from "@/hooks/hookify-function";
+import { deleteLLMProviderUsecase } from "@/core/usecases";
 
 export type LLMProviderCardProps = {
   provider: LLMProvider;
@@ -26,6 +27,15 @@ export const LLMProviderCard: FC<LLMProviderCardProps> = ({
 }) => {
   const type = provider.providerType;
   const name = provider.name;
+
+  const { execute: deleteLLMProvider, isLoading: deleteLLMProviderLoading } =
+    hookifyFunction(
+      deleteLLMProviderUsecase.execute.bind(deleteLLMProviderUsecase),
+    );
+
+  const handleDelete = async () => {
+    await deleteLLMProvider(provider.id);
+  };
 
   return (
     <Card className="bg-gradient-to-bl from-green-50 via-white to-gray-50 hover:scale-101 transition-all duration-300 cursor-pointer">
@@ -55,12 +65,16 @@ export const LLMProviderCard: FC<LLMProviderCardProps> = ({
             <ConfirmDangerDialog
               title="Are you sure?"
               description="This action will remove the provider and all related models resulting in a potential downtime of your application."
-              onConfirm={() => {}}
+              onConfirm={handleDelete}
               confirmationText="DELETE"
             >
-              <TriggerConfirmButton size="xs" variant="outline">
+              <Button
+                size="xs"
+                variant="outline"
+                isLoading={deleteLLMProviderLoading}
+              >
                 <Trash2 className="text-muted-foreground w-4 h-4" />
-              </TriggerConfirmButton>
+              </Button>
             </ConfirmDangerDialog>
           </div>
         </div>

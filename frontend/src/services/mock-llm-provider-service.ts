@@ -43,4 +43,10 @@ export class MockLLMProviderService implements LLMProviderService {
 
     await new Promise((resolve) => setTimeout(resolve, 2000));
   }
+
+  async delete(id: string) {
+    const authToken = await getAuthToken();
+
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+  }
 }

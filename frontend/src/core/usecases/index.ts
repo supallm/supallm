@@ -4,6 +4,7 @@ import { MockLLMProviderService } from "@/services/mock-llm-provider-service";
 import { ListLLMProvidersUsecase } from "./list-llm-providers";
 import { CreateLLMProviderUsecase } from "./create-llm-provider";
 import { PatchLLMProviderUsecase } from "./patch-llm-provider";
+import { DeleteLLMProviderUsecase } from "./delete-llm-provider";
 
 export const getProjectUsecase = new GetProjectUsecase(
   new MockProjectService(),
@@ -18,5 +19,9 @@ export const createLLMProviderUsecase = new CreateLLMProviderUsecase(
 );
 
 export const patchLLMProviderUsecase = new PatchLLMProviderUsecase(
+  new MockLLMProviderService(),
+);
+
+export const deleteLLMProviderUsecase = new DeleteLLMProviderUsecase(
   new MockLLMProviderService(),
 );

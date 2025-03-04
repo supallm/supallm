@@ -99,7 +99,6 @@ export const ConfirmDangerDialog: FC<
                   <FormControl>
                     <Input
                       placeholder={`Type ${confirmationText} to confirm`}
-                      type="password"
                       {...field}
                     />
                   </FormControl>

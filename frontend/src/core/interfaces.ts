@@ -20,4 +20,5 @@ export interface LLMProviderService {
       apiKey: string | undefined;
     },
   ) => Promise<void>;
+  delete: (id: string) => Promise<void>;
 }

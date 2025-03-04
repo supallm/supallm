@@ -8,6 +8,7 @@ interface LLMProviderState {
   setLLMProviders: (providers: LLMProvider[]) => void;
   addLLMProvider: (provider: LLMProvider) => void;
   patchLLMProvider: (id: string, data: Partial<LLMProvider>) => void;
+  deleteLLMProvider: (id: string) => void;
 }
 
 export const useLLMProviderStore = create<LLMProviderState>()(
@@ -24,6 +25,12 @@ export const useLLMProviderStore = create<LLMProviderState>()(
           set((state) => ({
             llmProviders: state.llmProviders.map((provider) =>
               provider.id === id ? { ...provider, ...data } : provider,
+            ),
+          })),
+        deleteLLMProvider: (id) =>
+          set((state) => ({
+            llmProviders: state.llmProviders.filter(
+              (provider) => provider.id !== id,
             ),
           })),
       }),
@@ -48,4 +55,8 @@ export const addLLMProvider = (provider: LLMProvider) => {
 
 export const patchLLMProvider = (id: string, data: Partial<LLMProvider>) => {
   useLLMProviderStore.getState().patchLLMProvider(id, data);
+};
+
+export const deleteLLMProvider = (id: string) => {
+  useLLMProviderStore.getState().deleteLLMProvider(id);
 };
