@@ -33,7 +33,7 @@ type Model struct {
 
 type Project struct {
 	ID           uuid.UUID          `json:"id"`
-	UserID       uuid.UUID          `json:"user_id"`
+	UserID       string             `json:"user_id"`
 	Name         string             `json:"name"`
 	AuthProvider authProvider       `json:"auth_provider"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`

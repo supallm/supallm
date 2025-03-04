@@ -9,19 +9,19 @@ import (
 // Project represents a supallm root configuration
 type Project struct {
 	ID           uuid.UUID
-	UserID       uuid.UUID
+	UserID       string
 	Name         string
 	AuthProvider AuthProvider
 	LLMProviders []LLMProvider
 	Models       map[slug.Slug]Model
 }
 
-func NewProject(id uuid.UUID, userID uuid.UUID, name string) (*Project, error) {
+func NewProject(id uuid.UUID, userID string, name string) (*Project, error) {
 	if id == uuid.Nil {
 		return nil, errs.ErrReqInvalid{Field: "id", Reason: "id is required"}
 	}
 
-	if userID == uuid.Nil {
+	if userID == "" {
 		return nil, errs.ErrReqInvalid{Field: "userID", Reason: "userID is required"}
 	}
 

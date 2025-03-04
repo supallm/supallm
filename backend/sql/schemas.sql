@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS projects (
     id UUID PRIMARY KEY,
-    user_id UUID NOT NULL,
+    user_id VARCHAR(255) NOT NULL,
     name VARCHAR(255) NOT NULL,
     auth_provider JSONB,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

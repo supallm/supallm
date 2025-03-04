@@ -13,7 +13,7 @@ import (
 
 type CreateProjectCommand struct {
 	ID     uuid.UUID
-	UserID uuid.UUID
+	UserID string
 	Name   string
 }
 

@@ -47,7 +47,7 @@ FROM projects
 WHERE user_id = $1
 `
 
-func (q *Queries) projectsByUserId(ctx context.Context, userID uuid.UUID) ([]Project, error) {
+func (q *Queries) projectsByUserId(ctx context.Context, userID string) ([]Project, error) {
 	rows, err := q.db.Query(ctx, projectsByUserId, userID)
 	if err != nil {
 		return nil, err
@@ -81,7 +81,7 @@ VALUES ($1, $2, $3, $4)
 
 type storeProjectParams struct {
 	ID           uuid.UUID    `json:"id"`
-	UserID       uuid.UUID    `json:"user_id"`
+	UserID       string       `json:"user_id"`
 	Name         string       `json:"name"`
 	AuthProvider authProvider `json:"auth_provider"`
 }

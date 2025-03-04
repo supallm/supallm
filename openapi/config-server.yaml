@@ -1,4 +1,4 @@
-package: http
+package: gen
 generate:
   fiber-server: true
 output: ./gen/openapi-server.gen.go
