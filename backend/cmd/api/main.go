@@ -31,7 +31,7 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("failed to create application: %w", err)
 	}
-	s := http.NewServer(server, app)
-	s.RegisterRoutes()
+
+	http.NewServer(server, app)
 	return server.Start()
 }

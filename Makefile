@@ -8,8 +8,8 @@ api:
 gen: transport sqlc
 
 oapi:
-	@rm -fr ./backend/internal/interfaces/http/**/*.gen.go
-	DOCKER_BUILDKIT=1 docker build -f Dockerfile.generate --target oapi --output ./backend/internal/interfaces/http .
+	@rm -fr ./backend/internal/infra/http/**/*.gen.go
+	DOCKER_BUILDKIT=1 docker build -f Dockerfile.generate --target oapi --output ./backend/internal/infra/http .
 
 ## Generate golang source go from sqlc spec
 sqlc:

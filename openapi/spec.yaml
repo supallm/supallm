@@ -4,11 +4,113 @@ info:
   title: SupALLM API
   version: "0.0.1"
 
+# Apply security globally
+security:
+  - BearerAuth: []
+
 paths:
-  /providers:
+  /projects:
     get:
-      summary: List all providers
+      summary: List all projects
+      operationId: listProjects
+      responses:
+        "200":
+          description: List of projects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Project"
+    post:
+      summary: "Create a project"
+      operationId: createProject
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProjectRequest"
+      responses:
+        "201":
+          description: "Project created"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+
+  /projects/{projectId}:
+    get:
+      summary: "Get a project by ID"
+      operationId: getProject
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: "Project details"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+        "404":
+          description: "Project not found"
+    put:
+      summary: "Update a project"
+      operationId: updateProject
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProjectRequest"
+      responses:
+        "200":
+          description: "Project updated"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+        "404":
+          description: "Project not found"
+    delete:
+      summary: "Delete a project"
+      operationId: deleteProject
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: "Project deleted"
+        "404":
+          description: "Project not found"
+
+  /projects/{projectId}/providers:
+    get:
+      summary: List all providers for a project
       operationId: listProviders
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
         "200":
           description: List of providers
@@ -18,9 +120,18 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Provider"
+        "404":
+          description: Project not found
     post:
-      summary: "Create a provider"
+      summary: "Create a provider for a project"
       operationId: createProvider
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
         required: true
         content:
@@ -34,12 +145,23 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Provider"
-  /providers/{id}:
+        "400":
+          description: Bad request
+        "404":
+          description: Project not found
+
+  /projects/{projectId}/providers/{providerId}:
     get:
       summary: "Get a provider by ID"
       operationId: getProvider
       parameters:
-        - name: id
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: providerId
           in: path
           required: true
           schema:
@@ -52,11 +174,52 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Provider"
+        "404":
+          description: Provider or project not found
+    put:
+      summary: "Update a provider"
+      operationId: updateProvider
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: providerId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProviderRequest"
+      responses:
+        "200":
+          description: "Provider updated"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Provider"
+        "400":
+          description: Bad request
+        "404":
+          description: Provider or project not found
     delete:
       summary: "Delete a provider"
       operationId: deleteProvider
       parameters:
-        - name: id
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: providerId
           in: path
           required: true
           schema:
@@ -65,10 +228,148 @@ paths:
       responses:
         "204":
           description: "Provider deleted"
-  /auth:
+        "404":
+          description: Provider or project not found
+
+  /projects/{projectId}/models:
     get:
-      summary: "Get authentication"
+      summary: List all models for a project
+      operationId: listModels
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: List of models
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Model"
+        "404":
+          description: Project not found
+    post:
+      summary: "Create a model for a project"
+      operationId: createModel
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateModelRequest"
+      responses:
+        "201":
+          description: "Model created"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Model"
+        "400":
+          description: Bad request
+        "404":
+          description: Project not found
+
+  /projects/{projectId}/models/{slug}:
+    get:
+      summary: "Get a model by slug"
+      operationId: getModel
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Model details"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Model"
+        "404":
+          description: Model or project not found
+    put:
+      summary: "Update a model"
+      operationId: updateModel
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateModelRequest"
+      responses:
+        "200":
+          description: "Model updated"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Model"
+        "400":
+          description: Bad request
+        "404":
+          description: Model or project not found
+    delete:
+      summary: "Delete a model"
+      operationId: deleteModel
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: "Model deleted"
+        "404":
+          description: Model or project not found
+
+  /projects/{projectId}/auth:
+    get:
+      summary: "Get authentication configuration for a project"
       operationId: getAuth
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
         "200":
           description: "Authentication configuration"
@@ -76,9 +377,18 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Auth"
+        "404":
+          description: Project not found
     put:
-      summary: "Update authentication"
+      summary: "Update authentication for a project"
       operationId: updateAuth
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
         required: true
         content:
@@ -92,39 +402,22 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Auth"
-  /system-prompts:
-    get:
-      summary: "List system prompts"
-      operationId: listSystemPrompts
-      responses:
-        "200":
-          description: List of system prompts
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/SystemPrompt"
-    post:
-      summary: "Create a system prompt"
-      operationId: createSystemPrompt
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateSystemPromptRequest"
-      responses:
-        "201":
-          description: "System prompt created"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SystemPrompt"
-  /generateText:
+        "400":
+          description: Bad request
+        "404":
+          description: Project not found
+
+  /projects/{projectId}/generateText:
     post:
       summary: "Generate text (HTTP blocking)"
       operationId: generateText
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
         required: true
         content:
@@ -141,10 +434,22 @@ paths:
                 properties:
                   text:
                     type: string
-  /streamText:
+        "400":
+          description: Bad request
+        "404":
+          description: Project not found
+
+  /projects/{projectId}/streamText:
     post:
       summary: "Generate text in streaming (SSE)"
       operationId: streamText
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
         required: true
         content:
@@ -153,14 +458,71 @@ paths:
               $ref: "#/components/schemas/TextGenerationRequest"
       responses:
         "200":
-          description: "Flux de texte g\xE9n\xE9r\xE9"
+          description: "SSE stream of generated text"
           content:
             text/event-stream:
               schema:
                 type: string
                 example: 'data: {''text'': ''Hello world''}\n\n'
+        "400":
+          description: Bad request
+        "404":
+          description: Project not found
+
 components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
+    Project:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        userId:
+          type: string
+          format: uuid
+      required:
+        - id
+        - name
+        - userId
+
+    CreateProjectRequest:
+      type: object
+      properties:
+        name:
+          type: string
+      required:
+        - name
+
+    UpdateProjectRequest:
+      type: object
+      properties:
+        name:
+          type: string
+      required:
+        - name
+
+    ProviderType:
+      type: string
+      enum:
+        - openai
+        - anthropic
+
+    LLMModel:
+      type: string
+      enum:
+        - gpt-4o
+        - gpt-4o-mini
+        - claude-3-7-sonnet
+        - claude-3-5-sonnet
+        - claude-3-5-haiku
+
     Provider:
       type: object
       properties:
@@ -170,10 +532,7 @@ components:
         name:
           type: string
         provider:
-          type: string
-          enum:
-            - openai
-            - anthropic
+          $ref: "#/components/schemas/ProviderType"
         apiKey:
           type: string
       required:
@@ -181,22 +540,83 @@ components:
         - name
         - provider
         - apiKey
+
     CreateProviderRequest:
       type: object
       properties:
         name:
           type: string
         provider:
-          type: string
-          enum:
-            - openai
-            - anthropic
+          $ref: "#/components/schemas/ProviderType"
         apiKey:
           type: string
       required:
         - name
         - provider
         - apiKey
+
+    UpdateProviderRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        apiKey:
+          type: string
+      required:
+        - name
+        - apiKey
+
+    Model:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        slug:
+          type: string
+        provider:
+          $ref: "#/components/schemas/Provider"
+        model:
+          $ref: "#/components/schemas/LLMModel"
+        systemPrompt:
+          type: string
+      required:
+        - id
+        - slug
+        - provider
+        - model
+
+    CreateModelRequest:
+      type: object
+      properties:
+        slug:
+          type: string
+        providerId:
+          type: string
+          format: uuid
+        model:
+          $ref: "#/components/schemas/LLMModel"
+        systemPrompt:
+          type: string
+      required:
+        - slug
+        - providerId
+        - model
+
+    UpdateModelRequest:
+      type: object
+      properties:
+        providerId:
+          type: string
+          format: uuid
+        model:
+          $ref: "#/components/schemas/LLMModel"
+        systemPrompt:
+          type: string
+      required:
+        - providerId
+        - model
+
     Auth:
       type: object
       properties:
@@ -209,6 +629,7 @@ components:
       required:
         - provider
         - config
+
     UpdateAuthRequest:
       type: object
       properties:
@@ -221,6 +642,7 @@ components:
       required:
         - provider
         - config
+
     SupabaseAuthConfig:
       type: object
       properties:
@@ -231,40 +653,24 @@ components:
       required:
         - url
         - key
-    SystemPrompt:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-        prompt:
-          type: string
-      required:
-        - id
-        - name
-        - prompt
-    CreateSystemPromptRequest:
-      type: object
-      properties:
-        name:
-          type: string
-        prompt:
-          type: string
-      required:
-        - name
-        - prompt
+
     TextGenerationRequest:
       type: object
       properties:
-        provider:
+        modelSlug:
           type: string
-          enum:
-            - openai
-            - anthropic
         prompt:
           type: string
+        maxTokens:
+          type: integer
+          minimum: 1
+          maximum: 4096
+          default: 1024
+        temperature:
+          type: number
+          minimum: 0
+          maximum: 1
+          default: 0.7
       required:
-        - provider
+        - modelSlug
         - prompt

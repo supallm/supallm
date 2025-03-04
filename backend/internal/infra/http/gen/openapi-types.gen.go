@@ -7,27 +7,28 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
+const (
+	BearerAuthScopes = "BearerAuth.Scopes"
+)
+
 // Defines values for AuthProvider.
 const (
 	AuthProviderSupabase AuthProvider = "supabase"
 )
 
-// Defines values for CreateProviderRequestProvider.
+// Defines values for LLMModel.
 const (
-	CreateProviderRequestProviderAnthropic CreateProviderRequestProvider = "anthropic"
-	CreateProviderRequestProviderOpenai    CreateProviderRequestProvider = "openai"
+	Claude35Haiku  LLMModel = "claude-3-5-haiku"
+	Claude35Sonnet LLMModel = "claude-3-5-sonnet"
+	Claude37Sonnet LLMModel = "claude-3-7-sonnet"
+	Gpt4o          LLMModel = "gpt-4o"
+	Gpt4oMini      LLMModel = "gpt-4o-mini"
 )
 
-// Defines values for ProviderProvider.
+// Defines values for ProviderType.
 const (
-	ProviderProviderAnthropic ProviderProvider = "anthropic"
-	ProviderProviderOpenai    ProviderProvider = "openai"
-)
-
-// Defines values for TextGenerationRequestProvider.
-const (
-	Anthropic TextGenerationRequestProvider = "anthropic"
-	Openai    TextGenerationRequestProvider = "openai"
+	Anthropic ProviderType = "anthropic"
+	Openai    ProviderType = "openai"
 )
 
 // Defines values for UpdateAuthRequestProvider.
@@ -44,20 +45,43 @@ type Auth struct {
 // AuthProvider defines model for Auth.Provider.
 type AuthProvider string
 
-// CreateProviderRequest defines model for CreateProviderRequest.
-type CreateProviderRequest struct {
-	ApiKey   string                        `json:"apiKey"`
-	Name     string                        `json:"name"`
-	Provider CreateProviderRequestProvider `json:"provider"`
+// CreateModelRequest defines model for CreateModelRequest.
+type CreateModelRequest struct {
+	Model        LLMModel           `json:"model"`
+	ProviderId   openapi_types.UUID `json:"providerId"`
+	Slug         string             `json:"slug"`
+	SystemPrompt *string            `json:"systemPrompt,omitempty"`
 }
 
-// CreateProviderRequestProvider defines model for CreateProviderRequest.Provider.
-type CreateProviderRequestProvider string
+// CreateProjectRequest defines model for CreateProjectRequest.
+type CreateProjectRequest struct {
+	Name string `json:"name"`
+}
 
-// CreateSystemPromptRequest defines model for CreateSystemPromptRequest.
-type CreateSystemPromptRequest struct {
-	Name   string `json:"name"`
-	Prompt string `json:"prompt"`
+// CreateProviderRequest defines model for CreateProviderRequest.
+type CreateProviderRequest struct {
+	ApiKey   string       `json:"apiKey"`
+	Name     string       `json:"name"`
+	Provider ProviderType `json:"provider"`
+}
+
+// LLMModel defines model for LLMModel.
+type LLMModel string
+
+// Model defines model for Model.
+type Model struct {
+	Id           openapi_types.UUID `json:"id"`
+	Model        LLMModel           `json:"model"`
+	Provider     Provider           `json:"provider"`
+	Slug         string             `json:"slug"`
+	SystemPrompt *string            `json:"systemPrompt,omitempty"`
+}
+
+// Project defines model for Project.
+type Project struct {
+	Id     openapi_types.UUID `json:"id"`
+	Name   string             `json:"name"`
+	UserId openapi_types.UUID `json:"userId"`
 }
 
 // Provider defines model for Provider.
@@ -65,11 +89,11 @@ type Provider struct {
 	ApiKey   string             `json:"apiKey"`
 	Id       openapi_types.UUID `json:"id"`
 	Name     string             `json:"name"`
-	Provider ProviderProvider   `json:"provider"`
+	Provider ProviderType       `json:"provider"`
 }
 
-// ProviderProvider defines model for Provider.Provider.
-type ProviderProvider string
+// ProviderType defines model for ProviderType.
+type ProviderType string
 
 // SupabaseAuthConfig defines model for SupabaseAuthConfig.
 type SupabaseAuthConfig struct {
@@ -77,21 +101,13 @@ type SupabaseAuthConfig struct {
 	Url string `json:"url"`
 }
 
-// SystemPrompt defines model for SystemPrompt.
-type SystemPrompt struct {
-	Id     openapi_types.UUID `json:"id"`
-	Name   string             `json:"name"`
-	Prompt string             `json:"prompt"`
-}
-
 // TextGenerationRequest defines model for TextGenerationRequest.
 type TextGenerationRequest struct {
-	Prompt   string                        `json:"prompt"`
-	Provider TextGenerationRequestProvider `json:"provider"`
+	MaxTokens   *int     `json:"maxTokens,omitempty"`
+	ModelSlug   string   `json:"modelSlug"`
+	Prompt      string   `json:"prompt"`
+	Temperature *float32 `json:"temperature,omitempty"`
 }
-
-// TextGenerationRequestProvider defines model for TextGenerationRequest.Provider.
-type TextGenerationRequestProvider string
 
 // UpdateAuthRequest defines model for UpdateAuthRequest.
 type UpdateAuthRequest struct {
@@ -102,17 +118,47 @@ type UpdateAuthRequest struct {
 // UpdateAuthRequestProvider defines model for UpdateAuthRequest.Provider.
 type UpdateAuthRequestProvider string
 
+// UpdateModelRequest defines model for UpdateModelRequest.
+type UpdateModelRequest struct {
+	Model        LLMModel           `json:"model"`
+	ProviderId   openapi_types.UUID `json:"providerId"`
+	SystemPrompt *string            `json:"systemPrompt,omitempty"`
+}
+
+// UpdateProjectRequest defines model for UpdateProjectRequest.
+type UpdateProjectRequest struct {
+	Name string `json:"name"`
+}
+
+// UpdateProviderRequest defines model for UpdateProviderRequest.
+type UpdateProviderRequest struct {
+	ApiKey string `json:"apiKey"`
+	Name   string `json:"name"`
+}
+
+// CreateProjectJSONRequestBody defines body for CreateProject for application/json ContentType.
+type CreateProjectJSONRequestBody = CreateProjectRequest
+
+// UpdateProjectJSONRequestBody defines body for UpdateProject for application/json ContentType.
+type UpdateProjectJSONRequestBody = UpdateProjectRequest
+
 // UpdateAuthJSONRequestBody defines body for UpdateAuth for application/json ContentType.
 type UpdateAuthJSONRequestBody = UpdateAuthRequest
 
 // GenerateTextJSONRequestBody defines body for GenerateText for application/json ContentType.
 type GenerateTextJSONRequestBody = TextGenerationRequest
 
+// CreateModelJSONRequestBody defines body for CreateModel for application/json ContentType.
+type CreateModelJSONRequestBody = CreateModelRequest
+
+// UpdateModelJSONRequestBody defines body for UpdateModel for application/json ContentType.
+type UpdateModelJSONRequestBody = UpdateModelRequest
+
 // CreateProviderJSONRequestBody defines body for CreateProvider for application/json ContentType.
 type CreateProviderJSONRequestBody = CreateProviderRequest
 
+// UpdateProviderJSONRequestBody defines body for UpdateProvider for application/json ContentType.
+type UpdateProviderJSONRequestBody = UpdateProviderRequest
+
 // StreamTextJSONRequestBody defines body for StreamText for application/json ContentType.
 type StreamTextJSONRequestBody = TextGenerationRequest
-
-// CreateSystemPromptJSONRequestBody defines body for CreateSystemPrompt for application/json ContentType.
-type CreateSystemPromptJSONRequestBody = CreateSystemPromptRequest

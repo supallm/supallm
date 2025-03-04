@@ -4,6 +4,7 @@ go 1.24
 
 require (
 	github.com/anthropics/anthropic-sdk-go v0.2.0-alpha.13
+	github.com/clerk/clerk-sdk-go/v2 v2.2.0
 	github.com/gofiber/fiber/v2 v2.52.6
 	github.com/google/uuid v1.6.0
 	github.com/gosimple/slug v1.15.0
@@ -20,7 +21,9 @@ require (
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
 	github.com/cockroachdb/apd v1.1.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/go-jose/go-jose/v3 v3.0.4 // indirect
 	github.com/gofrs/uuid v4.0.0+incompatible // indirect
+	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/gosimple/unidecode v1.0.1 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
 	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
@@ -30,7 +33,7 @@ require (
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
-	github.com/kr/text v0.1.0 // indirect
+	github.com/kr/pretty v0.3.1 // indirect
 	github.com/lib/pq v1.10.2 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect

@@ -13,36 +13,63 @@ import (
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
-	// Get authentication
-	// (GET /auth)
-	GetAuth(c *fiber.Ctx) error
-	// Update authentication
-	// (PUT /auth)
-	UpdateAuth(c *fiber.Ctx) error
+	// List all projects
+	// (GET /projects)
+	ListProjects(c *fiber.Ctx) error
+	// Create a project
+	// (POST /projects)
+	CreateProject(c *fiber.Ctx) error
+	// Delete a project
+	// (DELETE /projects/{projectId})
+	DeleteProject(c *fiber.Ctx, projectId openapi_types.UUID) error
+	// Get a project by ID
+	// (GET /projects/{projectId})
+	GetProject(c *fiber.Ctx, projectId openapi_types.UUID) error
+	// Update a project
+	// (PUT /projects/{projectId})
+	UpdateProject(c *fiber.Ctx, projectId openapi_types.UUID) error
+	// Get authentication configuration for a project
+	// (GET /projects/{projectId}/auth)
+	GetAuth(c *fiber.Ctx, projectId openapi_types.UUID) error
+	// Update authentication for a project
+	// (PUT /projects/{projectId}/auth)
+	UpdateAuth(c *fiber.Ctx, projectId openapi_types.UUID) error
 	// Generate text (HTTP blocking)
-	// (POST /generateText)
-	GenerateText(c *fiber.Ctx) error
-	// List all providers
-	// (GET /providers)
-	ListProviders(c *fiber.Ctx) error
-	// Create a provider
-	// (POST /providers)
-	CreateProvider(c *fiber.Ctx) error
+	// (POST /projects/{projectId}/generateText)
+	GenerateText(c *fiber.Ctx, projectId openapi_types.UUID) error
+	// List all models for a project
+	// (GET /projects/{projectId}/models)
+	ListModels(c *fiber.Ctx, projectId openapi_types.UUID) error
+	// Create a model for a project
+	// (POST /projects/{projectId}/models)
+	CreateModel(c *fiber.Ctx, projectId openapi_types.UUID) error
+	// Delete a model
+	// (DELETE /projects/{projectId}/models/{slug})
+	DeleteModel(c *fiber.Ctx, projectId openapi_types.UUID, slug string) error
+	// Get a model by slug
+	// (GET /projects/{projectId}/models/{slug})
+	GetModel(c *fiber.Ctx, projectId openapi_types.UUID, slug string) error
+	// Update a model
+	// (PUT /projects/{projectId}/models/{slug})
+	UpdateModel(c *fiber.Ctx, projectId openapi_types.UUID, slug string) error
+	// List all providers for a project
+	// (GET /projects/{projectId}/providers)
+	ListProviders(c *fiber.Ctx, projectId openapi_types.UUID) error
+	// Create a provider for a project
+	// (POST /projects/{projectId}/providers)
+	CreateProvider(c *fiber.Ctx, projectId openapi_types.UUID) error
 	// Delete a provider
-	// (DELETE /providers/{id})
-	DeleteProvider(c *fiber.Ctx, id openapi_types.UUID) error
+	// (DELETE /projects/{projectId}/providers/{providerId})
+	DeleteProvider(c *fiber.Ctx, projectId openapi_types.UUID, providerId openapi_types.UUID) error
 	// Get a provider by ID
-	// (GET /providers/{id})
-	GetProvider(c *fiber.Ctx, id openapi_types.UUID) error
+	// (GET /projects/{projectId}/providers/{providerId})
+	GetProvider(c *fiber.Ctx, projectId openapi_types.UUID, providerId openapi_types.UUID) error
+	// Update a provider
+	// (PUT /projects/{projectId}/providers/{providerId})
+	UpdateProvider(c *fiber.Ctx, projectId openapi_types.UUID, providerId openapi_types.UUID) error
 	// Generate text in streaming (SSE)
-	// (POST /streamText)
-	StreamText(c *fiber.Ctx) error
-	// List system prompts
-	// (GET /system-prompts)
-	ListSystemPrompts(c *fiber.Ctx) error
-	// Create a system prompt
-	// (POST /system-prompts)
-	CreateSystemPrompt(c *fiber.Ctx) error
+	// (POST /projects/{projectId}/streamText)
+	StreamText(c *fiber.Ctx, projectId openapi_types.UUID) error
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -52,34 +79,278 @@ type ServerInterfaceWrapper struct {
 
 type MiddlewareFunc fiber.Handler
 
+// ListProjects operation middleware
+func (siw *ServerInterfaceWrapper) ListProjects(c *fiber.Ctx) error {
+
+	c.Context().SetUserValue(BearerAuthScopes, []string{})
+
+	return siw.Handler.ListProjects(c)
+}
+
+// CreateProject operation middleware
+func (siw *ServerInterfaceWrapper) CreateProject(c *fiber.Ctx) error {
+
+	c.Context().SetUserValue(BearerAuthScopes, []string{})
+
+	return siw.Handler.CreateProject(c)
+}
+
+// DeleteProject operation middleware
+func (siw *ServerInterfaceWrapper) DeleteProject(c *fiber.Ctx) error {
+
+	var err error
+
+	// ------------- Path parameter "projectId" -------------
+	var projectId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "projectId", c.Params("projectId"), &projectId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter projectId: %w", err).Error())
+	}
+
+	c.Context().SetUserValue(BearerAuthScopes, []string{})
+
+	return siw.Handler.DeleteProject(c, projectId)
+}
+
+// GetProject operation middleware
+func (siw *ServerInterfaceWrapper) GetProject(c *fiber.Ctx) error {
+
+	var err error
+
+	// ------------- Path parameter "projectId" -------------
+	var projectId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "projectId", c.Params("projectId"), &projectId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter projectId: %w", err).Error())
+	}
+
+	c.Context().SetUserValue(BearerAuthScopes, []string{})
+
+	return siw.Handler.GetProject(c, projectId)
+}
+
+// UpdateProject operation middleware
+func (siw *ServerInterfaceWrapper) UpdateProject(c *fiber.Ctx) error {
+
+	var err error
+
+	// ------------- Path parameter "projectId" -------------
+	var projectId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "projectId", c.Params("projectId"), &projectId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter projectId: %w", err).Error())
+	}
+
+	c.Context().SetUserValue(BearerAuthScopes, []string{})
+
+	return siw.Handler.UpdateProject(c, projectId)
+}
+
 // GetAuth operation middleware
 func (siw *ServerInterfaceWrapper) GetAuth(c *fiber.Ctx) error {
 
-	return siw.Handler.GetAuth(c)
+	var err error
+
+	// ------------- Path parameter "projectId" -------------
+	var projectId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "projectId", c.Params("projectId"), &projectId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter projectId: %w", err).Error())
+	}
+
+	c.Context().SetUserValue(BearerAuthScopes, []string{})
+
+	return siw.Handler.GetAuth(c, projectId)
 }
 
 // UpdateAuth operation middleware
 func (siw *ServerInterfaceWrapper) UpdateAuth(c *fiber.Ctx) error {
 
-	return siw.Handler.UpdateAuth(c)
+	var err error
+
+	// ------------- Path parameter "projectId" -------------
+	var projectId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "projectId", c.Params("projectId"), &projectId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter projectId: %w", err).Error())
+	}
+
+	c.Context().SetUserValue(BearerAuthScopes, []string{})
+
+	return siw.Handler.UpdateAuth(c, projectId)
 }
 
 // GenerateText operation middleware
 func (siw *ServerInterfaceWrapper) GenerateText(c *fiber.Ctx) error {
 
-	return siw.Handler.GenerateText(c)
+	var err error
+
+	// ------------- Path parameter "projectId" -------------
+	var projectId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "projectId", c.Params("projectId"), &projectId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter projectId: %w", err).Error())
+	}
+
+	c.Context().SetUserValue(BearerAuthScopes, []string{})
+
+	return siw.Handler.GenerateText(c, projectId)
+}
+
+// ListModels operation middleware
+func (siw *ServerInterfaceWrapper) ListModels(c *fiber.Ctx) error {
+
+	var err error
+
+	// ------------- Path parameter "projectId" -------------
+	var projectId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "projectId", c.Params("projectId"), &projectId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter projectId: %w", err).Error())
+	}
+
+	c.Context().SetUserValue(BearerAuthScopes, []string{})
+
+	return siw.Handler.ListModels(c, projectId)
+}
+
+// CreateModel operation middleware
+func (siw *ServerInterfaceWrapper) CreateModel(c *fiber.Ctx) error {
+
+	var err error
+
+	// ------------- Path parameter "projectId" -------------
+	var projectId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "projectId", c.Params("projectId"), &projectId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter projectId: %w", err).Error())
+	}
+
+	c.Context().SetUserValue(BearerAuthScopes, []string{})
+
+	return siw.Handler.CreateModel(c, projectId)
+}
+
+// DeleteModel operation middleware
+func (siw *ServerInterfaceWrapper) DeleteModel(c *fiber.Ctx) error {
+
+	var err error
+
+	// ------------- Path parameter "projectId" -------------
+	var projectId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "projectId", c.Params("projectId"), &projectId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter projectId: %w", err).Error())
+	}
+
+	// ------------- Path parameter "slug" -------------
+	var slug string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "slug", c.Params("slug"), &slug, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter slug: %w", err).Error())
+	}
+
+	c.Context().SetUserValue(BearerAuthScopes, []string{})
+
+	return siw.Handler.DeleteModel(c, projectId, slug)
+}
+
+// GetModel operation middleware
+func (siw *ServerInterfaceWrapper) GetModel(c *fiber.Ctx) error {
+
+	var err error
+
+	// ------------- Path parameter "projectId" -------------
+	var projectId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "projectId", c.Params("projectId"), &projectId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter projectId: %w", err).Error())
+	}
+
+	// ------------- Path parameter "slug" -------------
+	var slug string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "slug", c.Params("slug"), &slug, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter slug: %w", err).Error())
+	}
+
+	c.Context().SetUserValue(BearerAuthScopes, []string{})
+
+	return siw.Handler.GetModel(c, projectId, slug)
+}
+
+// UpdateModel operation middleware
+func (siw *ServerInterfaceWrapper) UpdateModel(c *fiber.Ctx) error {
+
+	var err error
+
+	// ------------- Path parameter "projectId" -------------
+	var projectId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "projectId", c.Params("projectId"), &projectId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter projectId: %w", err).Error())
+	}
+
+	// ------------- Path parameter "slug" -------------
+	var slug string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "slug", c.Params("slug"), &slug, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter slug: %w", err).Error())
+	}
+
+	c.Context().SetUserValue(BearerAuthScopes, []string{})
+
+	return siw.Handler.UpdateModel(c, projectId, slug)
 }
 
 // ListProviders operation middleware
 func (siw *ServerInterfaceWrapper) ListProviders(c *fiber.Ctx) error {
 
-	return siw.Handler.ListProviders(c)
+	var err error
+
+	// ------------- Path parameter "projectId" -------------
+	var projectId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "projectId", c.Params("projectId"), &projectId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter projectId: %w", err).Error())
+	}
+
+	c.Context().SetUserValue(BearerAuthScopes, []string{})
+
+	return siw.Handler.ListProviders(c, projectId)
 }
 
 // CreateProvider operation middleware
 func (siw *ServerInterfaceWrapper) CreateProvider(c *fiber.Ctx) error {
 
-	return siw.Handler.CreateProvider(c)
+	var err error
+
+	// ------------- Path parameter "projectId" -------------
+	var projectId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "projectId", c.Params("projectId"), &projectId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter projectId: %w", err).Error())
+	}
+
+	c.Context().SetUserValue(BearerAuthScopes, []string{})
+
+	return siw.Handler.CreateProvider(c, projectId)
 }
 
 // DeleteProvider operation middleware
@@ -87,15 +358,25 @@ func (siw *ServerInterfaceWrapper) DeleteProvider(c *fiber.Ctx) error {
 
 	var err error
 
-	// ------------- Path parameter "id" -------------
-	var id openapi_types.UUID
+	// ------------- Path parameter "projectId" -------------
+	var projectId openapi_types.UUID
 
-	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Params("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	err = runtime.BindStyledParameterWithOptions("simple", "projectId", c.Params("projectId"), &projectId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter id: %w", err).Error())
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter projectId: %w", err).Error())
 	}
 
-	return siw.Handler.DeleteProvider(c, id)
+	// ------------- Path parameter "providerId" -------------
+	var providerId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "providerId", c.Params("providerId"), &providerId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter providerId: %w", err).Error())
+	}
+
+	c.Context().SetUserValue(BearerAuthScopes, []string{})
+
+	return siw.Handler.DeleteProvider(c, projectId, providerId)
 }
 
 // GetProvider operation middleware
@@ -103,33 +384,69 @@ func (siw *ServerInterfaceWrapper) GetProvider(c *fiber.Ctx) error {
 
 	var err error
 
-	// ------------- Path parameter "id" -------------
-	var id openapi_types.UUID
+	// ------------- Path parameter "projectId" -------------
+	var projectId openapi_types.UUID
 
-	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Params("id"), &id, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	err = runtime.BindStyledParameterWithOptions("simple", "projectId", c.Params("projectId"), &projectId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter id: %w", err).Error())
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter projectId: %w", err).Error())
 	}
 
-	return siw.Handler.GetProvider(c, id)
+	// ------------- Path parameter "providerId" -------------
+	var providerId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "providerId", c.Params("providerId"), &providerId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter providerId: %w", err).Error())
+	}
+
+	c.Context().SetUserValue(BearerAuthScopes, []string{})
+
+	return siw.Handler.GetProvider(c, projectId, providerId)
+}
+
+// UpdateProvider operation middleware
+func (siw *ServerInterfaceWrapper) UpdateProvider(c *fiber.Ctx) error {
+
+	var err error
+
+	// ------------- Path parameter "projectId" -------------
+	var projectId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "projectId", c.Params("projectId"), &projectId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter projectId: %w", err).Error())
+	}
+
+	// ------------- Path parameter "providerId" -------------
+	var providerId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "providerId", c.Params("providerId"), &providerId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter providerId: %w", err).Error())
+	}
+
+	c.Context().SetUserValue(BearerAuthScopes, []string{})
+
+	return siw.Handler.UpdateProvider(c, projectId, providerId)
 }
 
 // StreamText operation middleware
 func (siw *ServerInterfaceWrapper) StreamText(c *fiber.Ctx) error {
 
-	return siw.Handler.StreamText(c)
-}
+	var err error
 
-// ListSystemPrompts operation middleware
-func (siw *ServerInterfaceWrapper) ListSystemPrompts(c *fiber.Ctx) error {
+	// ------------- Path parameter "projectId" -------------
+	var projectId openapi_types.UUID
 
-	return siw.Handler.ListSystemPrompts(c)
-}
+	err = runtime.BindStyledParameterWithOptions("simple", "projectId", c.Params("projectId"), &projectId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter projectId: %w", err).Error())
+	}
 
-// CreateSystemPrompt operation middleware
-func (siw *ServerInterfaceWrapper) CreateSystemPrompt(c *fiber.Ctx) error {
+	c.Context().SetUserValue(BearerAuthScopes, []string{})
 
-	return siw.Handler.CreateSystemPrompt(c)
+	return siw.Handler.StreamText(c, projectId)
 }
 
 // FiberServerOptions provides options for the Fiber server.
@@ -153,24 +470,42 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 		router.Use(fiber.Handler(m))
 	}
 
-	router.Get(options.BaseURL+"/auth", wrapper.GetAuth)
+	router.Get(options.BaseURL+"/projects", wrapper.ListProjects)
 
-	router.Put(options.BaseURL+"/auth", wrapper.UpdateAuth)
+	router.Post(options.BaseURL+"/projects", wrapper.CreateProject)
 
-	router.Post(options.BaseURL+"/generateText", wrapper.GenerateText)
+	router.Delete(options.BaseURL+"/projects/:projectId", wrapper.DeleteProject)
 
-	router.Get(options.BaseURL+"/providers", wrapper.ListProviders)
+	router.Get(options.BaseURL+"/projects/:projectId", wrapper.GetProject)
 
-	router.Post(options.BaseURL+"/providers", wrapper.CreateProvider)
+	router.Put(options.BaseURL+"/projects/:projectId", wrapper.UpdateProject)
 
-	router.Delete(options.BaseURL+"/providers/:id", wrapper.DeleteProvider)
+	router.Get(options.BaseURL+"/projects/:projectId/auth", wrapper.GetAuth)
 
-	router.Get(options.BaseURL+"/providers/:id", wrapper.GetProvider)
+	router.Put(options.BaseURL+"/projects/:projectId/auth", wrapper.UpdateAuth)
 
-	router.Post(options.BaseURL+"/streamText", wrapper.StreamText)
+	router.Post(options.BaseURL+"/projects/:projectId/generateText", wrapper.GenerateText)
 
-	router.Get(options.BaseURL+"/system-prompts", wrapper.ListSystemPrompts)
+	router.Get(options.BaseURL+"/projects/:projectId/models", wrapper.ListModels)
 
-	router.Post(options.BaseURL+"/system-prompts", wrapper.CreateSystemPrompt)
+	router.Post(options.BaseURL+"/projects/:projectId/models", wrapper.CreateModel)
+
+	router.Delete(options.BaseURL+"/projects/:projectId/models/:slug", wrapper.DeleteModel)
+
+	router.Get(options.BaseURL+"/projects/:projectId/models/:slug", wrapper.GetModel)
+
+	router.Put(options.BaseURL+"/projects/:projectId/models/:slug", wrapper.UpdateModel)
+
+	router.Get(options.BaseURL+"/projects/:projectId/providers", wrapper.ListProviders)
+
+	router.Post(options.BaseURL+"/projects/:projectId/providers", wrapper.CreateProvider)
+
+	router.Delete(options.BaseURL+"/projects/:projectId/providers/:providerId", wrapper.DeleteProvider)
+
+	router.Get(options.BaseURL+"/projects/:projectId/providers/:providerId", wrapper.GetProvider)
+
+	router.Put(options.BaseURL+"/projects/:projectId/providers/:providerId", wrapper.UpdateProvider)
+
+	router.Post(options.BaseURL+"/projects/:projectId/streamText", wrapper.StreamText)
 
 }

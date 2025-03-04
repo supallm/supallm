@@ -20,6 +20,7 @@ type Server struct {
 
 func New(conf config.Config) *Server {
 	app := fiber.New(fiber.Config{
+		DisableStartupMessage: true,
 		ErrorHandler: func(ctx *fiber.Ctx, err error) error {
 			pb := errs.Problem(err)
 

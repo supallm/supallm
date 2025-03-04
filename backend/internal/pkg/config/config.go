@@ -16,6 +16,10 @@ type (
 		Port string
 	}
 
+	Clerk struct {
+		SecretKey string
+	}
+
 	Postgres struct {
 		URL string
 	}
@@ -23,6 +27,7 @@ type (
 	Config struct {
 		Server   Server
 		Postgres Postgres
+		Clerk    Clerk
 	}
 )
 
@@ -41,6 +46,9 @@ func Load(ctx context.Context) Config {
 		},
 		Postgres: Postgres{
 			URL: postgresURL,
+		},
+		Clerk: Clerk{
+			SecretKey: mustGet("CLERK_SECRET_KEY"),
 		},
 	}
 }
