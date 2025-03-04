@@ -10,6 +10,7 @@ import { Spacer } from "@/components/spacer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAppConfigStore } from "@/core/store/app-config";
+import { useLLMProviderStore } from "@/core/store/llm-providers";
 import { useListLLMProviders } from "@/hooks/use-list-llm-providers";
 import { PlusIcon } from "lucide-react";
 import { useState } from "react";
@@ -36,14 +37,13 @@ export const PageSkeleton = () => {
 const ProjectPage = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { currentProject } = useAppConfigStore();
+  const { llmProviders } = useLLMProviderStore();
 
   if (!currentProject) {
     throw new Error("Unexpected error: no project id");
   }
 
-  const { result: providers, isLoading } = useListLLMProviders(
-    currentProject.id,
-  );
+  const { isLoading } = useListLLMProviders(currentProject.id);
 
   const addLLMProviderButton = (
     <Button
@@ -64,7 +64,7 @@ const ProjectPage = () => {
       <Spacer />
       <PageContainer>
         {isLoading && <PageSkeleton />}
-        {!isLoading && !providers?.length && (
+        {!isLoading && !llmProviders?.length && (
           <EmptyState
             title="No LLM providers"
             description="You don't have any LLM providers yet. Add one to start using them."
@@ -73,16 +73,18 @@ const ProjectPage = () => {
           </EmptyState>
         )}
 
-        {!isLoading && !!providers?.length && (
+        {!isLoading && !!llmProviders?.length && (
           <div>
-            {addLLMProviderButton}
+            <div className="flex justify-end">{addLLMProviderButton}</div>
+            <Spacer />
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {Object.entries(providers).map(([key, value]) => (
+              {Object.entries(llmProviders).map(([key, value]) => (
                 <LLMProviderCard
+                  onEdit={() => {}}
                   key={key}
                   name={value.name}
-                  description={value.description}
-                  logo={<ProviderLogo name={value.provider} />}
+                  providerType={value.provider}
                 />
               ))}
             </div>

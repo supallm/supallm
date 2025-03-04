@@ -1,14 +1,15 @@
 import { ProviderLogo } from "../logos/provider-logo";
-import { LLMProviderCard, LLMProviderCardProps } from "./llm-provider-card";
+import { LLMProviderChoiceCardProps } from "./llm-provider-choice-card";
 import { FC } from "react";
 import { LLMProviderName } from "@/core/entities/llm-provider";
+import { LLMProviderChoiceCard } from "./llm-provider-choice-card";
 
 export const ProviderCardList: FC<{
   onSelected: (provider: LLMProviderName) => void;
 }> = ({ onSelected }) => {
   const ProviderInfoMap: Record<
     LLMProviderName,
-    Omit<LLMProviderCardProps, "onSelected">
+    Omit<LLMProviderChoiceCardProps, "onSelected">
   > = {
     openai: {
       name: "OpenAI",
@@ -45,7 +46,7 @@ export const ProviderCardList: FC<{
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {Object.entries(ProviderInfoMap).map(([key, value]) => (
-        <LLMProviderCard
+        <LLMProviderChoiceCard
           key={key}
           name={value.name}
           description={value.description}

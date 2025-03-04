@@ -20,18 +20,37 @@ import {
 } from "@/components/ui/form";
 import { FC, useEffect, useState } from "react";
 import { ProviderCardList } from "./llm-providers/provider-card-list";
-import { LLMProviderName } from "@/core/entities/llm-provider";
+import {
+  LLMProviderName,
+  LLMProviderNames,
+} from "@/core/entities/llm-provider";
 import { ProviderLogo } from "./logos/provider-logo";
 import { Card, CardContent, CardHeader } from "./ui/card";
 import { cn } from "@/lib/utils";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { Input } from "./ui/input";
+import { createLLMProviderUsecase } from "@/core/usecases";
+import { useAppConfigStore } from "@/core/store/app-config";
+import { hookifyFunction } from "@/hooks/hookify-function";
 
 export const AddLLMProviderDialog: FC<{
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
 }> = ({ isOpen, onOpenChange }) => {
+  const { currentProject } = useAppConfigStore();
+  const {
+    execute: createLLMProvider,
+    isLoading: isCreatingLLMProvider,
+    error: createLLMProviderError,
+  } = hookifyFunction(
+    createLLMProviderUsecase.execute.bind(createLLMProviderUsecase),
+  );
+
+  if (!currentProject) {
+    throw new Error("Unexpected error: current project is not set");
+  }
+
   const [open, setOpen] = useState(isOpen);
   const [selectedProvider, setSelectedProvider] =
     useState<LLMProviderName | null>(null);
@@ -43,7 +62,7 @@ export const AddLLMProviderDialog: FC<{
   const formSchema = z.object({
     name: z.string().min(2).max(50),
     apiKey: z.string().min(2).max(50),
-    providerName: z.string().min(2).max(50),
+    providerType: z.enum(LLMProviderNames),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -51,12 +70,18 @@ export const AddLLMProviderDialog: FC<{
     defaultValues: {
       name: "My provider",
       apiKey: "",
-      providerName: "",
+      providerType: "openai",
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    const project = await createLLMProvider({
+      projectId: currentProject!.id,
+      name: values.name,
+      apiKey: values.apiKey,
+      providerType: values.providerType,
+    });
+    onOpenChange(false);
   }
 
   const reset = () => {
@@ -116,7 +141,7 @@ export const AddLLMProviderDialog: FC<{
                       >
                         <FormField
                           control={form.control}
-                          name="apiKey"
+                          name="name"
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Name</FormLabel>
@@ -138,10 +163,10 @@ export const AddLLMProviderDialog: FC<{
                           name="apiKey"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>API key</FormLabel>
+                              <FormLabel>API Key</FormLabel>
                               <FormControl>
                                 <Input
-                                  placeholder="Enter your API key"
+                                  placeholder="Enter your API Key"
                                   type="password"
                                   {...field}
                                 />
@@ -154,7 +179,9 @@ export const AddLLMProviderDialog: FC<{
                             </FormItem>
                           )}
                         />
-                        <Button type="submit">Submit</Button>
+                        <Button type="submit" isLoading={isCreatingLLMProvider}>
+                          Create provider
+                        </Button>
                       </form>
                     </Form>
                   </div>

@@ -14,3 +14,15 @@ export type LLMProvider = {
   name: string;
   description: string;
 };
+
+export const LLMProviderNameLabelMap: Record<LLMProviderName, string> = {
+  openai: "OpenAI",
+  anthropic: "Anthropic",
+  google: "Google",
+  azure: "Azure",
+  mistral: "Mistral",
+};
+
+export const LLMProviderLabel = (name: LLMProviderName) => {
+  return LLMProviderNameLabelMap[name];
+};
