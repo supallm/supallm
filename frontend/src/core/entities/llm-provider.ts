@@ -3,10 +3,7 @@ export const LLMProviderNames = [
   "anthropic",
   "google",
   "azure",
-  "claude",
-  "groq",
-  "gemini",
-  "perplexity",
+  "mistral",
 ] as const;
 
 export type LLMProviderName = (typeof LLMProviderNames)[number];
