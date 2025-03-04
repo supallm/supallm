@@ -3,6 +3,7 @@ package application
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/supallm/core/internal/adapters/llm"
@@ -16,6 +17,7 @@ import (
 type App struct {
 	Commands *Commands
 	Queries  *Queries
+	pool     *pgxpool.Pool
 }
 
 type Commands struct {
@@ -54,12 +56,14 @@ func New(
 	if err != nil {
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
+	slog.Info("connected to postgres")
 
 	projectRepo := project.NewRepository(ctx, pool)
 	sessionRepo := session.NewRepository(ctx, pool)
 	llmRegistry := llm.NewProviderRegistry()
 
 	app := &App{
+		pool: pool,
 		Commands: &Commands{
 			CreateProject:      command.NewCreateProjectHandler(projectRepo),
 			UpdateProjectName:  command.NewUpdateProjectNameHandler(projectRepo),
@@ -74,6 +78,7 @@ func New(
 			RemoveLLMProvider: command.NewRemoveLLMProviderHandler(projectRepo),
 
 			GenerateText: command.NewGenerateTextHandler(projectRepo, sessionRepo, llmRegistry),
+			StreamText:   command.NewStreamTextHandler(projectRepo, sessionRepo, llmRegistry),
 		},
 		Queries: &Queries{
 			GetProject:    query.NewGetProjectHandler(projectRepo),
@@ -84,4 +89,17 @@ func New(
 	}
 
 	return app, nil
+}
+
+// Shutdown gracefully closes all application resources
+func (a *App) Shutdown(ctx context.Context) error {
+	slog.Info("shutting down application resources")
+
+	// Close database connection pool
+	if a.pool != nil {
+		slog.Info("closing database connection pool")
+		a.pool.Close()
+	}
+
+	return nil
 }

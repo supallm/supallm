@@ -131,3 +131,13 @@ func recoveryMiddleware(c *fiber.Ctx) error {
 
 	return c.Next()
 }
+
+// Add a Stop method to gracefully shutdown the server
+func (s *Server) Stop(ctx context.Context) error {
+	slog.Info("stopping HTTP server")
+	return s.App.Shutdown()
+}
+
+func (s *Server) Addr() string {
+	return fmt.Sprintf(":%s", s.conf.Server.Port)
+}
