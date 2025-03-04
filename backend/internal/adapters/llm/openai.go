@@ -3,16 +3,19 @@ package llm
 import (
 	"context"
 
+	"github.com/openai/openai-go"
+	"github.com/openai/openai-go/option"
 	"github.com/supallm/core/internal/application/domain/model"
+	"github.com/supallm/core/internal/pkg/secret"
 )
 
 type OpenAI struct {
-	key string
+	client *openai.Client
 }
 
 func newOpenAI(key string) *OpenAI {
 	return &OpenAI{
-		key: key,
+		client: openai.NewClient(option.WithAPIKey(key)),
 	}
 }
 
@@ -26,7 +29,7 @@ func (o *OpenAI) StreamText(ctx context.Context, request *model.LLMRequest) (<-c
 	return nil, nil
 }
 
-func (o *OpenAI) VerifyKey(ctx context.Context, key string) error {
+func (o *OpenAI) VerifyKey(ctx context.Context, key secret.ApiKey) error {
 	// TODO: Implement
 	return nil
 }

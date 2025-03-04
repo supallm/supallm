@@ -11,6 +11,8 @@ const (
 	ErrInvalidUserID Err = "invalid user id"
 	ErrInvalidName   Err = "invalid name"
 
+	ErrProviderNameRequired Err = "provider name is required"
+
 	ErrProviderNotFound        Err = "provider not found"
 	ErrModelNotFound           Err = "model not found"
 	ErrModelExists             Err = "model already exists"

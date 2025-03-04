@@ -69,7 +69,7 @@ func New(
 			UpdateModel: command.NewUpdateModelHandler(projectRepo),
 			RemoveModel: command.NewRemoveModelHandler(projectRepo),
 
-			AddLLMProvider:    command.NewAddLLMProviderHandler(projectRepo),
+			AddLLMProvider:    command.NewAddLLMProviderHandler(projectRepo, llmRegistry),
 			UpdateLLMProvider: command.NewUpdateLLMProviderHandler(projectRepo),
 			RemoveLLMProvider: command.NewRemoveLLMProviderHandler(projectRepo),
 

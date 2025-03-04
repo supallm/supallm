@@ -3,16 +3,19 @@ package llm
 import (
 	"context"
 
+	"github.com/anthropics/anthropic-sdk-go"
+	"github.com/anthropics/anthropic-sdk-go/option"
 	"github.com/supallm/core/internal/application/domain/model"
+	"github.com/supallm/core/internal/pkg/secret"
 )
 
 type Anthropic struct {
-	key string
+	client *anthropic.Client
 }
 
 func newAnthropic(key string) *Anthropic {
 	return &Anthropic{
-		key: key,
+		client: anthropic.NewClient(option.WithAPIKey(key)),
 	}
 }
 
@@ -26,7 +29,7 @@ func (a *Anthropic) StreamText(ctx context.Context, request *model.LLMRequest) (
 	return nil, nil
 }
 
-func (a *Anthropic) VerifyKey(ctx context.Context, key string) error {
+func (a *Anthropic) VerifyKey(ctx context.Context, key secret.ApiKey) error {
 	// TODO: Implement
 	return nil
 }

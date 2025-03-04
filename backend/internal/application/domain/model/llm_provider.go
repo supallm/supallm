@@ -68,34 +68,31 @@ func (c *Project) getProvider(id uuid.UUID) (*LLMProvider, error) {
 	return nil, ErrProviderNotFound
 }
 
-func (p *Project) AddProvider(id uuid.UUID, name string, providerType LLMProviderType, apiKey secret.ApiKey) error {
+func (p *Project) CreateProvider(id uuid.UUID, name string, providerType LLMProviderType, apiKey secret.ApiKey) (*LLMProvider, error) {
 	provider, err := newLLMProvider(id, name, providerType, apiKey)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	p.LLMProviders = append(p.LLMProviders, *provider)
-	return nil
-}
-
-func (p *Project) RemoveProvider(providerID uuid.UUID) error {
-	for i, provider := range p.LLMProviders {
-		if provider.ID == providerID {
-			p.LLMProviders = append(p.LLMProviders[:i], p.LLMProviders[i+1:]...)
-			return nil
-		}
-	}
-	return ErrProviderNotFound
+	return provider, nil
 }
 
 func (p *Project) UpdateProvider(id uuid.UUID, name string, apiKey secret.ApiKey) error {
+	if name == "" {
+		return ErrProviderNameRequired
+	}
+
 	provider, err := p.getProvider(id)
 	if err != nil {
 		return err
 	}
 
+	if apiKey != "" {
+		provider.APIKey = apiKey
+	}
+
 	provider.Name = name
-	provider.APIKey = apiKey
 	return nil
 }
 

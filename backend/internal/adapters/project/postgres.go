@@ -175,10 +175,26 @@ func (r Repository) Update(ctx context.Context, project *model.Project) error {
 	})
 }
 
-func (r Repository) Delete(ctx context.Context, id uuid.UUID) error {
+func (r Repository) DeleteProject(ctx context.Context, id uuid.UUID) error {
 	err := r.queries.deleteProject(ctx, id)
 	if err != nil {
 		return fmt.Errorf("error deleting project: %w", err)
+	}
+	return nil
+}
+
+func (r Repository) DeleteLLMProvider(ctx context.Context, id uuid.UUID) error {
+	err := r.queries.deleteLLMProvider(ctx, id)
+	if err != nil {
+		return fmt.Errorf("error deleting llm provider: %w", err)
+	}
+	return nil
+}
+
+func (r Repository) DeleteModel(ctx context.Context, id uuid.UUID) error {
+	err := r.queries.deleteModel(ctx, id)
+	if err != nil {
+		return fmt.Errorf("error deleting model: %w", err)
 	}
 	return nil
 }

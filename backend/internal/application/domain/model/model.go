@@ -39,15 +39,6 @@ func (p *Project) AddModel(id uuid.UUID, slug slug.Slug, llmProviderId uuid.UUID
 	return nil
 }
 
-func (p *Project) RemoveModel(slug slug.Slug) error {
-	if _, ok := p.Models[slug]; !ok {
-		return ErrModelNotFound
-	}
-
-	delete(p.Models, slug)
-	return nil
-}
-
 func (p *Project) getModel(slug slug.Slug) (*Model, error) {
 	model, ok := p.Models[slug]
 	if !ok {

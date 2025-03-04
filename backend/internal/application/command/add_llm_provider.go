@@ -21,19 +21,27 @@ type AddLLMProviderCommand struct {
 }
 
 type AddLLMProviderHandler struct {
-	projectRepo repository.ProjectRepository
+	projectRepo      repository.ProjectRepository
+	providerRegistry repository.ProviderRegistry
 }
 
 func NewAddLLMProviderHandler(
 	projectRepo repository.ProjectRepository,
+	providerRegistry repository.ProviderRegistry,
 ) AddLLMProviderHandler {
 	if projectRepo == nil {
 		slog.Error("projectRepo is nil")
 		os.Exit(1)
 	}
 
+	if providerRegistry == nil {
+		slog.Error("providerRegistry is nil")
+		os.Exit(1)
+	}
+
 	return AddLLMProviderHandler{
-		projectRepo: projectRepo,
+		projectRepo:      projectRepo,
+		providerRegistry: providerRegistry,
 	}
 }
 
@@ -43,9 +51,20 @@ func (h AddLLMProviderHandler) Handle(ctx context.Context, cmd AddLLMProviderCom
 		return errs.ErrNotFound{Resource: "project", ID: cmd.ProjectID}
 	}
 
-	err = project.AddProvider(cmd.ID, cmd.Name, cmd.ProviderType, cmd.APIKey)
+	provider, err := project.CreateProvider(cmd.ID, cmd.Name, cmd.ProviderType, cmd.APIKey)
 	if err != nil {
 		return errs.ErrReqInvalid{Reason: err.Error()}
 	}
+
+	llmProvider, err := h.providerRegistry.GetLLM(provider)
+	if err != nil {
+		return errs.ErrReqInvalid{Reason: err.Error()}
+	}
+
+	err = llmProvider.VerifyKey(ctx, cmd.APIKey)
+	if err != nil {
+		return errs.ErrReqInvalid{Reason: err.Error()}
+	}
+
 	return h.projectRepo.Update(ctx, project)
 }
