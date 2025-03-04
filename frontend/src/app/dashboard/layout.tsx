@@ -2,13 +2,15 @@ import React from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { ProjectOnly } from "@/guards/project-only";
+import { TopNav } from "@/components/top-nav";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <ProjectOnly>
+      <TopNav />
       <SidebarProvider>
         <AppSidebar />
-        <main className="flex flex-col w-full">
+        <main className="flex flex-col w-full mt-[40px]">
           <SidebarTrigger />
           {children}
         </main>
