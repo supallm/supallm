@@ -16,31 +16,23 @@ import (
 type GenerateTextCommand struct {
 	SessionID   uuid.UUID
 	ProjectID   uuid.UUID
-	UserID      uuid.UUID
+	UserID      string
 	Prompt      model.Prompt
-	Model       slug.Slug
+	ModelSlug   slug.Slug
 	MaxTokens   int
 	Temperature float64
-}
-
-func (cmd GenerateTextCommand) ToRequestConfig() model.LLMRequestConfig {
-	return model.LLMRequestConfig{
-		Prompt:      cmd.Prompt,
-		MaxTokens:   cmd.MaxTokens,
-		Temperature: cmd.Temperature,
-	}
 }
 
 type GenerateTextHandler struct {
 	projectRepo repository.ProjectRepository
 	sessionRepo repository.LLMSessionRepository
-	llmRegistry repository.ProviderRegistry
+	llmProvider repository.LLMProvider
 }
 
 func NewGenerateTextHandler(
 	projectRepo repository.ProjectRepository,
 	sessionRepo repository.LLMSessionRepository,
-	llmRegistry repository.ProviderRegistry,
+	llmProvider repository.LLMProvider,
 ) GenerateTextHandler {
 	if projectRepo == nil {
 		slog.Error("projectRepo is nil")
@@ -52,15 +44,15 @@ func NewGenerateTextHandler(
 		os.Exit(1)
 	}
 
-	if llmRegistry == nil {
-		slog.Error("llmRegistry is nil")
+	if llmProvider == nil {
+		slog.Error("llmProvider is nil")
 		os.Exit(1)
 	}
 
 	return GenerateTextHandler{
 		projectRepo: projectRepo,
 		sessionRepo: sessionRepo,
-		llmRegistry: llmRegistry,
+		llmProvider: llmProvider,
 	}
 }
 
@@ -75,19 +67,21 @@ func (h GenerateTextHandler) Handle(ctx context.Context, cmd GenerateTextCommand
 		return "", err
 	}
 
-	llmModel, provider, err := project.GetModelAndProvider(cmd.Model)
+	m, err := project.GetModel(cmd.ModelSlug)
 	if err != nil {
-		return "", errs.ErrNotFound{Resource: "model", ID: cmd.Model}
+		return "", errs.ErrNotFound{Resource: "model", ID: cmd.ModelSlug}
 	}
 
-	request, err := session.NewRequest(cmd.SessionID, llmModel, cmd.ToRequestConfig())
+	request, err := session.NewRequest(cmd.SessionID, m, model.LLMRequestConfig{
+		Prompt: cmd.Prompt,
+	})
 	if err != nil {
-		return "", errs.ErrNotFound{Resource: "model", ID: cmd.Model}
+		return "", errs.ErrNotFound{Resource: "model", ID: cmd.ModelSlug}
 	}
 
-	response, err := h.generateText(ctx, request, provider)
+	response, err := h.llmProvider.GenerateText(ctx, request)
 	if err != nil {
-		return "", err
+		return "", errs.ErrInternal{Reason: err}
 	}
 
 	err = h.saveResponse(ctx, session, response)
@@ -98,7 +92,7 @@ func (h GenerateTextHandler) Handle(ctx context.Context, cmd GenerateTextCommand
 	return response.Content, nil
 }
 
-func (h GenerateTextHandler) getOrCreateSession(ctx context.Context, projectID, sessionID, userID uuid.UUID) (*model.LLMSession, error) {
+func (h GenerateTextHandler) getOrCreateSession(ctx context.Context, projectID, sessionID uuid.UUID, userID string) (*model.LLMSession, error) {
 	session, err := h.sessionRepo.Retrieve(ctx, sessionID)
 	if err != nil {
 		if !errors.Is(err, nil) {
@@ -110,20 +104,6 @@ func (h GenerateTextHandler) getOrCreateSession(ctx context.Context, projectID, 
 	}
 
 	return session, nil
-}
-
-func (s GenerateTextHandler) generateText(ctx context.Context, request *model.LLMRequest, provider *model.LLMProvider) (*model.LLMResponse, error) {
-	llm, err := s.llmRegistry.GetLLM(provider)
-	if err != nil {
-		return nil, errs.ErrInternal{Reason: err}
-	}
-
-	response, err := llm.GenerateText(ctx, request)
-	if err != nil {
-		return nil, errs.ErrInternal{Reason: err}
-	}
-
-	return response, nil
 }
 
 func (s GenerateTextHandler) saveResponse(ctx context.Context, session *model.LLMSession, response *model.LLMResponse) error {

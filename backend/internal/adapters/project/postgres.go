@@ -61,18 +61,18 @@ func (r Repository) Create(ctx context.Context, project *model.Project) error {
 			return fmt.Errorf("error storing project: %w", err)
 		}
 
-		for _, llmProvider := range project.LLMProviders {
-			encrypted, err := llmProvider.APIKey.Encrypt()
+		for _, llmCredential := range project.Credentials {
+			encrypted, err := llmCredential.APIKey.Encrypt()
 			if err != nil {
 				return fmt.Errorf("error encrypting api key: %w", err)
 			}
-			err = q.storeLLMProvider(ctx, storeLLMProviderParams{
-				ID:               llmProvider.ID,
+			err = q.storeLLMCredential(ctx, storeLLMCredentialParams{
+				ID:               llmCredential.ID,
 				ProjectID:        project.ID,
-				Name:             llmProvider.Name,
-				ProviderType:     llmProvider.Type.String(),
+				Name:             llmCredential.Name,
+				ProviderType:     llmCredential.ProviderType.String(),
 				ApiKeyEncrypted:  encrypted,
-				ApiKeyObfuscated: llmProvider.APIKey.Obfuscate(),
+				ApiKeyObfuscated: llmCredential.APIKey.Obfuscate(),
 			})
 			if err != nil {
 				return fmt.Errorf("error storing llm provider: %w", err)
@@ -83,9 +83,10 @@ func (r Repository) Create(ctx context.Context, project *model.Project) error {
 			err = q.storeModel(ctx, storeModelParams{
 				ID:           model.ID,
 				ProjectID:    project.ID,
-				ProviderID:   model.ProviderId,
+				CredentialID: model.LLMCredential.ID,
+				Name:         model.Name,
 				Slug:         model.Slug.String(),
-				LlmModel:     model.Model.String(),
+				LlmModel:     model.LLMModel.String(),
 				SystemPrompt: model.SystemPrompt.String(),
 			})
 			if err != nil {
@@ -97,15 +98,15 @@ func (r Repository) Create(ctx context.Context, project *model.Project) error {
 	})
 }
 
-func (r Repository) retrieve(ctx context.Context, id uuid.UUID) (Project, []LlmProvider, []Model, error) {
+func (r Repository) retrieve(ctx context.Context, id uuid.UUID) (Project, []LlmCredential, []Model, error) {
 	project, err := r.queries.projectById(ctx, id)
 	if err != nil {
 		return Project{}, nil, nil, fmt.Errorf("error getting project: %w", err)
 	}
 
-	llmProviders, err := r.queries.llmProvidersByProjectId(ctx, id)
+	llmCredentials, err := r.queries.llmCredentialsByProjectId(ctx, id)
 	if err != nil {
-		return Project{}, nil, nil, fmt.Errorf("error getting llm providers: %w", err)
+		return Project{}, nil, nil, fmt.Errorf("error getting llm credentials: %w", err)
 	}
 
 	models, err := r.queries.modelsByProjectId(ctx, id)
@@ -113,7 +114,7 @@ func (r Repository) retrieve(ctx context.Context, id uuid.UUID) (Project, []LlmP
 		return Project{}, nil, nil, fmt.Errorf("error getting models: %w", err)
 	}
 
-	return project, llmProviders, models, nil
+	return project, llmCredentials, models, nil
 }
 
 func (r Repository) Retrieve(ctx context.Context, id uuid.UUID) (*model.Project, error) {
@@ -139,31 +140,32 @@ func (r Repository) Update(ctx context.Context, project *model.Project) error {
 			return fmt.Errorf("error updating project: %w", err)
 		}
 
-		for _, llmProvider := range project.LLMProviders {
-			encrypted, err := llmProvider.APIKey.Encrypt()
+		for _, llmCredential := range project.Credentials {
+			encrypted, err := llmCredential.APIKey.Encrypt()
 			if err != nil {
 				return fmt.Errorf("error encrypting api key: %w", err)
 			}
-			err = q.upsertLLMProvider(ctx, upsertLLMProviderParams{
-				ID:               llmProvider.ID,
+			err = q.upsertLLMCredential(ctx, upsertLLMCredentialParams{
+				ID:               llmCredential.ID,
 				ProjectID:        project.ID,
-				Name:             llmProvider.Name,
-				ProviderType:     llmProvider.Type.String(),
+				Name:             llmCredential.Name,
+				ProviderType:     llmCredential.ProviderType.String(),
 				ApiKeyEncrypted:  encrypted,
-				ApiKeyObfuscated: llmProvider.APIKey.Obfuscate(),
+				ApiKeyObfuscated: llmCredential.APIKey.Obfuscate(),
 			})
 			if err != nil {
 				return fmt.Errorf("error updating llm provider: %w", err)
 			}
+
 		}
 
 		for _, model := range project.Models {
 			err = q.upsertModel(ctx, upsertModelParams{
 				ID:           model.ID,
 				ProjectID:    project.ID,
-				ProviderID:   model.ProviderId,
+				CredentialID: model.LLMCredential.ID,
 				Slug:         model.Slug.String(),
-				LlmModel:     model.Model.String(),
+				LlmModel:     model.LLMModel.String(),
 				SystemPrompt: model.SystemPrompt.String(),
 			})
 			if err != nil {
@@ -183,10 +185,10 @@ func (r Repository) DeleteProject(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-func (r Repository) DeleteLLMProvider(ctx context.Context, id uuid.UUID) error {
-	err := r.queries.deleteLLMProvider(ctx, id)
+func (r Repository) DeleteLLMCredential(ctx context.Context, id uuid.UUID) error {
+	err := r.queries.deleteLLMCredential(ctx, id)
 	if err != nil {
-		return fmt.Errorf("error deleting llm provider: %w", err)
+		return fmt.Errorf("error deleting llm credential: %w", err)
 	}
 	return nil
 }

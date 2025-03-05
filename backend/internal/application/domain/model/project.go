@@ -12,8 +12,8 @@ type Project struct {
 	UserID       string
 	Name         string
 	AuthProvider AuthProvider
-	LLMProviders []LLMProvider
-	Models       map[slug.Slug]Model
+	Credentials  map[uuid.UUID]*LLMCredential
+	Models       map[slug.Slug]*Model
 }
 
 func NewProject(id uuid.UUID, userID string, name string) (*Project, error) {
@@ -43,18 +43,4 @@ func (p *Project) UpdateName(name string) error {
 
 	p.Name = name
 	return nil
-}
-
-func (p *Project) GetModelAndProvider(modelSlug slug.Slug) (*Model, *LLMProvider, error) {
-	model, err := p.getModel(modelSlug)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	provider, err := p.getProviderFromModel(model.Model)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return model, provider, nil
 }

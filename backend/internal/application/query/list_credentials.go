@@ -8,30 +8,30 @@ import (
 	"github.com/google/uuid"
 )
 
-type ListProvidersQuery struct {
+type ListCredentialsQuery struct {
 	ProjectID uuid.UUID
 }
 
-type ListProvidersHandler struct {
+type ListCredentialsHandler struct {
 	projectReader ProjectReader
 }
 
-func NewListProvidersHandler(projectReader ProjectReader) ListProvidersHandler {
+func NewListCredentialsHandler(projectReader ProjectReader) ListCredentialsHandler {
 	if projectReader == nil {
 		slog.Error("projectReader is nil")
 		os.Exit(1)
 	}
 
-	return ListProvidersHandler{
+	return ListCredentialsHandler{
 		projectReader: projectReader,
 	}
 }
 
-func (h ListProvidersHandler) Handle(ctx context.Context, query ListProvidersQuery) ([]LLMProvider, error) {
+func (h ListCredentialsHandler) Handle(ctx context.Context, query ListCredentialsQuery) ([]LLMCredential, error) {
 	project, err := h.projectReader.GetProject(ctx, query.ProjectID)
 	if err != nil {
 		return nil, err
 	}
 
-	return project.LLMProviders, nil
+	return project.Credentials, nil
 }

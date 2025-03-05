@@ -5,7 +5,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/supallm/core/internal/application/domain/model"
-	"github.com/supallm/core/internal/pkg/secret"
 )
 
 // ProjectRepository defines the interface for configuration persistence
@@ -15,7 +14,7 @@ type ProjectRepository interface {
 	Update(ctx context.Context, project *model.Project) error
 
 	DeleteProject(ctx context.Context, id uuid.UUID) error
-	DeleteLLMProvider(ctx context.Context, id uuid.UUID) error
+	DeleteLLMCredential(ctx context.Context, id uuid.UUID) error
 	DeleteModel(ctx context.Context, id uuid.UUID) error
 }
 
@@ -31,10 +30,5 @@ type LLMSessionRepository interface {
 type LLMProvider interface {
 	GenerateText(ctx context.Context, request *model.LLMRequest) (*model.LLMResponse, error)
 	StreamText(ctx context.Context, request *model.LLMRequest) (<-chan struct{}, error)
-	VerifyKey(ctx context.Context, key secret.ApiKey) error
-}
-
-// ProviderRegistry defines the interface for interacting with provider registries
-type ProviderRegistry interface {
-	GetLLM(provider *model.LLMProvider) (LLMProvider, error)
+	VerifyKey(ctx context.Context, credential *model.LLMCredential) error
 }

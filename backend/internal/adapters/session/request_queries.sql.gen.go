@@ -12,7 +12,7 @@ import (
 )
 
 const requestById = `-- name: requestById :one
-SELECT id, session_id, model_id, prompt, config, status, created_at, updated_at
+SELECT id, session_id, model_id, config, status, created_at, updated_at
 FROM requests
 WHERE id = $1
 `
@@ -24,7 +24,6 @@ func (q *Queries) requestById(ctx context.Context, id uuid.UUID) (Request, error
 		&i.ID,
 		&i.SessionID,
 		&i.ModelID,
-		&i.Prompt,
 		&i.Config,
 		&i.Status,
 		&i.CreatedAt,
@@ -34,7 +33,7 @@ func (q *Queries) requestById(ctx context.Context, id uuid.UUID) (Request, error
 }
 
 const requestsBySessionId = `-- name: requestsBySessionId :many
-SELECT id, session_id, model_id, prompt, config, status, created_at, updated_at
+SELECT id, session_id, model_id, config, status, created_at, updated_at
 FROM requests
 WHERE session_id = $1
 ORDER BY created_at DESC
@@ -53,7 +52,6 @@ func (q *Queries) requestsBySessionId(ctx context.Context, sessionID uuid.UUID) 
 			&i.ID,
 			&i.SessionID,
 			&i.ModelID,
-			&i.Prompt,
 			&i.Config,
 			&i.Status,
 			&i.CreatedAt,
@@ -70,15 +68,14 @@ func (q *Queries) requestsBySessionId(ctx context.Context, sessionID uuid.UUID) 
 }
 
 const storeRequest = `-- name: storeRequest :exec
-INSERT INTO requests (id, session_id, model_id, prompt, config, status)
-VALUES ($1, $2, $3, $4, $5, $6)
+INSERT INTO requests (id, session_id, model_id, config, status)
+VALUES ($1, $2, $3, $4, $5)
 `
 
 type storeRequestParams struct {
 	ID        uuid.UUID `json:"id"`
 	SessionID uuid.UUID `json:"session_id"`
 	ModelID   uuid.UUID `json:"model_id"`
-	Prompt    string    `json:"prompt"`
 	Config    []byte    `json:"config"`
 	Status    string    `json:"status"`
 }
@@ -88,7 +85,6 @@ func (q *Queries) storeRequest(ctx context.Context, arg storeRequestParams) erro
 		arg.ID,
 		arg.SessionID,
 		arg.ModelID,
-		arg.Prompt,
 		arg.Config,
 		arg.Status,
 	)

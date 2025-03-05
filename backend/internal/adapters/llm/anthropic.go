@@ -9,27 +9,27 @@ import (
 	"github.com/supallm/core/internal/pkg/secret"
 )
 
-type Anthropic struct {
+type anthropicService struct {
 	client *anthropic.Client
 }
 
-func newAnthropic(key string) *Anthropic {
-	return &Anthropic{
+func newAnthropic(key string) *anthropicService {
+	return &anthropicService{
 		client: anthropic.NewClient(option.WithAPIKey(key)),
 	}
 }
 
-func (a *Anthropic) GenerateText(ctx context.Context, request *model.LLMRequest) (*model.LLMResponse, error) {
+func (a *anthropicService) GenerateText(ctx context.Context, request *model.LLMRequest) (*model.LLMResponse, error) {
 	// TODO: Implement
 	return nil, nil
 }
 
-func (a *Anthropic) StreamText(ctx context.Context, request *model.LLMRequest) (<-chan struct{}, error) {
+func (a *anthropicService) StreamText(ctx context.Context, request *model.LLMRequest) (<-chan struct{}, error) {
 	// TODO: Implement
 	return nil, nil
 }
 
-func (a *Anthropic) VerifyKey(ctx context.Context, key secret.ApiKey) error {
+func (a *anthropicService) VerifyKey(ctx context.Context, key secret.ApiKey) error {
 	// TODO: Implement
 	return nil
 }

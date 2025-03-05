@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS projects (
     CONSTRAINT projects_name_user_unique UNIQUE (name, user_id)
 );
 
-CREATE TABLE IF NOT EXISTS llm_providers (
+CREATE TABLE IF NOT EXISTS llm_credentials (
     id UUID PRIMARY KEY,
     project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
@@ -16,17 +16,18 @@ CREATE TABLE IF NOT EXISTS llm_providers (
     api_key_encrypted VARCHAR(255) NOT NULL,
     api_key_obfuscated VARCHAR(255) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    CONSTRAINT llm_providers_name_project_unique UNIQUE (name, project_id)
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS models (
     id UUID PRIMARY KEY,
     project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
-    provider_id UUID NOT NULL REFERENCES llm_providers(id) ON DELETE CASCADE,
+    credential_id UUID NOT NULL REFERENCES llm_credentials(id) ON DELETE CASCADE,
+    name VARCHAR(100) NOT NULL,
     slug VARCHAR(100) NOT NULL,
     llm_model VARCHAR(100) NOT NULL,
     system_prompt TEXT NOT NULL,
+    parameters JSONB,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     CONSTRAINT models_slug_project_unique UNIQUE (slug, project_id)
@@ -45,7 +46,6 @@ CREATE TABLE IF NOT EXISTS requests (
     id UUID PRIMARY KEY,
     session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
     model_id UUID NOT NULL REFERENCES models(id) ON DELETE CASCADE,
-    prompt TEXT NOT NULL,
     config JSONB,
     status VARCHAR(50) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -74,9 +74,9 @@ CREATE TABLE IF NOT EXISTS stream_chunks (
 );
 
 CREATE INDEX idx_projects_user_id ON projects(user_id);
-CREATE INDEX idx_llm_providers_project_id ON llm_providers(project_id);
+CREATE INDEX idx_llm_credentials_project_id ON llm_credentials(project_id);
 CREATE INDEX idx_models_project_id ON models(project_id);
-CREATE INDEX idx_models_provider_id ON models(provider_id);
+CREATE INDEX idx_models_credential_id ON models(credential_id);
 CREATE INDEX idx_sessions_project_id ON sessions(project_id);
 CREATE INDEX idx_sessions_user_id ON sessions(user_id);
 CREATE INDEX idx_requests_session_id ON requests(session_id);
@@ -98,8 +98,8 @@ CREATE TRIGGER update_projects_timestamp
 BEFORE UPDATE ON projects
 FOR EACH ROW EXECUTE FUNCTION update_timestamp();
 
-CREATE TRIGGER update_llm_providers_timestamp
-BEFORE UPDATE ON llm_providers
+CREATE TRIGGER update_llm_credentials_timestamp
+BEFORE UPDATE ON llm_credentials
 FOR EACH ROW EXECUTE FUNCTION update_timestamp();
 
 CREATE TRIGGER update_models_timestamp
