@@ -31,6 +31,7 @@ import { Cog, MoreHorizontalIcon, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { ConfirmDangerDialog } from "../confirm-danger-dialog";
 import { Copiable } from "../copiable";
+import { EditModelDialog } from "../edit-model-dialog";
 import { ProviderLogo } from "../logos/provider-logo";
 import { Spinner } from "../spinner";
 import { TruncatedTableCell } from "../truncated-table-cell";
@@ -84,6 +85,7 @@ export const ModelTableColumns: ColumnDef<Model>[] = [
     header: "Actions",
     cell: ({ row }) => {
       const [open, setOpen] = useState(false);
+      const [openEdit, setOpenEdit] = useState(false);
 
       const { execute: deleteModel, isLoading: isDeleting } = hookifyFunction(
         deleteModelUsecase.execute.bind(deleteModelUsecase),
@@ -95,6 +97,11 @@ export const ModelTableColumns: ColumnDef<Model>[] = [
 
       return (
         <>
+          <EditModelDialog
+            model={row.original}
+            isOpen={openEdit}
+            onOpenChange={setOpenEdit}
+          />
           <ConfirmDangerDialog
             title="Delete Model"
             description="Are you sure you want to delete this model? If it is being used by your web app, it could break your app."
@@ -123,7 +130,7 @@ export const ModelTableColumns: ColumnDef<Model>[] = [
                 >
                   <Trash2 className="w-4 h-4" /> Delete
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setOpenEdit(true)}>
                   <Cog className="w-4 h-4" /> Configure
                 </DropdownMenuItem>
               </DropdownMenuContent>

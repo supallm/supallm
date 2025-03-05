@@ -9,6 +9,7 @@ import { GetProjectUsecase } from "./get-project";
 import { ListLLMProvidersUsecase } from "./list-llm-providers";
 import { ListModelUsecase } from "./list-models";
 import { PatchLLMProviderUsecase } from "./patch-llm-provider";
+import { PatchModelUsecase } from "./patch-model";
 
 /**
  * Project
@@ -48,3 +49,5 @@ export const listModelUsecase = new ListModelUsecase(new MockModelService());
 export const deleteModelUsecase = new DeleteModelUsecase(
   new MockModelService(),
 );
+
+export const patchModelUsecase = new PatchModelUsecase(new MockModelService());
