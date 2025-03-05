@@ -1,17 +1,17 @@
 "use client";
 
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "./ui/select";
+import { ProviderType } from "@/core/entities/credential";
 import { FC, useMemo } from "react";
 import { FormControl } from "./ui/form";
-import { LLMProviderName } from "@/core/entities/llm-provider";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 
-export const ProviderModels: Record<LLMProviderName, string[]> = {
+export const ProviderModels: Record<ProviderType, string[]> = {
   openai: ["gpt-4o", "gpt-4o-mini"],
   anthropic: [],
   google: [],
@@ -22,7 +22,7 @@ export const ProviderModels: Record<LLMProviderName, string[]> = {
 export const SelectModel: FC<{
   onValueChange: (value: string) => void;
   defaultValue: string;
-  providerType: LLMProviderName;
+  providerType: ProviderType;
 }> = ({ onValueChange, defaultValue, providerType }) => {
   const models = useMemo(() => {
     return ProviderModels[providerType];

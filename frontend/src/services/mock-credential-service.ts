@@ -1,13 +1,13 @@
-import { LLMProvider, LLMProviderName } from "@/core/entities/llm-provider";
-import { LLMProviderService } from "@/core/interfaces";
+import { Credential, ProviderType } from "@/core/entities/credential";
+import { CredentialService } from "@/core/interfaces";
 import { getAuthToken } from "@/lib/auth";
 
-export class MockLLMProviderService implements LLMProviderService {
+export class MockCredentialService implements CredentialService {
   async create(data: {
     name: string;
     apiKey: string;
-    providerType: LLMProviderName;
-  }): Promise<LLMProvider> {
+    providerType: ProviderType;
+  }): Promise<Credential> {
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
     const createdProvider = {
@@ -20,7 +20,7 @@ export class MockLLMProviderService implements LLMProviderService {
     return createdProvider;
   }
 
-  async listAll(projectId: string): Promise<LLMProvider[]> {
+  async listAll(projectId: string): Promise<Credential[]> {
     const authToken = await getAuthToken();
 
     console.log("listAll", projectId, authToken);

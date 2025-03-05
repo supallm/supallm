@@ -2,8 +2,8 @@ export const OverviewRoute = {
   path: () => `/dashboard/overview`,
 };
 
-export const LLMProvidersRoute = {
-  path: () => `/dashboard/llm-providers`,
+export const CredentialsRoute = {
+  path: () => `/dashboard/credentials`,
 };
 
 export const NoProjectRoute = {

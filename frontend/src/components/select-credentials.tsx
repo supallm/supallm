@@ -1,10 +1,10 @@
 "use client";
 
-import { LLMProviderName } from "@/core/entities/llm-provider";
+import { ProviderType } from "@/core/entities/credential";
 import { useAppConfigStore } from "@/core/store/app-config";
-import { useLLMProviderStore } from "@/core/store/llm-providers";
-import { useListLLMProviders } from "@/hooks/use-list-llm-providers";
-import { LLMProvidersRoute } from "@/routes";
+import { useCredentialStore } from "@/core/store/credentials";
+import { useListCredentials } from "@/hooks/use-list-credentials";
+import { CredentialsRoute } from "@/routes";
 import { PlusIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FC } from "react";
@@ -22,7 +22,7 @@ import { Skeleton } from "./ui/skeleton";
 export const SelectCredentials: FC<{
   onValueChange: (value: string) => void;
   defaultValue: string;
-  providerType: LLMProviderName;
+  providerType: ProviderType;
 }> = ({ onValueChange, defaultValue, providerType }) => {
   const router = useRouter();
   const { currentProject } = useAppConfigStore();
@@ -33,8 +33,8 @@ export const SelectCredentials: FC<{
     );
   }
 
-  const { isLoading } = useListLLMProviders(currentProject.id);
-  const { list: items } = useLLMProviderStore();
+  const { isLoading } = useListCredentials(currentProject.id);
+  const { list: items } = useCredentialStore();
 
   const filteredItems = items.filter(
     (item) => item.providerType === providerType,
@@ -59,7 +59,7 @@ export const SelectCredentials: FC<{
             No credentials found for this provider.{" "}
             <Button
               onClick={() => {
-                router.push(LLMProvidersRoute.path());
+                router.push(CredentialsRoute.path());
               }}
               size="xs"
               variant="outline"

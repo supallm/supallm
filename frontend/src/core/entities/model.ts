@@ -1,11 +1,11 @@
-import { LLMProviderName } from "./llm-provider";
+import { ProviderType } from "./credential";
 
 export type Model = {
   id: string;
   name: string;
   slug: string;
   credentialId: string;
-  providerType: LLMProviderName;
+  providerType: ProviderType;
   model: string;
   systemPrompt: string;
   temperature: number;

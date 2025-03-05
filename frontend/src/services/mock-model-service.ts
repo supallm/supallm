@@ -1,4 +1,4 @@
-import { LLMProviderName } from "@/core/entities/llm-provider";
+import { ProviderType } from "@/core/entities/credential";
 import { Model } from "@/core/entities/model";
 import { ModelService } from "@/core/interfaces";
 
@@ -7,7 +7,7 @@ export class MockModelService implements ModelService {
     projectId: string;
     name: string;
     credentialId: string;
-    providerType: LLMProviderName;
+    providerType: ProviderType;
     model: string;
     systemPrompt: string;
     temperature: number;

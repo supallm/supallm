@@ -1,4 +1,4 @@
-import { LLMProvider, LLMProviderName } from "./entities/llm-provider";
+import { Credential, ProviderType } from "./entities/credential";
 import { Model } from "./entities/model";
 import { Project } from "./entities/project";
 
@@ -6,14 +6,14 @@ export interface ProjectService {
   getCurrentProject: (userId: string) => Promise<Project>;
 }
 
-export interface LLMProviderService {
-  listAll: (projectId: string) => Promise<LLMProvider[]>;
+export interface CredentialService {
+  listAll: (projectId: string) => Promise<Credential[]>;
   create: (data: {
     projectId: string;
     name: string;
     apiKey: string;
-    providerType: LLMProviderName;
-  }) => Promise<LLMProvider>;
+    providerType: ProviderType;
+  }) => Promise<Credential>;
   patch: (
     id: string,
     data: {
@@ -29,7 +29,7 @@ export interface ModelService {
     projectId: string;
     name: string;
     credentialId: string;
-    providerType: LLMProviderName;
+    providerType: ProviderType;
     model: string;
     systemPrompt: string;
     temperature: number;

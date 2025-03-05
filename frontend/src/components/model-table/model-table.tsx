@@ -84,7 +84,9 @@ export const ModelTableColumns: ColumnDef<Model>[] = [
     accessorKey: "actions",
     header: "Actions",
     cell: ({ row }) => {
+      // eslint-disable-next-line
       const [open, setOpen] = useState(false);
+      // eslint-disable-next-line
       const [openEdit, setOpenEdit] = useState(false);
 
       const { execute: deleteModel, isLoading: isDeleting } = hookifyFunction(

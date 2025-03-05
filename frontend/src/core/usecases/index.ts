@@ -1,14 +1,14 @@
-import { MockLLMProviderService } from "@/services/mock-llm-provider-service";
+import { MockCredentialService } from "@/services/mock-credential-service";
 import { MockModelService } from "@/services/mock-model-service";
 import { MockProjectService } from "@/services/mock-project-service";
-import { CreateLLMProviderUsecase } from "./create-llm-provider";
+import { CreateCredentialUsecase } from "./create-credential";
 import { CreateModelUsecase } from "./create-model";
-import { DeleteLLMProviderUsecase } from "./delete-llm-provider";
+import { DeleteCredentialUsecase } from "./delete-credential";
 import { DeleteModelUsecase } from "./delete-model";
 import { GetProjectUsecase } from "./get-project";
-import { ListLLMProvidersUsecase } from "./list-llm-providers";
+import { ListCredentialsUsecase } from "./list-credentials";
 import { ListModelUsecase } from "./list-models";
-import { PatchLLMProviderUsecase } from "./patch-llm-provider";
+import { PatchCredentialUsecase } from "./patch-credential";
 import { PatchModelUsecase } from "./patch-model";
 
 /**
@@ -21,20 +21,20 @@ export const getProjectUsecase = new GetProjectUsecase(
 /**
  * Credentials
  */
-export const listLLMProvidersUsecase = new ListLLMProvidersUsecase(
-  new MockLLMProviderService(),
+export const listCredentialsUsecase = new ListCredentialsUsecase(
+  new MockCredentialService(),
 );
 
-export const createLLMProviderUsecase = new CreateLLMProviderUsecase(
-  new MockLLMProviderService(),
+export const createCredentialUsecase = new CreateCredentialUsecase(
+  new MockCredentialService(),
 );
 
-export const patchLLMProviderUsecase = new PatchLLMProviderUsecase(
-  new MockLLMProviderService(),
+export const patchCredentialUsecase = new PatchCredentialUsecase(
+  new MockCredentialService(),
 );
 
-export const deleteLLMProviderUsecase = new DeleteLLMProviderUsecase(
-  new MockLLMProviderService(),
+export const deleteCredentialUsecase = new DeleteCredentialUsecase(
+  new MockCredentialService(),
 );
 
 /**

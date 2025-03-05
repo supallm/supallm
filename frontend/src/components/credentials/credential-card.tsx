@@ -1,31 +1,31 @@
-import { LLMProvider, LLMProviderLabel } from "@/core/entities/llm-provider";
+import { Credential, CredentialLabel } from "@/core/entities/credential";
 import { FC } from "react";
 import { ProviderLogo } from "../logos/provider-logo";
 import { Button } from "../ui/button";
 import { Card, CardFooter, CardHeader } from "../ui/card";
 
-import { deleteLLMProviderUsecase } from "@/core/usecases";
+import { deleteCredentialUsecase } from "@/core/usecases";
 import { hookifyFunction } from "@/hooks/hookify-function";
 import { Cog, Trash2 } from "lucide-react";
 import { ConfirmDangerDialog } from "../confirm-danger-dialog";
-import { EditLLMProviderDialog } from "../edit-llm-provider-dialog";
+import { EditCredentialDialog } from "../edit-credential-dialog";
 
-export type LLMProviderCardProps = {
-  provider: LLMProvider;
+export type CredentialCardProps = {
+  provider: Credential;
   onEdit: () => void;
 };
 
-export const LLMProviderCard: FC<LLMProviderCardProps> = ({ provider }) => {
+export const CredentialCard: FC<CredentialCardProps> = ({ provider }) => {
   const type = provider.providerType;
   const name = provider.name;
 
-  const { execute: deleteLLMProvider, isLoading: deleteLLMProviderLoading } =
+  const { execute: deleteCredential, isLoading: deleteCredentialLoading } =
     hookifyFunction(
-      deleteLLMProviderUsecase.execute.bind(deleteLLMProviderUsecase),
+      deleteCredentialUsecase.execute.bind(deleteCredentialUsecase),
     );
 
   const handleDelete = async () => {
-    await deleteLLMProvider(provider.id);
+    await deleteCredential(provider.id);
   };
 
   return (
@@ -40,18 +40,18 @@ export const LLMProviderCard: FC<LLMProviderCardProps> = ({ provider }) => {
 
         <div>
           <p className="text-sm text-muted-foreground">
-            Configured with {LLMProviderLabel(type)}
+            Configured with {CredentialLabel(type)}
           </p>
         </div>
       </CardHeader>
       <CardFooter>
         <div className="flex flex-row justify-between w-full">
           <div className="flex flex-row gap-2 items-center">
-            <EditLLMProviderDialog provider={provider}>
+            <EditCredentialDialog provider={provider}>
               <Button size="xs" variant="outline">
                 <Cog className="text-muted-foreground w-4 h-4" /> Edit
               </Button>
-            </EditLLMProviderDialog>
+            </EditCredentialDialog>
 
             <ConfirmDangerDialog
               title="Are you sure?"
@@ -62,7 +62,7 @@ export const LLMProviderCard: FC<LLMProviderCardProps> = ({ provider }) => {
               <Button
                 size="xs"
                 variant="outline"
-                isLoading={deleteLLMProviderLoading}
+                isLoading={deleteCredentialLoading}
               >
                 <Trash2 className="text-muted-foreground w-4 h-4" />
               </Button>

@@ -16,9 +16,9 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { LLMProvider, LLMProviderName } from "@/core/entities/llm-provider";
+import { Credential, ProviderType } from "@/core/entities/credential";
 import { useAppConfigStore } from "@/core/store/app-config";
-import { patchLLMProviderUsecase } from "@/core/usecases";
+import { patchCredentialUsecase } from "@/core/usecases";
 import { hookifyFunction } from "@/hooks/hookify-function";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -29,16 +29,16 @@ import { ProviderLogo } from "./logos/provider-logo";
 import { Card, CardContent, CardHeader } from "./ui/card";
 import { Input } from "./ui/input";
 
-export const EditLLMProviderDialog: FC<
+export const EditCredentialDialog: FC<
   PropsWithChildren<{
-    provider: LLMProvider;
+    provider: Credential;
   }>
 > = ({ provider, children }) => {
   const { currentProject } = useAppConfigStore();
 
-  const { execute: patchLLMProvider, isLoading: isPatchingLLMProvider } =
+  const { execute: patchCredential, isLoading: isPatchingCredential } =
     hookifyFunction(
-      patchLLMProviderUsecase.execute.bind(patchLLMProviderUsecase),
+      patchCredentialUsecase.execute.bind(patchCredentialUsecase),
     );
 
   if (!currentProject) {
@@ -46,8 +46,9 @@ export const EditLLMProviderDialog: FC<
   }
 
   const [open, setOpen] = useState(false);
-  const [selectedProvider, setSelectedProvider] =
-    useState<LLMProviderName | null>(null);
+  const [selectedProvider, setSelectedProvider] = useState<ProviderType | null>(
+    null,
+  );
 
   const formSchema = z.object({
     name: z.string().min(2).max(50),
@@ -70,7 +71,7 @@ export const EditLLMProviderDialog: FC<
   }, [provider, form]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    await patchLLMProvider(provider.id, {
+    await patchCredential(provider.id, {
       name: values.name,
       apiKey: values.apiKey,
     });
@@ -93,7 +94,7 @@ export const EditLLMProviderDialog: FC<
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Edit LLM provider</DialogTitle>
+          <DialogTitle>Edit Credential</DialogTitle>
           <DialogDescription>
             Note that we won&apos;t show your API key for security reasons.
           </DialogDescription>
@@ -158,7 +159,7 @@ export const EditLLMProviderDialog: FC<
                           </FormItem>
                         )}
                       />
-                      <Button type="submit" isLoading={isPatchingLLMProvider}>
+                      <Button type="submit" isLoading={isPatchingCredential}>
                         Save
                       </Button>
                     </form>

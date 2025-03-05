@@ -1,10 +1,10 @@
 "use client";
 
 import {
-  BrainCircuit,
   ChevronUp,
   FileSliders,
   Home,
+  KeyRoundIcon,
   Settings,
   User2,
   Users,
@@ -21,15 +21,15 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { CredentialsRoute, ModelsRoute, OverviewRoute } from "@/routes";
+import { useAuth } from "@clerk/nextjs";
+import Link from "next/link";
 import {
-  DropdownMenuContent,
   DropdownMenu,
+  DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { LLMProvidersRoute, ModelsRoute, OverviewRoute } from "@/routes";
-import Link from "next/link";
-import { useAuth } from "@clerk/nextjs";
 
 // Menu items.
 const items = [
@@ -39,14 +39,14 @@ const items = [
     icon: Home,
   },
   {
-    title: "LLM providers",
-    url: LLMProvidersRoute.path(),
-    icon: BrainCircuit,
-  },
-  {
     title: "Models",
     url: ModelsRoute.path(),
     icon: FileSliders,
+  },
+  {
+    title: "Credentials",
+    url: CredentialsRoute.path(),
+    icon: KeyRoundIcon,
   },
   {
     title: "Authentication",
