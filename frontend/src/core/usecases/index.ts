@@ -1,13 +1,14 @@
-import { MockProjectService } from "@/services/mock-project-service";
-import { GetProjectUsecase } from "./get-project";
 import { MockLLMProviderService } from "@/services/mock-llm-provider-service";
-import { ListLLMProvidersUsecase } from "./list-llm-providers";
-import { CreateLLMProviderUsecase } from "./create-llm-provider";
-import { PatchLLMProviderUsecase } from "./patch-llm-provider";
-import { DeleteLLMProviderUsecase } from "./delete-llm-provider";
-import { CreateModelUsecase } from "./create-model";
 import { MockModelService } from "@/services/mock-model-service";
+import { MockProjectService } from "@/services/mock-project-service";
+import { CreateLLMProviderUsecase } from "./create-llm-provider";
+import { CreateModelUsecase } from "./create-model";
+import { DeleteLLMProviderUsecase } from "./delete-llm-provider";
+import { DeleteModelUsecase } from "./delete-model";
+import { GetProjectUsecase } from "./get-project";
+import { ListLLMProvidersUsecase } from "./list-llm-providers";
 import { ListModelUsecase } from "./list-models";
+import { PatchLLMProviderUsecase } from "./patch-llm-provider";
 
 /**
  * Project
@@ -43,3 +44,7 @@ export const createModelUsecase = new CreateModelUsecase(
 );
 
 export const listModelUsecase = new ListModelUsecase(new MockModelService());
+
+export const deleteModelUsecase = new DeleteModelUsecase(
+  new MockModelService(),
+);

@@ -11,7 +11,11 @@ declare global {
 }
 
 export async function getAuthToken() {
-  // const isServer = typeof window === "undefined";
+  const isServer = typeof window === "undefined";
+
+  if (isServer) {
+    return null;
+  }
 
   // if (isServer) {
   //   const { getToken } = await auth();

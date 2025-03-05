@@ -37,6 +37,6 @@ export class MockModelService implements ModelService {
   }
 
   async delete(): Promise<void> {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 4000));
   }
 }

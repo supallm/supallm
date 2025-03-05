@@ -1,6 +1,6 @@
-import { Project } from "./entities/project";
 import { LLMProvider, LLMProviderName } from "./entities/llm-provider";
 import { Model } from "./entities/model";
+import { Project } from "./entities/project";
 
 export interface ProjectService {
   getCurrentProject: (userId: string) => Promise<Project>;

@@ -8,6 +8,15 @@ import {
 } from "@tanstack/react-table";
 
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+import {
   Table,
   TableBody,
   TableCell,
@@ -16,9 +25,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Model } from "@/core/entities/model";
-import { MoreHorizontalIcon } from "lucide-react";
+import { deleteModelUsecase } from "@/core/usecases";
+import { hookifyFunction } from "@/hooks/hookify-function";
+import { Cog, MoreHorizontalIcon, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { ConfirmDangerDialog } from "../confirm-danger-dialog";
 import { Copiable } from "../copiable";
 import { ProviderLogo } from "../logos/provider-logo";
+import { Spinner } from "../spinner";
 import { TruncatedTableCell } from "../truncated-table-cell";
 import { Button } from "../ui/button";
 
@@ -68,11 +82,54 @@ export const ModelTableColumns: ColumnDef<Model>[] = [
   {
     accessorKey: "actions",
     header: "Actions",
-    cell: () => {
+    cell: ({ row }) => {
+      const [open, setOpen] = useState(false);
+
+      const { execute: deleteModel, isLoading: isDeleting } = hookifyFunction(
+        deleteModelUsecase.execute.bind(deleteModelUsecase),
+      );
+
+      const handleDelete = () => {
+        deleteModel(row.original.id);
+      };
+
       return (
-        <Button variant="icon" size="sm">
-          <MoreHorizontalIcon />
-        </Button>
+        <>
+          <ConfirmDangerDialog
+            title="Delete Model"
+            description="Are you sure you want to delete this model? If it is being used by your web app, it could break your app."
+            confirmationText="DELETE"
+            onConfirm={() => {
+              handleDelete();
+            }}
+            isOpen={open}
+            onOpenChange={setOpen}
+          ></ConfirmDangerDialog>
+          {isDeleting && <Spinner />}
+          {!isDeleting && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="icon" size="sm">
+                  <MoreHorizontalIcon />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => {
+                    setOpen(true);
+                  }}
+                >
+                  <Trash2 className="w-4 h-4" /> Delete
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Cog className="w-4 h-4" /> Configure
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </>
       );
     },
   },
