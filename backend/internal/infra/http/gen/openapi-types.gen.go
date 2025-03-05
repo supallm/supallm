@@ -4,6 +4,8 @@
 package gen
 
 import (
+	"time"
+
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
@@ -11,9 +13,9 @@ const (
 	BearerAuthScopes = "BearerAuth.Scopes"
 )
 
-// Defines values for AuthProvider.
+// Defines values for AuthProviderProvider.
 const (
-	AuthProviderSupabase AuthProvider = "supabase"
+	AuthProviderProviderSupabase AuthProviderProvider = "supabase"
 )
 
 // Defines values for LLMModel.
@@ -36,21 +38,29 @@ const (
 	UpdateAuthRequestProviderSupabase UpdateAuthRequestProvider = "supabase"
 )
 
-// Auth defines model for Auth.
-type Auth struct {
-	Config   SupabaseAuthConfig `json:"config"`
-	Provider AuthProvider       `json:"provider"`
+// AuthProvider defines model for AuthProvider.
+type AuthProvider struct {
+	Config   SupabaseAuthConfig   `json:"config"`
+	Provider AuthProviderProvider `json:"provider"`
 }
 
-// AuthProvider defines model for Auth.Provider.
-type AuthProvider string
+// AuthProviderProvider defines model for AuthProvider.Provider.
+type AuthProviderProvider string
+
+// CreateLLMCredentialRequest defines model for CreateLLMCredentialRequest.
+type CreateLLMCredentialRequest struct {
+	ApiKey   string       `json:"apiKey"`
+	Name     string       `json:"name"`
+	Provider ProviderType `json:"provider"`
+}
 
 // CreateModelRequest defines model for CreateModelRequest.
 type CreateModelRequest struct {
-	Model        LLMModel           `json:"model"`
-	ProviderId   openapi_types.UUID `json:"providerId"`
-	Slug         string             `json:"slug"`
-	SystemPrompt *string            `json:"systemPrompt,omitempty"`
+	LlmCredentialId openapi_types.UUID     `json:"llmCredentialId"`
+	LlmModel        string                 `json:"llmModel"`
+	Name            string                 `json:"name"`
+	Parameters      map[string]interface{} `json:"parameters"`
+	SystemPrompt    string                 `json:"systemPrompt"`
 }
 
 // CreateProjectRequest defines model for CreateProjectRequest.
@@ -58,11 +68,14 @@ type CreateProjectRequest struct {
 	Name string `json:"name"`
 }
 
-// CreateProviderRequest defines model for CreateProviderRequest.
-type CreateProviderRequest struct {
-	ApiKey   string       `json:"apiKey"`
-	Name     string       `json:"name"`
-	Provider ProviderType `json:"provider"`
+// LLMCredential defines model for LLMCredential.
+type LLMCredential struct {
+	ApiKey    string             `json:"apiKey"`
+	CreatedAt *time.Time         `json:"createdAt,omitempty"`
+	Id        openapi_types.UUID `json:"id"`
+	Name      string             `json:"name"`
+	Provider  ProviderType       `json:"provider"`
+	UpdatedAt *time.Time         `json:"updatedAt,omitempty"`
 }
 
 // LLMModel defines model for LLMModel.
@@ -70,26 +83,27 @@ type LLMModel string
 
 // Model defines model for Model.
 type Model struct {
-	Id           openapi_types.UUID `json:"id"`
-	Model        LLMModel           `json:"model"`
-	Provider     Provider           `json:"provider"`
-	Slug         string             `json:"slug"`
-	SystemPrompt *string            `json:"systemPrompt,omitempty"`
+	CreatedAt    time.Time              `json:"createdAt"`
+	Credential   LLMCredential          `json:"credential"`
+	Id           openapi_types.UUID     `json:"id"`
+	LlmModel     LLMModel               `json:"llmModel"`
+	Name         *string                `json:"name,omitempty"`
+	Parameters   map[string]interface{} `json:"parameters"`
+	Slug         string                 `json:"slug"`
+	SystemPrompt string                 `json:"systemPrompt"`
+	UpdatedAt    time.Time              `json:"updatedAt"`
 }
 
 // Project defines model for Project.
 type Project struct {
-	Id     openapi_types.UUID `json:"id"`
-	Name   string             `json:"name"`
-	UserId openapi_types.UUID `json:"userId"`
-}
-
-// Provider defines model for Provider.
-type Provider struct {
-	ApiKey   string             `json:"apiKey"`
-	Id       openapi_types.UUID `json:"id"`
-	Name     string             `json:"name"`
-	Provider ProviderType       `json:"provider"`
+	AuthProvider AuthProvider       `json:"authProvider"`
+	CreatedAt    time.Time          `json:"createdAt"`
+	Credentials  []LLMCredential    `json:"credentials"`
+	Id           openapi_types.UUID `json:"id"`
+	Models       []Model            `json:"models"`
+	Name         string             `json:"name"`
+	UpdatedAt    time.Time          `json:"updatedAt"`
+	UserId       openapi_types.UUID `json:"userId"`
 }
 
 // ProviderType defines model for ProviderType.
@@ -118,22 +132,24 @@ type UpdateAuthRequest struct {
 // UpdateAuthRequestProvider defines model for UpdateAuthRequest.Provider.
 type UpdateAuthRequestProvider string
 
+// UpdateLLMCredentialRequest defines model for UpdateLLMCredentialRequest.
+type UpdateLLMCredentialRequest struct {
+	ApiKey string `json:"apiKey"`
+	Name   string `json:"name"`
+}
+
 // UpdateModelRequest defines model for UpdateModelRequest.
 type UpdateModelRequest struct {
-	Model        LLMModel           `json:"model"`
-	ProviderId   openapi_types.UUID `json:"providerId"`
-	SystemPrompt *string            `json:"systemPrompt,omitempty"`
+	LlmCredentialId openapi_types.UUID     `json:"llmCredentialId"`
+	LlmModel        LLMModel               `json:"llmModel"`
+	Name            string                 `json:"name"`
+	Parameters      map[string]interface{} `json:"parameters"`
+	SystemPrompt    string                 `json:"systemPrompt"`
 }
 
 // UpdateProjectRequest defines model for UpdateProjectRequest.
 type UpdateProjectRequest struct {
 	Name string `json:"name"`
-}
-
-// UpdateProviderRequest defines model for UpdateProviderRequest.
-type UpdateProviderRequest struct {
-	ApiKey string `json:"apiKey"`
-	Name   string `json:"name"`
 }
 
 // CreateProjectJSONRequestBody defines body for CreateProject for application/json ContentType.
@@ -145,6 +161,12 @@ type UpdateProjectJSONRequestBody = UpdateProjectRequest
 // UpdateAuthJSONRequestBody defines body for UpdateAuth for application/json ContentType.
 type UpdateAuthJSONRequestBody = UpdateAuthRequest
 
+// CreateCredentialJSONRequestBody defines body for CreateCredential for application/json ContentType.
+type CreateCredentialJSONRequestBody = CreateLLMCredentialRequest
+
+// UpdateCredentialJSONRequestBody defines body for UpdateCredential for application/json ContentType.
+type UpdateCredentialJSONRequestBody = UpdateLLMCredentialRequest
+
 // GenerateTextJSONRequestBody defines body for GenerateText for application/json ContentType.
 type GenerateTextJSONRequestBody = TextGenerationRequest
 
@@ -153,12 +175,6 @@ type CreateModelJSONRequestBody = CreateModelRequest
 
 // UpdateModelJSONRequestBody defines body for UpdateModel for application/json ContentType.
 type UpdateModelJSONRequestBody = UpdateModelRequest
-
-// CreateProviderJSONRequestBody defines body for CreateProvider for application/json ContentType.
-type CreateProviderJSONRequestBody = CreateProviderRequest
-
-// UpdateProviderJSONRequestBody defines body for UpdateProvider for application/json ContentType.
-type UpdateProviderJSONRequestBody = UpdateProviderRequest
 
 // StreamTextJSONRequestBody defines body for StreamText for application/json ContentType.
 type StreamTextJSONRequestBody = TextGenerationRequest

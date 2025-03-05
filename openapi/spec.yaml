@@ -34,10 +34,6 @@ paths:
       responses:
         "201":
           description: "Project created"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Project"
 
   /projects/{projectId}:
     get:
@@ -78,10 +74,6 @@ paths:
       responses:
         "200":
           description: "Project updated"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Project"
         "404":
           description: "Project not found"
     delete:
@@ -100,10 +92,10 @@ paths:
         "404":
           description: "Project not found"
 
-  /projects/{projectId}/providers:
+  /projects/{projectId}/credentials:
     get:
-      summary: List all providers for a project
-      operationId: listProviders
+      summary: List all credentials for a project
+      operationId: listCredentials
       parameters:
         - name: projectId
           in: path
@@ -113,18 +105,18 @@ paths:
             format: uuid
       responses:
         "200":
-          description: List of providers
+          description: List of credentials
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Provider"
+                  $ref: "#/components/schemas/LLMCredential"
         "404":
           description: Project not found
     post:
-      summary: "Create a provider for a project"
-      operationId: createProvider
+      summary: "Create a credential for a project"
+      operationId: createCredential
       parameters:
         - name: projectId
           in: path
@@ -137,23 +129,19 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateProviderRequest"
+              $ref: "#/components/schemas/CreateLLMCredentialRequest"
       responses:
         "201":
-          description: "Provider created"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Provider"
+          description: "Credential created"
         "400":
           description: Bad request
         "404":
           description: Project not found
 
-  /projects/{projectId}/providers/{providerId}:
+  /projects/{projectId}/credentials/{llmCredentialId}:
     get:
-      summary: "Get a provider by ID"
-      operationId: getProvider
+      summary: "Get a credential by ID"
+      operationId: getCredential
       parameters:
         - name: projectId
           in: path
@@ -161,7 +149,7 @@ paths:
           schema:
             type: string
             format: uuid
-        - name: providerId
+        - name: llmCredentialId
           in: path
           required: true
           schema:
@@ -169,16 +157,16 @@ paths:
             format: uuid
       responses:
         "200":
-          description: "Provider details"
+          description: "Credentials"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Provider"
+                $ref: "#/components/schemas/LLMCredential"
         "404":
-          description: Provider or project not found
+          description: Credential or project not found
     put:
-      summary: "Update a provider"
-      operationId: updateProvider
+      summary: "Update a credential"
+      operationId: updateCredential
       parameters:
         - name: projectId
           in: path
@@ -186,7 +174,7 @@ paths:
           schema:
             type: string
             format: uuid
-        - name: providerId
+        - name: llmCredentialId
           in: path
           required: true
           schema:
@@ -197,21 +185,17 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateProviderRequest"
+              $ref: "#/components/schemas/UpdateLLMCredentialRequest"
       responses:
         "200":
-          description: "Provider updated"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Provider"
+          description: "Credential updated"
         "400":
           description: Bad request
         "404":
-          description: Provider or project not found
+          description: Credential or project not found
     delete:
-      summary: "Delete a provider"
-      operationId: deleteProvider
+      summary: "Delete a credential"
+      operationId: deleteCredential
       parameters:
         - name: projectId
           in: path
@@ -219,7 +203,7 @@ paths:
           schema:
             type: string
             format: uuid
-        - name: providerId
+        - name: llmCredentialId
           in: path
           required: true
           schema:
@@ -227,9 +211,9 @@ paths:
             format: uuid
       responses:
         "204":
-          description: "Provider deleted"
+          description: "Credential deleted"
         "404":
-          description: Provider or project not found
+          description: Credential or project not found
 
   /projects/{projectId}/models:
     get:
@@ -272,10 +256,6 @@ paths:
       responses:
         "201":
           description: "Model created"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Model"
         "400":
           description: Bad request
         "404":
@@ -330,10 +310,6 @@ paths:
       responses:
         "200":
           description: "Model updated"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Model"
         "400":
           description: Bad request
         "404":
@@ -376,7 +352,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Auth"
+                $ref: "#/components/schemas/AuthProvider"
         "404":
           description: Project not found
     put:
@@ -398,10 +374,6 @@ paths:
       responses:
         "200":
           description: "Authentication updated"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Auth"
         "400":
           description: Bad request
         "404":
@@ -487,10 +459,31 @@ components:
         userId:
           type: string
           format: uuid
+        authProvider:
+          $ref: "#/components/schemas/AuthProvider"
+        credentials:
+          type: array
+          items:
+            $ref: "#/components/schemas/LLMCredential"
+        models:
+          type: array
+          items:
+            $ref: "#/components/schemas/Model"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
       required:
         - id
         - name
         - userId
+        - authProvider
+        - credentials
+        - models
+        - createdAt
+        - updatedAt
 
     CreateProjectRequest:
       type: object
@@ -523,7 +516,7 @@ components:
         - claude-3-5-sonnet
         - claude-3-5-haiku
 
-    Provider:
+    LLMCredential:
       type: object
       properties:
         id:
@@ -535,13 +528,19 @@ components:
           $ref: "#/components/schemas/ProviderType"
         apiKey:
           type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
       required:
         - id
         - name
         - provider
         - apiKey
 
-    CreateProviderRequest:
+    CreateLLMCredentialRequest:
       type: object
       properties:
         name:
@@ -555,7 +554,7 @@ components:
         - provider
         - apiKey
 
-    UpdateProviderRequest:
+    UpdateLLMCredentialRequest:
       type: object
       properties:
         name:
@@ -572,52 +571,77 @@ components:
         id:
           type: string
           format: uuid
+        name:
+          type: string
         slug:
           type: string
-        provider:
-          $ref: "#/components/schemas/Provider"
-        model:
+        credential:
+          $ref: "#/components/schemas/LLMCredential"
+        llmModel:
           $ref: "#/components/schemas/LLMModel"
         systemPrompt:
           type: string
+        parameters:
+          type: object
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
       required:
         - id
         - slug
-        - provider
-        - model
+        - credential
+        - llmModel
+        - systemPrompt
+        - parameters
+        - createdAt
+        - updatedAt
 
     CreateModelRequest:
       type: object
       properties:
-        slug:
+        name:
           type: string
-        providerId:
+        llmCredentialId:
           type: string
           format: uuid
-        model:
-          $ref: "#/components/schemas/LLMModel"
+        llmModel:
+          type: string
         systemPrompt:
           type: string
+        parameters:
+          type: object
       required:
-        - slug
-        - providerId
-        - model
+        - name
+        - llmCredentialId
+        - llmModel
+        - systemPrompt
+        - parameters
 
     UpdateModelRequest:
       type: object
       properties:
-        providerId:
+        name:
+          type: string
+        llmCredentialId:
           type: string
           format: uuid
-        model:
+        llmModel:
           $ref: "#/components/schemas/LLMModel"
         systemPrompt:
           type: string
+        parameters:
+          type: object
       required:
-        - providerId
-        - model
+        - name
+        - llmCredentialId
+        - llmModel
+        - systemPrompt
+        - parameters
 
-    Auth:
+    AuthProvider:
       type: object
       properties:
         provider:
