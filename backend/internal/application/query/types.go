@@ -1,6 +1,8 @@
 package query
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/supallm/core/internal/pkg/slug"
 )
@@ -11,6 +13,8 @@ type Project struct {
 	AuthProvider AuthProvider
 	Credentials  []LLMCredential
 	Models       []Model
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
 }
 
 type AuthProvider struct {
@@ -24,6 +28,8 @@ type Model struct {
 	Slug         slug.Slug
 	Model        string
 	SystemPrompt string
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
 }
 
 type LLMCredential struct {
@@ -31,4 +37,6 @@ type LLMCredential struct {
 	Name             string
 	Provider         string
 	ObfuscatedApiKey string
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
 }

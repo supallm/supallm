@@ -44,6 +44,8 @@ func (l LlmCredential) query() (query.LLMCredential, error) {
 		Name:             l.Name,
 		Provider:         l.ProviderType,
 		ObfuscatedApiKey: l.ApiKeyObfuscated,
+		CreatedAt:        l.CreatedAt.Time,
+		UpdatedAt:        l.UpdatedAt.Time,
 	}, nil
 }
 
@@ -62,6 +64,8 @@ func (m Model) query() (query.Model, error) {
 		Slug:         slug.Slug(m.Slug),
 		Model:        m.LlmModel,
 		SystemPrompt: m.SystemPrompt,
+		CreatedAt:    m.CreatedAt.Time,
+		UpdatedAt:    m.UpdatedAt.Time,
 	}, nil
 }
 
@@ -124,5 +128,7 @@ func (p Project) query(cs []LlmCredential, ms []Model) (query.Project, error) {
 		AuthProvider: ap,
 		Credentials:  llmCredentials,
 		Models:       models,
+		CreatedAt:    p.CreatedAt.Time,
+		UpdatedAt:    p.UpdatedAt.Time,
 	}, nil
 }
