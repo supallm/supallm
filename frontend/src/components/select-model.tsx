@@ -32,7 +32,7 @@ export const SelectModel: FC<{
     <Select onValueChange={onValueChange} defaultValue={defaultValue}>
       <FormControl className="w-full">
         <SelectTrigger>
-          <SelectValue placeholder="Select a verified email to display" />
+          <SelectValue placeholder="Select the model to use" />
         </SelectTrigger>
       </FormControl>
       <SelectContent className="w-full">
