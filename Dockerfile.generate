@@ -11,3 +11,18 @@ RUN ./genoapi.sh
 
 FROM scratch AS oapi
 COPY --from=generator-oapi /utils/gen ./gen
+
+# #
+# Frontend Generator
+# #
+FROM node:20-alpine AS generator-frontend
+WORKDIR /utils
+COPY ./openapi/ .
+
+FROM generator-frontend AS generator-oapi-frontend
+WORKDIR /utils/gen-client
+RUN sh ./gen-client.sh
+
+FROM scratch AS oapi-frontend
+COPY --from=generator-oapi-frontend /utils/gen-client/src .
+

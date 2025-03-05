@@ -20,6 +20,9 @@
 # production
 /build
 
+# generated code
+gen-api
+
 # misc
 .DS_Store
 *.pem
