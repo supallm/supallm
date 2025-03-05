@@ -13,11 +13,12 @@ import (
 )
 
 type UpdateModelCommand struct {
-	ProjectID     uuid.UUID
-	Slug          slug.Slug
-	LLMProviderID uuid.UUID
-	LLMModel      model.LLMModel
-	SystemPrompt  model.Prompt
+	ProjectID       uuid.UUID
+	Slug            slug.Slug
+	Name            string
+	LLMCredentialID uuid.UUID
+	LLMModel        model.LLMModel
+	SystemPrompt    model.Prompt
 }
 
 type UpdateModelHandler struct {
@@ -43,9 +44,20 @@ func (h UpdateModelHandler) Handle(ctx context.Context, cmd UpdateModelCommand) 
 		return errs.ErrNotFound{Resource: "project", ID: cmd.ProjectID}
 	}
 
-	err = project.UpdateModel(cmd.Slug, cmd.LLMProviderID, cmd.LLMModel, cmd.SystemPrompt)
+	err = project.UpdateModelName(cmd.Slug, cmd.Name)
 	if err != nil {
 		return errs.ErrReqInvalid{Reason: err.Error()}
 	}
+
+	err = project.UpdateModelLLMCredential(cmd.Slug, cmd.LLMCredentialID)
+	if err != nil {
+		return errs.ErrReqInvalid{Reason: err.Error()}
+	}
+
+	err = project.UpdateModelLLMModel(cmd.Slug, cmd.LLMModel)
+	if err != nil {
+		return errs.ErrReqInvalid{Reason: err.Error()}
+	}
+
 	return h.projectRepo.Update(ctx, project)
 }

@@ -18,4 +18,12 @@ const (
 	ErrModelExists             Err = "model already exists"
 	ErrLLMModelNotSupported    Err = "llm model not supported"
 	ErrLLMProviderNotSupported Err = "llm provider not supported"
+
+	ErrInvalidModelSlug Err = "invalid model slug"
+	ErrInvalidModel     Err = "invalid model"
+
+	ErrCredentialNotFound Err = "credential not found"
+
+	ErrInvalidLLMCredential Err = "invalid llm credential"
+	ErrInvalidLLMModel      Err = "invalid llm model"
 )

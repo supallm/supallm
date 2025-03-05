@@ -9,7 +9,7 @@ type Project struct {
 	ID           uuid.UUID
 	Name         string
 	AuthProvider AuthProvider
-	LLMProviders []LLMProvider
+	Credentials  []LLMCredential
 	Models       []Model
 }
 
@@ -26,7 +26,7 @@ type Model struct {
 	SystemPrompt string
 }
 
-type LLMProvider struct {
+type LLMCredential struct {
 	ID               uuid.UUID
 	Name             string
 	Provider         string

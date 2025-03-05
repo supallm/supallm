@@ -12,7 +12,7 @@ import (
 	"github.com/supallm/core/internal/pkg/secret"
 )
 
-type AddLLMProviderCommand struct {
+type AddLLMCredentialCommand struct {
 	ID           uuid.UUID
 	ProjectID    uuid.UUID
 	Name         string
@@ -20,48 +20,43 @@ type AddLLMProviderCommand struct {
 	APIKey       secret.ApiKey
 }
 
-type AddLLMProviderHandler struct {
-	projectRepo      repository.ProjectRepository
-	providerRegistry repository.ProviderRegistry
+type AddLLMCredentialHandler struct {
+	projectRepo repository.ProjectRepository
+	llmProvider repository.LLMProvider
 }
 
-func NewAddLLMProviderHandler(
+func NewAddLLMCredentialHandler(
 	projectRepo repository.ProjectRepository,
-	providerRegistry repository.ProviderRegistry,
-) AddLLMProviderHandler {
+	llmProvider repository.LLMProvider,
+) AddLLMCredentialHandler {
 	if projectRepo == nil {
 		slog.Error("projectRepo is nil")
 		os.Exit(1)
 	}
 
-	if providerRegistry == nil {
-		slog.Error("providerRegistry is nil")
+	if llmProvider == nil {
+		slog.Error("llmProvider is nil")
 		os.Exit(1)
 	}
 
-	return AddLLMProviderHandler{
-		projectRepo:      projectRepo,
-		providerRegistry: providerRegistry,
+	return AddLLMCredentialHandler{
+		projectRepo: projectRepo,
+		llmProvider: llmProvider,
 	}
 }
 
-func (h AddLLMProviderHandler) Handle(ctx context.Context, cmd AddLLMProviderCommand) error {
+func (h AddLLMCredentialHandler) Handle(ctx context.Context, cmd AddLLMCredentialCommand) error {
 	project, err := h.projectRepo.Retrieve(ctx, cmd.ProjectID)
 	if err != nil {
 		return errs.ErrNotFound{Resource: "project", ID: cmd.ProjectID}
 	}
 
-	provider, err := project.CreateProvider(cmd.ID, cmd.Name, cmd.ProviderType, cmd.APIKey)
+	credential, err := project.CreateCredential(cmd.ID, cmd.Name, cmd.ProviderType, cmd.APIKey)
 	if err != nil {
 		return errs.ErrReqInvalid{Reason: err.Error()}
 	}
 
-	llmProvider, err := h.providerRegistry.GetLLM(provider)
-	if err != nil {
-		return errs.ErrReqInvalid{Reason: err.Error()}
-	}
-
-	err = llmProvider.VerifyKey(ctx, cmd.APIKey)
+	err = h.llmProvider.VerifyKey(ctx, credential)
 	if err != nil {
 		return errs.ErrReqInvalid{Reason: err.Error()}
 	}

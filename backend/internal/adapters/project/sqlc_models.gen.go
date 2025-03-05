@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type LlmProvider struct {
+type LlmCredential struct {
 	ID               uuid.UUID          `json:"id"`
 	ProjectID        uuid.UUID          `json:"project_id"`
 	Name             string             `json:"name"`
@@ -23,10 +23,12 @@ type LlmProvider struct {
 type Model struct {
 	ID           uuid.UUID          `json:"id"`
 	ProjectID    uuid.UUID          `json:"project_id"`
-	ProviderID   uuid.UUID          `json:"provider_id"`
+	CredentialID uuid.UUID          `json:"credential_id"`
+	Name         string             `json:"name"`
 	Slug         string             `json:"slug"`
 	LlmModel     string             `json:"llm_model"`
 	SystemPrompt string             `json:"system_prompt"`
+	Parameters   []byte             `json:"parameters"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
 }

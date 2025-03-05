@@ -8,7 +8,7 @@ import (
 
 type LLMSession struct {
 	ID             uuid.UUID
-	UserID         uuid.UUID
+	UserID         string
 	ProjectID      uuid.UUID
 	Requests       []*LLMRequest
 	Responses      []*LLMResponse
@@ -16,7 +16,7 @@ type LLMSession struct {
 	LastActivityAt time.Time
 }
 
-func NewLLMSession(id, userID, projectID uuid.UUID) *LLMSession {
+func NewLLMSession(id uuid.UUID, userID string, projectID uuid.UUID) *LLMSession {
 	return &LLMSession{
 		ID:        id,
 		UserID:    userID,

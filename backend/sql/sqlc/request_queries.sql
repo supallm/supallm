@@ -1,6 +1,6 @@
 -- name: storeRequest :exec
-INSERT INTO requests (id, session_id, model_id, prompt, config, status)
-VALUES ($1, $2, $3, $4, $5, $6);
+INSERT INTO requests (id, session_id, model_id, config, status)
+VALUES ($1, $2, $3, $4, $5);
 
 -- name: requestById :one
 SELECT *

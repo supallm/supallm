@@ -29,19 +29,19 @@ type Commands struct {
 	UpdateModel command.UpdateModelHandler
 	RemoveModel command.RemoveModelHandler
 
-	AddLLMProvider    command.AddLLMProviderHandler
-	UpdateLLMProvider command.UpdateLLMProviderHandler
-	RemoveLLMProvider command.RemoveLLMProviderHandler
+	AddLLMCredential    command.AddLLMCredentialHandler
+	UpdateLLMCredential command.UpdateLLMCredentialHandler
+	RemoveLLMCredential command.RemoveLLMCredentialHandler
 
 	GenerateText command.GenerateTextHandler
 	StreamText   command.StreamTextHandler
 }
 
 type Queries struct {
-	GetProject    query.GetProjectHandler
-	ListProjects  query.ListProjectsHandler
-	ListModels    query.ListModelsHandler
-	ListProviders query.ListProvidersHandler
+	GetProject      query.GetProjectHandler
+	ListProjects    query.ListProjectsHandler
+	ListModels      query.ListModelsHandler
+	ListCredentials query.ListCredentialsHandler
 }
 
 func New(
@@ -73,18 +73,18 @@ func New(
 			UpdateModel: command.NewUpdateModelHandler(projectRepo),
 			RemoveModel: command.NewRemoveModelHandler(projectRepo),
 
-			AddLLMProvider:    command.NewAddLLMProviderHandler(projectRepo, llmRegistry),
-			UpdateLLMProvider: command.NewUpdateLLMProviderHandler(projectRepo),
-			RemoveLLMProvider: command.NewRemoveLLMProviderHandler(projectRepo),
+			AddLLMCredential:    command.NewAddLLMCredentialHandler(projectRepo, llmRegistry),
+			UpdateLLMCredential: command.NewUpdateLLMCredentialHandler(projectRepo),
+			RemoveLLMCredential: command.NewRemoveLLMCredentialHandler(projectRepo),
 
 			GenerateText: command.NewGenerateTextHandler(projectRepo, sessionRepo, llmRegistry),
 			StreamText:   command.NewStreamTextHandler(projectRepo, sessionRepo, llmRegistry),
 		},
 		Queries: &Queries{
-			GetProject:    query.NewGetProjectHandler(projectRepo),
-			ListProjects:  query.NewListProjectsHandler(projectRepo),
-			ListModels:    query.NewListModelsHandler(projectRepo),
-			ListProviders: query.NewListProvidersHandler(projectRepo),
+			GetProject:      query.NewGetProjectHandler(projectRepo),
+			ListProjects:    query.NewListProjectsHandler(projectRepo),
+			ListModels:      query.NewListModelsHandler(projectRepo),
+			ListCredentials: query.NewListCredentialsHandler(projectRepo),
 		},
 	}
 

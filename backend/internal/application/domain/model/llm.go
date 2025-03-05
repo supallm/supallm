@@ -12,14 +12,12 @@ type (
 	ResponseStatus string
 
 	LLMRequestConfig struct {
-		MaxTokens   int
-		Temperature float64
-		Prompt      Prompt
+		Prompt Prompt
 	}
 
 	LLMRequest struct {
 		ID     uuid.UUID
-		Model  *Model
+		Model  Model
 		Status RequestStatus
 		Config LLMRequestConfig
 	}
@@ -43,7 +41,6 @@ type (
 	LLMResponse struct {
 		ID          uuid.UUID
 		RequestID   uuid.UUID
-		SessionID   uuid.UUID
 		Content     string
 		Status      ResponseStatus
 		TokenUsage  TokenUsage
@@ -74,13 +71,16 @@ func (s *LLMSession) NewRequest(id uuid.UUID, model *Model, config LLMRequestCon
 		return nil, ErrInvalidID
 	}
 
+	if model == nil {
+		return nil, ErrInvalidModel
+	}
+
 	request := &LLMRequest{
 		ID:     id,
-		Model:  model,
+		Model:  *model,
 		Config: config,
 		Status: RequestStatusPending,
 	}
 	s.Requests = append(s.Requests, request)
-
 	return request, nil
 }

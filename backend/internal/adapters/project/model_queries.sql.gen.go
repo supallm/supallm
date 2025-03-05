@@ -11,16 +11,6 @@ import (
 	"github.com/google/uuid"
 )
 
-const deleteAllModelsByProjectId = `-- name: deleteAllModelsByProjectId :exec
-DELETE FROM models
-WHERE project_id = $1
-`
-
-func (q *Queries) deleteAllModelsByProjectId(ctx context.Context, projectID uuid.UUID) error {
-	_, err := q.db.Exec(ctx, deleteAllModelsByProjectId, projectID)
-	return err
-}
-
 const deleteModel = `-- name: deleteModel :exec
 DELETE FROM models
 WHERE id = $1
@@ -32,7 +22,7 @@ func (q *Queries) deleteModel(ctx context.Context, id uuid.UUID) error {
 }
 
 const modelsByProjectId = `-- name: modelsByProjectId :many
-SELECT id, project_id, provider_id, slug, llm_model, system_prompt, created_at, updated_at
+SELECT id, project_id, credential_id, name, slug, llm_model, system_prompt, parameters, created_at, updated_at
 FROM models
 WHERE project_id = $1
 `
@@ -49,10 +39,12 @@ func (q *Queries) modelsByProjectId(ctx context.Context, projectID uuid.UUID) ([
 		if err := rows.Scan(
 			&i.ID,
 			&i.ProjectID,
-			&i.ProviderID,
+			&i.CredentialID,
+			&i.Name,
 			&i.Slug,
 			&i.LlmModel,
 			&i.SystemPrompt,
+			&i.Parameters,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -67,59 +59,69 @@ func (q *Queries) modelsByProjectId(ctx context.Context, projectID uuid.UUID) ([
 }
 
 const storeModel = `-- name: storeModel :exec
-INSERT INTO models (id, project_id, provider_id, slug, llm_model, system_prompt)
-VALUES ($1, $2, $3, $4, $5, $6)
+INSERT INTO models (id, project_id, credential_id, name, slug, llm_model, system_prompt, parameters)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 `
 
 type storeModelParams struct {
 	ID           uuid.UUID `json:"id"`
 	ProjectID    uuid.UUID `json:"project_id"`
-	ProviderID   uuid.UUID `json:"provider_id"`
+	CredentialID uuid.UUID `json:"credential_id"`
+	Name         string    `json:"name"`
 	Slug         string    `json:"slug"`
 	LlmModel     string    `json:"llm_model"`
 	SystemPrompt string    `json:"system_prompt"`
+	Parameters   []byte    `json:"parameters"`
 }
 
 func (q *Queries) storeModel(ctx context.Context, arg storeModelParams) error {
 	_, err := q.db.Exec(ctx, storeModel,
 		arg.ID,
 		arg.ProjectID,
-		arg.ProviderID,
+		arg.CredentialID,
+		arg.Name,
 		arg.Slug,
 		arg.LlmModel,
 		arg.SystemPrompt,
+		arg.Parameters,
 	)
 	return err
 }
 
 const upsertModel = `-- name: upsertModel :exec
-INSERT INTO models (id, project_id, provider_id, slug, llm_model, system_prompt)
-VALUES ($1, $2, $3, $4, $5, $6)
+INSERT INTO models (id, project_id, credential_id, name, slug, llm_model, system_prompt, parameters)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 ON CONFLICT (id)
 DO UPDATE SET
     llm_model = EXCLUDED.llm_model,
+    credential_id = EXCLUDED.credential_id,
+    name = EXCLUDED.name,
     system_prompt = EXCLUDED.system_prompt,
-    provider_id = EXCLUDED.provider_id,
+    parameters = EXCLUDED.parameters,
     updated_at = NOW()
 `
 
 type upsertModelParams struct {
 	ID           uuid.UUID `json:"id"`
 	ProjectID    uuid.UUID `json:"project_id"`
-	ProviderID   uuid.UUID `json:"provider_id"`
+	CredentialID uuid.UUID `json:"credential_id"`
+	Name         string    `json:"name"`
 	Slug         string    `json:"slug"`
 	LlmModel     string    `json:"llm_model"`
 	SystemPrompt string    `json:"system_prompt"`
+	Parameters   []byte    `json:"parameters"`
 }
 
 func (q *Queries) upsertModel(ctx context.Context, arg upsertModelParams) error {
 	_, err := q.db.Exec(ctx, upsertModel,
 		arg.ID,
 		arg.ProjectID,
-		arg.ProviderID,
+		arg.CredentialID,
+		arg.Name,
 		arg.Slug,
 		arg.LlmModel,
 		arg.SystemPrompt,
+		arg.Parameters,
 	)
 	return err
 }

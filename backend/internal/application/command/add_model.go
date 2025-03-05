@@ -13,12 +13,14 @@ import (
 )
 
 type AddModelCommand struct {
-	ProjectID     uuid.UUID
-	ModelID       uuid.UUID
-	Slug          slug.Slug
-	LLMProviderID uuid.UUID
-	LLMModel      model.LLMModel
-	SystemPrompt  model.Prompt
+	ProjectID       uuid.UUID
+	ModelID         uuid.UUID
+	Slug            slug.Slug
+	Name            string
+	LLMCredentialID uuid.UUID
+	LLMModel        model.LLMModel
+	SystemPrompt    model.Prompt
+	Parameters      model.ModelParameters
 }
 
 type AddModelHandler struct {
@@ -44,7 +46,7 @@ func (h AddModelHandler) Handle(ctx context.Context, cmd AddModelCommand) error 
 		return errs.ErrNotFound{Resource: "project", ID: cmd.ProjectID}
 	}
 
-	err = project.AddModel(cmd.ModelID, cmd.Slug, cmd.LLMProviderID, cmd.LLMModel, cmd.SystemPrompt)
+	err = project.AddModel(cmd.ModelID, cmd.Name, cmd.Slug, cmd.LLMCredentialID, cmd.LLMModel, cmd.SystemPrompt, cmd.Parameters)
 	if err != nil {
 		return errs.ErrReqInvalid{Reason: err.Error()}
 	}

@@ -1,6 +1,7 @@
 package project
 
 import (
+	"github.com/google/uuid"
 	"github.com/supallm/core/internal/application/domain/model"
 	"github.com/supallm/core/internal/application/query"
 	"github.com/supallm/core/internal/pkg/secret"
@@ -23,22 +24,22 @@ func (a authProvider) query() (query.AuthProvider, error) {
 	}, nil
 }
 
-func (l LlmProvider) domain() (model.LLMProvider, error) {
+func (l LlmCredential) domain() (*model.LLMCredential, error) {
 	apiKey, err := secret.Decrypt(l.ApiKeyEncrypted)
 	if err != nil {
-		return model.LLMProvider{}, err
+		return nil, err
 	}
 
-	return model.LLMProvider{
-		ID:     l.ID,
-		Name:   l.Name,
-		Type:   model.LLMProviderType(l.ProviderType),
-		APIKey: apiKey,
+	return &model.LLMCredential{
+		ID:           l.ID,
+		Name:         l.Name,
+		ProviderType: model.LLMProviderType(l.ProviderType),
+		APIKey:       apiKey,
 	}, nil
 }
 
-func (l LlmProvider) query() (query.LLMProvider, error) {
-	return query.LLMProvider{
+func (l LlmCredential) query() (query.LLMCredential, error) {
+	return query.LLMCredential{
 		ID:               l.ID,
 		Name:             l.Name,
 		Provider:         l.ProviderType,
@@ -46,12 +47,11 @@ func (l LlmProvider) query() (query.LLMProvider, error) {
 	}, nil
 }
 
-func (m Model) domain() (model.Model, error) {
-	return model.Model{
+func (m Model) domain() (*model.Model, error) {
+	return &model.Model{
 		ID:           m.ID,
 		Slug:         slug.Slug(m.Slug),
-		ProviderId:   m.ProviderID,
-		Model:        model.LLMModel(m.LlmModel),
+		LLMModel:     model.LLMModel(m.LlmModel),
 		SystemPrompt: model.Prompt(m.SystemPrompt),
 	}, nil
 }
@@ -59,28 +59,27 @@ func (m Model) domain() (model.Model, error) {
 func (m Model) query() (query.Model, error) {
 	return query.Model{
 		ID:           m.ID,
-		ProviderId:   m.ProviderID,
 		Slug:         slug.Slug(m.Slug),
 		Model:        m.LlmModel,
 		SystemPrompt: m.SystemPrompt,
 	}, nil
 }
 
-func (p Project) domain(ps []LlmProvider, ms []Model) (*model.Project, error) {
+func (p Project) domain(cs []LlmCredential, ms []Model) (*model.Project, error) {
 	ap, err := p.AuthProvider.domain()
 	if err != nil {
 		return nil, err
 	}
 
-	llmProviders := make([]model.LLMProvider, len(ps))
-	for i, llmProvider := range ps {
-		llmProviders[i], err = llmProvider.domain()
+	llmCredentials := make(map[uuid.UUID]*model.LLMCredential)
+	for _, llmCredential := range cs {
+		llmCredentials[llmCredential.ID], err = llmCredential.domain()
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	models := make(map[slug.Slug]model.Model)
+	models := make(map[slug.Slug]*model.Model)
 	for _, m := range ms {
 		models[slug.Slug(m.Slug)], err = m.domain()
 		if err != nil {
@@ -92,20 +91,20 @@ func (p Project) domain(ps []LlmProvider, ms []Model) (*model.Project, error) {
 		ID:           p.ID,
 		Name:         p.Name,
 		AuthProvider: ap,
-		LLMProviders: llmProviders,
+		Credentials:  llmCredentials,
 		Models:       models,
 	}, nil
 }
 
-func (p Project) query(ps []LlmProvider, ms []Model) (query.Project, error) {
+func (p Project) query(cs []LlmCredential, ms []Model) (query.Project, error) {
 	ap, err := p.AuthProvider.query()
 	if err != nil {
 		return query.Project{}, err
 	}
 
-	llmProviders := make([]query.LLMProvider, len(ps))
-	for i, llmProvider := range ps {
-		llmProviders[i], err = llmProvider.query()
+	llmCredentials := make([]query.LLMCredential, len(cs))
+	for i, llmCredential := range cs {
+		llmCredentials[i], err = llmCredential.query()
 		if err != nil {
 			return query.Project{}, err
 		}
@@ -123,7 +122,7 @@ func (p Project) query(ps []LlmProvider, ms []Model) (query.Project, error) {
 		ID:           p.ID,
 		Name:         p.Name,
 		AuthProvider: ap,
-		LLMProviders: llmProviders,
+		Credentials:  llmCredentials,
 		Models:       models,
 	}, nil
 }

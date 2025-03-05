@@ -24,13 +24,13 @@ type StreamTextCommand struct {
 type StreamTextHandler struct {
 	projectRepo repository.ProjectRepository
 	sessionRepo repository.LLMSessionRepository
-	llmRegistry repository.ProviderRegistry
+	llmProvider repository.LLMProvider
 }
 
 func NewStreamTextHandler(
 	projectRepo repository.ProjectRepository,
 	sessionRepo repository.LLMSessionRepository,
-	llmRegistry repository.ProviderRegistry,
+	llmProvider repository.LLMProvider,
 ) StreamTextHandler {
 	if projectRepo == nil {
 		slog.Error("projectRepo is nil")
@@ -42,15 +42,15 @@ func NewStreamTextHandler(
 		os.Exit(1)
 	}
 
-	if llmRegistry == nil {
-		slog.Error("llmRegistry is nil")
+	if llmProvider == nil {
+		slog.Error("llmProvider is nil")
 		os.Exit(1)
 	}
 
 	return StreamTextHandler{
 		projectRepo: projectRepo,
 		sessionRepo: sessionRepo,
-		llmRegistry: llmRegistry,
+		llmProvider: llmProvider,
 	}
 }
 

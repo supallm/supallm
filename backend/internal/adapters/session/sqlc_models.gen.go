@@ -13,7 +13,6 @@ type Request struct {
 	ID        uuid.UUID          `json:"id"`
 	SessionID uuid.UUID          `json:"session_id"`
 	ModelID   uuid.UUID          `json:"model_id"`
-	Prompt    string             `json:"prompt"`
 	Config    []byte             `json:"config"`
 	Status    string             `json:"status"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
