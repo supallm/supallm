@@ -8,7 +8,6 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/oapi-codegen/runtime"
-	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
 // ServerInterface represents all server handlers.
@@ -21,55 +20,55 @@ type ServerInterface interface {
 	CreateProject(c *fiber.Ctx) error
 	// Delete a project
 	// (DELETE /projects/{projectId})
-	DeleteProject(c *fiber.Ctx, projectId openapi_types.UUID) error
+	DeleteProject(c *fiber.Ctx, projectId UUID) error
 	// Get a project by ID
 	// (GET /projects/{projectId})
-	GetProject(c *fiber.Ctx, projectId openapi_types.UUID) error
+	GetProject(c *fiber.Ctx, projectId UUID) error
 	// Update a project
 	// (PUT /projects/{projectId})
-	UpdateProject(c *fiber.Ctx, projectId openapi_types.UUID) error
+	UpdateProject(c *fiber.Ctx, projectId UUID) error
 	// Get authentication configuration for a project
 	// (GET /projects/{projectId}/auth)
-	GetAuth(c *fiber.Ctx, projectId openapi_types.UUID) error
+	GetAuth(c *fiber.Ctx, projectId UUID) error
 	// Update authentication for a project
 	// (PUT /projects/{projectId}/auth)
-	UpdateAuth(c *fiber.Ctx, projectId openapi_types.UUID) error
+	UpdateAuth(c *fiber.Ctx, projectId UUID) error
 	// List all credentials for a project
 	// (GET /projects/{projectId}/credentials)
-	ListCredentials(c *fiber.Ctx, projectId openapi_types.UUID) error
+	ListCredentials(c *fiber.Ctx, projectId UUID) error
 	// Create a credential for a project
 	// (POST /projects/{projectId}/credentials)
-	CreateCredential(c *fiber.Ctx, projectId openapi_types.UUID) error
+	CreateCredential(c *fiber.Ctx, projectId UUID) error
 	// Delete a credential
 	// (DELETE /projects/{projectId}/credentials/{llmCredentialId})
-	DeleteCredential(c *fiber.Ctx, projectId openapi_types.UUID, llmCredentialId openapi_types.UUID) error
+	DeleteCredential(c *fiber.Ctx, projectId UUID, llmCredentialId UUID) error
 	// Get a credential by ID
 	// (GET /projects/{projectId}/credentials/{llmCredentialId})
-	GetCredential(c *fiber.Ctx, projectId openapi_types.UUID, llmCredentialId openapi_types.UUID) error
+	GetCredential(c *fiber.Ctx, projectId UUID, llmCredentialId UUID) error
 	// Update a credential
 	// (PUT /projects/{projectId}/credentials/{llmCredentialId})
-	UpdateCredential(c *fiber.Ctx, projectId openapi_types.UUID, llmCredentialId openapi_types.UUID) error
+	UpdateCredential(c *fiber.Ctx, projectId UUID, llmCredentialId UUID) error
 	// Generate text (HTTP blocking)
 	// (POST /projects/{projectId}/generateText)
-	GenerateText(c *fiber.Ctx, projectId openapi_types.UUID) error
+	GenerateText(c *fiber.Ctx, projectId UUID) error
 	// List all models for a project
 	// (GET /projects/{projectId}/models)
-	ListModels(c *fiber.Ctx, projectId openapi_types.UUID) error
+	ListModels(c *fiber.Ctx, projectId UUID) error
 	// Create a model for a project
 	// (POST /projects/{projectId}/models)
-	CreateModel(c *fiber.Ctx, projectId openapi_types.UUID) error
+	CreateModel(c *fiber.Ctx, projectId UUID) error
 	// Delete a model
 	// (DELETE /projects/{projectId}/models/{slug})
-	DeleteModel(c *fiber.Ctx, projectId openapi_types.UUID, slug string) error
+	DeleteModel(c *fiber.Ctx, projectId UUID, slug string) error
 	// Get a model by slug
 	// (GET /projects/{projectId}/models/{slug})
-	GetModel(c *fiber.Ctx, projectId openapi_types.UUID, slug string) error
+	GetModel(c *fiber.Ctx, projectId UUID, slug string) error
 	// Update a model
 	// (PUT /projects/{projectId}/models/{slug})
-	UpdateModel(c *fiber.Ctx, projectId openapi_types.UUID, slug string) error
+	UpdateModel(c *fiber.Ctx, projectId UUID, slug string) error
 	// Generate text in streaming (SSE)
 	// (POST /projects/{projectId}/streamText)
-	StreamText(c *fiber.Ctx, projectId openapi_types.UUID) error
+	StreamText(c *fiber.Ctx, projectId UUID) error
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -101,7 +100,7 @@ func (siw *ServerInterfaceWrapper) DeleteProject(c *fiber.Ctx) error {
 	var err error
 
 	// ------------- Path parameter "projectId" -------------
-	var projectId openapi_types.UUID
+	var projectId UUID
 
 	err = runtime.BindStyledParameterWithOptions("simple", "projectId", c.Params("projectId"), &projectId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
@@ -119,7 +118,7 @@ func (siw *ServerInterfaceWrapper) GetProject(c *fiber.Ctx) error {
 	var err error
 
 	// ------------- Path parameter "projectId" -------------
-	var projectId openapi_types.UUID
+	var projectId UUID
 
 	err = runtime.BindStyledParameterWithOptions("simple", "projectId", c.Params("projectId"), &projectId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
@@ -137,7 +136,7 @@ func (siw *ServerInterfaceWrapper) UpdateProject(c *fiber.Ctx) error {
 	var err error
 
 	// ------------- Path parameter "projectId" -------------
-	var projectId openapi_types.UUID
+	var projectId UUID
 
 	err = runtime.BindStyledParameterWithOptions("simple", "projectId", c.Params("projectId"), &projectId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
@@ -155,7 +154,7 @@ func (siw *ServerInterfaceWrapper) GetAuth(c *fiber.Ctx) error {
 	var err error
 
 	// ------------- Path parameter "projectId" -------------
-	var projectId openapi_types.UUID
+	var projectId UUID
 
 	err = runtime.BindStyledParameterWithOptions("simple", "projectId", c.Params("projectId"), &projectId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
@@ -173,7 +172,7 @@ func (siw *ServerInterfaceWrapper) UpdateAuth(c *fiber.Ctx) error {
 	var err error
 
 	// ------------- Path parameter "projectId" -------------
-	var projectId openapi_types.UUID
+	var projectId UUID
 
 	err = runtime.BindStyledParameterWithOptions("simple", "projectId", c.Params("projectId"), &projectId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
@@ -191,7 +190,7 @@ func (siw *ServerInterfaceWrapper) ListCredentials(c *fiber.Ctx) error {
 	var err error
 
 	// ------------- Path parameter "projectId" -------------
-	var projectId openapi_types.UUID
+	var projectId UUID
 
 	err = runtime.BindStyledParameterWithOptions("simple", "projectId", c.Params("projectId"), &projectId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
@@ -209,7 +208,7 @@ func (siw *ServerInterfaceWrapper) CreateCredential(c *fiber.Ctx) error {
 	var err error
 
 	// ------------- Path parameter "projectId" -------------
-	var projectId openapi_types.UUID
+	var projectId UUID
 
 	err = runtime.BindStyledParameterWithOptions("simple", "projectId", c.Params("projectId"), &projectId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
@@ -227,7 +226,7 @@ func (siw *ServerInterfaceWrapper) DeleteCredential(c *fiber.Ctx) error {
 	var err error
 
 	// ------------- Path parameter "projectId" -------------
-	var projectId openapi_types.UUID
+	var projectId UUID
 
 	err = runtime.BindStyledParameterWithOptions("simple", "projectId", c.Params("projectId"), &projectId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
@@ -235,7 +234,7 @@ func (siw *ServerInterfaceWrapper) DeleteCredential(c *fiber.Ctx) error {
 	}
 
 	// ------------- Path parameter "llmCredentialId" -------------
-	var llmCredentialId openapi_types.UUID
+	var llmCredentialId UUID
 
 	err = runtime.BindStyledParameterWithOptions("simple", "llmCredentialId", c.Params("llmCredentialId"), &llmCredentialId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
@@ -253,7 +252,7 @@ func (siw *ServerInterfaceWrapper) GetCredential(c *fiber.Ctx) error {
 	var err error
 
 	// ------------- Path parameter "projectId" -------------
-	var projectId openapi_types.UUID
+	var projectId UUID
 
 	err = runtime.BindStyledParameterWithOptions("simple", "projectId", c.Params("projectId"), &projectId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
@@ -261,7 +260,7 @@ func (siw *ServerInterfaceWrapper) GetCredential(c *fiber.Ctx) error {
 	}
 
 	// ------------- Path parameter "llmCredentialId" -------------
-	var llmCredentialId openapi_types.UUID
+	var llmCredentialId UUID
 
 	err = runtime.BindStyledParameterWithOptions("simple", "llmCredentialId", c.Params("llmCredentialId"), &llmCredentialId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
@@ -279,7 +278,7 @@ func (siw *ServerInterfaceWrapper) UpdateCredential(c *fiber.Ctx) error {
 	var err error
 
 	// ------------- Path parameter "projectId" -------------
-	var projectId openapi_types.UUID
+	var projectId UUID
 
 	err = runtime.BindStyledParameterWithOptions("simple", "projectId", c.Params("projectId"), &projectId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
@@ -287,7 +286,7 @@ func (siw *ServerInterfaceWrapper) UpdateCredential(c *fiber.Ctx) error {
 	}
 
 	// ------------- Path parameter "llmCredentialId" -------------
-	var llmCredentialId openapi_types.UUID
+	var llmCredentialId UUID
 
 	err = runtime.BindStyledParameterWithOptions("simple", "llmCredentialId", c.Params("llmCredentialId"), &llmCredentialId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
@@ -305,7 +304,7 @@ func (siw *ServerInterfaceWrapper) GenerateText(c *fiber.Ctx) error {
 	var err error
 
 	// ------------- Path parameter "projectId" -------------
-	var projectId openapi_types.UUID
+	var projectId UUID
 
 	err = runtime.BindStyledParameterWithOptions("simple", "projectId", c.Params("projectId"), &projectId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
@@ -323,7 +322,7 @@ func (siw *ServerInterfaceWrapper) ListModels(c *fiber.Ctx) error {
 	var err error
 
 	// ------------- Path parameter "projectId" -------------
-	var projectId openapi_types.UUID
+	var projectId UUID
 
 	err = runtime.BindStyledParameterWithOptions("simple", "projectId", c.Params("projectId"), &projectId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
@@ -341,7 +340,7 @@ func (siw *ServerInterfaceWrapper) CreateModel(c *fiber.Ctx) error {
 	var err error
 
 	// ------------- Path parameter "projectId" -------------
-	var projectId openapi_types.UUID
+	var projectId UUID
 
 	err = runtime.BindStyledParameterWithOptions("simple", "projectId", c.Params("projectId"), &projectId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
@@ -359,7 +358,7 @@ func (siw *ServerInterfaceWrapper) DeleteModel(c *fiber.Ctx) error {
 	var err error
 
 	// ------------- Path parameter "projectId" -------------
-	var projectId openapi_types.UUID
+	var projectId UUID
 
 	err = runtime.BindStyledParameterWithOptions("simple", "projectId", c.Params("projectId"), &projectId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
@@ -385,7 +384,7 @@ func (siw *ServerInterfaceWrapper) GetModel(c *fiber.Ctx) error {
 	var err error
 
 	// ------------- Path parameter "projectId" -------------
-	var projectId openapi_types.UUID
+	var projectId UUID
 
 	err = runtime.BindStyledParameterWithOptions("simple", "projectId", c.Params("projectId"), &projectId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
@@ -411,7 +410,7 @@ func (siw *ServerInterfaceWrapper) UpdateModel(c *fiber.Ctx) error {
 	var err error
 
 	// ------------- Path parameter "projectId" -------------
-	var projectId openapi_types.UUID
+	var projectId UUID
 
 	err = runtime.BindStyledParameterWithOptions("simple", "projectId", c.Params("projectId"), &projectId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
@@ -437,7 +436,7 @@ func (siw *ServerInterfaceWrapper) StreamText(c *fiber.Ctx) error {
 	var err error
 
 	// ------------- Path parameter "projectId" -------------
-	var projectId openapi_types.UUID
+	var projectId UUID
 
 	err = runtime.BindStyledParameterWithOptions("simple", "projectId", c.Params("projectId"), &projectId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {

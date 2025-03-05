@@ -6,6 +6,7 @@ package gen
 import (
 	"time"
 
+	uuid "github.com/google/uuid"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
@@ -70,12 +71,12 @@ type CreateProjectRequest struct {
 
 // LLMCredential defines model for LLMCredential.
 type LLMCredential struct {
-	ApiKey    string             `json:"apiKey"`
-	CreatedAt *time.Time         `json:"createdAt,omitempty"`
-	Id        openapi_types.UUID `json:"id"`
-	Name      string             `json:"name"`
-	Provider  ProviderType       `json:"provider"`
-	UpdatedAt *time.Time         `json:"updatedAt,omitempty"`
+	ApiKey    string       `json:"apiKey"`
+	CreatedAt *time.Time   `json:"createdAt,omitempty"`
+	Id        UUID         `json:"id"`
+	Name      string       `json:"name"`
+	Provider  ProviderType `json:"provider"`
+	UpdatedAt *time.Time   `json:"updatedAt,omitempty"`
 }
 
 // LLMModel defines model for LLMModel.
@@ -85,7 +86,7 @@ type LLMModel string
 type Model struct {
 	CreatedAt    time.Time              `json:"createdAt"`
 	Credential   LLMCredential          `json:"credential"`
-	Id           openapi_types.UUID     `json:"id"`
+	Id           UUID                   `json:"id"`
 	LlmModel     LLMModel               `json:"llmModel"`
 	Name         *string                `json:"name,omitempty"`
 	Parameters   map[string]interface{} `json:"parameters"`
@@ -96,14 +97,13 @@ type Model struct {
 
 // Project defines model for Project.
 type Project struct {
-	AuthProvider AuthProvider       `json:"authProvider"`
-	CreatedAt    time.Time          `json:"createdAt"`
-	Credentials  []LLMCredential    `json:"credentials"`
-	Id           openapi_types.UUID `json:"id"`
-	Models       []Model            `json:"models"`
-	Name         string             `json:"name"`
-	UpdatedAt    time.Time          `json:"updatedAt"`
-	UserId       openapi_types.UUID `json:"userId"`
+	AuthProvider AuthProvider    `json:"authProvider"`
+	CreatedAt    time.Time       `json:"createdAt"`
+	Credentials  []LLMCredential `json:"credentials"`
+	Id           UUID            `json:"id"`
+	Models       []Model         `json:"models"`
+	Name         string          `json:"name"`
+	UpdatedAt    time.Time       `json:"updatedAt"`
 }
 
 // ProviderType defines model for ProviderType.
@@ -122,6 +122,9 @@ type TextGenerationRequest struct {
 	Prompt      string   `json:"prompt"`
 	Temperature *float32 `json:"temperature,omitempty"`
 }
+
+// UUID defines model for UUID.
+type UUID = uuid.UUID
 
 // UpdateAuthRequest defines model for UpdateAuthRequest.
 type UpdateAuthRequest struct {

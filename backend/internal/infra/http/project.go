@@ -3,7 +3,6 @@ package http
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	openapi_types "github.com/oapi-codegen/runtime/types"
 	"github.com/supallm/core/internal/application/command"
 	"github.com/supallm/core/internal/infra/http/gen"
 )
@@ -27,15 +26,15 @@ func (s *Server) CreateProject(c *fiber.Ctx) error {
 	return s.server.RespondWithContentLocation(c, fiber.StatusCreated, "/projects/%s", projectId.String())
 }
 
-func (s *Server) DeleteProject(c *fiber.Ctx, projectId openapi_types.UUID) error {
+func (s *Server) DeleteProject(c *fiber.Ctx, projectId gen.UUID) error {
 	return s.server.Respond(c, fiber.StatusOK, nil)
 }
 
-func (s *Server) GetProject(c *fiber.Ctx, projectId openapi_types.UUID) error {
+func (s *Server) GetProject(c *fiber.Ctx, projectId gen.UUID) error {
 	return s.server.Respond(c, fiber.StatusOK, nil)
 }
 
-func (s *Server) UpdateProject(c *fiber.Ctx, projectId openapi_types.UUID) error {
+func (s *Server) UpdateProject(c *fiber.Ctx, projectId gen.UUID) error {
 	return s.server.Respond(c, fiber.StatusOK, nil)
 }
 

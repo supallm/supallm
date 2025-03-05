@@ -44,8 +44,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
-            format: uuid
+            $ref: "#/components/schemas/UUID"
       responses:
         "200":
           description: "Project details"
@@ -63,8 +62,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
-            format: uuid
+            $ref: "#/components/schemas/UUID"
       requestBody:
         required: true
         content:
@@ -84,8 +82,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
-            format: uuid
+            $ref: "#/components/schemas/UUID"
       responses:
         "204":
           description: "Project deleted"
@@ -101,8 +98,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
-            format: uuid
+            $ref: "#/components/schemas/UUID"
       responses:
         "200":
           description: List of credentials
@@ -122,8 +118,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
-            format: uuid
+            $ref: "#/components/schemas/UUID"
       requestBody:
         required: true
         content:
@@ -147,14 +142,12 @@ paths:
           in: path
           required: true
           schema:
-            type: string
-            format: uuid
+            $ref: "#/components/schemas/UUID"
         - name: llmCredentialId
           in: path
           required: true
           schema:
-            type: string
-            format: uuid
+            $ref: "#/components/schemas/UUID"
       responses:
         "200":
           description: "Credentials"
@@ -172,14 +165,12 @@ paths:
           in: path
           required: true
           schema:
-            type: string
-            format: uuid
+            $ref: "#/components/schemas/UUID"
         - name: llmCredentialId
           in: path
           required: true
           schema:
-            type: string
-            format: uuid
+            $ref: "#/components/schemas/UUID"
       requestBody:
         required: true
         content:
@@ -201,14 +192,12 @@ paths:
           in: path
           required: true
           schema:
-            type: string
-            format: uuid
+            $ref: "#/components/schemas/UUID"
         - name: llmCredentialId
           in: path
           required: true
           schema:
-            type: string
-            format: uuid
+            $ref: "#/components/schemas/UUID"
       responses:
         "204":
           description: "Credential deleted"
@@ -224,8 +213,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
-            format: uuid
+            $ref: "#/components/schemas/UUID"
       responses:
         "200":
           description: List of models
@@ -245,8 +233,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
-            format: uuid
+            $ref: "#/components/schemas/UUID"
       requestBody:
         required: true
         content:
@@ -270,8 +257,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
-            format: uuid
+            $ref: "#/components/schemas/UUID"
         - name: slug
           in: path
           required: true
@@ -294,8 +280,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
-            format: uuid
+            $ref: "#/components/schemas/UUID"
         - name: slug
           in: path
           required: true
@@ -322,8 +307,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
-            format: uuid
+            $ref: "#/components/schemas/UUID"
         - name: slug
           in: path
           required: true
@@ -344,8 +328,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
-            format: uuid
+            $ref: "#/components/schemas/UUID"
       responses:
         "200":
           description: "Authentication configuration"
@@ -363,8 +346,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
-            format: uuid
+            $ref: "#/components/schemas/UUID"
       requestBody:
         required: true
         content:
@@ -388,8 +370,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
-            format: uuid
+            $ref: "#/components/schemas/UUID"
       requestBody:
         required: true
         content:
@@ -420,8 +401,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
-            format: uuid
+            $ref: "#/components/schemas/UUID"
       requestBody:
         required: true
         content:
@@ -448,17 +428,19 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
+    UUID:
+      type: string
+      x-go-type: uuid.UUID
+      x-go-type-import:
+        name: uuid
+        path: github.com/google/uuid
     Project:
       type: object
       properties:
         id:
-          type: string
-          format: uuid
+          $ref: "#/components/schemas/UUID"
         name:
           type: string
-        userId:
-          type: string
-          format: uuid
         authProvider:
           $ref: "#/components/schemas/AuthProvider"
         credentials:
@@ -478,7 +460,6 @@ components:
       required:
         - id
         - name
-        - userId
         - authProvider
         - credentials
         - models
@@ -520,8 +501,7 @@ components:
       type: object
       properties:
         id:
-          type: string
-          format: uuid
+          $ref: "#/components/schemas/UUID"
         name:
           type: string
         provider:
@@ -569,8 +549,7 @@ components:
       type: object
       properties:
         id:
-          type: string
-          format: uuid
+          $ref: "#/components/schemas/UUID"
         name:
           type: string
         slug:
