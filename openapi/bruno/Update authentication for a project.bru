@@ -1,0 +1,26 @@
+meta {
+  name: Update authentication for a project
+  type: http
+  seq: 2
+}
+
+put {
+  url: /projects/:projectId/auth
+  body: json
+  auth: bearer
+}
+
+params:path {
+  projectId: 
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "provider": "",
+    "config": {}
+  }
+}

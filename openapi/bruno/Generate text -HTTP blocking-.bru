@@ -1,0 +1,26 @@
+meta {
+  name: Generate text -HTTP blocking-
+  type: http
+  seq: 3
+}
+
+post {
+  url: /projects/:projectId/generateText
+  body: json
+  auth: bearer
+}
+
+params:path {
+  projectId: 
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "modelSlug": "",
+    "prompt": ""
+  }
+}

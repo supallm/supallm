@@ -1,0 +1,15 @@
+meta {
+  name: Get a model by slug
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseURL}}/projects/{{projectId}}/models/{{modelSlug}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}

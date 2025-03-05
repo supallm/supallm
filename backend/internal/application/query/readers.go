@@ -8,5 +8,5 @@ import (
 
 type ProjectReader interface {
 	GetProject(ctx context.Context, id uuid.UUID) (Project, error)
-	ListProjects(ctx context.Context, userID uuid.UUID) ([]Project, error)
+	ListProjects(ctx context.Context, userID string) ([]Project, error)
 }

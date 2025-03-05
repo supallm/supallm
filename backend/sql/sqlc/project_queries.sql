@@ -1,6 +1,6 @@
 -- name: storeProject :exec
-INSERT INTO projects (id, user_id, name, auth_provider)
-VALUES ($1, $2, $3, $4);
+INSERT INTO projects (id, user_id, name)
+VALUES ($1, $2, $3);
 
 -- name: updateProject :exec
 UPDATE projects

@@ -29,9 +29,9 @@ type Commands struct {
 	UpdateModel command.UpdateModelHandler
 	RemoveModel command.RemoveModelHandler
 
-	AddLLMCredential    command.AddLLMCredentialHandler
-	UpdateLLMCredential command.UpdateLLMCredentialHandler
-	RemoveLLMCredential command.RemoveLLMCredentialHandler
+	AddCredential    command.AddCredentialHandler
+	UpdateCredential command.UpdateCredentialHandler
+	RemoveCredential command.RemoveCredentialHandler
 
 	GenerateText command.GenerateTextHandler
 	StreamText   command.StreamTextHandler
@@ -73,9 +73,9 @@ func New(
 			UpdateModel: command.NewUpdateModelHandler(projectRepo),
 			RemoveModel: command.NewRemoveModelHandler(projectRepo),
 
-			AddLLMCredential:    command.NewAddLLMCredentialHandler(projectRepo, llmRegistry),
-			UpdateLLMCredential: command.NewUpdateLLMCredentialHandler(projectRepo),
-			RemoveLLMCredential: command.NewRemoveLLMCredentialHandler(projectRepo),
+			AddCredential:    command.NewAddCredentialHandler(projectRepo, llmRegistry),
+			UpdateCredential: command.NewUpdateCredentialHandler(projectRepo),
+			RemoveCredential: command.NewRemoveCredentialHandler(projectRepo),
 
 			GenerateText: command.NewGenerateTextHandler(projectRepo, sessionRepo, llmRegistry),
 			StreamText:   command.NewStreamTextHandler(projectRepo, sessionRepo, llmRegistry),

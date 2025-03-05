@@ -36,7 +36,7 @@ func NewUpdateProjectNameHandler(
 func (h UpdateProjectNameHandler) Handle(ctx context.Context, cmd UpdateProjectNameCommand) error {
 	project, err := h.projectRepo.Retrieve(ctx, cmd.ProjectID)
 	if err != nil {
-		return errs.ErrNotFound{Resource: "project", ID: cmd.ProjectID}
+		return errs.ErrInternal{Reason: err}
 	}
 
 	err = project.UpdateName(cmd.Name)

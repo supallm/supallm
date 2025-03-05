@@ -9,27 +9,27 @@ import (
 	"github.com/supallm/core/internal/application/domain/repository"
 )
 
-type RemoveLLMCredentialCommand struct {
+type RemoveCredentialCommand struct {
 	LLMCredentialID uuid.UUID
 }
 
-type RemoveLLMCredentialHandler struct {
+type RemoveCredentialHandler struct {
 	projectRepo repository.ProjectRepository
 }
 
-func NewRemoveLLMCredentialHandler(
+func NewRemoveCredentialHandler(
 	projectRepo repository.ProjectRepository,
-) RemoveLLMCredentialHandler {
+) RemoveCredentialHandler {
 	if projectRepo == nil {
 		slog.Error("projectRepo is nil")
 		os.Exit(1)
 	}
 
-	return RemoveLLMCredentialHandler{
+	return RemoveCredentialHandler{
 		projectRepo: projectRepo,
 	}
 }
 
-func (h RemoveLLMCredentialHandler) Handle(ctx context.Context, cmd RemoveLLMCredentialCommand) error {
+func (h RemoveCredentialHandler) Handle(ctx context.Context, cmd RemoveCredentialCommand) error {
 	return h.projectRepo.DeleteLLMCredential(ctx, cmd.LLMCredentialID)
 }

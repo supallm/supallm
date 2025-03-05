@@ -1,0 +1,15 @@
+meta {
+  name: Delete a model
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseURL}}/projects/{{projectId}}/models/{{modeSlug}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}

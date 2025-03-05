@@ -28,9 +28,13 @@ func (s *Repository) withTx(ctx context.Context, fn func(*Queries) error) error 
 	if err != nil {
 		return fmt.Errorf("error starting transaction: %w", err)
 	}
+
+	isCommitted := false
 	defer func() {
-		if err := tx.Rollback(ctx); err != nil {
-			slog.Error("error rolling back transaction", "error", err)
+		if !isCommitted {
+			if err := tx.Rollback(ctx); err != nil {
+				slog.Error("error rolling back transaction", "error", err)
+			}
 		}
 	}()
 
@@ -42,6 +46,7 @@ func (s *Repository) withTx(ctx context.Context, fn func(*Queries) error) error 
 	if err := tx.Commit(ctx); err != nil {
 		return fmt.Errorf("error committing transaction: %w", err)
 	}
+	isCommitted = true
 
 	return nil
 }
@@ -52,10 +57,6 @@ func (r Repository) Create(ctx context.Context, project *model.Project) error {
 			ID:     project.ID,
 			UserID: project.UserID,
 			Name:   project.Name,
-			AuthProvider: authProvider{
-				Type:   project.AuthProvider.GetType().String(),
-				Config: project.AuthProvider.Config(),
-			},
 		})
 		if err != nil {
 			return fmt.Errorf("error storing project: %w", err)
@@ -98,20 +99,29 @@ func (r Repository) Create(ctx context.Context, project *model.Project) error {
 	})
 }
 
+func (r Repository) retrieveDependencies(ctx context.Context, id uuid.UUID) ([]Credential, []Model, error) {
+	llmCredentials, err := r.queries.credentialsByProjectId(ctx, id)
+	if err != nil {
+		return nil, nil, fmt.Errorf("error getting llm credentials: %w", err)
+	}
+
+	models, err := r.queries.modelsByProjectId(ctx, id)
+	if err != nil {
+		return nil, nil, fmt.Errorf("error getting models: %w", err)
+	}
+
+	return llmCredentials, models, nil
+}
+
 func (r Repository) retrieve(ctx context.Context, id uuid.UUID) (Project, []Credential, []Model, error) {
 	project, err := r.queries.projectById(ctx, id)
 	if err != nil {
 		return Project{}, nil, nil, fmt.Errorf("error getting project: %w", err)
 	}
 
-	llmCredentials, err := r.queries.credentialsByProjectId(ctx, id)
+	llmCredentials, models, err := r.retrieveDependencies(ctx, id)
 	if err != nil {
-		return Project{}, nil, nil, fmt.Errorf("error getting llm credentials: %w", err)
-	}
-
-	models, err := r.queries.modelsByProjectId(ctx, id)
-	if err != nil {
-		return Project{}, nil, nil, fmt.Errorf("error getting models: %w", err)
+		return Project{}, nil, nil, fmt.Errorf("error getting dependencies: %w", err)
 	}
 
 	return project, llmCredentials, models, nil
@@ -128,13 +138,18 @@ func (r Repository) Retrieve(ctx context.Context, id uuid.UUID) (*model.Project,
 
 func (r Repository) Update(ctx context.Context, project *model.Project) error {
 	return r.withTx(ctx, func(q *Queries) error {
-		err := q.updateProject(ctx, updateProjectParams{
-			ID:   project.ID,
-			Name: project.Name,
-			AuthProvider: authProvider{
+		ap := authProvider{}
+		if project.AuthProvider != nil {
+			ap = authProvider{
 				Type:   project.AuthProvider.GetType().String(),
 				Config: project.AuthProvider.Config(),
-			},
+			}
+		}
+
+		err := q.updateProject(ctx, updateProjectParams{
+			ID:           project.ID,
+			Name:         project.Name,
+			AuthProvider: ap,
 		})
 		if err != nil {
 			return fmt.Errorf("error updating project: %w", err)
@@ -164,6 +179,7 @@ func (r Repository) Update(ctx context.Context, project *model.Project) error {
 				ID:            model.ID,
 				ProjectID:     project.ID,
 				CredentialID:  model.Credential.ID,
+				Name:          model.Name,
 				Slug:          model.Slug.String(),
 				ProviderModel: model.ProviderModel.String(),
 				SystemPrompt:  model.SystemPrompt.String(),
@@ -210,19 +226,23 @@ func (r Repository) GetProject(ctx context.Context, id uuid.UUID) (query.Project
 	return project.query(llmProviders, models)
 }
 
-func (r Repository) ListProjects(ctx context.Context, userID uuid.UUID) ([]query.Project, error) {
-	// projects, err := r.queries.projectsByUserId(ctx, userID)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("error getting projects: %w", err)
-	// }
+func (r Repository) ListProjects(ctx context.Context, userID string) ([]query.Project, error) {
+	projects, err := r.queries.projectsByUserId(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("error getting projects: %w", err)
+	}
 
-	// queryProjects := make([]query.Project, len(projects))
-	// for i, project := range projects {
-	// 	queryProjects[i], err = project.query(llmProviders, models)
-	// 	if err != nil {
-	// 		return nil, fmt.Errorf("error getting project: %w", err)
-	// 	}
-	// }
+	queryProjects := make([]query.Project, len(projects))
+	for i, project := range projects {
+		llmProviders, models, err := r.retrieveDependencies(ctx, project.ID)
+		if err != nil {
+			return nil, fmt.Errorf("error getting project: %w", err)
+		}
+		queryProjects[i], err = project.query(llmProviders, models)
+		if err != nil {
+			return nil, fmt.Errorf("error getting project: %w", err)
+		}
+	}
 
-	return nil, nil
+	return queryProjects, nil
 }

@@ -14,10 +14,18 @@ type authProvider struct {
 }
 
 func (a authProvider) domain() (model.AuthProvider, error) {
+	if a.Type == "" {
+		return nil, nil
+	}
+
 	return model.UnmarshalAuthProvider(model.AuthProviderType(a.Type), a.Config)
 }
 
 func (a authProvider) query() (query.AuthProvider, error) {
+	if a.Type == "" {
+		return query.AuthProvider{}, nil
+	}
+
 	return query.AuthProvider{
 		Provider: a.Type,
 		Config:   a.Config,

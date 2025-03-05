@@ -1,0 +1,21 @@
+meta {
+  name: Update a project
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseURL}}/projects/{{projectId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "name": "aaaa"
+  }
+}

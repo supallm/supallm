@@ -1,0 +1,20 @@
+meta {
+  name: List all projects
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseURL}}/projects
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+tests {
+  var jsonData = res.getBody();
+  bru.setEnvVar("projectId", jsonData[0].id);
+}

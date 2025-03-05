@@ -1,0 +1,28 @@
+meta {
+  name: Create a project
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseURL}}/projects
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "name": "test"
+  }
+}
+
+tests {
+  let cl = res.getHeader("content-location")
+  let part = cl.split("/")
+  let projectId = part[2]
+  bru.setVar("projectId", projectId)
+}

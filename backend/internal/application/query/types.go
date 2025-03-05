@@ -24,12 +24,19 @@ type AuthProvider struct {
 
 type Model struct {
 	ID           uuid.UUID
-	ProviderId   uuid.UUID
+	Credential   Credential
+	Name         string
 	Slug         slug.Slug
 	Model        string
 	SystemPrompt string
+	Parameters   ModelParameters
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
+}
+
+type ModelParameters struct {
+	MaxTokens   int
+	Temperature float64
 }
 
 type Credential struct {

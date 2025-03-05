@@ -4,12 +4,10 @@ import (
 	"context"
 	"log/slog"
 	"os"
-
-	"github.com/google/uuid"
 )
 
 type ListProjectsQuery struct {
-	UserID uuid.UUID
+	UserID string
 }
 
 type ListProjectsHandler struct {

@@ -75,24 +75,18 @@ func (q *Queries) projectsByUserId(ctx context.Context, userID string) ([]Projec
 }
 
 const storeProject = `-- name: storeProject :exec
-INSERT INTO projects (id, user_id, name, auth_provider)
-VALUES ($1, $2, $3, $4)
+INSERT INTO projects (id, user_id, name)
+VALUES ($1, $2, $3)
 `
 
 type storeProjectParams struct {
-	ID           uuid.UUID    `json:"id"`
-	UserID       string       `json:"user_id"`
-	Name         string       `json:"name"`
-	AuthProvider authProvider `json:"auth_provider"`
+	ID     uuid.UUID `json:"id"`
+	UserID string    `json:"user_id"`
+	Name   string    `json:"name"`
 }
 
 func (q *Queries) storeProject(ctx context.Context, arg storeProjectParams) error {
-	_, err := q.db.Exec(ctx, storeProject,
-		arg.ID,
-		arg.UserID,
-		arg.Name,
-		arg.AuthProvider,
-	)
+	_, err := q.db.Exec(ctx, storeProject, arg.ID, arg.UserID, arg.Name)
 	return err
 }
 

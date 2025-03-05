@@ -6,7 +6,6 @@ import (
 	"github.com/supallm/core/internal/pkg/slug"
 )
 
-// Project represents a supallm root configuration
 type Project struct {
 	ID           uuid.UUID
 	UserID       string
@@ -30,9 +29,12 @@ func NewProject(id uuid.UUID, userID string, name string) (*Project, error) {
 	}
 
 	return &Project{
-		ID:     id,
-		UserID: userID,
-		Name:   name,
+		ID:           id,
+		UserID:       userID,
+		Name:         name,
+		AuthProvider: nil,
+		Credentials:  map[uuid.UUID]*Credential{},
+		Models:       map[slug.Slug]*Model{},
 	}, nil
 }
 
@@ -42,5 +44,14 @@ func (p *Project) UpdateName(name string) error {
 	}
 
 	p.Name = name
+	return nil
+}
+
+func (p *Project) UpdateAuthProvider(authProvider AuthProvider) error {
+	if authProvider == nil {
+		return errs.ErrReqInvalid{Field: "authProvider", Reason: "authProvider is required"}
+	}
+
+	p.AuthProvider = authProvider
 	return nil
 }

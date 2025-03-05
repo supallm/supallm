@@ -30,7 +30,6 @@ func NewProviderRegistry() *ProviderRegistry {
 
 func (r *ProviderRegistry) getLLM(credential *model.Credential) (llm, error) {
 	r.mu.RLock()
-	defer r.mu.RUnlock()
 
 	key := credential.ID.String()
 	switch credential.ProviderType {
@@ -46,7 +45,10 @@ func (r *ProviderRegistry) getLLM(credential *model.Credential) (llm, error) {
 				client = newOpenAI(credential.APIKey.String())
 				r.openAIClients[key] = client
 			}
+			return client, nil
 		}
+
+		r.mu.RUnlock()
 		return client, nil
 
 	case model.ProviderTypeAnthropic:
@@ -61,10 +63,14 @@ func (r *ProviderRegistry) getLLM(credential *model.Credential) (llm, error) {
 				client = newAnthropic(credential.APIKey.String())
 				r.anthropicClients[key] = client
 			}
+			return client, nil
 		}
+
+		r.mu.RUnlock()
 		return client, nil
 
 	default:
+		r.mu.RUnlock()
 		return nil, fmt.Errorf("unsupported provider type: %s", credential.ProviderType)
 	}
 }

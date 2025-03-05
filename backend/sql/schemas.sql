@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS projects (
     id UUID PRIMARY KEY,
     user_id VARCHAR(255) NOT NULL,
     name VARCHAR(255) NOT NULL,
-    auth_provider JSONB,
+    auth_provider JSONB DEFAULT '{}',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     CONSTRAINT projects_name_user_unique UNIQUE (name, user_id)

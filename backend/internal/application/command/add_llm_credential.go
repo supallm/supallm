@@ -12,7 +12,7 @@ import (
 	"github.com/supallm/core/internal/pkg/secret"
 )
 
-type AddLLMCredentialCommand struct {
+type AddCredentialCommand struct {
 	ID           uuid.UUID
 	ProjectID    uuid.UUID
 	Name         string
@@ -20,15 +20,15 @@ type AddLLMCredentialCommand struct {
 	APIKey       secret.ApiKey
 }
 
-type AddLLMCredentialHandler struct {
+type AddCredentialHandler struct {
 	projectRepo repository.ProjectRepository
 	llmProvider repository.LLMProvider
 }
 
-func NewAddLLMCredentialHandler(
+func NewAddCredentialHandler(
 	projectRepo repository.ProjectRepository,
 	llmProvider repository.LLMProvider,
-) AddLLMCredentialHandler {
+) AddCredentialHandler {
 	if projectRepo == nil {
 		slog.Error("projectRepo is nil")
 		os.Exit(1)
@@ -39,13 +39,13 @@ func NewAddLLMCredentialHandler(
 		os.Exit(1)
 	}
 
-	return AddLLMCredentialHandler{
+	return AddCredentialHandler{
 		projectRepo: projectRepo,
 		llmProvider: llmProvider,
 	}
 }
 
-func (h AddLLMCredentialHandler) Handle(ctx context.Context, cmd AddLLMCredentialCommand) error {
+func (h AddCredentialHandler) Handle(ctx context.Context, cmd AddCredentialCommand) error {
 	project, err := h.projectRepo.Retrieve(ctx, cmd.ProjectID)
 	if err != nil {
 		return errs.ErrNotFound{Resource: "project", ID: cmd.ProjectID}

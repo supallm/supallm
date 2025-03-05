@@ -6,12 +6,14 @@ import (
 	"log/slog"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
+	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/healthcheck"
+	"github.com/gofiber/fiber/v2/middleware/helmet"
+	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"github.com/supallm/core/internal/pkg/config"
 	"github.com/supallm/core/internal/pkg/errs"
 )
-
-type Handler = func(ctx context.Context) error
 
 type Server struct {
 	App  *fiber.App
@@ -39,13 +41,17 @@ func New(conf config.Config) *Server {
 	})
 
 	// Add middleware
-	app.Use(requestIDMiddleware)
-	app.Use(recoveryMiddleware)
-
-	// Health check endpoint
-	app.Get("/health", func(c *fiber.Ctx) error {
-		return c.SendStatus(fiber.StatusOK)
-	})
+	app.Use(helmet.New())
+	app.Use(requestid.New())
+	// app.Use(recover.New())
+	app.Use(logger.New())
+	app.Use(healthcheck.New())
+	app.Use(cors.New(cors.Config{
+		AllowOrigins:  "*",
+		AllowMethods:  "GET, POST, PUT, DELETE, OPTIONS",
+		AllowHeaders:  "Origin, Content-Type, Accept, Authorization",
+		ExposeHeaders: "Content-Location",
+	}))
 
 	return &Server{
 		App:  app,
@@ -59,7 +65,7 @@ func (s *Server) Start() error {
 
 func (s *Server) Respond(c *fiber.Ctx, status int, data any) error {
 	if data == nil {
-		return c.SendStatus(status)
+		return c.Status(status).Send(nil)
 	}
 	return c.Status(status).JSON(data)
 }
@@ -79,57 +85,6 @@ func (s *Server) GetQueryParam(c *fiber.Ctx, key string) string {
 
 func (s *Server) GetParam(c *fiber.Ctx, key string) string {
 	return c.Params(key)
-}
-
-func (s *Server) GetOriginalURL(c *fiber.Ctx) string {
-	scheme := "http"
-	if c.Protocol() == "https" {
-		scheme = "https"
-	}
-	return fmt.Sprintf("%s://%s%s", scheme, c.Hostname(), c.OriginalURL())
-}
-
-func (s *Server) ParseUUID(c *fiber.Ctx, key string) (uuid.UUID, error) {
-	id, err := uuid.Parse(c.Params(key))
-	if err != nil {
-		return uuid.UUID{}, fmt.Errorf("%w: %w", errs.ErrReqInvalid{
-			Field:  key,
-			Reason: "invalid uuid",
-		}, err)
-	}
-	return id, nil
-}
-
-func requestIDMiddleware(c *fiber.Ctx) error {
-	requestID := c.Get(fiber.HeaderXRequestID)
-	if requestID == "" {
-		requestID = uuid.New().String()
-		c.Set(fiber.HeaderXRequestID, requestID)
-	}
-	return c.Next()
-}
-
-func recoveryMiddleware(c *fiber.Ctx) error {
-	defer func() {
-		if r := recover(); r != nil {
-			err, ok := r.(error)
-			if !ok {
-				err = fmt.Errorf("%v", r)
-			}
-
-			slog.Error("recovered from panic",
-				slog.String("error", err.Error()),
-				slog.String("path", c.Path()),
-				slog.String("request-id", c.Get(fiber.HeaderXRequestID)),
-			)
-
-			_ = c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": "Internal Server Error",
-			})
-		}
-	}()
-
-	return c.Next()
 }
 
 // Add a Stop method to gracefully shutdown the server

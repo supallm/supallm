@@ -1,0 +1,25 @@
+meta {
+  name: Update a model
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseURL}}/projects/{{projectId}}/models/{{modelSlug}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "name": "",
+    "credentialId": "",
+    "providerModel": "",
+    "systemPrompt": "",
+    "parameters": {}
+  }
+}

@@ -49,7 +49,14 @@ func (p *Project) UpdateCredential(id uuid.UUID, name string, apiKey secret.ApiK
 		return err
 	}
 
+	if name == "" {
+		return errs.ErrReqInvalid{Field: "name", Reason: "name is required"}
+	}
+
+	if apiKey != "" {
+		credential.APIKey = apiKey
+	}
+
 	credential.Name = name
-	credential.APIKey = apiKey
 	return nil
 }

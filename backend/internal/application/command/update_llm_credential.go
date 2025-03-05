@@ -11,31 +11,31 @@ import (
 	"github.com/supallm/core/internal/pkg/secret"
 )
 
-type UpdateLLMCredentialCommand struct {
+type UpdateCredentialCommand struct {
 	ID        uuid.UUID
 	ProjectID uuid.UUID
 	Name      string
 	APIKey    secret.ApiKey
 }
 
-type UpdateLLMCredentialHandler struct {
+type UpdateCredentialHandler struct {
 	projectRepo repository.ProjectRepository
 }
 
-func NewUpdateLLMCredentialHandler(
+func NewUpdateCredentialHandler(
 	projectRepo repository.ProjectRepository,
-) UpdateLLMCredentialHandler {
+) UpdateCredentialHandler {
 	if projectRepo == nil {
 		slog.Error("projectRepo is nil")
 		os.Exit(1)
 	}
 
-	return UpdateLLMCredentialHandler{
+	return UpdateCredentialHandler{
 		projectRepo: projectRepo,
 	}
 }
 
-func (h UpdateLLMCredentialHandler) Handle(ctx context.Context, cmd UpdateLLMCredentialCommand) error {
+func (h UpdateCredentialHandler) Handle(ctx context.Context, cmd UpdateCredentialCommand) error {
 	project, err := h.projectRepo.Retrieve(ctx, cmd.ProjectID)
 	if err != nil {
 		return errs.ErrNotFound{Resource: "project", ID: cmd.ProjectID}
