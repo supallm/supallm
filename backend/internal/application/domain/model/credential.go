@@ -6,14 +6,14 @@ import (
 	"github.com/supallm/core/internal/pkg/secret"
 )
 
-type LLMCredential struct {
+type Credential struct {
 	ID           uuid.UUID
-	ProviderType LLMProviderType
+	ProviderType ProviderType
 	Name         string
 	APIKey       secret.ApiKey
 }
 
-func (p *Project) CreateCredential(id uuid.UUID, name string, providerType LLMProviderType, apiKey secret.ApiKey) (*LLMCredential, error) {
+func (p *Project) CreateCredential(id uuid.UUID, name string, providerType ProviderType, apiKey secret.ApiKey) (*Credential, error) {
 	if id == uuid.Nil {
 		return nil, errs.ErrReqInvalid{Field: "id", Reason: "id is required"}
 	}
@@ -30,12 +30,12 @@ func (p *Project) CreateCredential(id uuid.UUID, name string, providerType LLMPr
 		return nil, errs.ErrReqInvalid{Field: "apiKey", Reason: "apiKey is required"}
 	}
 
-	credential := &LLMCredential{ID: id, Name: name, ProviderType: providerType, APIKey: apiKey}
+	credential := &Credential{ID: id, Name: name, ProviderType: providerType, APIKey: apiKey}
 	p.Credentials[credential.ID] = credential
 	return credential, nil
 }
 
-func (p *Project) GetCredential(id uuid.UUID) (*LLMCredential, error) {
+func (p *Project) GetCredential(id uuid.UUID) (*Credential, error) {
 	credential, ok := p.Credentials[id]
 	if !ok {
 		return nil, ErrCredentialNotFound

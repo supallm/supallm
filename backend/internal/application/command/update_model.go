@@ -17,7 +17,7 @@ type UpdateModelCommand struct {
 	Slug            slug.Slug
 	Name            string
 	LLMCredentialID uuid.UUID
-	LLMModel        model.LLMModel
+	LLMModel        model.ProviderModel
 	SystemPrompt    model.Prompt
 }
 
@@ -54,7 +54,7 @@ func (h UpdateModelHandler) Handle(ctx context.Context, cmd UpdateModelCommand) 
 		return errs.ErrReqInvalid{Reason: err.Error()}
 	}
 
-	err = project.UpdateModelLLMModel(cmd.Slug, cmd.LLMModel)
+	err = project.UpdateModelProviderModel(cmd.Slug, cmd.LLMModel)
 	if err != nil {
 		return errs.ErrReqInvalid{Reason: err.Error()}
 	}

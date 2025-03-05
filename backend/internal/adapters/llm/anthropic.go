@@ -19,12 +19,12 @@ func newAnthropic(key string) *anthropicService {
 	}
 }
 
-func (a *anthropicService) GenerateText(ctx context.Context, request *model.LLMRequest) (*model.LLMResponse, error) {
+func (a *anthropicService) GenerateText(ctx context.Context, request *model.Request) (*model.Response, error) {
 	// TODO: Implement
 	return nil, nil
 }
 
-func (a *anthropicService) StreamText(ctx context.Context, request *model.LLMRequest) (<-chan struct{}, error) {
+func (a *anthropicService) StreamText(ctx context.Context, request *model.Request) (<-chan struct{}, error) {
 	// TODO: Implement
 	return nil, nil
 }

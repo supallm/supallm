@@ -22,7 +22,7 @@ func (q *Queries) deleteModel(ctx context.Context, id uuid.UUID) error {
 }
 
 const modelsByProjectId = `-- name: modelsByProjectId :many
-SELECT id, project_id, credential_id, name, slug, llm_model, system_prompt, parameters, created_at, updated_at
+SELECT id, project_id, credential_id, name, slug, provider_model, system_prompt, parameters, created_at, updated_at
 FROM models
 WHERE project_id = $1
 `
@@ -42,7 +42,7 @@ func (q *Queries) modelsByProjectId(ctx context.Context, projectID uuid.UUID) ([
 			&i.CredentialID,
 			&i.Name,
 			&i.Slug,
-			&i.LlmModel,
+			&i.ProviderModel,
 			&i.SystemPrompt,
 			&i.Parameters,
 			&i.CreatedAt,
@@ -59,19 +59,19 @@ func (q *Queries) modelsByProjectId(ctx context.Context, projectID uuid.UUID) ([
 }
 
 const storeModel = `-- name: storeModel :exec
-INSERT INTO models (id, project_id, credential_id, name, slug, llm_model, system_prompt, parameters)
+INSERT INTO models (id, project_id, credential_id, name, slug, provider_model, system_prompt, parameters)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 `
 
 type storeModelParams struct {
-	ID           uuid.UUID `json:"id"`
-	ProjectID    uuid.UUID `json:"project_id"`
-	CredentialID uuid.UUID `json:"credential_id"`
-	Name         string    `json:"name"`
-	Slug         string    `json:"slug"`
-	LlmModel     string    `json:"llm_model"`
-	SystemPrompt string    `json:"system_prompt"`
-	Parameters   []byte    `json:"parameters"`
+	ID            uuid.UUID `json:"id"`
+	ProjectID     uuid.UUID `json:"project_id"`
+	CredentialID  uuid.UUID `json:"credential_id"`
+	Name          string    `json:"name"`
+	Slug          string    `json:"slug"`
+	ProviderModel string    `json:"provider_model"`
+	SystemPrompt  string    `json:"system_prompt"`
+	Parameters    []byte    `json:"parameters"`
 }
 
 func (q *Queries) storeModel(ctx context.Context, arg storeModelParams) error {
@@ -81,7 +81,7 @@ func (q *Queries) storeModel(ctx context.Context, arg storeModelParams) error {
 		arg.CredentialID,
 		arg.Name,
 		arg.Slug,
-		arg.LlmModel,
+		arg.ProviderModel,
 		arg.SystemPrompt,
 		arg.Parameters,
 	)
@@ -89,11 +89,11 @@ func (q *Queries) storeModel(ctx context.Context, arg storeModelParams) error {
 }
 
 const upsertModel = `-- name: upsertModel :exec
-INSERT INTO models (id, project_id, credential_id, name, slug, llm_model, system_prompt, parameters)
+INSERT INTO models (id, project_id, credential_id, name, slug, provider_model, system_prompt, parameters)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 ON CONFLICT (id)
 DO UPDATE SET
-    llm_model = EXCLUDED.llm_model,
+    provider_model = EXCLUDED.provider_model,
     credential_id = EXCLUDED.credential_id,
     name = EXCLUDED.name,
     system_prompt = EXCLUDED.system_prompt,
@@ -102,14 +102,14 @@ DO UPDATE SET
 `
 
 type upsertModelParams struct {
-	ID           uuid.UUID `json:"id"`
-	ProjectID    uuid.UUID `json:"project_id"`
-	CredentialID uuid.UUID `json:"credential_id"`
-	Name         string    `json:"name"`
-	Slug         string    `json:"slug"`
-	LlmModel     string    `json:"llm_model"`
-	SystemPrompt string    `json:"system_prompt"`
-	Parameters   []byte    `json:"parameters"`
+	ID            uuid.UUID `json:"id"`
+	ProjectID     uuid.UUID `json:"project_id"`
+	CredentialID  uuid.UUID `json:"credential_id"`
+	Name          string    `json:"name"`
+	Slug          string    `json:"slug"`
+	ProviderModel string    `json:"provider_model"`
+	SystemPrompt  string    `json:"system_prompt"`
+	Parameters    []byte    `json:"parameters"`
 }
 
 func (q *Queries) upsertModel(ctx context.Context, arg upsertModelParams) error {
@@ -119,7 +119,7 @@ func (q *Queries) upsertModel(ctx context.Context, arg upsertModelParams) error 
 		arg.CredentialID,
 		arg.Name,
 		arg.Slug,
-		arg.LlmModel,
+		arg.ProviderModel,
 		arg.SystemPrompt,
 		arg.Parameters,
 	)

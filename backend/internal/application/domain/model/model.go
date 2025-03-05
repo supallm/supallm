@@ -9,8 +9,8 @@ type Model struct {
 	ID            uuid.UUID
 	Slug          slug.Slug
 	Name          string
-	LLMCredential *LLMCredential
-	LLMModel      LLMModel
+	Credential    *Credential
+	ProviderModel ProviderModel
 	SystemPrompt  Prompt
 	Parameters    ModelParameters
 }
@@ -20,22 +20,22 @@ type ModelParameters struct {
 	Temperature float64 `json:"temperature"`
 }
 
-func (p *Project) AddModel(id uuid.UUID, name string, slug slug.Slug, credentialID uuid.UUID, llmModel LLMModel, systemPrompt Prompt, parameters ModelParameters) error {
+func (p *Project) AddModel(id uuid.UUID, name string, slug slug.Slug, credentialID uuid.UUID, providerModel ProviderModel, systemPrompt Prompt, parameters ModelParameters) error {
 	credential, err := p.GetCredential(credentialID)
 	if err != nil {
 		return err
 	}
 
-	if _, ok := providerModels[credential.ProviderType][llmModel]; !ok {
-		return ErrLLMModelNotSupported
+	if _, ok := providerModels[credential.ProviderType][providerModel]; !ok {
+		return ErrProviderModelNotSupported
 	}
 
 	model := Model{
 		ID:            id,
 		Slug:          slug,
 		Name:          name,
-		LLMCredential: credential,
-		LLMModel:      llmModel,
+		Credential:    credential,
+		ProviderModel: providerModel,
 		SystemPrompt:  systemPrompt,
 		Parameters:    parameters,
 	}
@@ -94,27 +94,27 @@ func (p *Project) UpdateModelLLMCredential(slug slug.Slug, credentialID uuid.UUI
 	}
 
 	if credential == nil {
-		return ErrInvalidLLMCredential
+		return ErrInvalidCredential
 	}
 
-	if credential.ProviderType != model.LLMCredential.ProviderType {
-		return ErrInvalidLLMCredential
+	if credential.ProviderType != model.Credential.ProviderType {
+		return ErrInvalidCredential
 	}
 
-	model.LLMCredential = credential
+	model.Credential = credential
 	return nil
 }
 
-func (p *Project) UpdateModelLLMModel(slug slug.Slug, llmModel LLMModel) error {
+func (p *Project) UpdateModelProviderModel(slug slug.Slug, providerModel ProviderModel) error {
 	model, err := p.GetModel(slug)
 	if err != nil {
 		return err
 	}
 
-	if _, ok := providerModels[model.LLMCredential.ProviderType][llmModel]; !ok {
-		return ErrLLMModelNotSupported
+	if _, ok := providerModels[model.Credential.ProviderType][providerModel]; !ok {
+		return ErrProviderModelNotSupported
 	}
 
-	model.LLMModel = llmModel
+	model.ProviderModel = providerModel
 	return nil
 }

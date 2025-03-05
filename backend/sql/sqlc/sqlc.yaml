@@ -9,7 +9,7 @@ sql:
     queries:
       - "./project_queries.sql"
       - "./model_queries.sql"
-      - "./llm_credential_queries.sql"
+      - "./credential_queries.sql"
     engine: "postgresql"
     gen:
       go:

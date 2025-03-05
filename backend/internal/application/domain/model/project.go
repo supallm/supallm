@@ -12,7 +12,7 @@ type Project struct {
 	UserID       string
 	Name         string
 	AuthProvider AuthProvider
-	Credentials  map[uuid.UUID]*LLMCredential
+	Credentials  map[uuid.UUID]*Credential
 	Models       map[slug.Slug]*Model
 }
 

@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS projects (
     CONSTRAINT projects_name_user_unique UNIQUE (name, user_id)
 );
 
-CREATE TABLE IF NOT EXISTS llm_credentials (
+CREATE TABLE IF NOT EXISTS credentials (
     id UUID PRIMARY KEY,
     project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
@@ -22,10 +22,10 @@ CREATE TABLE IF NOT EXISTS llm_credentials (
 CREATE TABLE IF NOT EXISTS models (
     id UUID PRIMARY KEY,
     project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
-    credential_id UUID NOT NULL REFERENCES llm_credentials(id) ON DELETE CASCADE,
+    credential_id UUID NOT NULL REFERENCES credentials(id) ON DELETE CASCADE,
     name VARCHAR(100) NOT NULL,
     slug VARCHAR(100) NOT NULL,
-    llm_model VARCHAR(100) NOT NULL,
+    provider_model VARCHAR(100) NOT NULL,
     system_prompt TEXT NOT NULL,
     parameters JSONB,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS stream_chunks (
 );
 
 CREATE INDEX idx_projects_user_id ON projects(user_id);
-CREATE INDEX idx_llm_credentials_project_id ON llm_credentials(project_id);
+CREATE INDEX idx_credentials_project_id ON credentials(project_id);
 CREATE INDEX idx_models_project_id ON models(project_id);
 CREATE INDEX idx_models_credential_id ON models(credential_id);
 CREATE INDEX idx_sessions_project_id ON sessions(project_id);
@@ -98,8 +98,8 @@ CREATE TRIGGER update_projects_timestamp
 BEFORE UPDATE ON projects
 FOR EACH ROW EXECUTE FUNCTION update_timestamp();
 
-CREATE TRIGGER update_llm_credentials_timestamp
-BEFORE UPDATE ON llm_credentials
+CREATE TRIGGER update_credentials_timestamp
+BEFORE UPDATE ON credentials
 FOR EACH ROW EXECUTE FUNCTION update_timestamp();
 
 CREATE TRIGGER update_models_timestamp

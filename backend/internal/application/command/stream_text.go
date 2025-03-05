@@ -23,13 +23,13 @@ type StreamTextCommand struct {
 
 type StreamTextHandler struct {
 	projectRepo repository.ProjectRepository
-	sessionRepo repository.LLMSessionRepository
+	sessionRepo repository.SessionRepository
 	llmProvider repository.LLMProvider
 }
 
 func NewStreamTextHandler(
 	projectRepo repository.ProjectRepository,
-	sessionRepo repository.LLMSessionRepository,
+	sessionRepo repository.SessionRepository,
 	llmProvider repository.LLMProvider,
 ) StreamTextHandler {
 	if projectRepo == nil {

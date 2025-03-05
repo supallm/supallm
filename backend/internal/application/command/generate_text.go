@@ -25,13 +25,13 @@ type GenerateTextCommand struct {
 
 type GenerateTextHandler struct {
 	projectRepo repository.ProjectRepository
-	sessionRepo repository.LLMSessionRepository
+	sessionRepo repository.SessionRepository
 	llmProvider repository.LLMProvider
 }
 
 func NewGenerateTextHandler(
 	projectRepo repository.ProjectRepository,
-	sessionRepo repository.LLMSessionRepository,
+	sessionRepo repository.SessionRepository,
 	llmProvider repository.LLMProvider,
 ) GenerateTextHandler {
 	if projectRepo == nil {
@@ -72,7 +72,7 @@ func (h GenerateTextHandler) Handle(ctx context.Context, cmd GenerateTextCommand
 		return "", errs.ErrNotFound{Resource: "model", ID: cmd.ModelSlug}
 	}
 
-	request, err := session.NewRequest(cmd.SessionID, m, model.LLMRequestConfig{
+	request, err := session.NewRequest(cmd.SessionID, m, model.RequestConfig{
 		Prompt: cmd.Prompt,
 	})
 	if err != nil {
@@ -92,21 +92,21 @@ func (h GenerateTextHandler) Handle(ctx context.Context, cmd GenerateTextCommand
 	return response.Content, nil
 }
 
-func (h GenerateTextHandler) getOrCreateSession(ctx context.Context, projectID, sessionID uuid.UUID, userID string) (*model.LLMSession, error) {
+func (h GenerateTextHandler) getOrCreateSession(ctx context.Context, projectID, sessionID uuid.UUID, userID string) (*model.Session, error) {
 	session, err := h.sessionRepo.Retrieve(ctx, sessionID)
 	if err != nil {
 		if !errors.Is(err, nil) {
 			return nil, errs.ErrInternal{Reason: err}
 		}
 
-		session = model.NewLLMSession(sessionID, userID, projectID)
+		session = model.NewSession(sessionID, userID, projectID)
 		return session, nil
 	}
 
 	return session, nil
 }
 
-func (s GenerateTextHandler) saveResponse(ctx context.Context, session *model.LLMSession, response *model.LLMResponse) error {
+func (s GenerateTextHandler) saveResponse(ctx context.Context, session *model.Session, response *model.Response) error {
 	session.AddResponse(response)
 	return s.sessionRepo.Update(ctx, session)
 }

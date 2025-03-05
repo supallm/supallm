@@ -16,7 +16,7 @@ type AddLLMCredentialCommand struct {
 	ID           uuid.UUID
 	ProjectID    uuid.UUID
 	Name         string
-	ProviderType model.LLMProviderType
+	ProviderType model.ProviderType
 	APIKey       secret.ApiKey
 }
 

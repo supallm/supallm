@@ -9,11 +9,11 @@ import (
 
 type InMemory struct{}
 
-func (i *InMemory) GenerateText(ctx context.Context, request *model.LLMRequest) (*model.LLMResponse, error) {
+func (i *InMemory) GenerateText(ctx context.Context, request *model.Request) (*model.Response, error) {
 	return nil, nil
 }
 
-func (i *InMemory) StreamText(ctx context.Context, request *model.LLMRequest) (<-chan struct{}, error) {
+func (i *InMemory) StreamText(ctx context.Context, request *model.Request) (<-chan struct{}, error) {
 	return nil, nil
 }
 

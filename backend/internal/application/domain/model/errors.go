@@ -13,17 +13,17 @@ const (
 
 	ErrProviderNameRequired Err = "provider name is required"
 
-	ErrProviderNotFound        Err = "provider not found"
-	ErrModelNotFound           Err = "model not found"
-	ErrModelExists             Err = "model already exists"
-	ErrLLMModelNotSupported    Err = "llm model not supported"
-	ErrLLMProviderNotSupported Err = "llm provider not supported"
+	ErrProviderNotFound          Err = "provider not found"
+	ErrModelNotFound             Err = "model not found"
+	ErrModelExists               Err = "model already exists"
+	ErrProviderModelNotSupported Err = "provider model not supported"
+	ErrCredentialNotSupported    Err = "credential not supported"
 
 	ErrInvalidModelSlug Err = "invalid model slug"
 	ErrInvalidModel     Err = "invalid model"
 
 	ErrCredentialNotFound Err = "credential not found"
 
-	ErrInvalidLLMCredential Err = "invalid llm credential"
-	ErrInvalidLLMModel      Err = "invalid llm model"
+	ErrInvalidCredential    Err = "invalid credential"
+	ErrInvalidProviderModel Err = "invalid provider model"
 )

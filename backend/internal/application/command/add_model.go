@@ -18,7 +18,7 @@ type AddModelCommand struct {
 	Slug            slug.Slug
 	Name            string
 	LLMCredentialID uuid.UUID
-	LLMModel        model.LLMModel
+	LLMModel        model.ProviderModel
 	SystemPrompt    model.Prompt
 	Parameters      model.ModelParameters
 }

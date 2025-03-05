@@ -18,17 +18,17 @@ type ProjectRepository interface {
 	DeleteModel(ctx context.Context, id uuid.UUID) error
 }
 
-// LLMSessionRepository defines the interface for session persistence
-type LLMSessionRepository interface {
-	Create(ctx context.Context, session *model.LLMSession) error
-	Retrieve(ctx context.Context, id uuid.UUID) (*model.LLMSession, error)
-	Update(ctx context.Context, session *model.LLMSession) error
+// SessionRepository defines the interface for session persistence
+type SessionRepository interface {
+	Create(ctx context.Context, session *model.Session) error
+	Retrieve(ctx context.Context, id uuid.UUID) (*model.Session, error)
+	Update(ctx context.Context, session *model.Session) error
 	Delete(ctx context.Context, id uuid.UUID) error
 }
 
 // LLMProvider defines the interface for interacting with LLM providers
 type LLMProvider interface {
-	GenerateText(ctx context.Context, request *model.LLMRequest) (*model.LLMResponse, error)
-	StreamText(ctx context.Context, request *model.LLMRequest) (<-chan struct{}, error)
-	VerifyKey(ctx context.Context, credential *model.LLMCredential) error
+	GenerateText(ctx context.Context, request *model.Request) (*model.Response, error)
+	StreamText(ctx context.Context, request *model.Request) (<-chan struct{}, error)
+	VerifyKey(ctx context.Context, credential *model.Credential) error
 }

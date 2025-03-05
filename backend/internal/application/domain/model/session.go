@@ -7,19 +7,29 @@ import (
 )
 
 type (
+	Session struct {
+		ID             uuid.UUID
+		UserID         string
+		ProjectID      uuid.UUID
+		Requests       []*Request
+		Responses      []*Response
+		Active         bool
+		LastActivityAt time.Time
+	}
+
 	Prompt         string
 	RequestStatus  string
 	ResponseStatus string
 
-	LLMRequestConfig struct {
+	RequestConfig struct {
 		Prompt Prompt
 	}
 
-	LLMRequest struct {
+	Request struct {
 		ID     uuid.UUID
 		Model  Model
 		Status RequestStatus
-		Config LLMRequestConfig
+		Config RequestConfig
 	}
 
 	TokenUsage struct {
@@ -38,7 +48,7 @@ type (
 		Delivered bool
 	}
 
-	LLMResponse struct {
+	Response struct {
 		ID          uuid.UUID
 		RequestID   uuid.UUID
 		Content     string
@@ -54,6 +64,21 @@ func (p Prompt) String() string {
 	return string(p)
 }
 
+func NewSession(id uuid.UUID, userID string, projectID uuid.UUID) *Session {
+	return &Session{
+		ID:        id,
+		UserID:    userID,
+		ProjectID: projectID,
+		Requests:  make([]*Request, 0),
+		Responses: make([]*Response, 0),
+		Active:    true,
+	}
+}
+
+func (s *Session) AddResponse(response *Response) {
+	s.Responses = append(s.Responses, response)
+}
+
 const (
 	RequestStatusPending   RequestStatus = "pending"
 	RequestStatusCompleted RequestStatus = "completed"
@@ -66,7 +91,7 @@ const (
 	ResponseStatusInterrupted ResponseStatus = "interrupted"
 )
 
-func (s *LLMSession) NewRequest(id uuid.UUID, model *Model, config LLMRequestConfig) (*LLMRequest, error) {
+func (s *Session) NewRequest(id uuid.UUID, model *Model, config RequestConfig) (*Request, error) {
 	if id == uuid.Nil {
 		return nil, ErrInvalidID
 	}
@@ -75,7 +100,7 @@ func (s *LLMSession) NewRequest(id uuid.UUID, model *Model, config LLMRequestCon
 		return nil, ErrInvalidModel
 	}
 
-	request := &LLMRequest{
+	request := &Request{
 		ID:     id,
 		Model:  *model,
 		Config: config,

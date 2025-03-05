@@ -107,7 +107,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/LLMCredential"
+                  $ref: "#/components/schemas/Credential"
         "404":
           description: Project not found
     post:
@@ -124,7 +124,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateLLMCredentialRequest"
+              $ref: "#/components/schemas/CreateCredentialRequest"
       responses:
         "201":
           description: "Credential created"
@@ -133,7 +133,7 @@ paths:
         "404":
           description: Project not found
 
-  /projects/{projectId}/credentials/{llmCredentialId}:
+  /projects/{projectId}/credentials/{credentialId}:
     get:
       summary: "Get a credential by ID"
       operationId: getCredential
@@ -143,7 +143,7 @@ paths:
           required: true
           schema:
             $ref: "#/components/schemas/UUID"
-        - name: llmCredentialId
+        - name: credentialId
           in: path
           required: true
           schema:
@@ -154,7 +154,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/LLMCredential"
+                $ref: "#/components/schemas/Credential"
         "404":
           description: Credential or project not found
     put:
@@ -166,7 +166,7 @@ paths:
           required: true
           schema:
             $ref: "#/components/schemas/UUID"
-        - name: llmCredentialId
+        - name: credentialId
           in: path
           required: true
           schema:
@@ -176,7 +176,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateLLMCredentialRequest"
+              $ref: "#/components/schemas/UpdateCredentialRequest"
       responses:
         "200":
           description: "Credential updated"
@@ -193,7 +193,7 @@ paths:
           required: true
           schema:
             $ref: "#/components/schemas/UUID"
-        - name: llmCredentialId
+        - name: credentialId
           in: path
           required: true
           schema:
@@ -446,7 +446,7 @@ components:
         credentials:
           type: array
           items:
-            $ref: "#/components/schemas/LLMCredential"
+            $ref: "#/components/schemas/Credential"
         models:
           type: array
           items:
@@ -460,6 +460,7 @@ components:
       required:
         - id
         - name
+        - userId
         - authProvider
         - credentials
         - models
@@ -488,7 +489,7 @@ components:
         - openai
         - anthropic
 
-    LLMModel:
+    ProviderModel:
       type: string
       enum:
         - gpt-4o
@@ -497,7 +498,7 @@ components:
         - claude-3-5-sonnet
         - claude-3-5-haiku
 
-    LLMCredential:
+    Credential:
       type: object
       properties:
         id:
@@ -520,7 +521,7 @@ components:
         - provider
         - apiKey
 
-    CreateLLMCredentialRequest:
+    CreateCredentialRequest:
       type: object
       properties:
         name:
@@ -534,7 +535,7 @@ components:
         - provider
         - apiKey
 
-    UpdateLLMCredentialRequest:
+    UpdateCredentialRequest:
       type: object
       properties:
         name:
@@ -555,9 +556,9 @@ components:
         slug:
           type: string
         credential:
-          $ref: "#/components/schemas/LLMCredential"
-        llmModel:
-          $ref: "#/components/schemas/LLMModel"
+          $ref: "#/components/schemas/Credential"
+        providerModel:
+          $ref: "#/components/schemas/ProviderModel"
         systemPrompt:
           type: string
         parameters:
@@ -572,7 +573,7 @@ components:
         - id
         - slug
         - credential
-        - llmModel
+        - providerModel
         - systemPrompt
         - parameters
         - createdAt
@@ -583,10 +584,10 @@ components:
       properties:
         name:
           type: string
-        llmCredentialId:
+        credentialId:
           type: string
           format: uuid
-        llmModel:
+        providerModel:
           type: string
         systemPrompt:
           type: string
@@ -594,8 +595,8 @@ components:
           type: object
       required:
         - name
-        - llmCredentialId
-        - llmModel
+        - credentialId
+        - providerModel
         - systemPrompt
         - parameters
 
@@ -604,19 +605,19 @@ components:
       properties:
         name:
           type: string
-        llmCredentialId:
+        credentialId:
           type: string
           format: uuid
-        llmModel:
-          $ref: "#/components/schemas/LLMModel"
+        providerModel:
+          $ref: "#/components/schemas/ProviderModel"
         systemPrompt:
           type: string
         parameters:
           type: object
       required:
         - name
-        - llmCredentialId
-        - llmModel
+        - credentialId
+        - providerModel
         - systemPrompt
         - parameters
 
@@ -628,7 +629,7 @@ components:
           enum:
             - supabase
         config:
-          $ref: "#/components/schemas/SupabaseAuthConfig"
+          type: object
       required:
         - provider
         - config
@@ -641,21 +642,10 @@ components:
           enum:
             - supabase
         config:
-          $ref: "#/components/schemas/SupabaseAuthConfig"
+          type: object
       required:
         - provider
         - config
-
-    SupabaseAuthConfig:
-      type: object
-      properties:
-        url:
-          type: string
-        key:
-          type: string
-      required:
-        - url
-        - key
 
     TextGenerationRequest:
       type: object
@@ -664,16 +654,6 @@ components:
           type: string
         prompt:
           type: string
-        maxTokens:
-          type: integer
-          minimum: 1
-          maximum: 4096
-          default: 1024
-        temperature:
-          type: number
-          minimum: 0
-          maximum: 1
-          default: 0.7
       required:
         - modelSlug
         - prompt

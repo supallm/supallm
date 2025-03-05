@@ -10,8 +10,8 @@ import (
 )
 
 type llm interface {
-	GenerateText(ctx context.Context, request *model.LLMRequest) (*model.LLMResponse, error)
-	StreamText(ctx context.Context, request *model.LLMRequest) (<-chan struct{}, error)
+	GenerateText(ctx context.Context, request *model.Request) (*model.Response, error)
+	StreamText(ctx context.Context, request *model.Request) (<-chan struct{}, error)
 	VerifyKey(ctx context.Context, apiKey secret.ApiKey) error
 }
 
@@ -28,7 +28,7 @@ func NewProviderRegistry() *ProviderRegistry {
 	}
 }
 
-func (r *ProviderRegistry) getLLM(credential *model.LLMCredential) (llm, error) {
+func (r *ProviderRegistry) getLLM(credential *model.Credential) (llm, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -69,23 +69,23 @@ func (r *ProviderRegistry) getLLM(credential *model.LLMCredential) (llm, error) 
 	}
 }
 
-func (r *ProviderRegistry) GenerateText(ctx context.Context, request *model.LLMRequest) (*model.LLMResponse, error) {
-	llm, err := r.getLLM(request.Model.LLMCredential)
+func (r *ProviderRegistry) GenerateText(ctx context.Context, request *model.Request) (*model.Response, error) {
+	llm, err := r.getLLM(request.Model.Credential)
 	if err != nil {
 		return nil, err
 	}
 	return llm.GenerateText(ctx, request)
 }
 
-func (r *ProviderRegistry) StreamText(ctx context.Context, request *model.LLMRequest) (<-chan struct{}, error) {
-	llm, err := r.getLLM(request.Model.LLMCredential)
+func (r *ProviderRegistry) StreamText(ctx context.Context, request *model.Request) (<-chan struct{}, error) {
+	llm, err := r.getLLM(request.Model.Credential)
 	if err != nil {
 		return nil, err
 	}
 	return llm.StreamText(ctx, request)
 }
 
-func (r *ProviderRegistry) VerifyKey(ctx context.Context, credential *model.LLMCredential) error {
+func (r *ProviderRegistry) VerifyKey(ctx context.Context, credential *model.Credential) error {
 	llm, err := r.getLLM(credential)
 	if err != nil {
 		return err

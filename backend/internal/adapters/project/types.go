@@ -24,22 +24,22 @@ func (a authProvider) query() (query.AuthProvider, error) {
 	}, nil
 }
 
-func (l LlmCredential) domain() (*model.LLMCredential, error) {
+func (l Credential) domain() (*model.Credential, error) {
 	apiKey, err := secret.Decrypt(l.ApiKeyEncrypted)
 	if err != nil {
 		return nil, err
 	}
 
-	return &model.LLMCredential{
+	return &model.Credential{
 		ID:           l.ID,
 		Name:         l.Name,
-		ProviderType: model.LLMProviderType(l.ProviderType),
+		ProviderType: model.ProviderType(l.ProviderType),
 		APIKey:       apiKey,
 	}, nil
 }
 
-func (l LlmCredential) query() (query.LLMCredential, error) {
-	return query.LLMCredential{
+func (l Credential) query() (query.Credential, error) {
+	return query.Credential{
 		ID:               l.ID,
 		Name:             l.Name,
 		Provider:         l.ProviderType,
@@ -51,10 +51,10 @@ func (l LlmCredential) query() (query.LLMCredential, error) {
 
 func (m Model) domain() (*model.Model, error) {
 	return &model.Model{
-		ID:           m.ID,
-		Slug:         slug.Slug(m.Slug),
-		LLMModel:     model.LLMModel(m.LlmModel),
-		SystemPrompt: model.Prompt(m.SystemPrompt),
+		ID:            m.ID,
+		Slug:          slug.Slug(m.Slug),
+		ProviderModel: model.ProviderModel(m.ProviderModel),
+		SystemPrompt:  model.Prompt(m.SystemPrompt),
 	}, nil
 }
 
@@ -62,20 +62,20 @@ func (m Model) query() (query.Model, error) {
 	return query.Model{
 		ID:           m.ID,
 		Slug:         slug.Slug(m.Slug),
-		Model:        m.LlmModel,
+		Model:        m.ProviderModel,
 		SystemPrompt: m.SystemPrompt,
 		CreatedAt:    m.CreatedAt.Time,
 		UpdatedAt:    m.UpdatedAt.Time,
 	}, nil
 }
 
-func (p Project) domain(cs []LlmCredential, ms []Model) (*model.Project, error) {
+func (p Project) domain(cs []Credential, ms []Model) (*model.Project, error) {
 	ap, err := p.AuthProvider.domain()
 	if err != nil {
 		return nil, err
 	}
 
-	llmCredentials := make(map[uuid.UUID]*model.LLMCredential)
+	llmCredentials := make(map[uuid.UUID]*model.Credential)
 	for _, llmCredential := range cs {
 		llmCredentials[llmCredential.ID], err = llmCredential.domain()
 		if err != nil {
@@ -100,13 +100,13 @@ func (p Project) domain(cs []LlmCredential, ms []Model) (*model.Project, error) 
 	}, nil
 }
 
-func (p Project) query(cs []LlmCredential, ms []Model) (query.Project, error) {
+func (p Project) query(cs []Credential, ms []Model) (query.Project, error) {
 	ap, err := p.AuthProvider.query()
 	if err != nil {
 		return query.Project{}, err
 	}
 
-	llmCredentials := make([]query.LLMCredential, len(cs))
+	llmCredentials := make([]query.Credential, len(cs))
 	for i, llmCredential := range cs {
 		llmCredentials[i], err = llmCredential.query()
 		if err != nil {

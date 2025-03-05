@@ -40,14 +40,14 @@ type ServerInterface interface {
 	// (POST /projects/{projectId}/credentials)
 	CreateCredential(c *fiber.Ctx, projectId UUID) error
 	// Delete a credential
-	// (DELETE /projects/{projectId}/credentials/{llmCredentialId})
-	DeleteCredential(c *fiber.Ctx, projectId UUID, llmCredentialId UUID) error
+	// (DELETE /projects/{projectId}/credentials/{credentialId})
+	DeleteCredential(c *fiber.Ctx, projectId UUID, credentialId UUID) error
 	// Get a credential by ID
-	// (GET /projects/{projectId}/credentials/{llmCredentialId})
-	GetCredential(c *fiber.Ctx, projectId UUID, llmCredentialId UUID) error
+	// (GET /projects/{projectId}/credentials/{credentialId})
+	GetCredential(c *fiber.Ctx, projectId UUID, credentialId UUID) error
 	// Update a credential
-	// (PUT /projects/{projectId}/credentials/{llmCredentialId})
-	UpdateCredential(c *fiber.Ctx, projectId UUID, llmCredentialId UUID) error
+	// (PUT /projects/{projectId}/credentials/{credentialId})
+	UpdateCredential(c *fiber.Ctx, projectId UUID, credentialId UUID) error
 	// Generate text (HTTP blocking)
 	// (POST /projects/{projectId}/generateText)
 	GenerateText(c *fiber.Ctx, projectId UUID) error
@@ -233,17 +233,17 @@ func (siw *ServerInterfaceWrapper) DeleteCredential(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter projectId: %w", err).Error())
 	}
 
-	// ------------- Path parameter "llmCredentialId" -------------
-	var llmCredentialId UUID
+	// ------------- Path parameter "credentialId" -------------
+	var credentialId UUID
 
-	err = runtime.BindStyledParameterWithOptions("simple", "llmCredentialId", c.Params("llmCredentialId"), &llmCredentialId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	err = runtime.BindStyledParameterWithOptions("simple", "credentialId", c.Params("credentialId"), &credentialId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter llmCredentialId: %w", err).Error())
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter credentialId: %w", err).Error())
 	}
 
 	c.Context().SetUserValue(BearerAuthScopes, []string{})
 
-	return siw.Handler.DeleteCredential(c, projectId, llmCredentialId)
+	return siw.Handler.DeleteCredential(c, projectId, credentialId)
 }
 
 // GetCredential operation middleware
@@ -259,17 +259,17 @@ func (siw *ServerInterfaceWrapper) GetCredential(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter projectId: %w", err).Error())
 	}
 
-	// ------------- Path parameter "llmCredentialId" -------------
-	var llmCredentialId UUID
+	// ------------- Path parameter "credentialId" -------------
+	var credentialId UUID
 
-	err = runtime.BindStyledParameterWithOptions("simple", "llmCredentialId", c.Params("llmCredentialId"), &llmCredentialId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	err = runtime.BindStyledParameterWithOptions("simple", "credentialId", c.Params("credentialId"), &credentialId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter llmCredentialId: %w", err).Error())
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter credentialId: %w", err).Error())
 	}
 
 	c.Context().SetUserValue(BearerAuthScopes, []string{})
 
-	return siw.Handler.GetCredential(c, projectId, llmCredentialId)
+	return siw.Handler.GetCredential(c, projectId, credentialId)
 }
 
 // UpdateCredential operation middleware
@@ -285,17 +285,17 @@ func (siw *ServerInterfaceWrapper) UpdateCredential(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter projectId: %w", err).Error())
 	}
 
-	// ------------- Path parameter "llmCredentialId" -------------
-	var llmCredentialId UUID
+	// ------------- Path parameter "credentialId" -------------
+	var credentialId UUID
 
-	err = runtime.BindStyledParameterWithOptions("simple", "llmCredentialId", c.Params("llmCredentialId"), &llmCredentialId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	err = runtime.BindStyledParameterWithOptions("simple", "credentialId", c.Params("credentialId"), &credentialId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter llmCredentialId: %w", err).Error())
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter credentialId: %w", err).Error())
 	}
 
 	c.Context().SetUserValue(BearerAuthScopes, []string{})
 
-	return siw.Handler.UpdateCredential(c, projectId, llmCredentialId)
+	return siw.Handler.UpdateCredential(c, projectId, credentialId)
 }
 
 // GenerateText operation middleware
@@ -487,11 +487,11 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 
 	router.Post(options.BaseURL+"/projects/:projectId/credentials", wrapper.CreateCredential)
 
-	router.Delete(options.BaseURL+"/projects/:projectId/credentials/:llmCredentialId", wrapper.DeleteCredential)
+	router.Delete(options.BaseURL+"/projects/:projectId/credentials/:credentialId", wrapper.DeleteCredential)
 
-	router.Get(options.BaseURL+"/projects/:projectId/credentials/:llmCredentialId", wrapper.GetCredential)
+	router.Get(options.BaseURL+"/projects/:projectId/credentials/:credentialId", wrapper.GetCredential)
 
-	router.Put(options.BaseURL+"/projects/:projectId/credentials/:llmCredentialId", wrapper.UpdateCredential)
+	router.Put(options.BaseURL+"/projects/:projectId/credentials/:credentialId", wrapper.UpdateCredential)
 
 	router.Post(options.BaseURL+"/projects/:projectId/generateText", wrapper.GenerateText)
 

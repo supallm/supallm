@@ -27,7 +27,7 @@ func NewListCredentialsHandler(projectReader ProjectReader) ListCredentialsHandl
 	}
 }
 
-func (h ListCredentialsHandler) Handle(ctx context.Context, query ListCredentialsQuery) ([]LLMCredential, error) {
+func (h ListCredentialsHandler) Handle(ctx context.Context, query ListCredentialsQuery) ([]Credential, error) {
 	project, err := h.projectReader.GetProject(ctx, query.ProjectID)
 	if err != nil {
 		return nil, err

@@ -66,7 +66,7 @@ func (r Repository) Create(ctx context.Context, project *model.Project) error {
 			if err != nil {
 				return fmt.Errorf("error encrypting api key: %w", err)
 			}
-			err = q.storeLLMCredential(ctx, storeLLMCredentialParams{
+			err = q.storeCredential(ctx, storeCredentialParams{
 				ID:               llmCredential.ID,
 				ProjectID:        project.ID,
 				Name:             llmCredential.Name,
@@ -81,13 +81,13 @@ func (r Repository) Create(ctx context.Context, project *model.Project) error {
 
 		for _, model := range project.Models {
 			err = q.storeModel(ctx, storeModelParams{
-				ID:           model.ID,
-				ProjectID:    project.ID,
-				CredentialID: model.LLMCredential.ID,
-				Name:         model.Name,
-				Slug:         model.Slug.String(),
-				LlmModel:     model.LLMModel.String(),
-				SystemPrompt: model.SystemPrompt.String(),
+				ID:            model.ID,
+				ProjectID:     project.ID,
+				CredentialID:  model.Credential.ID,
+				Name:          model.Name,
+				Slug:          model.Slug.String(),
+				ProviderModel: model.ProviderModel.String(),
+				SystemPrompt:  model.SystemPrompt.String(),
 			})
 			if err != nil {
 				return fmt.Errorf("error storing model: %w", err)
@@ -98,13 +98,13 @@ func (r Repository) Create(ctx context.Context, project *model.Project) error {
 	})
 }
 
-func (r Repository) retrieve(ctx context.Context, id uuid.UUID) (Project, []LlmCredential, []Model, error) {
+func (r Repository) retrieve(ctx context.Context, id uuid.UUID) (Project, []Credential, []Model, error) {
 	project, err := r.queries.projectById(ctx, id)
 	if err != nil {
 		return Project{}, nil, nil, fmt.Errorf("error getting project: %w", err)
 	}
 
-	llmCredentials, err := r.queries.llmCredentialsByProjectId(ctx, id)
+	llmCredentials, err := r.queries.credentialsByProjectId(ctx, id)
 	if err != nil {
 		return Project{}, nil, nil, fmt.Errorf("error getting llm credentials: %w", err)
 	}
@@ -145,7 +145,7 @@ func (r Repository) Update(ctx context.Context, project *model.Project) error {
 			if err != nil {
 				return fmt.Errorf("error encrypting api key: %w", err)
 			}
-			err = q.upsertLLMCredential(ctx, upsertLLMCredentialParams{
+			err = q.upsertCredential(ctx, upsertCredentialParams{
 				ID:               llmCredential.ID,
 				ProjectID:        project.ID,
 				Name:             llmCredential.Name,
@@ -161,12 +161,12 @@ func (r Repository) Update(ctx context.Context, project *model.Project) error {
 
 		for _, model := range project.Models {
 			err = q.upsertModel(ctx, upsertModelParams{
-				ID:           model.ID,
-				ProjectID:    project.ID,
-				CredentialID: model.LLMCredential.ID,
-				Slug:         model.Slug.String(),
-				LlmModel:     model.LLMModel.String(),
-				SystemPrompt: model.SystemPrompt.String(),
+				ID:            model.ID,
+				ProjectID:     project.ID,
+				CredentialID:  model.Credential.ID,
+				Slug:          model.Slug.String(),
+				ProviderModel: model.ProviderModel.String(),
+				SystemPrompt:  model.SystemPrompt.String(),
 			})
 			if err != nil {
 				return fmt.Errorf("error updating model: %w", err)
@@ -186,7 +186,7 @@ func (r Repository) DeleteProject(ctx context.Context, id uuid.UUID) error {
 }
 
 func (r Repository) DeleteLLMCredential(ctx context.Context, id uuid.UUID) error {
-	err := r.queries.deleteLLMCredential(ctx, id)
+	err := r.queries.deleteCredential(ctx, id)
 	if err != nil {
 		return fmt.Errorf("error deleting llm credential: %w", err)
 	}

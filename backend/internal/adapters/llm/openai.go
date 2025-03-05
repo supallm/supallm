@@ -19,12 +19,12 @@ func newOpenAI(key string) *openaiService {
 	}
 }
 
-func (o *openaiService) GenerateText(ctx context.Context, request *model.LLMRequest) (*model.LLMResponse, error) {
+func (o *openaiService) GenerateText(ctx context.Context, request *model.Request) (*model.Response, error) {
 	// TODO: Implement
 	return nil, nil
 }
 
-func (o *openaiService) StreamText(ctx context.Context, request *model.LLMRequest) (<-chan struct{}, error) {
+func (o *openaiService) StreamText(ctx context.Context, request *model.Request) (<-chan struct{}, error) {
 	// TODO: Implement
 	return nil, nil
 }

@@ -11,7 +11,7 @@ type Project struct {
 	ID           uuid.UUID
 	Name         string
 	AuthProvider AuthProvider
-	Credentials  []LLMCredential
+	Credentials  []Credential
 	Models       []Model
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
@@ -32,7 +32,7 @@ type Model struct {
 	UpdatedAt    time.Time
 }
 
-type LLMCredential struct {
+type Credential struct {
 	ID               uuid.UUID
 	Name             string
 	Provider         string
