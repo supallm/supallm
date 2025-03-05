@@ -32,7 +32,7 @@ export const ModelTableColumns: ColumnDef<Model>[] = [
     accessorKey: "slug",
     header: "ID",
     cell: ({ row }) => {
-      return <Copiable value={row.original.slug} />;
+      return <Copiable value={row.original.slug} width="sm" />;
     },
   },
   {
@@ -53,6 +53,10 @@ export const ModelTableColumns: ColumnDef<Model>[] = [
     cell: ({ row }) => {
       return <TruncatedTableCell value={row.original.name} />;
     },
+  },
+  {
+    accessorKey: "temperature",
+    header: "Temperature",
   },
   {
     accessorKey: "systemPrompt",

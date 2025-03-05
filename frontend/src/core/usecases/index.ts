@@ -38,7 +38,6 @@ export const deleteLLMProviderUsecase = new DeleteLLMProviderUsecase(
 /**
  * Models
  */
-
 export const createModelUsecase = new CreateModelUsecase(
   new MockModelService(),
 );

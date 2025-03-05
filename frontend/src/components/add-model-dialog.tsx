@@ -3,7 +3,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -28,17 +27,13 @@ import { cn } from "@/lib/utils";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { Input } from "./ui/input";
-import { createLLMProviderUsecase } from "@/core/usecases";
+import { createModelUsecase } from "@/core/usecases";
 import { useAppConfigStore } from "@/core/store/app-config";
 import { hookifyFunction } from "@/hooks/hookify-function";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "./ui/select";
 import { SelectCredentials } from "./select-credentials";
+import { Textarea } from "./ui/textarea";
+import { DialogDescription } from "@radix-ui/react-dialog";
+import { SelectModel } from "./select-model";
 
 export const AddModelDialog: FC<{
   isOpen: boolean;
@@ -46,12 +41,10 @@ export const AddModelDialog: FC<{
 }> = ({ isOpen, onOpenChange }) => {
   const { currentProject } = useAppConfigStore();
   const {
-    execute: createLLMProvider,
-    isLoading: isCreatingLLMProvider,
-    error: createLLMProviderError,
-  } = hookifyFunction(
-    createLLMProviderUsecase.execute.bind(createLLMProviderUsecase),
-  );
+    execute: createModel,
+    isLoading: isCreating,
+    error: creationError,
+  } = hookifyFunction(createModelUsecase.execute.bind(createModelUsecase));
 
   if (!currentProject) {
     throw new Error("Unexpected error: current project is not set");
@@ -67,25 +60,37 @@ export const AddModelDialog: FC<{
 
   const formSchema = z.object({
     name: z.string().min(2).max(50),
-    apiKey: z.string().min(2),
+    credentialId: z.string().min(2),
+    model: z.string().min(2),
     providerType: z.enum(LLMProviderNames),
+    temperature: z.number().min(0).max(2),
+    systemPrompt: z.string().min(0),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
-      apiKey: "",
+      credentialId: "",
       providerType: "openai",
+      temperature: 1,
+      systemPrompt: "",
+      model: "",
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const project = await createLLMProvider({
+    console.log("onSubmit");
+    console.log(values);
+
+    await createModel({
       projectId: currentProject!.id,
       name: values.name,
       credentialId: values.credentialId,
       providerType: values.providerType,
+      model: values.model,
+      systemPrompt: values.systemPrompt,
+      temperature: values.temperature,
     });
     reset();
     onOpenChange(false);
@@ -104,13 +109,10 @@ export const AddModelDialog: FC<{
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-3xl">
+      <DialogContent className="sm:max-w-3xl max-h-screen overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add model</DialogTitle>
-          <DialogDescription>
-            Note you can create multiple instances of the same provider to
-            manage multiple API keys.
-          </DialogDescription>
+          <DialogDescription></DialogDescription>
         </DialogHeader>
         <div className="flex items-center space-x-2">
           {!selectedProvider && (
@@ -180,8 +182,61 @@ export const AddModelDialog: FC<{
                             </FormItem>
                           )}
                         />
-                        <Button type="submit" isLoading={isCreatingLLMProvider}>
-                          Create provider
+                        <FormField
+                          control={form.control}
+                          name="model"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Model</FormLabel>
+                              <SelectModel
+                                onValueChange={field.onChange}
+                                defaultValue={field.value}
+                                providerType={selectedProvider}
+                              />
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="temperature"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Temperature</FormLabel>
+                              <FormControl>
+                                <Input
+                                  step={0.1}
+                                  type="number"
+                                  placeholder="1"
+                                  {...field}
+                                  onChange={(e) => {
+                                    field.onChange(Number(e.target.value));
+                                  }}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="systemPrompt"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>System Prompt</FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  placeholder="You are a helpful assistant..."
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <Button type="submit" isLoading={isCreating}>
+                          Create model
                         </Button>
                       </form>
                     </Form>

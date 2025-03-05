@@ -1,3 +1,5 @@
+import { LLMProviderName } from "@/core/entities/llm-provider";
+import { Model } from "@/core/entities/model";
 import { ModelService } from "@/core/interfaces";
 
 export class MockModelService implements ModelService {
@@ -8,16 +10,19 @@ export class MockModelService implements ModelService {
     providerType: LLMProviderName;
     model: string;
     systemPrompt: string;
+    temperature: number;
   }): Promise<Model> {
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     return {
-      id: "1",
-      name: "test",
-      slug: "test",
-      credentialId: "1",
-      model: "test",
-      systemPrompt: "test",
+      id: crypto.randomUUID(),
+      name: data.name,
+      slug: `slug-${crypto.randomUUID()}`,
+      credentialId: data.credentialId,
+      providerType: data.providerType,
+      model: data.model,
+      systemPrompt: data.systemPrompt,
+      temperature: 0.5,
     };
   }
 
