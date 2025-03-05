@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Dialog,
   DialogContent,
@@ -15,36 +14,35 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { FC, useEffect, useState } from "react";
-import { ProviderCardList } from "./llm-providers/provider-card-list";
 import {
   LLMProviderName,
   LLMProviderNames,
 } from "@/core/entities/llm-provider";
-import { ProviderLogo } from "./logos/provider-logo";
-import { Card, CardContent, CardHeader } from "./ui/card";
-import { cn } from "@/lib/utils";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { Input } from "./ui/input";
-import { createModelUsecase } from "@/core/usecases";
 import { useAppConfigStore } from "@/core/store/app-config";
+import { createModelUsecase } from "@/core/usecases";
 import { hookifyFunction } from "@/hooks/hookify-function";
-import { SelectCredentials } from "./select-credentials";
-import { Textarea } from "./ui/textarea";
+import { cn } from "@/lib/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { DialogDescription } from "@radix-ui/react-dialog";
+import { FC, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { ProviderCardList } from "./llm-providers/provider-card-list";
+import { ProviderLogo } from "./logos/provider-logo";
+import { SelectCredentials } from "./select-credentials";
 import { SelectModel } from "./select-model";
+import { Card, CardContent, CardHeader } from "./ui/card";
+import { Input } from "./ui/input";
+import { Textarea } from "./ui/textarea";
 
 export const AddModelDialog: FC<{
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
 }> = ({ isOpen, onOpenChange }) => {
   const { currentProject } = useAppConfigStore();
-  const {
-    execute: createModel,
-    isLoading: isCreating,
-    error: creationError,
-  } = hookifyFunction(createModelUsecase.execute.bind(createModelUsecase));
+  const { execute: createModel, isLoading: isCreating } = hookifyFunction(
+    createModelUsecase.execute.bind(createModelUsecase),
+  );
 
   if (!currentProject) {
     throw new Error("Unexpected error: current project is not set");

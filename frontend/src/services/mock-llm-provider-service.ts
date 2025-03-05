@@ -8,8 +8,6 @@ export class MockLLMProviderService implements LLMProviderService {
     apiKey: string;
     providerType: LLMProviderName;
   }): Promise<LLMProvider> {
-    const authToken = await getAuthToken();
-
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
     const createdProvider = {
@@ -32,21 +30,11 @@ export class MockLLMProviderService implements LLMProviderService {
     return [];
   }
 
-  async patch(
-    id: string,
-    data: {
-      name: string;
-      apiKey: string | undefined;
-    },
-  ) {
-    const authToken = await getAuthToken();
-
+  async patch() {
     await new Promise((resolve) => setTimeout(resolve, 2000));
   }
 
-  async delete(id: string) {
-    const authToken = await getAuthToken();
-
+  async delete() {
     await new Promise((resolve) => setTimeout(resolve, 2000));
   }
 }

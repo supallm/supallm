@@ -1,22 +1,14 @@
-import {
-  TooltipProvider,
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from "./ui/tooltip";
 import { FC } from "react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip";
 
 export const TruncatedTableCell: FC<{
   value: string;
-  maxWidth?: number;
-  tooltipMaxHeight?: number;
-  tooltipMaxWidth?: number;
-}> = ({
-  value,
-  maxWidth = 40,
-  tooltipMaxHeight = 100,
-  tooltipMaxWidth = 100,
-}) => {
+}> = ({ value }) => {
   return (
     <TooltipProvider>
       <Tooltip>

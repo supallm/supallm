@@ -26,25 +26,17 @@ export class MockModelService implements ModelService {
     };
   }
 
-  async list(projectId: string): Promise<Model[]> {
+  async list(): Promise<Model[]> {
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     return [];
   }
 
-  async patch(
-    id: string,
-    data: {
-      name: string;
-      credentialId: string;
-      systemPrompt: string;
-      temperature: number;
-    },
-  ): Promise<void> {
+  async patch(): Promise<void> {
     await new Promise((resolve) => setTimeout(resolve, 1000));
   }
 
-  async delete(id: string): Promise<void> {
+  async delete(): Promise<void> {
     await new Promise((resolve) => setTimeout(resolve, 1000));
   }
 }

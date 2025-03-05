@@ -1,30 +1,21 @@
-import { FC, ReactNode } from "react";
-import { Card, CardContent, CardFooter, CardHeader } from "../ui/card";
-import { Button } from "../ui/button";
-import { cn } from "@/lib/utils";
-import {
-  LLMProvider,
-  LLMProviderLabel,
-  LLMProviderName,
-} from "@/core/entities/llm-provider";
+import { LLMProvider, LLMProviderLabel } from "@/core/entities/llm-provider";
+import { FC } from "react";
 import { ProviderLogo } from "../logos/provider-logo";
+import { Button } from "../ui/button";
+import { Card, CardFooter, CardHeader } from "../ui/card";
 
+import { deleteLLMProviderUsecase } from "@/core/usecases";
+import { hookifyFunction } from "@/hooks/hookify-function";
 import { Cog, Trash2 } from "lucide-react";
 import { ConfirmDangerDialog } from "../confirm-danger-dialog";
-import { TriggerConfirmButton } from "../trigger-confirm-button";
 import { EditLLMProviderDialog } from "../edit-llm-provider-dialog";
-import { hookifyFunction } from "@/hooks/hookify-function";
-import { deleteLLMProviderUsecase } from "@/core/usecases";
 
 export type LLMProviderCardProps = {
   provider: LLMProvider;
   onEdit: () => void;
 };
 
-export const LLMProviderCard: FC<LLMProviderCardProps> = ({
-  provider,
-  onEdit,
-}) => {
+export const LLMProviderCard: FC<LLMProviderCardProps> = ({ provider }) => {
   const type = provider.providerType;
   const name = provider.name;
 

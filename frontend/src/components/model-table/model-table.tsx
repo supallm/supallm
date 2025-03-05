@@ -16,11 +16,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Model } from "@/core/entities/model";
-import { Button } from "../ui/button";
 import { MoreHorizontalIcon } from "lucide-react";
 import { Copiable } from "../copiable";
 import { ProviderLogo } from "../logos/provider-logo";
 import { TruncatedTableCell } from "../truncated-table-cell";
+import { Button } from "../ui/button";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -68,7 +68,7 @@ export const ModelTableColumns: ColumnDef<Model>[] = [
   {
     accessorKey: "actions",
     header: "Actions",
-    cell: ({ row }) => {
+    cell: () => {
       return (
         <Button variant="icon" size="sm">
           <MoreHorizontalIcon />

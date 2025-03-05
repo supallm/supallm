@@ -1,15 +1,14 @@
 "use client";
 
-import { CodeBlock } from "@/components/ui/code-block";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
+import { Spacer } from "@/components/spacer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { BrainCircuit, FileSliders, Users } from "lucide-react";
-import { FC, PropsWithChildren } from "react";
+import { CodeBlock } from "@/components/ui/code-block";
 import { useAppConfigStore } from "@/core/store/app-config";
-import { Spacer } from "@/components/spacer";
+import { BrainCircuit, FileSliders, Users } from "lucide-react";
 
 const code = `import { streamText } from 'supallm';
 import { openai } from '@supallm/openai';
@@ -27,7 +26,7 @@ stream.on('data', (data) => {
 });
 `;
 
-export const OverviewPage: FC<PropsWithChildren<{}>> = () => {
+const OverviewPage = () => {
   const { currentProject } = useAppConfigStore();
 
   if (!currentProject) {

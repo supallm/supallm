@@ -7,22 +7,8 @@ import {
   DialogTrigger,
   DialogDescription,
 } from "./ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { FC, PropsWithChildren, useState } from "react";
 import { Button } from "./ui/button";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { Input } from "./ui/input";
-import { ArrowRight } from "lucide-react";
 
 export const ConfirmDialog: FC<
   PropsWithChildren<{

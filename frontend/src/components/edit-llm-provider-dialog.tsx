@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Dialog,
   DialogContent,
@@ -17,17 +16,18 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { FC, PropsWithChildren, useEffect, useState } from "react";
 import { LLMProvider, LLMProviderName } from "@/core/entities/llm-provider";
+import { useAppConfigStore } from "@/core/store/app-config";
+import { patchLLMProviderUsecase } from "@/core/usecases";
+import { hookifyFunction } from "@/hooks/hookify-function";
+import { cn } from "@/lib/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { FC, PropsWithChildren, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { ProviderLogo } from "./logos/provider-logo";
 import { Card, CardContent, CardHeader } from "./ui/card";
-import { cn } from "@/lib/utils";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
 import { Input } from "./ui/input";
-import { patchLLMProviderUsecase } from "@/core/usecases";
-import { useAppConfigStore } from "@/core/store/app-config";
-import { hookifyFunction } from "@/hooks/hookify-function";
 
 export const EditLLMProviderDialog: FC<
   PropsWithChildren<{
@@ -36,13 +36,10 @@ export const EditLLMProviderDialog: FC<
 > = ({ provider, children }) => {
   const { currentProject } = useAppConfigStore();
 
-  const {
-    execute: patchLLMProvider,
-    isLoading: isPatchingLLMProvider,
-    error: patchLLMProviderError,
-  } = hookifyFunction(
-    patchLLMProviderUsecase.execute.bind(patchLLMProviderUsecase),
-  );
+  const { execute: patchLLMProvider, isLoading: isPatchingLLMProvider } =
+    hookifyFunction(
+      patchLLMProviderUsecase.execute.bind(patchLLMProviderUsecase),
+    );
 
   if (!currentProject) {
     throw new Error("Unexpected error: current project is not set");
@@ -70,7 +67,7 @@ export const EditLLMProviderDialog: FC<
       name: provider.name,
       apiKey: undefined,
     });
-  }, [provider]);
+  }, [provider, form]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     await patchLLMProvider(provider.id, {

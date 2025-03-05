@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Dialog,
   DialogContent,
@@ -16,34 +15,32 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { FC, useEffect, useState } from "react";
-import { ProviderCardList } from "./llm-providers/provider-card-list";
 import {
   LLMProviderName,
   LLMProviderNames,
 } from "@/core/entities/llm-provider";
+import { useAppConfigStore } from "@/core/store/app-config";
+import { createLLMProviderUsecase } from "@/core/usecases";
+import { hookifyFunction } from "@/hooks/hookify-function";
+import { cn } from "@/lib/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { FC, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { ProviderCardList } from "./llm-providers/provider-card-list";
 import { ProviderLogo } from "./logos/provider-logo";
 import { Card, CardContent, CardHeader } from "./ui/card";
-import { cn } from "@/lib/utils";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
 import { Input } from "./ui/input";
-import { createLLMProviderUsecase } from "@/core/usecases";
-import { useAppConfigStore } from "@/core/store/app-config";
-import { hookifyFunction } from "@/hooks/hookify-function";
 
 export const AddLLMProviderDialog: FC<{
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
 }> = ({ isOpen, onOpenChange }) => {
   const { currentProject } = useAppConfigStore();
-  const {
-    execute: createLLMProvider,
-    isLoading: isCreatingLLMProvider,
-    error: createLLMProviderError,
-  } = hookifyFunction(
-    createLLMProviderUsecase.execute.bind(createLLMProviderUsecase),
-  );
+  const { execute: createLLMProvider, isLoading: isCreatingLLMProvider } =
+    hookifyFunction(
+      createLLMProviderUsecase.execute.bind(createLLMProviderUsecase),
+    );
 
   if (!currentProject) {
     throw new Error("Unexpected error: current project is not set");
@@ -73,7 +70,7 @@ export const AddLLMProviderDialog: FC<{
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const project = await createLLMProvider({
+    await createLLMProvider({
       projectId: currentProject!.id,
       name: values.name,
       apiKey: values.apiKey,

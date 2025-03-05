@@ -1,4 +1,4 @@
-import { FC, PropsWithChildren, ReactNode } from "react";
+import { FC, PropsWithChildren } from "react";
 import { Card, CardContent } from "./ui/card";
 
 export const EmptyState: FC<

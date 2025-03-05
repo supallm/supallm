@@ -11,7 +11,7 @@ export class PatchLLMProviderUsecase {
       apiKey: string | undefined;
     },
   ) {
-    const provider = await this.llmProviderService.patch(id, data);
+    await this.llmProviderService.patch(id, data);
 
     patchLLMProvider(id, {
       name: data.name,

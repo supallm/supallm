@@ -17,7 +17,7 @@ import { useListModels } from "@/hooks/use-list-models";
 import { PlusIcon } from "lucide-react";
 import { useState } from "react";
 
-export const PageSkeleton = () => {
+const PageSkeleton = () => {
   return (
     <div className="">
       <PageContainer>

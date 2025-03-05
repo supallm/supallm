@@ -1,5 +1,5 @@
 import { LLMProviderService } from "@/core/interfaces";
-import { deleteLLMProvider, patchLLMProvider } from "../store/llm-providers";
+import { deleteLLMProvider } from "../store/llm-providers";
 
 export class DeleteLLMProviderUsecase {
   constructor(private readonly llmProviderService: LLMProviderService) {}

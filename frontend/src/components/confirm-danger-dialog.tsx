@@ -1,28 +1,26 @@
 import {
-  Dialog,
-  DialogFooter,
-  DialogHeader,
-  DialogContent,
-  DialogTitle,
-  DialogTrigger,
-  DialogDescription,
-} from "./ui/dialog";
-import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { FC, PropsWithChildren, useState } from "react";
-import { Button } from "./ui/button";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { FC, PropsWithChildren, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Input } from "./ui/input";
+import { z } from "zod";
 import { Spacer } from "./spacer";
+import { Button } from "./ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./ui/dialog";
+import { Input } from "./ui/input";
 
 export const ConfirmDangerDialog: FC<
   PropsWithChildren<{
@@ -65,7 +63,7 @@ export const ConfirmDangerDialog: FC<
     }
   };
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit() {
     onConfirm();
     setOpen(false);
     reset();

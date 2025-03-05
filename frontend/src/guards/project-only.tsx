@@ -2,7 +2,6 @@
 
 import { GlobalLoading } from "@/components/global-loading";
 import { useAppConfigStore } from "@/core/store/app-config";
-import { useAppConfig } from "@/hooks/use-app-config";
 import { NoProjectRoute } from "@/routes";
 import { useRouter } from "next/navigation";
 import { FC, PropsWithChildren } from "react";

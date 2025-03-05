@@ -3,7 +3,6 @@
 import { AddLLMProviderDialog } from "@/components/add-llm-provider-dialog";
 import { EmptyState } from "@/components/empty-state";
 import { LLMProviderCard } from "@/components/llm-providers/llm-provider-card";
-import { ProviderLogo } from "@/components/logos/provider-logo";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
 import { Spacer } from "@/components/spacer";
@@ -15,7 +14,7 @@ import { useListLLMProviders } from "@/hooks/use-list-llm-providers";
 import { PlusIcon } from "lucide-react";
 import { useState } from "react";
 
-export const PageSkeleton = () => {
+const PageSkeleton = () => {
   return (
     <div className="">
       <PageContainer>
