@@ -1,17 +1,19 @@
 "use client";
 
-import { AddLLMProviderDialog } from "@/components/add-llm-provider-dialog";
+import { AddModelDialog } from "@/components/add-model-dialog";
 import { EmptyState } from "@/components/empty-state";
-import { LLMProviderCard } from "@/components/llm-providers/llm-provider-card";
-import { ProviderLogo } from "@/components/logos/provider-logo";
+import {
+  ModelTable,
+  ModelTableColumns,
+} from "@/components/model-table/model-table";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
 import { Spacer } from "@/components/spacer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAppConfigStore } from "@/core/store/app-config";
-import { useLLMProviderStore } from "@/core/store/llm-providers";
-import { useListLLMProviders } from "@/hooks/use-list-llm-providers";
+import { useModelStore } from "@/core/store/models";
+import { useListModels } from "@/hooks/use-list-models";
 import { PlusIcon } from "lucide-react";
 import { useState } from "react";
 
@@ -21,7 +23,7 @@ export const PageSkeleton = () => {
       <PageContainer>
         <div className="flex justify-end">
           <Button disabled startContent={<PlusIcon className="w-3 h-3" />}>
-            Add LLM provider
+            Add model
           </Button>
         </div>
         <Spacer />
@@ -34,55 +36,48 @@ export const PageSkeleton = () => {
   );
 };
 
-const ProjectPage = () => {
+const ModelsPage = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { currentProject } = useAppConfigStore();
-  const { list: llmProviders } = useLLMProviderStore();
+  const { list: models } = useModelStore();
 
   if (!currentProject) {
     throw new Error("Unexpected error: no project id");
   }
 
-  const { isLoading } = useListLLMProviders(currentProject.id);
+  const { isLoading } = useListModels(currentProject.id);
 
-  const addLLMProviderButton = (
+  const addModelButton = (
     <Button
       onClick={() => setIsDialogOpen(true)}
       startContent={<PlusIcon className="w-3 h-3" />}
     >
-      Add LLM provider
+      Add model
     </Button>
   );
 
   return (
     <div>
-      <AddLLMProviderDialog
-        isOpen={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-      />
-      <PageHeader title="LLMs providers" />
+      <AddModelDialog isOpen={isDialogOpen} onOpenChange={setIsDialogOpen} />
+      <PageHeader title="Models" />
       <Spacer />
       <PageContainer>
         {isLoading && <PageSkeleton />}
-        {!isLoading && !llmProviders?.length && (
+        {!isLoading && !models?.length && (
           <EmptyState
-            title="No LLM providers"
-            description="You don't have any LLM providers yet. Add one to start using them."
+            title="No model configured"
+            description="Start adding models to your project to use them from your frontend"
           >
-            {addLLMProviderButton}
+            {addModelButton}
           </EmptyState>
         )}
 
-        {!isLoading && !!llmProviders?.length && (
+        {!isLoading && !!models?.length && (
           <div>
-            <div className="flex justify-end">{addLLMProviderButton}</div>
+            <div className="flex justify-end">{addModelButton}</div>
             <Spacer />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {Object.entries(llmProviders).map(([key, value]) => (
-                <LLMProviderCard onEdit={() => {}} key={key} provider={value} />
-              ))}
-            </div>
+            <ModelTable data={models} columns={ModelTableColumns} />
           </div>
         )}
       </PageContainer>
@@ -90,4 +85,4 @@ const ProjectPage = () => {
   );
 };
 
-export default ProjectPage;
+export default ModelsPage;

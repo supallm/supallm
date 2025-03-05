@@ -1,62 +1,25 @@
-import { create } from "zustand";
-import { devtools, persist } from "zustand/middleware";
-import type {} from "@redux-devtools/extension"; // required for devtools typing
 import { LLMProvider } from "../entities/llm-provider";
+import { createCrudStore } from "./crud-store";
 
-interface LLMProviderState {
-  llmProviders: LLMProvider[];
-  setLLMProviders: (providers: LLMProvider[]) => void;
-  addLLMProvider: (provider: LLMProvider) => void;
-  patchLLMProvider: (id: string, data: Partial<LLMProvider>) => void;
-  deleteLLMProvider: (id: string) => void;
-}
-
-export const useLLMProviderStore = create<LLMProviderState>()(
-  devtools(
-    persist(
-      (set) => ({
-        llmProviders: [],
-        setLLMProviders: (providers) => set({ llmProviders: providers }),
-        addLLMProvider: (provider: LLMProvider) =>
-          set((state) => ({
-            llmProviders: [...state.llmProviders, provider],
-          })),
-        patchLLMProvider: (id, data) =>
-          set((state) => ({
-            llmProviders: state.llmProviders.map((provider) =>
-              provider.id === id ? { ...provider, ...data } : provider,
-            ),
-          })),
-        deleteLLMProvider: (id) =>
-          set((state) => ({
-            llmProviders: state.llmProviders.filter(
-              (provider) => provider.id !== id,
-            ),
-          })),
-      }),
-      {
-        name: "llm-providers",
-      },
-    ),
-  ),
-);
+export const useLLMProviderStore =
+  createCrudStore<LLMProvider>("llm-providers");
 
 export const getLLMProviders = () => {
-  return useLLMProviderStore.getState().llmProviders;
+  return useLLMProviderStore.getState().list;
 };
 
 export const setLLMProviders = (providers: LLMProvider[]) => {
-  useLLMProviderStore.getState().setLLMProviders(providers);
+  useLLMProviderStore.getState().set(providers);
 };
 
 export const addLLMProvider = (provider: LLMProvider) => {
-  useLLMProviderStore.getState().addLLMProvider(provider);
+  useLLMProviderStore.getState().add(provider);
 };
 
 export const patchLLMProvider = (id: string, data: Partial<LLMProvider>) => {
-  useLLMProviderStore.getState().patchLLMProvider(id, data);
+  useLLMProviderStore.getState().patch(id, data);
 };
 
 export const deleteLLMProvider = (id: string) => {
-  useLLMProviderStore.getState().deleteLLMProvider(id);
+  useLLMProviderStore.getState().delete(id);
 };

@@ -10,8 +10,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       <TopNav />
       <SidebarProvider>
         <AppSidebar />
-        <main className="flex flex-col w-full mt-[40px]">
-          <SidebarTrigger />
+        <main className="flex flex-col w-full mt-[40px] relative">
+          <SidebarTrigger className="absolute top-0 left-0" />
           {children}
         </main>
       </SidebarProvider>

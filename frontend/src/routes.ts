@@ -9,3 +9,7 @@ export const LLMProvidersRoute = {
 export const NoProjectRoute = {
   path: () => `/new-project`,
 };
+
+export const ModelsRoute = {
+  path: () => `/dashboard/models`,
+};
