@@ -1,19 +1,17 @@
 "use client";
 
+import { useAppConfig } from "@/hooks/use-app-config";
+import { useOrganization } from "@clerk/nextjs";
 import { BookIcon, MessageCircleQuestion, Slash } from "lucide-react";
 import Logo from "./logo";
 import {
   Breadcrumb,
-  BreadcrumbList,
   BreadcrumbItem,
-  BreadcrumbLink,
+  BreadcrumbList,
   BreadcrumbSeparator,
 } from "./ui/breadcrumb";
-import { useOrganization, useOrganizationList } from "@clerk/nextjs";
-import { Skeleton } from "./ui/skeleton";
-import { useAppConfig } from "@/hooks/use-app-config";
 import { Button } from "./ui/button";
-import { IconQuestionMark } from "@tabler/icons-react";
+import { Skeleton } from "./ui/skeleton";
 
 const OrganizationBreadcrumb = () => {
   const { organization, isLoaded: organizationLoaded } = useOrganization();

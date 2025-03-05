@@ -1,17 +1,20 @@
 import { useCallback, useState } from "react";
 
-// Type definition for the return value of the feature function
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AsyncFunction<Args extends any[], ReturnType> = (
   ...args: Args
 ) => Promise<ReturnType>;
 
-type ResetFunction = () => void;
-
+//eslint-disable-next-line
 export const hookifyFunction = <Args extends any[], ReturnType>(
   feature: AsyncFunction<Args, ReturnType>,
 ) => {
+  // eslint-disable-next-line
   const [isLoading, setIsLoading] = useState(false);
+
+  // eslint-disable-next-line
   const [error, setError] = useState<Error | null>(null);
+  // eslint-disable-next-line
   const [result, setResult] = useState<ReturnType | null>(null);
 
   const reset = () => {
@@ -20,6 +23,7 @@ export const hookifyFunction = <Args extends any[], ReturnType>(
     setIsLoading(false);
   };
 
+  // eslint-disable-next-line
   const wrappedFeature: AsyncFunction<Args, ReturnType> = useCallback(
     async (...args: Args) => {
       setIsLoading(true);

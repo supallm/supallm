@@ -1,10 +1,10 @@
-import { FC } from "react";
-import { OpenAI } from "./openai";
 import { LLMProviderName } from "@/core/entities/llm-provider";
-import { Azure } from "./azure";
+import { FC } from "react";
 import { Anthropic } from "./anthropic";
+import { Azure } from "./azure";
 import { Google } from "./google";
 import { Mistral } from "./mistral";
+import { OpenAI } from "./openai";
 
 export const ProviderLogo: FC<{
   name: LLMProviderName;

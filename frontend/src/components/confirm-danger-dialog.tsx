@@ -1,28 +1,26 @@
 import {
-  Dialog,
-  DialogFooter,
-  DialogHeader,
-  DialogContent,
-  DialogTitle,
-  DialogTrigger,
-  DialogDescription,
-} from "./ui/dialog";
-import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { FC, PropsWithChildren, useState } from "react";
-import { Button } from "./ui/button";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { FC, PropsWithChildren, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Input } from "./ui/input";
+import { z } from "zod";
 import { Spacer } from "./spacer";
+import { Button } from "./ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./ui/dialog";
+import { Input } from "./ui/input";
 
 export const ConfirmDangerDialog: FC<
   PropsWithChildren<{
@@ -31,6 +29,9 @@ export const ConfirmDangerDialog: FC<
     onConfirm: () => void;
     onCancel?: () => void;
     confirmationText: string;
+    asChild?: boolean;
+    isOpen?: boolean;
+    onOpenChange?: (open: boolean) => void;
   }>
 > = ({
   children,
@@ -39,8 +40,15 @@ export const ConfirmDangerDialog: FC<
   title,
   description,
   confirmationText,
+  asChild = true,
+  isOpen = false,
+  onOpenChange,
 }) => {
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    setOpen(isOpen);
+  }, [isOpen]);
 
   const formSchema = z.object({
     confirmation: z.literal(confirmationText),
@@ -57,15 +65,16 @@ export const ConfirmDangerDialog: FC<
     form.reset();
   };
 
-  const onOpenChange = (open: boolean) => {
+  const _onOpenChange = (open: boolean) => {
     setOpen(open);
+    onOpenChange?.(open);
 
     if (!open) {
       reset();
     }
   };
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit() {
     onConfirm();
     setOpen(false);
     reset();
@@ -78,8 +87,8 @@ export const ConfirmDangerDialog: FC<
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+    <Dialog open={open} onOpenChange={_onOpenChange}>
+      <DialogTrigger asChild={asChild}>{children}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>

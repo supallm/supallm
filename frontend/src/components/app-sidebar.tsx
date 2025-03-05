@@ -27,7 +27,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { LLMProvidersRoute, OverviewRoute } from "@/routes";
+import { LLMProvidersRoute, ModelsRoute, OverviewRoute } from "@/routes";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
 
@@ -45,7 +45,7 @@ const items = [
   },
   {
     title: "Models",
-    url: "#",
+    url: ModelsRoute.path(),
     icon: FileSliders,
   },
   {

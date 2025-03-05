@@ -1,6 +1,5 @@
 import { LLMProviderService } from "@/core/interfaces";
 import { LLMProvider, LLMProviderName } from "../entities/llm-provider";
-import { useAppConfigStore } from "../store/app-config";
 import { addLLMProvider } from "../store/llm-providers";
 
 export class CreateLLMProviderUsecase {
