@@ -59,7 +59,7 @@ const ProjectPage = () => {
         isOpen={isDialogOpen}
         onOpenChange={setIsDialogOpen}
       />
-      <PageHeader title="LLMs providers" />
+      <PageHeader title="Credentials" />
       <Spacer />
       <PageContainer>
         {isLoading && <PageSkeleton />}

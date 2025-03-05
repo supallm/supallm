@@ -174,7 +174,7 @@ export const AddCredentialDialog: FC<{
                           )}
                         />
                         <Button type="submit" isLoading={isCreatingCredential}>
-                          Create provider
+                          Create credential
                         </Button>
                       </form>
                     </Form>
