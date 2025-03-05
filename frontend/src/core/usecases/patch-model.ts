@@ -14,7 +14,7 @@ export class PatchModelUsecase {
       temperature: number;
     },
   ) {
-    const model = await this.modelService.patch(id, req);
+    await this.modelService.patch(id, req);
 
     patchModel(id, req);
   }

@@ -15,31 +15,28 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  LLMProviderName,
-  LLMProviderNames,
-} from "@/core/entities/llm-provider";
+import { ProviderType, ProviderTypes } from "@/core/entities/credential";
 import { useAppConfigStore } from "@/core/store/app-config";
-import { createLLMProviderUsecase } from "@/core/usecases";
+import { createCredentialUsecase } from "@/core/usecases";
 import { hookifyFunction } from "@/hooks/hookify-function";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FC, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { ProviderCardList } from "./llm-providers/provider-card-list";
+import { ProviderCardList } from "./credentials/provider-card-list";
 import { ProviderLogo } from "./logos/provider-logo";
 import { Card, CardContent, CardHeader } from "./ui/card";
 import { Input } from "./ui/input";
 
-export const AddLLMProviderDialog: FC<{
+export const AddCredentialDialog: FC<{
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
 }> = ({ isOpen, onOpenChange }) => {
   const { currentProject } = useAppConfigStore();
-  const { execute: createLLMProvider, isLoading: isCreatingLLMProvider } =
+  const { execute: createCredential, isLoading: isCreatingCredential } =
     hookifyFunction(
-      createLLMProviderUsecase.execute.bind(createLLMProviderUsecase),
+      createCredentialUsecase.execute.bind(createCredentialUsecase),
     );
 
   if (!currentProject) {
@@ -47,8 +44,9 @@ export const AddLLMProviderDialog: FC<{
   }
 
   const [open, setOpen] = useState(isOpen);
-  const [selectedProvider, setSelectedProvider] =
-    useState<LLMProviderName | null>(null);
+  const [selectedProvider, setSelectedProvider] = useState<ProviderType | null>(
+    null,
+  );
 
   useEffect(() => {
     setOpen(isOpen);
@@ -57,7 +55,7 @@ export const AddLLMProviderDialog: FC<{
   const formSchema = z.object({
     name: z.string().min(2).max(50),
     apiKey: z.string().min(2),
-    providerType: z.enum(LLMProviderNames),
+    providerType: z.enum(ProviderTypes),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -70,7 +68,7 @@ export const AddLLMProviderDialog: FC<{
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    await createLLMProvider({
+    await createCredential({
       projectId: currentProject!.id,
       name: values.name,
       apiKey: values.apiKey,
@@ -95,7 +93,7 @@ export const AddLLMProviderDialog: FC<{
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Add an LLM provider</DialogTitle>
+          <DialogTitle>Add Credential</DialogTitle>
           <DialogDescription>
             Note you can create multiple instances of the same provider to
             manage multiple API keys.
@@ -175,8 +173,8 @@ export const AddLLMProviderDialog: FC<{
                             </FormItem>
                           )}
                         />
-                        <Button type="submit" isLoading={isCreatingLLMProvider}>
-                          Create provider
+                        <Button type="submit" isLoading={isCreatingCredential}>
+                          Create credential
                         </Button>
                       </form>
                     </Form>

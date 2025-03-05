@@ -1,4 +1,4 @@
-import { LLMProviderName } from "@/core/entities/llm-provider";
+import { ProviderType } from "@/core/entities/credential";
 import { FC } from "react";
 import { Anthropic } from "./anthropic";
 import { Azure } from "./azure";
@@ -7,7 +7,7 @@ import { Mistral } from "./mistral";
 import { OpenAI } from "./openai";
 
 export const ProviderLogo: FC<{
-  name: LLMProviderName;
+  name: ProviderType;
   width?: number;
   height?: number;
 }> = ({ name, width, height }) => {

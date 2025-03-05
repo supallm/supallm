@@ -14,10 +14,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  LLMProviderName,
-  LLMProviderNames,
-} from "@/core/entities/llm-provider";
+import { ProviderType, ProviderTypes } from "@/core/entities/credential";
 import { useAppConfigStore } from "@/core/store/app-config";
 import { createModelUsecase } from "@/core/usecases";
 import { hookifyFunction } from "@/hooks/hookify-function";
@@ -27,7 +24,7 @@ import { DialogDescription } from "@radix-ui/react-dialog";
 import { FC, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { ProviderCardList } from "./llm-providers/provider-card-list";
+import { ProviderCardList } from "./credentials/provider-card-list";
 import { ProviderLogo } from "./logos/provider-logo";
 import { SelectCredentials } from "./select-credentials";
 import { SelectModel } from "./select-model";
@@ -49,8 +46,9 @@ export const AddModelDialog: FC<{
   }
 
   const [open, setOpen] = useState(isOpen);
-  const [selectedProvider, setSelectedProvider] =
-    useState<LLMProviderName | null>(null);
+  const [selectedProvider, setSelectedProvider] = useState<ProviderType | null>(
+    null,
+  );
 
   useEffect(() => {
     setOpen(isOpen);
@@ -60,7 +58,7 @@ export const AddModelDialog: FC<{
     name: z.string().min(2).max(50),
     credentialId: z.string().min(2),
     model: z.string().min(2),
-    providerType: z.enum(LLMProviderNames),
+    providerType: z.enum(ProviderTypes),
     temperature: z.number().min(0).max(2),
     systemPrompt: z.string().min(0),
   });

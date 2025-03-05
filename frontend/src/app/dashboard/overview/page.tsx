@@ -54,7 +54,7 @@ const OverviewPage = () => {
                   Configure your AI model
                 </h1>
                 <p className="text-md text-muted-foreground">
-                  Start by adding your first LLM provider. Then you can call it
+                  Start by adding your first Credential. Then you can call it
                   directly by your frontend using the Supallm frontend sdk.
                 </p>
               </div>
@@ -64,7 +64,7 @@ const OverviewPage = () => {
                   size={"sm"}
                   className="cursor-pointer"
                 >
-                  <BrainCircuit /> Add your first LLM provider
+                  <BrainCircuit /> Add your first Credential
                 </Button>
                 <Button
                   variant="outline"
@@ -86,7 +86,7 @@ const OverviewPage = () => {
                   Install the Supallm frontend sdk
                 </h1>
                 <p className="text-md text-muted-foreground">
-                  Start by adding your first LLM provider. Then you can call it
+                  Start by adding your first Credential. Then you can call it
                   directly by your frontend using the Supallm frontend sdk.
                 </p>
               </div>

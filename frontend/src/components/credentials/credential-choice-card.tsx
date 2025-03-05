@@ -1,9 +1,9 @@
-import { FC, ReactNode } from "react";
-import { Card, CardContent, CardHeader } from "../ui/card";
-import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
+import { FC, ReactNode } from "react";
+import { Button } from "../ui/button";
+import { Card, CardContent, CardHeader } from "../ui/card";
 
-export type LLMProviderChoiceCardProps = {
+export type CredentialChoiceCardProps = {
   name: string;
   description: string;
   logo: ReactNode;
@@ -11,7 +11,7 @@ export type LLMProviderChoiceCardProps = {
   onSelected: () => void;
 };
 
-export const LLMProviderChoiceCard: FC<LLMProviderChoiceCardProps> = ({
+export const CredentialChoiceCard: FC<CredentialChoiceCardProps> = ({
   name,
   description,
   logo,

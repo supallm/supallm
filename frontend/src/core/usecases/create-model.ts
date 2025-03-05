@@ -1,4 +1,4 @@
-import { LLMProviderName } from "../entities/llm-provider";
+import { ProviderType } from "../entities/credential";
 import { Model } from "../entities/model";
 import { ModelService } from "../interfaces";
 import { addModel } from "../store/models";
@@ -10,7 +10,7 @@ export class CreateModelUsecase {
     projectId: string;
     name: string;
     credentialId: string;
-    providerType: LLMProviderName;
+    providerType: ProviderType;
     model: string;
     systemPrompt: string;
     temperature: number;
