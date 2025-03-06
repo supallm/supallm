@@ -3,18 +3,28 @@ import { MockModelService } from "@/services/mock-model-service";
 import { MockProjectService } from "@/services/mock-project-service";
 import { CreateCredentialUsecase } from "./create-credential";
 import { CreateModelUsecase } from "./create-model";
+import { CreateProjectUsecase } from "./create-project";
 import { DeleteCredentialUsecase } from "./delete-credential";
 import { DeleteModelUsecase } from "./delete-model";
-import { GetProjectUsecase } from "./get-project";
+import { GetCurrentProjectUsecase } from "./get-current-project";
 import { ListCredentialsUsecase } from "./list-credentials";
 import { ListModelUsecase } from "./list-models";
+import { ListProjectsUsecase } from "./list-projects";
 import { PatchCredentialUsecase } from "./patch-credential";
 import { PatchModelUsecase } from "./patch-model";
 
 /**
  * Project
  */
-export const getProjectUsecase = new GetProjectUsecase(
+export const getCurrentProjectUsecase = new GetCurrentProjectUsecase(
+  new MockProjectService(),
+);
+
+export const listProjectsUsecase = new ListProjectsUsecase(
+  new MockProjectService(),
+);
+
+export const createProjectUsecase = new CreateProjectUsecase(
   new MockProjectService(),
 );
 

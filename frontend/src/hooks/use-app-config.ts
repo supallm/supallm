@@ -1,7 +1,7 @@
 "use client";
 
 import { Project } from "@/core/entities/project";
-import { getProjectUsecase } from "@/core/usecases";
+import { getCurrentProjectUsecase } from "@/core/usecases";
 import { useUser } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 
@@ -17,7 +17,7 @@ export function useAppConfig() {
       return;
     }
 
-    getProjectUsecase
+    getCurrentProjectUsecase
       .execute(user.id)
       .then((project) => {
         setCurrentProject(project);

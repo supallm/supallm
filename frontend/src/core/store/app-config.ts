@@ -1,6 +1,6 @@
-import { create } from "zustand";
-import { devtools, persist } from "zustand/middleware";
 import type {} from "@redux-devtools/extension"; // required for devtools typing
+import { create } from "zustand";
+import { devtools } from "zustand/middleware";
 import { Project } from "../entities/project";
 
 interface AppConfigState {
@@ -10,15 +10,13 @@ interface AppConfigState {
 
 export const useAppConfigStore = create<AppConfigState>()(
   devtools(
-    persist(
-      (set) => ({
-        currentProject: null,
-        setCurrentProject: (project) => set({ currentProject: project }),
-      }),
-      {
-        name: "app-config",
-      },
-    ),
+    (set) => ({
+      currentProject: null,
+      setCurrentProject: (project) => set({ currentProject: project }),
+    }),
+    {
+      name: "app-config",
+    },
   ),
 );
 
