@@ -71,7 +71,7 @@ const NewProjectPage = () => {
                     <FormItem>
                       <FormLabel>Project Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="My awesome ap" {...field} />
+                        <Input placeholder="My awesome app" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
