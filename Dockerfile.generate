@@ -1,6 +1,6 @@
-FROM golang:1.24-bullseye AS generator
+FROM golang:1.24-alpine AS generator
 
-RUN apt-get update && apt-get install -y git && \
+RUN apk add --no-cache git && \
     go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@latest
 
 WORKDIR /utils
