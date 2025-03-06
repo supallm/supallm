@@ -12,9 +12,17 @@ var _ problem = DuplicateError{}
 type DuplicateError struct {
 	Resource string `exhaustruct:"optional"`
 	ID       any    `exhaustruct:"optional"`
+	Err      error  `exhaustruct:"optional"`
 }
 
 func (e DuplicateError) Error() string {
+	if e.Err != nil {
+		return fmt.Sprintf("%s: %s", e.Detail(), e.Err.Error())
+	}
+	return e.Detail()
+}
+
+func (e DuplicateError) Detail() string {
 	switch {
 	case e.Resource != "" && e.ID != nil:
 		return fmt.Sprintf("%s %v already exists", e.Resource, e.ID)

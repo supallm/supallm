@@ -16,9 +16,14 @@ DO UPDATE SET
 
 -- name: deleteModel :exec
 DELETE FROM models
-WHERE id = $1;
+WHERE slug = $1;
 
 -- name: modelsByProjectId :many
 SELECT *
 FROM models
 WHERE project_id = $1;
+
+-- name: modelBySlug :one
+SELECT *
+FROM models
+WHERE project_id = $1 AND slug = $2;

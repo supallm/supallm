@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/supallm/core/internal/application/domain/model"
+	"github.com/supallm/core/internal/pkg/slug"
 )
 
 // ProjectRepository defines the interface for project persistence.
@@ -14,8 +15,8 @@ type ProjectRepository interface {
 	Update(ctx context.Context, project *model.Project) error
 
 	DeleteProject(ctx context.Context, id uuid.UUID) error
-	DeleteLLMCredential(ctx context.Context, id uuid.UUID) error
-	DeleteModel(ctx context.Context, id uuid.UUID) error
+	DeleteCredential(ctx context.Context, id uuid.UUID) error
+	DeleteModel(ctx context.Context, slug slug.Slug) error
 }
 
 // SessionRepository defines the interface for session persistence.

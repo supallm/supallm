@@ -9,12 +9,16 @@ var _ problem = UnauthorizedError{}
 
 // UnauthorizedError is returned when creation fails.
 type UnauthorizedError struct {
-	Reason error `exhaustruct:"optional"`
+	Err error `exhaustruct:"optional"`
+}
+
+func (e UnauthorizedError) Detail() string {
+	return "unauthorized"
 }
 
 func (e UnauthorizedError) Error() string {
-	if e.Reason != nil {
-		return "unauthorized: " + e.Reason.Error()
+	if e.Err != nil {
+		return e.Err.Error()
 	}
 	return "unauthorized"
 }
@@ -30,8 +34,5 @@ func (e UnauthorizedError) DocURL() string { return "-" }
 
 // Params implements problem.
 func (e UnauthorizedError) Params() map[string]any {
-	if e.Reason == nil {
-		return nil
-	}
-	return map[string]any{"reason": e.Reason.Error()}
+	return map[string]any{"reason": e.Detail()}
 }

@@ -2,10 +2,12 @@ package command
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"os"
 
 	"github.com/google/uuid"
+	repo "github.com/supallm/core/internal/adapters/project"
 	"github.com/supallm/core/internal/application/domain/repository"
 	"github.com/supallm/core/internal/pkg/errs"
 	"github.com/supallm/core/internal/pkg/secret"
@@ -38,12 +40,21 @@ func NewUpdateCredentialHandler(
 func (h UpdateCredentialHandler) Handle(ctx context.Context, cmd UpdateCredentialCommand) error {
 	project, err := h.projectRepo.Retrieve(ctx, cmd.ProjectID)
 	if err != nil {
-		return errs.NotFoundError{Resource: "project", ID: cmd.ProjectID}
+		if errors.Is(err, repo.ErrProjectNotFound) {
+			return errs.NotFoundError{Resource: "project", ID: cmd.ProjectID}
+		}
+		return errs.InternalError{Err: err}
 	}
 
 	err = project.UpdateCredential(cmd.ID, cmd.Name, cmd.APIKey)
 	if err != nil {
-		return errs.ReqInvalidError{Reason: err.Error()}
+		return errs.InvalidError{Reason: err.Error()}
 	}
-	return h.projectRepo.Update(ctx, project)
+
+	err = h.projectRepo.Update(ctx, project)
+	if err != nil {
+		return errs.UpdateError{Entity: "project", Err: err}
+	}
+
+	return nil
 }

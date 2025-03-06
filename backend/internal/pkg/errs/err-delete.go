@@ -1,6 +1,7 @@
 package errs
 
 import (
+	"fmt"
 	"net/http"
 )
 
@@ -9,12 +10,20 @@ var _ problem = DeleteError{}
 
 // DeleteError is returned when a deletion fails.
 type DeleteError struct {
-	Reason error `exhaustruct:"optional"`
+	Entity string `exhaustruct:"optional"`
+	Err    error  `exhaustruct:"optional"`
 }
 
 func (e DeleteError) Error() string {
-	if e.Reason != nil {
-		return "deletion: " + e.Reason.Error()
+	if e.Err != nil {
+		return e.Err.Error()
+	}
+	return e.Detail()
+}
+
+func (e DeleteError) Detail() string {
+	if e.Entity != "" {
+		return fmt.Sprintf("failed to delete %s", e.Entity)
 	}
 	return "deletion failed"
 }
@@ -30,8 +39,8 @@ func (e DeleteError) DocURL() string { return "-" }
 
 // Params implements problem.
 func (e DeleteError) Params() map[string]any {
-	if e.Reason == nil {
+	if e.Entity == "" {
 		return nil
 	}
-	return map[string]any{"reason": e.Reason.Error()}
+	return map[string]any{"entity": e.Entity}
 }

@@ -20,19 +20,19 @@ func (p *Project) CreateCredential(
 	apiKey secret.APIKey,
 ) (*Credential, error) {
 	if id == uuid.Nil {
-		return nil, errs.ReqInvalidError{Field: "id", Reason: "id is required"}
+		return nil, errs.InvalidError{Field: "id", Reason: "id is required"}
 	}
 
 	if name == "" {
-		return nil, errs.ReqInvalidError{Field: "name", Reason: "name is required"}
+		return nil, errs.InvalidError{Field: "name", Reason: "name is required"}
 	}
 
 	if providerType == "" {
-		return nil, errs.ReqInvalidError{Field: "providerType", Reason: "providerType is required"}
+		return nil, errs.InvalidError{Field: "providerType", Reason: "providerType is required"}
 	}
 
 	if apiKey == "" {
-		return nil, errs.ReqInvalidError{Field: "apiKey", Reason: "apiKey is required"}
+		return nil, errs.InvalidError{Field: "apiKey", Reason: "apiKey is required"}
 	}
 
 	credential := &Credential{ID: id, Name: name, ProviderType: providerType, APIKey: apiKey}
@@ -50,7 +50,7 @@ func (p *Project) getCredential(id uuid.UUID) (*Credential, error) {
 
 func (p *Project) UpdateCredential(id uuid.UUID, name string, apiKey secret.APIKey) error {
 	if name == "" {
-		return errs.ReqInvalidError{Field: "name", Reason: "name is required"}
+		return errs.InvalidError{Field: "name", Reason: "name is required"}
 	}
 
 	credential, ok := p.Credentials[id]

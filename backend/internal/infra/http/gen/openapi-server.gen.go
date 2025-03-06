@@ -27,10 +27,7 @@ type ServerInterface interface {
 	// Update a project
 	// (PUT /projects/{projectId})
 	UpdateProject(c *fiber.Ctx, projectId UUID) error
-	// Get authentication configuration for a project
-	// (GET /projects/{projectId}/auth)
-	GetAuth(c *fiber.Ctx, projectId UUID) error
-	// Update authentication for a project
+	// Update authentication configuration for a project
 	// (PUT /projects/{projectId}/auth)
 	UpdateAuth(c *fiber.Ctx, projectId UUID) error
 	// List all credentials for a project
@@ -46,7 +43,7 @@ type ServerInterface interface {
 	// (GET /projects/{projectId}/credentials/{credentialId})
 	GetCredential(c *fiber.Ctx, projectId UUID, credentialId UUID) error
 	// Update a credential
-	// (PUT /projects/{projectId}/credentials/{credentialId})
+	// (PATCH /projects/{projectId}/credentials/{credentialId})
 	UpdateCredential(c *fiber.Ctx, projectId UUID, credentialId UUID) error
 	// Generate text (HTTP blocking)
 	// (POST /projects/{projectId}/generateText)
@@ -146,24 +143,6 @@ func (siw *ServerInterfaceWrapper) UpdateProject(c *fiber.Ctx) error {
 	c.Context().SetUserValue(BearerAuthScopes, []string{})
 
 	return siw.Handler.UpdateProject(c, projectId)
-}
-
-// GetAuth operation middleware
-func (siw *ServerInterfaceWrapper) GetAuth(c *fiber.Ctx) error {
-
-	var err error
-
-	// ------------- Path parameter "projectId" -------------
-	var projectId UUID
-
-	err = runtime.BindStyledParameterWithOptions("simple", "projectId", c.Params("projectId"), &projectId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter projectId: %w", err).Error())
-	}
-
-	c.Context().SetUserValue(BearerAuthScopes, []string{})
-
-	return siw.Handler.GetAuth(c, projectId)
 }
 
 // UpdateAuth operation middleware
@@ -479,8 +458,6 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 
 	router.Put(options.BaseURL+"/projects/:projectId", wrapper.UpdateProject)
 
-	router.Get(options.BaseURL+"/projects/:projectId/auth", wrapper.GetAuth)
-
 	router.Put(options.BaseURL+"/projects/:projectId/auth", wrapper.UpdateAuth)
 
 	router.Get(options.BaseURL+"/projects/:projectId/credentials", wrapper.ListCredentials)
@@ -491,7 +468,7 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 
 	router.Get(options.BaseURL+"/projects/:projectId/credentials/:credentialId", wrapper.GetCredential)
 
-	router.Put(options.BaseURL+"/projects/:projectId/credentials/:credentialId", wrapper.UpdateCredential)
+	router.Patch(options.BaseURL+"/projects/:projectId/credentials/:credentialId", wrapper.UpdateCredential)
 
 	router.Post(options.BaseURL+"/projects/:projectId/generateText", wrapper.GenerateText)
 

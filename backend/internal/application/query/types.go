@@ -23,10 +23,9 @@ type AuthProvider struct {
 }
 
 type Model struct {
-	ID           uuid.UUID
-	CredentialID uuid.UUID
-	Name         string
 	Slug         slug.Slug
+	Name         string
+	CredentialID uuid.UUID
 	Model        string
 	SystemPrompt string
 	Parameters   ModelParameters

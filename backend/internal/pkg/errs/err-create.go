@@ -1,6 +1,7 @@
 package errs
 
 import (
+	"fmt"
 	"net/http"
 )
 
@@ -9,12 +10,20 @@ var _ problem = CreateError{}
 
 // CreateError is returned when creation fails.
 type CreateError struct {
-	Reason error `exhaustruct:"optional"`
+	Entity string `exhaustruct:"optional"`
+	Err    error  `exhaustruct:"optional"`
 }
 
 func (e CreateError) Error() string {
-	if e.Reason != nil {
-		return "creation: " + e.Reason.Error()
+	if e.Err != nil {
+		return fmt.Sprintf("%s: %s", e.Detail(), e.Err.Error())
+	}
+	return e.Detail()
+}
+
+func (e CreateError) Detail() string {
+	if e.Entity != "" {
+		return fmt.Sprintf("failed to create %s", e.Entity)
 	}
 	return "creation failed"
 }
@@ -30,8 +39,8 @@ func (e CreateError) DocURL() string { return "-" }
 
 // Params implements problem.
 func (e CreateError) Params() map[string]any {
-	if e.Reason == nil {
+	if e.Entity == "" {
 		return nil
 	}
-	return map[string]any{"reason": e.Reason.Error()}
+	return map[string]any{"entity": e.Entity}
 }

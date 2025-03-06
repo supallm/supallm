@@ -1,0 +1,22 @@
+meta {
+  name: Update a project auth
+  type: http
+  seq: 5
+}
+
+put {
+  url: {{baseURL}}/projects/{{projectId}}/auth
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "provider": "supabase",
+    "config": {}
+  }
+}

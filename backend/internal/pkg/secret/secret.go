@@ -6,7 +6,6 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
-	"errors"
 	"io"
 	"os"
 )
@@ -26,6 +25,10 @@ func (a APIKey) Obfuscate() string {
 
 // EncryptData encrypts data using AES-GCM
 func (a APIKey) Encrypt(key ...[]byte) (string, error) {
+	if len(a) == 0 {
+		return "", ErrKeyNotSet
+	}
+
 	k := envKey
 	if len(key) >= 1 {
 		k = key[0]
@@ -75,7 +78,7 @@ func Decrypt(encrypted string, key ...[]byte) (APIKey, error) {
 	nonceSize := aesGCM.NonceSize()
 
 	if len(ciphertext) < nonceSize {
-		return "", errors.New("ciphertext too short")
+		return "", ErrCiphertextTooShort
 	}
 
 	nonce, ciphertext := ciphertext[:nonceSize], ciphertext[nonceSize:]

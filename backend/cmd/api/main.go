@@ -30,7 +30,6 @@ func main() {
 func run() error {
 	logger.Banner()
 
-	// Create a context that will be canceled on interrupt signals
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
@@ -47,7 +46,6 @@ func run() error {
 
 	serverErrors := make(chan error, 1)
 	go func() {
-		slog.Info("starting server", "addr", server.Addr())
 		serverErrors <- server.Start()
 	}()
 

@@ -12,7 +12,7 @@ import (
 
 func (s *Server) CreateCredential(c *fiber.Ctx, projectID gen.UUID) error {
 	var req gen.CreateCredentialRequest
-	if err := c.BodyParser(&req); err != nil {
+	if err := s.server.ParseBody(c, &req); err != nil {
 		return err
 	}
 
@@ -31,13 +31,21 @@ func (s *Server) CreateCredential(c *fiber.Ctx, projectID gen.UUID) error {
 	return s.server.RespondWithContentLocation(c, fiber.StatusCreated, "/projects/%s/credentials/%s", projectID, id)
 }
 
-func (s *Server) GetCredential(_ *fiber.Ctx, _ gen.UUID, _ gen.UUID) error {
-	return nil
+func (s *Server) GetCredential(c *fiber.Ctx, projectID gen.UUID, credentialID gen.UUID) error {
+	credential, err := s.app.Queries.GetCredential.Handle(c.Context(), query.GetCredentialQuery{
+		ProjectID:    projectID,
+		CredentialID: credentialID,
+	})
+	if err != nil {
+		return err
+	}
+
+	return s.server.Respond(c, fiber.StatusOK, queryCredentialToDTO(credential))
 }
 
 func (s *Server) UpdateCredential(c *fiber.Ctx, projectID gen.UUID, credentialID gen.UUID) error {
 	var req gen.UpdateCredentialRequest
-	if err := c.BodyParser(&req); err != nil {
+	if err := s.server.ParseBody(c, &req); err != nil {
 		return err
 	}
 

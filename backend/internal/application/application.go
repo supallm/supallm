@@ -42,6 +42,8 @@ type Queries struct {
 	ListProjects    query.ListProjectsHandler
 	ListModels      query.ListModelsHandler
 	ListCredentials query.ListCredentialsHandler
+	GetModel        query.GetModelHandler
+	GetCredential   query.GetCredentialHandler
 }
 
 func New(
@@ -85,6 +87,8 @@ func New(
 			ListProjects:    query.NewListProjectsHandler(projectRepo),
 			ListModels:      query.NewListModelsHandler(projectRepo),
 			ListCredentials: query.NewListCredentialsHandler(projectRepo),
+			GetModel:        query.NewGetModelHandler(projectRepo),
+			GetCredential:   query.NewGetCredentialHandler(projectRepo),
 		},
 	}
 

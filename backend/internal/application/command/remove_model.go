@@ -7,10 +7,12 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/supallm/core/internal/application/domain/repository"
+	"github.com/supallm/core/internal/pkg/slug"
 )
 
 type RemoveModelCommand struct {
-	ModelID uuid.UUID
+	ProjectID uuid.UUID
+	Slug      slug.Slug
 }
 
 type RemoveModelHandler struct {
@@ -31,5 +33,5 @@ func NewRemoveModelHandler(
 }
 
 func (h RemoveModelHandler) Handle(ctx context.Context, cmd RemoveModelCommand) error {
-	return h.projectRepo.DeleteModel(ctx, cmd.ModelID)
+	return h.projectRepo.DeleteModel(ctx, cmd.Slug)
 }

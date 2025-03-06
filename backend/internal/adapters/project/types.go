@@ -89,7 +89,6 @@ func (m Model) domain(credential *model.Credential) *model.Model {
 
 func (m Model) query() query.Model {
 	return query.Model{
-		ID:           m.ID,
 		Slug:         slug.Slug(m.Slug),
 		CredentialID: m.CredentialID,
 		Name:         m.Name,

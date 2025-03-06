@@ -99,6 +99,30 @@ paths:
         "404":
           description: "Project not found"
 
+  /projects/{projectId}/auth:
+    put:
+      summary: "Update authentication configuration for a project"
+      operationId: updateAuth
+      tags:
+        - Project
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/UUID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAuthRequest"
+      responses:
+        "200":
+          description: "Authentication configuration updated"
+        "404":
+          description: "Project not found"
+
   /projects/{projectId}/credentials:
     get:
       summary: List all credentials for a project
@@ -173,7 +197,7 @@ paths:
                 $ref: "#/components/schemas/Credential"
         "404":
           description: Credential or project not found
-    put:
+    patch:
       summary: "Update a credential"
       operationId: updateCredential
       tags:
@@ -348,52 +372,6 @@ paths:
           description: "Model deleted"
         "404":
           description: Model or project not found
-
-  /projects/{projectId}/auth:
-    get:
-      summary: "Get authentication configuration for a project"
-      operationId: getAuth
-      tags:
-        - Auth
-      parameters:
-        - name: projectId
-          in: path
-          required: true
-          schema:
-            $ref: "#/components/schemas/UUID"
-      responses:
-        "200":
-          description: "Authentication configuration"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AuthProvider"
-        "404":
-          description: Project not found
-    put:
-      summary: "Update authentication for a project"
-      operationId: updateAuth
-      tags:
-        - Projects
-      parameters:
-        - name: projectId
-          in: path
-          required: true
-          schema:
-            $ref: "#/components/schemas/UUID"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UpdateAuthRequest"
-      responses:
-        "200":
-          description: "Authentication updated"
-        "400":
-          description: Bad request
-        "404":
-          description: Project not found
 
   /projects/{projectId}/generateText:
     post:
@@ -600,11 +578,9 @@ components:
     Model:
       type: object
       properties:
-        id:
-          $ref: "#/components/schemas/UUID"
-        name:
-          type: string
         slug:
+          type: string
+        name:
           type: string
         credentialId:
           $ref: "#/components/schemas/UUID"

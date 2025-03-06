@@ -1,6 +1,7 @@
 package errs
 
 import (
+	"fmt"
 	"net/http"
 )
 
@@ -9,14 +10,22 @@ var _ problem = UpdateError{}
 
 // UpdateError is returned when an update fails.
 type UpdateError struct {
-	Reason error `exhaustruct:"optional"`
+	Entity string `exhaustruct:"optional"`
+	Err    error  `exhaustruct:"optional"`
+}
+
+func (e UpdateError) Detail() string {
+	if e.Entity != "" {
+		return fmt.Sprintf("failed to update %s", e.Entity)
+	}
+	return "update failed"
 }
 
 func (e UpdateError) Error() string {
-	if e.Reason != nil {
-		return "update: " + e.Reason.Error()
+	if e.Err != nil {
+		return fmt.Sprintf("%s: %s", e.Detail(), e.Err.Error())
 	}
-	return "update failed"
+	return e.Detail()
 }
 
 // Slug implements problem.
@@ -30,8 +39,8 @@ func (e UpdateError) DocURL() string { return "-" }
 
 // Params implements problem.
 func (e UpdateError) Params() map[string]any {
-	if e.Reason == nil {
+	if e.Entity == "" {
 		return nil
 	}
-	return map[string]any{"reason": e.Reason.Error()}
+	return map[string]any{"entity": e.Entity}
 }

@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS models (
     slug VARCHAR(100) NOT NULL,
     provider_model VARCHAR(100) NOT NULL,
     system_prompt TEXT NOT NULL,
-    parameters JSONB,
+    parameters JSONB DEFAULT '{}',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     CONSTRAINT models_slug_project_unique UNIQUE (slug, project_id)
@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS requests (
     id UUID PRIMARY KEY,
     session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
     model_id UUID NOT NULL REFERENCES models(id) ON DELETE CASCADE,
-    config JSONB,
+    config JSONB DEFAULT '{}',
     status VARCHAR(50) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS responses (
     session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
     content TEXT NOT NULL,
     status VARCHAR(50) NOT NULL,
-    token_usage JSONB,
+    token_usage JSONB DEFAULT '{}',
     started_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     completed_at TIMESTAMP WITH TIME ZONE
 );

@@ -1,6 +1,7 @@
 package errs
 
 import (
+	"fmt"
 	"net/http"
 )
 
@@ -10,11 +11,19 @@ var _ problem = ReqMissingError{}
 // ReqMissingError is returned when a request is missing a required field.
 type ReqMissingError struct {
 	Field string `exhaustruct:"optional"`
+	Err   error  `exhaustruct:"optional"`
 }
 
 func (e ReqMissingError) Error() string {
+	if e.Err != nil {
+		return fmt.Sprintf("%s: %s", e.Detail(), e.Err.Error())
+	}
+	return e.Detail()
+}
+
+func (e ReqMissingError) Detail() string {
 	if e.Field != "" {
-		return "missing request." + e.Field
+		return fmt.Sprintf("missing request field: %s", e.Field)
 	}
 	return "missing request field"
 }

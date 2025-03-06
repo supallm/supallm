@@ -21,3 +21,8 @@ WHERE id = $1;
 SELECT *
 FROM credentials
 WHERE project_id = $1;
+
+-- name: credentialById :one
+SELECT *
+FROM credentials
+WHERE id = $1;

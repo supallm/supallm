@@ -18,11 +18,10 @@ func (s *Server) CreateModel(c *fiber.Ctx, projectID gen.UUID) error {
 		return err
 	}
 
-	slug := slug.Slug(req.Name)
-	id := uuid.New()
+	slug := slug.Make(req.Name)
 	err := s.app.Commands.AddModel.Handle(c.Context(), command.AddModelCommand{
 		ProjectID:     projectID,
-		ModelID:       id,
+		ModelID:       uuid.New(),
 		Name:          req.Name,
 		Slug:          slug,
 		CredentialID:  req.CredentialId,
@@ -40,16 +39,55 @@ func (s *Server) CreateModel(c *fiber.Ctx, projectID gen.UUID) error {
 	return s.server.RespondWithContentLocation(c, fiber.StatusCreated, "/projects/%s/models/%s", projectID, slug)
 }
 
-func (s *Server) GetModel(_ *fiber.Ctx, _ gen.UUID, _ string) error {
-	return nil
+func (s *Server) GetModel(c *fiber.Ctx, projectID gen.UUID, modelSlug string) error {
+	model, err := s.app.Queries.GetModel.Handle(c.Context(), query.GetModelQuery{
+		ProjectID: projectID,
+		ModelSlug: slug.Slug(modelSlug),
+	})
+	if err != nil {
+		return err
+	}
+
+	return s.server.Respond(c, fiber.StatusOK, queryModelToDTO(model))
 }
 
-func (s *Server) UpdateModel(_ *fiber.Ctx, _ gen.UUID, _ string) error {
-	return nil
+func (s *Server) UpdateModel(c *fiber.Ctx, projectID gen.UUID, modelSlug string) error {
+	var req gen.UpdateModelRequest
+	if err := c.BodyParser(&req); err != nil {
+		return err
+	}
+
+	err := s.app.Commands.UpdateModel.Handle(c.Context(), command.UpdateModelCommand{
+		ProjectID:     projectID,
+		Name:          req.Name,
+		Slug:          slug.Slug(modelSlug),
+		CredentialID:  req.CredentialId,
+		ProviderModel: model.ProviderModel(req.ProviderModel),
+		SystemPrompt:  model.Prompt(req.SystemPrompt),
+	})
+	if err != nil {
+		return err
+	}
+
+	return s.server.RespondWithContentLocation(
+		c,
+		fiber.StatusNoContent,
+		"/projects/%s/models/%s",
+		projectID,
+		slug.Slug(modelSlug),
+	)
 }
 
-func (s *Server) DeleteModel(_ *fiber.Ctx, _ gen.UUID, _ string) error {
-	return nil
+func (s *Server) DeleteModel(c *fiber.Ctx, projectID gen.UUID, modelSlug string) error {
+	err := s.app.Commands.RemoveModel.Handle(c.Context(), command.RemoveModelCommand{
+		ProjectID: projectID,
+		Slug:      slug.Slug(modelSlug),
+	})
+	if err != nil {
+		return err
+	}
+
+	return s.server.Respond(c, fiber.StatusNoContent, nil)
 }
 
 func (s *Server) ListModels(c *fiber.Ctx, projectID gen.UUID) error {

@@ -81,12 +81,12 @@ func (h GenerateTextHandler) Handle(ctx context.Context, cmd GenerateTextCommand
 
 	response, err := h.llmProvider.GenerateText(ctx, request)
 	if err != nil {
-		return "", errs.InternalError{Reason: err}
+		return "", errs.InternalError{Err: err}
 	}
 
 	err = h.saveResponse(ctx, session, response)
 	if err != nil {
-		return "", errs.InternalError{Reason: err}
+		return "", errs.InternalError{Err: err}
 	}
 
 	return response.Content, nil
@@ -101,7 +101,7 @@ func (h GenerateTextHandler) getOrCreateSession(
 	session, err := h.sessionRepo.Retrieve(ctx, sessionID)
 	if err != nil {
 		if !errors.Is(err, nil) {
-			return nil, errs.InternalError{Reason: err}
+			return nil, errs.InternalError{Err: err}
 		}
 
 		session = model.NewSession(sessionID, userID, projectID)

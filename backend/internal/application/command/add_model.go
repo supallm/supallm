@@ -57,7 +57,7 @@ func (h AddModelHandler) Handle(ctx context.Context, cmd AddModelCommand) error 
 		cmd.Parameters,
 	)
 	if err != nil {
-		return errs.ReqInvalidError{Reason: err.Error()}
+		return errs.InvalidError{Reason: err.Error()}
 	}
 	return h.projectRepo.Update(ctx, project)
 }

@@ -7,11 +7,6 @@ import (
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/healthcheck"
-	"github.com/gofiber/fiber/v2/middleware/helmet"
-	"github.com/gofiber/fiber/v2/middleware/logger"
-	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"github.com/supallm/core/internal/pkg/config"
 	"github.com/supallm/core/internal/pkg/errs"
 )
@@ -26,10 +21,14 @@ func New(conf config.Config) *Server {
 		DisableStartupMessage: true,
 		ErrorHandler: func(ctx *fiber.Ctx, err error) error {
 			pb := errs.Problem(err)
+			pb.Instance = ctx.Path()
 
-			slog.Error(err.Error(),
+			slog.Error("Request error",
+				slog.String("error", err.Error()),
 				slog.String("status", strconv.Itoa(pb.Status)),
+				slog.String("method", ctx.Method()),
 				slog.String("uri", string(ctx.Request().RequestURI())),
+				slog.String("request_id", ctx.GetRespHeader("X-Request-ID")),
 			)
 
 			err = ctx.Status(pb.Status).JSON(pb)
@@ -41,27 +40,30 @@ func New(conf config.Config) *Server {
 		},
 	})
 
-	// Add middleware
-	app.Use(helmet.New())
-	app.Use(requestid.New())
-	// app.Use(recover.New())
-	app.Use(logger.New())
-	app.Use(healthcheck.New())
-	app.Use(cors.New(cors.Config{
-		AllowOrigins:  "*",
-		AllowMethods:  "GET, POST, PUT, DELETE, OPTIONS",
-		AllowHeaders:  "Origin, Content-Type, Accept, Authorization",
-		ExposeHeaders: "Content-Location",
-	}))
-
-	return &Server{
+	s := &Server{
 		App:  app,
 		conf: conf,
 	}
+
+	s.applyCommonMiddleware()
+
+	return s
 }
 
 func (s *Server) Start() error {
+	slog.Info("starting HTTP server", slog.String("address", s.Addr()))
 	return s.App.Listen(fmt.Sprintf(":%s", s.conf.Server.Port))
+}
+
+func (s *Server) ParseBody(c *fiber.Ctx, v any) error {
+	if err := c.BodyParser(v); err != nil {
+		return errs.InvalidError{
+			Reason: "failed to parse body please refer to openapi schema",
+			Err:    err,
+		}
+	}
+
+	return nil
 }
 
 func (s *Server) Respond(c *fiber.Ctx, status int, data any) error {

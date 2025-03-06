@@ -53,12 +53,12 @@ func (h AddCredentialHandler) Handle(ctx context.Context, cmd AddCredentialComma
 
 	credential, err := project.CreateCredential(cmd.ID, cmd.Name, cmd.ProviderType, cmd.APIKey)
 	if err != nil {
-		return errs.ReqInvalidError{Reason: err.Error()}
+		return errs.InvalidError{Reason: err.Error()}
 	}
 
 	err = h.llmProvider.VerifyKey(ctx, credential)
 	if err != nil {
-		return errs.ReqInvalidError{Reason: err.Error()}
+		return errs.InvalidError{Reason: err.Error()}
 	}
 
 	return h.projectRepo.Update(ctx, project)

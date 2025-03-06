@@ -1,7 +1,6 @@
 package errs
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
 )
@@ -14,6 +13,9 @@ type problem interface {
 
 	// unique error slug 'title'.
 	Slug() slug
+
+	// public detail for the client
+	Detail() string
 
 	// original http status code 'status'.
 	Status() int
@@ -73,7 +75,7 @@ func Problem(err error) *ProblemJSON {
 		Type:     pb.DocURL(),
 		Title:    string(pb.Slug()),
 		Status:   pb.Status(),
-		Detail:   pb.Error(),
+		Detail:   pb.Detail(),
 		Params:   pb.Params(),
 		Instance: "", // filled by *http.Request.RequestURI in HTTP()
 	}
@@ -91,29 +93,5 @@ func (pb *ProblemJSON) HTTPStatus() int {
 func (pb *ProblemJSON) HTTPHeaders() http.Header {
 	return http.Header{
 		"Content-Type": {"application/problem+json"},
-	}
-}
-
-// HTTP writes the problem JSON to the response writer from an error chain.
-// Compliant with RFC 7807.
-func HTTP(w http.ResponseWriter, r *http.Request, e error) {
-	pb := Problem(e)
-	if pb == nil {
-		return
-	}
-
-	// fill in the instance with the request path.
-	pb.Instance = r.RequestURI
-
-	for k, vv := range pb.HTTPHeaders() {
-		for _, v := range vv {
-			w.Header().Add(k, v)
-		}
-	}
-
-	// write the problem JSON to the response writer.
-	w.WriteHeader(pb.HTTPStatus())
-	if err := json.NewEncoder(w).Encode(pb); err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	}
 }

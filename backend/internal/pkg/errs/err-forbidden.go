@@ -1,6 +1,7 @@
 package errs
 
 import (
+	"fmt"
 	"net/http"
 )
 
@@ -9,12 +10,20 @@ var _ problem = ForbiddenError{}
 
 // ForbiddenError is returned when access is forbidden.
 type ForbiddenError struct {
-	Reason error `exhaustruct:"optional"`
+	Entity string `exhaustruct:"optional"`
+	Err    error  `exhaustruct:"optional"`
 }
 
 func (e ForbiddenError) Error() string {
-	if e.Reason != nil {
-		return "forbidden: " + e.Reason.Error()
+	if e.Err != nil {
+		return e.Err.Error()
+	}
+	return e.Detail()
+}
+
+func (e ForbiddenError) Detail() string {
+	if e.Entity != "" {
+		return fmt.Sprintf("forbidden to access %s", e.Entity)
 	}
 	return "forbidden"
 }
@@ -30,8 +39,8 @@ func (e ForbiddenError) DocURL() string { return "-" }
 
 // Params implements problem.
 func (e ForbiddenError) Params() map[string]any {
-	if e.Reason == nil {
+	if e.Entity == "" {
 		return nil
 	}
-	return map[string]any{"reason": e.Reason.Error()}
+	return map[string]any{"entity": e.Entity}
 }

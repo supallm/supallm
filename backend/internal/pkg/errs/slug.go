@@ -31,7 +31,7 @@ func LogLevel(err error) slog.Level {
 	switch {
 	case errors.Is(err, &NotFoundError{}),
 		errors.Is(err, &ReqMissingError{}),
-		errors.Is(err, &ReqInvalidError{}),
+		errors.Is(err, &InvalidError{}),
 		errors.Is(err, &DuplicateError{}),
 		errors.Is(err, &ConstraintError{}),
 		errors.Is(err, &CreateError{}),

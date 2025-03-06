@@ -28,7 +28,7 @@ func NewListModelsHandler(projectReader ProjectReader) ListModelsHandler {
 }
 
 func (h ListModelsHandler) Handle(ctx context.Context, query ListModelsQuery) ([]Model, error) {
-	project, err := h.projectReader.GetProject(ctx, query.ProjectID)
+	project, err := h.projectReader.ReadProject(ctx, query.ProjectID)
 	if err != nil {
 		return nil, err
 	}

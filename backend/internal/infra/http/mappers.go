@@ -26,7 +26,6 @@ func queryCredentialsToDTOs(credentials []query.Credential) []gen.Credential {
 
 func queryModelToDTO(model query.Model) gen.Model {
 	return gen.Model{
-		Id:            model.ID,
 		Name:          model.Name,
 		CreatedAt:     model.CreatedAt,
 		UpdatedAt:     model.UpdatedAt,

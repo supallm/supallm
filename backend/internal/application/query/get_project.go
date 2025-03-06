@@ -28,7 +28,7 @@ func NewGetProjectHandler(projectReader ProjectReader) GetProjectHandler {
 }
 
 func (h GetProjectHandler) Handle(ctx context.Context, query GetProjectQuery) (Project, error) {
-	project, err := h.projectReader.GetProject(ctx, query.ProjectID)
+	project, err := h.projectReader.ReadProject(ctx, query.ProjectID)
 	if err != nil {
 		return Project{}, err
 	}

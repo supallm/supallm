@@ -132,6 +132,8 @@ linters-settings:
       - "^gopkg.in/yaml.v3.Node$"
       - "^github.com/gofiber/fiber/v2.Config$"
       - "^github.com/gofiber/fiber/v2/middleware/cors.Config$"
+      - "^github.com/gofiber/fiber/v2/middleware/recover.Config$"
+      - "^github.com/gofiber/fiber/v2/middleware/logger.Config$"
 
   funlen:
     # Checks the number of lines in a function.

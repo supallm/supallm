@@ -17,15 +17,15 @@ type Project struct {
 
 func NewProject(id uuid.UUID, userID string, name string) (*Project, error) {
 	if id == uuid.Nil {
-		return nil, errs.ReqInvalidError{Field: "id", Reason: "id is required"}
+		return nil, errs.InvalidError{Field: "id", Reason: "id is required"}
 	}
 
 	if userID == "" {
-		return nil, errs.ReqInvalidError{Field: "userID", Reason: "userID is required"}
+		return nil, errs.InvalidError{Field: "userID", Reason: "userID is required"}
 	}
 
 	if name == "" {
-		return nil, errs.ReqInvalidError{Field: "name", Reason: "name is required"}
+		return nil, errs.InvalidError{Field: "name", Reason: "name is required"}
 	}
 
 	return &Project{
@@ -40,7 +40,7 @@ func NewProject(id uuid.UUID, userID string, name string) (*Project, error) {
 
 func (p *Project) UpdateName(name string) error {
 	if name == "" {
-		return errs.ReqInvalidError{Field: "name", Reason: "name is required"}
+		return errs.InvalidError{Field: "name", Reason: "name is required"}
 	}
 
 	p.Name = name
@@ -49,7 +49,7 @@ func (p *Project) UpdateName(name string) error {
 
 func (p *Project) UpdateAuthProvider(authProvider AuthProvider) error {
 	if authProvider == nil {
-		return errs.ReqInvalidError{Field: "authProvider", Reason: "authProvider is required"}
+		return errs.InvalidError{Field: "authProvider", Reason: "authProvider is required"}
 	}
 
 	p.AuthProvider = authProvider

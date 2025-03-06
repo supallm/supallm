@@ -4,6 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/supallm/core/internal/application/command"
+	"github.com/supallm/core/internal/application/domain/model"
 	"github.com/supallm/core/internal/application/query"
 	"github.com/supallm/core/internal/infra/http/gen"
 )
@@ -52,6 +53,24 @@ func (s *Server) UpdateProject(c *fiber.Ctx, projectID gen.UUID) error {
 	}
 
 	return s.server.Respond(c, fiber.StatusOK, nil)
+}
+
+func (s *Server) UpdateAuth(c *fiber.Ctx, projectID gen.UUID) error {
+	var req gen.UpdateAuthRequest
+	if err := c.BodyParser(&req); err != nil {
+		return err
+	}
+
+	err := s.app.Commands.UpdateAuthProvider.Handle(c.Context(), command.UpdateAuthProviderCommand{
+		ProjectID:    projectID,
+		ProviderType: model.AuthProviderType(req.Provider),
+		Config:       req.Config,
+	})
+	if err != nil {
+		return err
+	}
+
+	return s.server.RespondWithContentLocation(c, fiber.StatusNoContent, "/projects/%s/auth", projectID)
 }
 
 func (s *Server) DeleteProject(c *fiber.Ctx, _ gen.UUID) error {

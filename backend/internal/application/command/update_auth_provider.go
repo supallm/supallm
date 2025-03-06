@@ -12,7 +12,6 @@ import (
 )
 
 type UpdateAuthProviderCommand struct {
-	ID           uuid.UUID
 	ProjectID    uuid.UUID
 	ProviderType model.AuthProviderType
 	Config       map[string]any
@@ -43,7 +42,7 @@ func (h UpdateAuthProviderHandler) Handle(ctx context.Context, cmd UpdateAuthPro
 
 	err = project.NewAuthProvider(cmd.ProviderType, cmd.Config)
 	if err != nil {
-		return errs.ReqInvalidError{Reason: err.Error()}
+		return errs.InvalidError{Reason: err.Error()}
 	}
 
 	return h.projectRepo.Update(ctx, project)

@@ -13,12 +13,41 @@ import (
 
 const deleteModel = `-- name: deleteModel :exec
 DELETE FROM models
-WHERE id = $1
+WHERE slug = $1
 `
 
-func (q *Queries) deleteModel(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.Exec(ctx, deleteModel, id)
+func (q *Queries) deleteModel(ctx context.Context, slug string) error {
+	_, err := q.db.Exec(ctx, deleteModel, slug)
 	return err
+}
+
+const modelBySlug = `-- name: modelBySlug :one
+SELECT id, project_id, credential_id, name, slug, provider_model, system_prompt, parameters, created_at, updated_at
+FROM models
+WHERE project_id = $1 AND slug = $2
+`
+
+type modelBySlugParams struct {
+	ProjectID uuid.UUID `json:"project_id"`
+	Slug      string    `json:"slug"`
+}
+
+func (q *Queries) modelBySlug(ctx context.Context, arg modelBySlugParams) (Model, error) {
+	row := q.db.QueryRow(ctx, modelBySlug, arg.ProjectID, arg.Slug)
+	var i Model
+	err := row.Scan(
+		&i.ID,
+		&i.ProjectID,
+		&i.CredentialID,
+		&i.Name,
+		&i.Slug,
+		&i.ProviderModel,
+		&i.SystemPrompt,
+		&i.Parameters,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const modelsByProjectId = `-- name: modelsByProjectId :many

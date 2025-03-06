@@ -87,7 +87,6 @@ type Credential struct {
 type Model struct {
 	CreatedAt     time.Time       `json:"createdAt"`
 	CredentialId  UUID            `json:"credentialId"`
-	Id            UUID            `json:"id"`
 	Name          string          `json:"name"`
 	Parameters    ModelParameters `json:"parameters"`
 	ProviderModel ProviderModel   `json:"providerModel"`

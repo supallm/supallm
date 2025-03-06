@@ -31,5 +31,5 @@ func NewRemoveCredentialHandler(
 }
 
 func (h RemoveCredentialHandler) Handle(ctx context.Context, cmd RemoveCredentialCommand) error {
-	return h.projectRepo.DeleteLLMCredential(ctx, cmd.LLMCredentialID)
+	return h.projectRepo.DeleteCredential(ctx, cmd.LLMCredentialID)
 }

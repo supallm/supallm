@@ -3,6 +3,12 @@ package server
 import (
 	"github.com/clerk/clerk-sdk-go/v2"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/healthcheck"
+	"github.com/gofiber/fiber/v2/middleware/helmet"
+	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/gofiber/fiber/v2/middleware/requestid"
 )
 
 const userIDKey = "userID"
@@ -17,6 +23,20 @@ func (s *Server) GetUserID(c *fiber.Ctx) string {
 		return ""
 	}
 	return id
+}
+
+func (s *Server) applyCommonMiddleware() {
+	s.App.Use(helmet.New())
+	s.App.Use(requestid.New())
+	s.App.Use(recover.New())
+	s.App.Use(logger.New())
+	s.App.Use(healthcheck.New())
+	s.App.Use(cors.New(cors.Config{
+		AllowOrigins:  "*",
+		AllowMethods:  "GET,POST,PUT,PATCH,DELETE,OPTIONS",
+		AllowHeaders:  "Origin, Content-Type, Accept, Authorization",
+		ExposeHeaders: "Content-Location",
+	}))
 }
 
 func (s *Server) ClerkAuthMiddleware() fiber.Handler {

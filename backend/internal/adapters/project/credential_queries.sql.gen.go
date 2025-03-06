@@ -11,6 +11,28 @@ import (
 	"github.com/google/uuid"
 )
 
+const credentialById = `-- name: credentialById :one
+SELECT id, project_id, name, provider_type, api_key_encrypted, api_key_obfuscated, created_at, updated_at
+FROM credentials
+WHERE id = $1
+`
+
+func (q *Queries) credentialById(ctx context.Context, id uuid.UUID) (Credential, error) {
+	row := q.db.QueryRow(ctx, credentialById, id)
+	var i Credential
+	err := row.Scan(
+		&i.ID,
+		&i.ProjectID,
+		&i.Name,
+		&i.ProviderType,
+		&i.ApiKeyEncrypted,
+		&i.ApiKeyObfuscated,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const credentialsByProjectId = `-- name: credentialsByProjectId :many
 SELECT id, project_id, name, provider_type, api_key_encrypted, api_key_obfuscated, created_at, updated_at
 FROM credentials

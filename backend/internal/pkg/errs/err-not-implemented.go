@@ -12,6 +12,8 @@ type NotImplementedError struct{}
 
 func (e NotImplementedError) Error() string { return "not implemented" }
 
+func (e NotImplementedError) Detail() string { return "not implemented" }
+
 // Slug implements problem.
 func (e NotImplementedError) Slug() slug { return SlugNotImplemented }
 

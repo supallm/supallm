@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/supallm/core/internal/application/domain/model"
 	"github.com/supallm/core/internal/application/query"
+	"github.com/supallm/core/internal/pkg/slug"
 )
 
 type Repository struct {
@@ -26,7 +27,7 @@ func NewRepository(_ context.Context, pool *pgxpool.Pool) *Repository {
 func (r Repository) withTx(ctx context.Context, fn func(*Queries) error) error {
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
-		return fmt.Errorf("error starting transaction: %w", err)
+		return r.errorDecoder(err)
 	}
 
 	isCommitted := false
@@ -44,7 +45,7 @@ func (r Repository) withTx(ctx context.Context, fn func(*Queries) error) error {
 	}
 
 	if err = tx.Commit(ctx); err != nil {
-		return fmt.Errorf("error committing transaction: %w", err)
+		return r.errorDecoder(err)
 	}
 	isCommitted = true
 
@@ -59,7 +60,7 @@ func (r Repository) Create(ctx context.Context, project *model.Project) error {
 			Name:   project.Name,
 		})
 		if err != nil {
-			return fmt.Errorf("error storing project: %w", err)
+			return r.errorDecoder(err)
 		}
 
 		return nil
@@ -69,12 +70,12 @@ func (r Repository) Create(ctx context.Context, project *model.Project) error {
 func (r Repository) retrieveDependencies(ctx context.Context, projectID uuid.UUID) ([]Credential, []Model, error) {
 	llmCredentials, err := r.queries.credentialsByProjectId(ctx, projectID)
 	if err != nil {
-		return nil, nil, fmt.Errorf("error getting llm credentials: %w", err)
+		return nil, nil, r.errorDecoder(err)
 	}
 
 	models, err := r.queries.modelsByProjectId(ctx, projectID)
 	if err != nil {
-		return nil, nil, fmt.Errorf("error getting models: %w", err)
+		return nil, nil, r.errorDecoder(err)
 	}
 
 	return llmCredentials, models, nil
@@ -83,12 +84,12 @@ func (r Repository) retrieveDependencies(ctx context.Context, projectID uuid.UUI
 func (r Repository) retrieve(ctx context.Context, projectID uuid.UUID) (Project, []Credential, []Model, error) {
 	project, err := r.queries.projectById(ctx, projectID)
 	if err != nil {
-		return Project{}, nil, nil, fmt.Errorf("error getting project: %w", err)
+		return Project{}, nil, nil, r.errorDecoder(err)
 	}
 
 	llmCredentials, models, err := r.retrieveDependencies(ctx, projectID)
 	if err != nil {
-		return Project{}, nil, nil, fmt.Errorf("error getting dependencies: %w", err)
+		return Project{}, nil, nil, r.errorDecoder(err)
 	}
 
 	return project, llmCredentials, models, nil
@@ -97,7 +98,7 @@ func (r Repository) retrieve(ctx context.Context, projectID uuid.UUID) (Project,
 func (r Repository) Retrieve(ctx context.Context, projectID uuid.UUID) (*model.Project, error) {
 	project, llmProviders, models, err := r.retrieve(ctx, projectID)
 	if err != nil {
-		return nil, fmt.Errorf("error getting project: %w", err)
+		return nil, err
 	}
 
 	return project.domain(llmProviders, models)
@@ -140,7 +141,7 @@ func (r Repository) updateProjectDetails(ctx context.Context, q *Queries, projec
 		AuthProvider: ap,
 	})
 	if err != nil {
-		return fmt.Errorf("error updating project: %w", err)
+		return r.errorDecoder(err)
 	}
 	return nil
 }
@@ -153,7 +154,7 @@ func (r Repository) updateCredentials(ctx context.Context, q *Queries, project *
 
 		encrypted, err := llmCredential.APIKey.Encrypt()
 		if err != nil {
-			return fmt.Errorf("error encrypting api key: %w", err)
+			return fmt.Errorf("unable to encrypt api key: %w", err)
 		}
 
 		err = q.upsertCredential(ctx, upsertCredentialParams{
@@ -165,7 +166,7 @@ func (r Repository) updateCredentials(ctx context.Context, q *Queries, project *
 			ApiKeyObfuscated: llmCredential.APIKey.Obfuscate(),
 		})
 		if err != nil {
-			return fmt.Errorf("error updating llm provider: %w", err)
+			return r.errorDecoder(err)
 		}
 	}
 	return nil
@@ -178,7 +179,7 @@ func (r Repository) updateModels(ctx context.Context, q *Queries, project *model
 		}
 
 		if model.Credential == nil {
-			return fmt.Errorf("model %s has nil credential", slug)
+			return ErrCredentialNotFound
 		}
 
 		err := q.upsertModel(ctx, upsertModelParams{
@@ -195,7 +196,7 @@ func (r Repository) updateModels(ctx context.Context, q *Queries, project *model
 			},
 		})
 		if err != nil {
-			return fmt.Errorf("error updating model: %w", err)
+			return r.errorDecoder(err)
 		}
 	}
 	return nil
@@ -204,40 +205,63 @@ func (r Repository) updateModels(ctx context.Context, q *Queries, project *model
 func (r Repository) DeleteProject(ctx context.Context, id uuid.UUID) error {
 	err := r.queries.deleteProject(ctx, id)
 	if err != nil {
-		return fmt.Errorf("error deleting project: %w", err)
+		return r.errorDecoder(err)
 	}
 	return nil
 }
 
-func (r Repository) DeleteLLMCredential(ctx context.Context, id uuid.UUID) error {
+func (r Repository) DeleteCredential(ctx context.Context, id uuid.UUID) error {
 	err := r.queries.deleteCredential(ctx, id)
 	if err != nil {
-		return fmt.Errorf("error deleting llm credential: %w", err)
+		return r.errorDecoder(err)
 	}
 	return nil
 }
 
-func (r Repository) DeleteModel(ctx context.Context, id uuid.UUID) error {
-	err := r.queries.deleteModel(ctx, id)
+func (r Repository) DeleteModel(ctx context.Context, slug slug.Slug) error {
+	err := r.queries.deleteModel(ctx, slug.String())
 	if err != nil {
-		return fmt.Errorf("error deleting model: %w", err)
+		return r.errorDecoder(err)
 	}
 	return nil
 }
 
-func (r Repository) GetProject(ctx context.Context, id uuid.UUID) (query.Project, error) {
+func (r Repository) ReadProject(ctx context.Context, id uuid.UUID) (query.Project, error) {
 	project, llmProviders, models, err := r.retrieve(ctx, id)
 	if err != nil {
-		return query.Project{}, fmt.Errorf("error getting project: %w", err)
+		return query.Project{}, err
 	}
 
 	return project.query(llmProviders, models), nil
 }
 
+func (r Repository) ReadCredential(
+	ctx context.Context,
+	projectID uuid.UUID,
+	credentialID uuid.UUID,
+) (query.Credential, error) {
+	credential, err := r.queries.credentialById(ctx, credentialID)
+	if err != nil {
+		return query.Credential{}, err
+	}
+	return credential.query(), nil
+}
+
+func (r Repository) ReadModel(ctx context.Context, projectID uuid.UUID, modelSlug slug.Slug) (query.Model, error) {
+	model, err := r.queries.modelBySlug(ctx, modelBySlugParams{
+		ProjectID: projectID,
+		Slug:      modelSlug.String(),
+	})
+	if err != nil {
+		return query.Model{}, err
+	}
+	return model.query(), nil
+}
+
 func (r Repository) ListProjects(ctx context.Context, userID string) ([]query.Project, error) {
 	projects, err := r.queries.projectsByUserId(ctx, userID)
 	if err != nil {
-		return nil, fmt.Errorf("error getting projects: %w", err)
+		return nil, r.errorDecoder(err)
 	}
 
 	queryProjects := make([]query.Project, len(projects))
@@ -247,7 +271,7 @@ func (r Repository) ListProjects(ctx context.Context, userID string) ([]query.Pr
 
 		llmProviders, models, err = r.retrieveDependencies(ctx, project.ID)
 		if err != nil {
-			return nil, fmt.Errorf("error getting project: %w", err)
+			return nil, err
 		}
 		queryProjects[i] = project.query(llmProviders, models)
 	}
