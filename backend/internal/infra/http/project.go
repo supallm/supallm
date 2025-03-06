@@ -14,22 +14,22 @@ func (s *Server) CreateProject(c *fiber.Ctx) error {
 		return err
 	}
 
-	projectId := uuid.New()
+	projectID := uuid.New()
 	err := s.app.Commands.CreateProject.Handle(c.Context(), command.CreateProjectCommand{
-		ID:     projectId,
+		ID:     projectID,
 		Name:   req.Name,
-		UserID: s.server.GetUserId(c),
+		UserID: s.server.GetUserID(c),
 	})
 	if err != nil {
 		return err
 	}
 
-	return s.server.RespondWithContentLocation(c, fiber.StatusCreated, "/projects/%s", projectId.String())
+	return s.server.RespondWithContentLocation(c, fiber.StatusCreated, "/projects/%s", projectID.String())
 }
 
-func (s *Server) GetProject(c *fiber.Ctx, projectId gen.UUID) error {
+func (s *Server) GetProject(c *fiber.Ctx, projectID gen.UUID) error {
 	project, err := s.app.Queries.GetProject.Handle(c.Context(), query.GetProjectQuery{
-		ProjectID: projectId,
+		ProjectID: projectID,
 	})
 	if err != nil {
 		return err
@@ -37,14 +37,14 @@ func (s *Server) GetProject(c *fiber.Ctx, projectId gen.UUID) error {
 	return s.server.Respond(c, fiber.StatusOK, queryProjectToDTO(project))
 }
 
-func (s *Server) UpdateProject(c *fiber.Ctx, projectId gen.UUID) error {
+func (s *Server) UpdateProject(c *fiber.Ctx, projectID gen.UUID) error {
 	var req gen.UpdateProjectRequest
 	if err := c.BodyParser(&req); err != nil {
 		return err
 	}
 
 	err := s.app.Commands.UpdateProjectName.Handle(c.Context(), command.UpdateProjectNameCommand{
-		ProjectID: projectId,
+		ProjectID: projectID,
 		Name:      req.Name,
 	})
 	if err != nil {
@@ -54,13 +54,13 @@ func (s *Server) UpdateProject(c *fiber.Ctx, projectId gen.UUID) error {
 	return s.server.Respond(c, fiber.StatusOK, nil)
 }
 
-func (s *Server) DeleteProject(c *fiber.Ctx, projectId gen.UUID) error {
+func (s *Server) DeleteProject(c *fiber.Ctx, _ gen.UUID) error {
 	return s.server.Respond(c, fiber.StatusOK, nil)
 }
 
 func (s *Server) ListProjects(c *fiber.Ctx) error {
 	projects, err := s.app.Queries.ListProjects.Handle(c.Context(), query.ListProjectsQuery{
-		UserID: s.server.GetUserId(c),
+		UserID: s.server.GetUserID(c),
 	})
 	if err != nil {
 		return err

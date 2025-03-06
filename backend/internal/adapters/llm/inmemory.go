@@ -9,14 +9,14 @@ import (
 
 type InMemory struct{}
 
-func (i *InMemory) GenerateText(ctx context.Context, request *model.Request) (*model.Response, error) {
+func (i *InMemory) GenerateText(_ context.Context, _ *model.Request) (*model.Response, error) {
 	return nil, nil
 }
 
-func (i *InMemory) StreamText(ctx context.Context, request *model.Request) (<-chan struct{}, error) {
+func (i *InMemory) StreamText(_ context.Context, _ *model.Request) (<-chan struct{}, error) {
 	return nil, nil
 }
 
-func (i *InMemory) VerifyKey(ctx context.Context, key secret.ApiKey) error {
+func (i *InMemory) VerifyKey(_ context.Context, _ secret.APIKey) error {
 	return nil
 }

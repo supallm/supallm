@@ -5,10 +5,10 @@ import (
 	"log/slog"
 )
 
-// slug represents a unique error type that can be detected by the client
+// slug represents a unique error type that can be detected by the client.
 type slug string
 
-// available slugs
+// available slugs.
 const (
 	SlugNotFound       slug = "not-found"
 	SlugRequestMissing slug = "request-missing"
@@ -26,17 +26,17 @@ const (
 	SlugUnknown slug = "unknown"
 )
 
-// LogLevel returns the log level from an error chain
+// LogLevel returns the log level from an error chain.
 func LogLevel(err error) slog.Level {
 	switch {
-	case errors.Is(err, &ErrNotFound{}),
-		errors.Is(err, &ErrReqMissing{}),
-		errors.Is(err, &ErrReqInvalid{}),
-		errors.Is(err, &ErrDuplicate{}),
-		errors.Is(err, &ErrConstraint{}),
-		errors.Is(err, &ErrCreate{}),
-		errors.Is(err, &ErrUpdate{}),
-		errors.Is(err, &ErrDelete{}):
+	case errors.Is(err, &NotFoundError{}),
+		errors.Is(err, &ReqMissingError{}),
+		errors.Is(err, &ReqInvalidError{}),
+		errors.Is(err, &DuplicateError{}),
+		errors.Is(err, &ConstraintError{}),
+		errors.Is(err, &CreateError{}),
+		errors.Is(err, &UpdateError{}),
+		errors.Is(err, &DeleteError{}):
 		return slog.LevelInfo
 
 	default:

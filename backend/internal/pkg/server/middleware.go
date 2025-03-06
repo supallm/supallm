@@ -5,12 +5,18 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func (s *Server) storeUserId(c *fiber.Ctx, userId string) {
-	c.Locals("userId", userId)
+const userIDKey = "userID"
+
+func (s *Server) storeUserID(c *fiber.Ctx, userID string) {
+	c.Locals(userIDKey, userID)
 }
 
-func (s *Server) GetUserId(c *fiber.Ctx) string {
-	return c.Locals("userId").(string)
+func (s *Server) GetUserID(c *fiber.Ctx) string {
+	id, ok := c.Locals(userIDKey).(string)
+	if !ok {
+		return ""
+	}
+	return id
 }
 
 func (s *Server) ClerkAuthMiddleware() fiber.Handler {
@@ -48,7 +54,7 @@ func (s *Server) ClerkAuthMiddleware() fiber.Handler {
 		// 	})
 		// }
 
-		s.storeUserId(c, "12345")
+		s.storeUserID(c, "12345")
 		return c.Next()
 	}
 }

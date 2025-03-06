@@ -61,11 +61,11 @@ type CreateCredentialRequest struct {
 
 // CreateModelRequest defines model for CreateModelRequest.
 type CreateModelRequest struct {
-	CredentialId  openapi_types.UUID     `json:"credentialId"`
-	Name          string                 `json:"name"`
-	Parameters    map[string]interface{} `json:"parameters"`
-	ProviderModel string                 `json:"providerModel"`
-	SystemPrompt  string                 `json:"systemPrompt"`
+	CredentialId  openapi_types.UUID `json:"credentialId"`
+	Name          string             `json:"name"`
+	Parameters    ModelParameters    `json:"parameters"`
+	ProviderModel string             `json:"providerModel"`
+	SystemPrompt  string             `json:"systemPrompt"`
 }
 
 // CreateProjectRequest defines model for CreateProjectRequest.
@@ -85,15 +85,21 @@ type Credential struct {
 
 // Model defines model for Model.
 type Model struct {
-	CreatedAt     time.Time              `json:"createdAt"`
-	CredentialId  UUID                   `json:"credentialId"`
-	Id            UUID                   `json:"id"`
-	Name          string                 `json:"name"`
-	Parameters    map[string]interface{} `json:"parameters"`
-	ProviderModel ProviderModel          `json:"providerModel"`
-	Slug          string                 `json:"slug"`
-	SystemPrompt  string                 `json:"systemPrompt"`
-	UpdatedAt     time.Time              `json:"updatedAt"`
+	CreatedAt     time.Time       `json:"createdAt"`
+	CredentialId  UUID            `json:"credentialId"`
+	Id            UUID            `json:"id"`
+	Name          string          `json:"name"`
+	Parameters    ModelParameters `json:"parameters"`
+	ProviderModel ProviderModel   `json:"providerModel"`
+	Slug          string          `json:"slug"`
+	SystemPrompt  string          `json:"systemPrompt"`
+	UpdatedAt     time.Time       `json:"updatedAt"`
+}
+
+// ModelParameters defines model for ModelParameters.
+type ModelParameters struct {
+	MaxTokens   int     `json:"maxTokens"`
+	Temperature float32 `json:"temperature"`
 }
 
 // Project defines model for Project.
@@ -139,11 +145,11 @@ type UpdateCredentialRequest struct {
 
 // UpdateModelRequest defines model for UpdateModelRequest.
 type UpdateModelRequest struct {
-	CredentialId  openapi_types.UUID     `json:"credentialId"`
-	Name          string                 `json:"name"`
-	Parameters    map[string]interface{} `json:"parameters"`
-	ProviderModel ProviderModel          `json:"providerModel"`
-	SystemPrompt  string                 `json:"systemPrompt"`
+	CredentialId  openapi_types.UUID `json:"credentialId"`
+	Name          string             `json:"name"`
+	Parameters    ModelParameters    `json:"parameters"`
+	ProviderModel ProviderModel      `json:"providerModel"`
+	SystemPrompt  string             `json:"systemPrompt"`
 }
 
 // UpdateProjectRequest defines model for UpdateProjectRequest.

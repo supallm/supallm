@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -27,7 +28,7 @@ func New(conf config.Config) *Server {
 			pb := errs.Problem(err)
 
 			slog.Error(err.Error(),
-				slog.String("status", fmt.Sprintf("%d", pb.Status)),
+				slog.String("status", strconv.Itoa(pb.Status)),
 				slog.String("uri", string(ctx.Request().RequestURI())),
 			)
 
@@ -88,7 +89,7 @@ func (s *Server) GetParam(c *fiber.Ctx, key string) string {
 }
 
 // Add a Stop method to gracefully shutdown the server
-func (s *Server) Stop(ctx context.Context) error {
+func (s *Server) Stop(_ context.Context) error {
 	slog.Info("stopping HTTP server")
 	return s.App.Shutdown()
 }

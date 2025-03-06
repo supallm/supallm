@@ -91,8 +91,8 @@ func New(
 	return app, nil
 }
 
-// Shutdown gracefully closes all application resources
-func (a *App) Shutdown(ctx context.Context) error {
+// Shutdown gracefully closes all application resources.
+func (a *App) Shutdown(_ context.Context) error {
 	slog.Info("shutting down application resources")
 
 	// Close database connection pool

@@ -27,6 +27,10 @@ sql:
             go_type:
               type: "authProvider"
             nullable: true
+          - column: "models.parameters"
+            go_type:
+              type: "modelParameters"
+            nullable: true
   - schema: "../schemas.sql"
     queries:
       - "./session_queries.sql"

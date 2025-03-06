@@ -1,6 +1,8 @@
 package project
 
 import (
+	"fmt"
+
 	"github.com/google/uuid"
 	"github.com/supallm/core/internal/application/domain/model"
 	"github.com/supallm/core/internal/application/query"
@@ -18,18 +20,31 @@ func (a authProvider) domain() (model.AuthProvider, error) {
 		return nil, nil
 	}
 
-	return model.UnmarshalAuthProvider(model.AuthProviderType(a.Type), a.Config)
+	ap, err := model.UnmarshalAuthProvider(model.AuthProviderType(a.Type), a.Config)
+	if err != nil {
+		return nil, err
+	}
+
+	return ap, nil
 }
 
-func (a authProvider) query() (query.AuthProvider, error) {
+type modelParameters struct {
+	MaxTokens   uint32  `json:"max_tokens"`
+	Temperature float64 `json:"temperature"`
+}
+
+func (a authProvider) query() query.AuthProvider {
 	if a.Type == "" {
-		return query.AuthProvider{}, nil
+		return query.AuthProvider{
+			Provider: "none",
+			Config:   map[string]any{},
+		}
 	}
 
 	return query.AuthProvider{
 		Provider: a.Type,
 		Config:   a.Config,
-	}, nil
+	}
 }
 
 func (l Credential) domain() (*model.Credential, error) {
@@ -46,27 +61,33 @@ func (l Credential) domain() (*model.Credential, error) {
 	}, nil
 }
 
-func (l Credential) query() (query.Credential, error) {
+func (l Credential) query() query.Credential {
 	return query.Credential{
 		ID:               l.ID,
 		Name:             l.Name,
 		Provider:         l.ProviderType,
-		ObfuscatedApiKey: l.ApiKeyObfuscated,
+		ObfuscatedAPIKey: l.ApiKeyObfuscated,
 		CreatedAt:        l.CreatedAt.Time,
 		UpdatedAt:        l.UpdatedAt.Time,
-	}, nil
+	}
 }
 
-func (m Model) domain() (*model.Model, error) {
+func (m Model) domain(credential *model.Credential) *model.Model {
 	return &model.Model{
-		ID:            m.ID,
-		Slug:          slug.Slug(m.Slug),
+		ID:   m.ID,
+		Slug: slug.Slug(m.Slug),
+		Name: m.Name,
+		Parameters: model.ModelParameters{
+			MaxTokens:   m.Parameters.MaxTokens,
+			Temperature: m.Parameters.Temperature,
+		},
+		Credential:    credential,
 		ProviderModel: model.ProviderModel(m.ProviderModel),
 		SystemPrompt:  model.Prompt(m.SystemPrompt),
-	}, nil
+	}
 }
 
-func (m Model) query() (query.Model, error) {
+func (m Model) query() query.Model {
 	return query.Model{
 		ID:           m.ID,
 		Slug:         slug.Slug(m.Slug),
@@ -74,9 +95,13 @@ func (m Model) query() (query.Model, error) {
 		Name:         m.Name,
 		Model:        m.ProviderModel,
 		SystemPrompt: m.SystemPrompt,
-		CreatedAt:    m.CreatedAt.Time,
-		UpdatedAt:    m.UpdatedAt.Time,
-	}, nil
+		Parameters: query.ModelParameters{
+			MaxTokens:   m.Parameters.MaxTokens,
+			Temperature: m.Parameters.Temperature,
+		},
+		CreatedAt: m.CreatedAt.Time,
+		UpdatedAt: m.UpdatedAt.Time,
+	}
 }
 
 func (p Project) domain(cs []Credential, ms []Model) (*model.Project, error) {
@@ -95,14 +120,16 @@ func (p Project) domain(cs []Credential, ms []Model) (*model.Project, error) {
 
 	models := make(map[slug.Slug]*model.Model)
 	for _, m := range ms {
-		models[slug.Slug(m.Slug)], err = m.domain()
-		if err != nil {
-			return nil, err
+		credential, ok := llmCredentials[m.CredentialID]
+		if !ok {
+			return nil, fmt.Errorf("credential not found: %s", m.CredentialID)
 		}
+		models[slug.Slug(m.Slug)] = m.domain(credential)
 	}
 
 	return &model.Project{
 		ID:           p.ID,
+		UserID:       p.UserID,
 		Name:         p.Name,
 		AuthProvider: ap,
 		Credentials:  llmCredentials,
@@ -110,26 +137,17 @@ func (p Project) domain(cs []Credential, ms []Model) (*model.Project, error) {
 	}, nil
 }
 
-func (p Project) query(cs []Credential, ms []Model) (query.Project, error) {
-	ap, err := p.AuthProvider.query()
-	if err != nil {
-		return query.Project{}, err
-	}
+func (p Project) query(cs []Credential, ms []Model) query.Project {
+	ap := p.AuthProvider.query()
 
 	llmCredentials := make([]query.Credential, len(cs))
 	for i, llmCredential := range cs {
-		llmCredentials[i], err = llmCredential.query()
-		if err != nil {
-			return query.Project{}, err
-		}
+		llmCredentials[i] = llmCredential.query()
 	}
 
 	models := make([]query.Model, len(ms))
 	for i, m := range ms {
-		models[i], err = m.query()
-		if err != nil {
-			return query.Project{}, err
-		}
+		models[i] = m.query()
 	}
 
 	return query.Project{
@@ -140,5 +158,5 @@ func (p Project) query(cs []Credential, ms []Model) (query.Project, error) {
 		Models:       models,
 		CreatedAt:    p.CreatedAt.Time,
 		UpdatedAt:    p.UpdatedAt.Time,
-	}, nil
+	}
 }

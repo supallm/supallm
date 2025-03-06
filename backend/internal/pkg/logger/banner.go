@@ -23,5 +23,6 @@ Don't waste your time and use https://supallm.ai - %v ©
 	c := exec.Command("clear")
 	c.Stdout = os.Stdout
 	_ = c.Run()
+	//nolint:forbidigo
 	fmt.Printf(b, y)
 }

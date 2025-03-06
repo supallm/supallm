@@ -4,32 +4,32 @@ import (
 	"net/http"
 )
 
-// ensures it implements problem at compile time
-var _ problem = ErrForbidden{}
+// ensures it implements problem at compile time.
+var _ problem = ForbiddenError{}
 
-// ErrForbidden is returned when access is forbidden.
-type ErrForbidden struct {
-	Reason error
+// ForbiddenError is returned when access is forbidden.
+type ForbiddenError struct {
+	Reason error `exhaustruct:"optional"`
 }
 
-func (e ErrForbidden) Error() string {
+func (e ForbiddenError) Error() string {
 	if e.Reason != nil {
 		return "forbidden: " + e.Reason.Error()
 	}
 	return "forbidden"
 }
 
-// Slug implements problem
-func (e ErrForbidden) Slug() slug { return SlugForbidden }
+// Slug implements problem.
+func (e ForbiddenError) Slug() slug { return SlugForbidden }
 
-// Status implements problem
-func (e ErrForbidden) Status() int { return http.StatusForbidden }
+// Status implements problem.
+func (e ForbiddenError) Status() int { return http.StatusForbidden }
 
-// DocURL implements problem
-func (e ErrForbidden) DocURL() string { return "-" }
+// DocURL implements problem.
+func (e ForbiddenError) DocURL() string { return "-" }
 
-// Params implements problem
-func (e ErrForbidden) Params() map[string]any {
+// Params implements problem.
+func (e ForbiddenError) Params() map[string]any {
 	if e.Reason == nil {
 		return nil
 	}

@@ -19,17 +19,14 @@ func newOpenAI(key string) *openaiService {
 	}
 }
 
-func (o *openaiService) GenerateText(ctx context.Context, request *model.Request) (*model.Response, error) {
-	// TODO: Implement
+func (o *openaiService) GenerateText(_ context.Context, _ *model.Request) (*model.Response, error) {
 	return nil, nil
 }
 
-func (o *openaiService) StreamText(ctx context.Context, request *model.Request) (<-chan struct{}, error) {
-	// TODO: Implement
+func (o *openaiService) StreamText(_ context.Context, _ *model.Request) (<-chan struct{}, error) {
 	return nil, nil
 }
 
-func (o *openaiService) VerifyKey(ctx context.Context, key secret.ApiKey) error {
-	// TODO: Implement
+func (o *openaiService) VerifyKey(_ context.Context, _ secret.APIKey) error {
 	return nil
 }

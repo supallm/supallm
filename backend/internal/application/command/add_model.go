@@ -44,12 +44,20 @@ func (h AddModelHandler) Handle(ctx context.Context, cmd AddModelCommand) error 
 	slog.Info("Adding model", "model", cmd)
 	project, err := h.projectRepo.Retrieve(ctx, cmd.ProjectID)
 	if err != nil {
-		return errs.ErrNotFound{Resource: "project", ID: cmd.ProjectID}
+		return errs.NotFoundError{Resource: "project", ID: cmd.ProjectID}
 	}
 
-	err = project.AddModel(cmd.ModelID, cmd.Name, cmd.Slug, cmd.CredentialID, cmd.ProviderModel, cmd.SystemPrompt, cmd.Parameters)
+	err = project.AddModel(
+		cmd.ModelID,
+		cmd.Name,
+		cmd.Slug,
+		cmd.CredentialID,
+		cmd.ProviderModel,
+		cmd.SystemPrompt,
+		cmd.Parameters,
+	)
 	if err != nil {
-		return errs.ErrReqInvalid{Reason: err.Error()}
+		return errs.ReqInvalidError{Reason: err.Error()}
 	}
 	return h.projectRepo.Update(ctx, project)
 }

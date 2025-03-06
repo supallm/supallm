@@ -16,6 +16,10 @@ import (
 	"github.com/supallm/core/internal/pkg/server"
 )
 
+const (
+	timeout = 10 * time.Second
+)
+
 func main() {
 	if err := run(); err != nil {
 		slog.Error("failed to run application", "error", err)
@@ -48,20 +52,20 @@ func run() error {
 	}()
 
 	select {
-	case err := <-serverErrors:
+	case err = <-serverErrors:
 		return fmt.Errorf("server error: %w", err)
 	case <-ctx.Done():
 		slog.Info("shutdown initiated")
 	}
 
-	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), timeout)
 	defer shutdownCancel()
 
-	if err := server.Stop(shutdownCtx); err != nil {
+	if err = server.Stop(shutdownCtx); err != nil {
 		return fmt.Errorf("server shutdown failed: %w", err)
 	}
 
-	if err := app.Shutdown(shutdownCtx); err != nil {
+	if err = app.Shutdown(shutdownCtx); err != nil {
 		return fmt.Errorf("application shutdown failed: %w", err)
 	}
 

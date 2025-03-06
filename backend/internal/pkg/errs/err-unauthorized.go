@@ -4,32 +4,32 @@ import (
 	"net/http"
 )
 
-// ensures it implements problem at compile time
-var _ problem = ErrUnauthorized{}
+// ensures it implements problem at compile time.
+var _ problem = UnauthorizedError{}
 
-// ErrUnauthorized is returned when creation fails
-type ErrUnauthorized struct {
-	Reason error
+// UnauthorizedError is returned when creation fails.
+type UnauthorizedError struct {
+	Reason error `exhaustruct:"optional"`
 }
 
-func (e ErrUnauthorized) Error() string {
+func (e UnauthorizedError) Error() string {
 	if e.Reason != nil {
 		return "unauthorized: " + e.Reason.Error()
 	}
 	return "unauthorized"
 }
 
-// Slug implements problem
-func (e ErrUnauthorized) Slug() slug { return SlugUnauthorized }
+// Slug implements problem.
+func (e UnauthorizedError) Slug() slug { return SlugUnauthorized }
 
-// Status implements problem
-func (e ErrUnauthorized) Status() int { return http.StatusUnauthorized }
+// Status implements problem.
+func (e UnauthorizedError) Status() int { return http.StatusUnauthorized }
 
-// DocURL implements problem
-func (e ErrUnauthorized) DocURL() string { return "-" }
+// DocURL implements problem.
+func (e UnauthorizedError) DocURL() string { return "-" }
 
-// Params implements problem
-func (e ErrUnauthorized) Params() map[string]any {
+// Params implements problem.
+func (e UnauthorizedError) Params() map[string]any {
 	if e.Reason == nil {
 		return nil
 	}

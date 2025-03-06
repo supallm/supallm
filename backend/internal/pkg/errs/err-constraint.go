@@ -4,31 +4,31 @@ import (
 	"net/http"
 )
 
-// ensures it implements problem at compile time
-var _ problem = ErrConstraint{}
+// ensures it implements problem at compile time.
+var _ problem = ConstraintError{}
 
-// ErrConstraint is returned when a constraint blocks the request.
-type ErrConstraint struct {
-	Condition string
+// ConstraintError is returned when a constraint blocks the request.
+type ConstraintError struct {
+	Condition string `exhaustruct:"optional"`
 }
 
-func (e ErrConstraint) Error() string {
+func (e ConstraintError) Error() string {
 	if e.Condition != "" {
 		return "constrain by " + e.Condition
 	}
 	return "constraint"
 }
 
-// Slug implements problem
-func (e ErrConstraint) Slug() slug { return SlugConstraint }
+// Slug implements problem.
+func (e ConstraintError) Slug() slug { return SlugConstraint }
 
-// Status implements problem
-func (e ErrConstraint) Status() int { return http.StatusConflict }
+// Status implements problem.
+func (e ConstraintError) Status() int { return http.StatusConflict }
 
-// DocURL implements problem
-func (e ErrConstraint) DocURL() string { return "-" }
+// DocURL implements problem.
+func (e ConstraintError) DocURL() string { return "-" }
 
-// Params implements problem
-func (e ErrConstraint) Params() map[string]any {
+// Params implements problem.
+func (e ConstraintError) Params() map[string]any {
 	return map[string]any{"condition": e.Condition}
 }

@@ -15,7 +15,7 @@ type UpdateCredentialCommand struct {
 	ID        uuid.UUID
 	ProjectID uuid.UUID
 	Name      string
-	APIKey    secret.ApiKey
+	APIKey    secret.APIKey
 }
 
 type UpdateCredentialHandler struct {
@@ -38,12 +38,12 @@ func NewUpdateCredentialHandler(
 func (h UpdateCredentialHandler) Handle(ctx context.Context, cmd UpdateCredentialCommand) error {
 	project, err := h.projectRepo.Retrieve(ctx, cmd.ProjectID)
 	if err != nil {
-		return errs.ErrNotFound{Resource: "project", ID: cmd.ProjectID}
+		return errs.NotFoundError{Resource: "project", ID: cmd.ProjectID}
 	}
 
 	err = project.UpdateCredential(cmd.ID, cmd.Name, cmd.APIKey)
 	if err != nil {
-		return errs.ErrReqInvalid{Reason: err.Error()}
+		return errs.ReqInvalidError{Reason: err.Error()}
 	}
 	return h.projectRepo.Update(ctx, project)
 }

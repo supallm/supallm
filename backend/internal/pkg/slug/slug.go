@@ -1,9 +1,9 @@
 package slug
 
 import (
+	"crypto/rand"
 	"fmt"
-	"math/rand"
-	"time"
+	"math/big"
 
 	"github.com/gosimple/slug"
 )
@@ -37,9 +37,15 @@ func MakeWithPrefix(s string, prefix string, size int) Slug {
 func randSeq(n int) string {
 	letters := []rune("abcdefghijklmnopqrstuvwxyz0123456789")
 	b := make([]rune, n)
-	rand.New(rand.NewSource(time.Now().UnixNano()))
+
 	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
+		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(letters))))
+		if err != nil {
+			b[i] = letters[0]
+			continue
+		}
+		b[i] = letters[num.Int64()]
 	}
+
 	return string(b)
 }

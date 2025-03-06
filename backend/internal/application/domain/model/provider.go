@@ -25,6 +25,7 @@ const (
 	ModelClaude35Haiku  ProviderModel = "claude-3-5-haiku"
 )
 
+//nolint:gochecknoglobals // map to be used in multiple files of this package
 var providerModels = map[ProviderType]map[ProviderModel]struct{}{
 	ProviderTypeOpenAI: {
 		ModelGPT4o:     {},

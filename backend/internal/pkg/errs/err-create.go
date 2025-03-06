@@ -4,32 +4,32 @@ import (
 	"net/http"
 )
 
-// ensures it implements problem at compile time
-var _ problem = ErrCreate{}
+// ensures it implements problem at compile time.
+var _ problem = CreateError{}
 
-// ErrCreate is returned when creation fails
-type ErrCreate struct {
-	Reason error
+// CreateError is returned when creation fails.
+type CreateError struct {
+	Reason error `exhaustruct:"optional"`
 }
 
-func (e ErrCreate) Error() string {
+func (e CreateError) Error() string {
 	if e.Reason != nil {
 		return "creation: " + e.Reason.Error()
 	}
 	return "creation failed"
 }
 
-// Slug implements problem
-func (e ErrCreate) Slug() slug { return SlugCreate }
+// Slug implements problem.
+func (e CreateError) Slug() slug { return SlugCreate }
 
-// Status implements problem
-func (e ErrCreate) Status() int { return http.StatusInternalServerError }
+// Status implements problem.
+func (e CreateError) Status() int { return http.StatusInternalServerError }
 
-// DocURL implements problem
-func (e ErrCreate) DocURL() string { return "-" }
+// DocURL implements problem.
+func (e CreateError) DocURL() string { return "-" }
 
-// Params implements problem
-func (e ErrCreate) Params() map[string]any {
+// Params implements problem.
+func (e CreateError) Params() map[string]any {
 	if e.Reason == nil {
 		return nil
 	}

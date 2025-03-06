@@ -7,32 +7,35 @@ import (
 )
 
 // problem represents a unique error type that can be detected by the client
-// according to RFC 7807
+// according to RFC 7807.
 type problem interface {
-	// Error() used for logs and as the human-readable error 'detail'
+	// Error() used for logs and as the human-readable error 'detail'.
 	error
 
-	// unique error slug 'title'
+	// unique error slug 'title'.
 	Slug() slug
-	// original http status code 'status'
+
+	// original http status code 'status'.
 	Status() int
-	// URL to the error documentation 'type'
+
+	// URL to the error documentation 'type'.
 	DocURL() string
-	// additional error details 'params'
+
+	// additional error details 'params'.
 	Params() map[string]any
 }
 
-// ProblemJSON is the RFC 7807 JSON representation of a Problem
+// ProblemJSON is the RFC 7807 JSON representation of a Problem.
 type ProblemJSON struct {
 	Type     string         `json:"type"`
 	Title    string         `json:"title"`
 	Status   int            `json:"status"`
 	Detail   string         `json:"detail"`
-	Instance string         `json:"instance"`
-	Params   map[string]any `json:"params"`
+	Instance string         `json:"instance" exhaustruct:"optional"`
+	Params   map[string]any `json:"params" exhaustruct:"optional"`
 }
 
-// extract returns a problem from an error chain
+// extract returns a problem from an error chain.
 func extract(err error) problem {
 	if err == nil {
 		return nil
@@ -44,6 +47,7 @@ func extract(err error) problem {
 	return nil
 }
 
+//nolint:gochecknoglobals // it's ok
 var unknownProblem = ProblemJSON{
 	Type:   "-",
 	Title:  string(SlugUnknown),
@@ -52,9 +56,9 @@ var unknownProblem = ProblemJSON{
 }
 
 // Problem extracts the ProblemJSON from an error chain.
-// Only returns nil if the error is nil
+// Only returns nil if the error is nil.
 //
-// # Can be used as a serialization between proxies
+// # Can be used as a serialization between proxies.
 func Problem(err error) *ProblemJSON {
 	if err == nil {
 		return nil
@@ -75,7 +79,7 @@ func Problem(err error) *ProblemJSON {
 	}
 }
 
-// HTTPStatus returns the HTTP status code of the problem
+// HTTPStatus returns the HTTP status code of the problem.
 func (pb *ProblemJSON) HTTPStatus() int {
 	if pb.Status == 0 {
 		return http.StatusInternalServerError
@@ -83,28 +87,31 @@ func (pb *ProblemJSON) HTTPStatus() int {
 	return pb.Status
 }
 
-// HTTPHeaders returns the HTTP headers to set for the problem
+// HTTPHeaders returns the HTTP headers to set for the problem.
 func (pb *ProblemJSON) HTTPHeaders() http.Header {
 	return http.Header{
 		"Content-Type": {"application/problem+json"},
 	}
 }
 
-// HTTP writes the problem JSON to the response writer from an error chain
-// Compliant with RFC 7807
-func HTTP(w http.ResponseWriter, r *http.Request, err error) {
-	pb := Problem(err)
+// HTTP writes the problem JSON to the response writer from an error chain.
+// Compliant with RFC 7807.
+func HTTP(w http.ResponseWriter, r *http.Request, e error) {
+	pb := Problem(e)
 	if pb == nil {
 		return
 	}
 
-	// fill in the instance with the request path
+	// fill in the instance with the request path.
 	pb.Instance = r.RequestURI
+
 	for k, vv := range pb.HTTPHeaders() {
 		for _, v := range vv {
 			w.Header().Add(k, v)
 		}
 	}
+
+	// write the problem JSON to the response writer.
 	w.WriteHeader(pb.HTTPStatus())
 	if err := json.NewEncoder(w).Encode(pb); err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)

@@ -14,7 +14,7 @@ func ErrorDecoder(err error) error {
 	}
 
 	if errors.Is(err, pgx.ErrNoRows) {
-		return fmt.Errorf("%w: %w", ErrNotFound{
+		return fmt.Errorf("%w: %w", NotFoundError{
 			Resource: "session",
 			ID:       "",
 		}, err)
@@ -24,12 +24,12 @@ func ErrorDecoder(err error) error {
 	if errors.As(err, &pgErr) {
 		switch pgErr.Code {
 		case "23505", "23514":
-			return fmt.Errorf("%w: %w", ErrDuplicate{
+			return fmt.Errorf("%w: %w", DuplicateError{
 				Resource: "session",
 				ID:       "",
 			}, err)
 		case "23503", "23502", "22P02", "42P01", "42703":
-			return fmt.Errorf("%w: %w", ErrReqInvalid{
+			return fmt.Errorf("%w: %w", ReqInvalidError{
 				Field:  "session",
 				Reason: pgErr.Message,
 			}, err)
@@ -37,12 +37,12 @@ func ErrorDecoder(err error) error {
 	}
 
 	if errors.Is(err, pgx.ErrTxCommitRollback) || errors.Is(err, pgx.ErrTxClosed) {
-		return ErrInternal{
+		return InternalError{
 			Reason: err,
 		}
 	}
 
-	return fmt.Errorf("%w: %w", ErrInternal{
+	return fmt.Errorf("%w: %w", InternalError{
 		Reason: err,
 	}, err)
 }

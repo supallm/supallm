@@ -5,16 +5,16 @@ import (
 	"net/http"
 )
 
-// ensures it implements problem at compile time
-var _ problem = ErrDuplicate{}
+// ensures it implements problem at compile time.
+var _ problem = DuplicateError{}
 
-// ErrDuplicate is returned when a resource already exists.
-type ErrDuplicate struct {
-	Resource string
-	ID       any
+// DuplicateError is returned when a resource already exists.
+type DuplicateError struct {
+	Resource string `exhaustruct:"optional"`
+	ID       any    `exhaustruct:"optional"`
 }
 
-func (e ErrDuplicate) Error() string {
+func (e DuplicateError) Error() string {
 	switch {
 	case e.Resource != "" && e.ID != nil:
 		return fmt.Sprintf("%s %v already exists", e.Resource, e.ID)
@@ -27,16 +27,16 @@ func (e ErrDuplicate) Error() string {
 	}
 }
 
-// Slug implements problem
-func (e ErrDuplicate) Slug() slug { return SlugDuplicate }
+// Slug implements problem.
+func (e DuplicateError) Slug() slug { return SlugDuplicate }
 
-// Status implements problem
-func (e ErrDuplicate) Status() int { return http.StatusConflict }
+// Status implements problem.
+func (e DuplicateError) Status() int { return http.StatusConflict }
 
-// DocURL implements problem
-func (e ErrDuplicate) DocURL() string { return "-" }
+// DocURL implements problem.
+func (e DuplicateError) DocURL() string { return "-" }
 
-// Params implements problem
-func (e ErrDuplicate) Params() map[string]any {
+// Params implements problem.
+func (e DuplicateError) Params() map[string]any {
 	return map[string]any{"resource": e.Resource, "id": e.ID}
 }

@@ -5,17 +5,17 @@ import (
 	"net/http"
 )
 
-// ensures it implements problem at compile time
-var _ problem = ErrReqInvalid{}
+// ensures it implements problem at compile time.
+var _ problem = ReqInvalidError{}
 
-// ErrReqInvalid is returned when a request has an invalid field.
-// When the field is omitted the error is considered global (i.e. bad request)
-type ErrReqInvalid struct {
-	Field  string
-	Reason string
+// ReqInvalidError is returned when a request has an invalid field.
+// When the field is omitted the error is considered global (i.e. bad request).
+type ReqInvalidError struct {
+	Field  string `exhaustruct:"optional"`
+	Reason string `exhaustruct:"optional"`
 }
 
-func (e ErrReqInvalid) Error() string {
+func (e ReqInvalidError) Error() string {
 	switch {
 	case e.Field != "" && e.Reason != "":
 		return fmt.Sprintf("invalid request.%s (%s)", e.Field, e.Reason)
@@ -28,16 +28,16 @@ func (e ErrReqInvalid) Error() string {
 	}
 }
 
-// Slug implements problem
-func (e ErrReqInvalid) Slug() slug { return SlugRequestInvalid }
+// Slug implements problem.
+func (e ReqInvalidError) Slug() slug { return SlugRequestInvalid }
 
-// Status implements problem
-func (e ErrReqInvalid) Status() int { return http.StatusBadRequest }
+// Status implements problem.
+func (e ReqInvalidError) Status() int { return http.StatusBadRequest }
 
-// DocURL implements problem
-func (e ErrReqInvalid) DocURL() string { return "-" }
+// DocURL implements problem.
+func (e ReqInvalidError) DocURL() string { return "-" }
 
-// Params implements problem
-func (e ErrReqInvalid) Params() map[string]any {
+// Params implements problem.
+func (e ReqInvalidError) Params() map[string]any {
 	return map[string]any{"field": e.Field, "reason": e.Reason}
 }

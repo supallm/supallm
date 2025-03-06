@@ -17,7 +17,7 @@ type AddCredentialCommand struct {
 	ProjectID    uuid.UUID
 	Name         string
 	ProviderType model.ProviderType
-	APIKey       secret.ApiKey
+	APIKey       secret.APIKey
 }
 
 type AddCredentialHandler struct {
@@ -48,17 +48,17 @@ func NewAddCredentialHandler(
 func (h AddCredentialHandler) Handle(ctx context.Context, cmd AddCredentialCommand) error {
 	project, err := h.projectRepo.Retrieve(ctx, cmd.ProjectID)
 	if err != nil {
-		return errs.ErrNotFound{Resource: "project", ID: cmd.ProjectID}
+		return errs.NotFoundError{Resource: "project", ID: cmd.ProjectID}
 	}
 
 	credential, err := project.CreateCredential(cmd.ID, cmd.Name, cmd.ProviderType, cmd.APIKey)
 	if err != nil {
-		return errs.ErrReqInvalid{Reason: err.Error()}
+		return errs.ReqInvalidError{Reason: err.Error()}
 	}
 
 	err = h.llmProvider.VerifyKey(ctx, credential)
 	if err != nil {
-		return errs.ErrReqInvalid{Reason: err.Error()}
+		return errs.ReqInvalidError{Reason: err.Error()}
 	}
 
 	return h.projectRepo.Update(ctx, project)

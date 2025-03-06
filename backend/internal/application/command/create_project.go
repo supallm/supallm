@@ -37,7 +37,7 @@ func NewCreateProjectHandler(
 func (h CreateProjectHandler) Handle(ctx context.Context, cmd CreateProjectCommand) error {
 	project, err := model.NewProject(cmd.ID, cmd.UserID, cmd.Name)
 	if err != nil {
-		return errs.ErrReqInvalid{Reason: err.Error()}
+		return errs.ReqInvalidError{Reason: err.Error()}
 	}
 
 	return h.projectRepo.Create(ctx, project)

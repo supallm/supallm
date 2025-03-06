@@ -11,20 +11,21 @@ import (
 	"os"
 )
 
+//nolint:all
 var envKey = []byte(os.Getenv("SECRET_KEY"))
 
-type ApiKey string
+type APIKey string
 
-func (a ApiKey) String() string {
+func (a APIKey) String() string {
 	return string(a)
 }
 
-func (a ApiKey) Obfuscate() string {
+func (a APIKey) Obfuscate() string {
 	return a.String()[:4] + "..." + a.String()[len(a.String())-4:]
 }
 
 // EncryptData encrypts data using AES-GCM
-func (a ApiKey) Encrypt(key ...[]byte) (string, error) {
+func (a APIKey) Encrypt(key ...[]byte) (string, error) {
 	k := envKey
 	if len(key) >= 1 {
 		k = key[0]
@@ -50,7 +51,7 @@ func (a ApiKey) Encrypt(key ...[]byte) (string, error) {
 }
 
 // DecryptData decrypts data using AES-GCM
-func Decrypt(encrypted string, key ...[]byte) (ApiKey, error) {
+func Decrypt(encrypted string, key ...[]byte) (APIKey, error) {
 	k := envKey
 	if len(key) >= 1 {
 		k = key[0]
@@ -83,7 +84,7 @@ func Decrypt(encrypted string, key ...[]byte) (ApiKey, error) {
 		return "", err
 	}
 
-	return ApiKey(plaintext), nil
+	return APIKey(plaintext), nil
 }
 
 func deriveKey(baseKey []byte) []byte {

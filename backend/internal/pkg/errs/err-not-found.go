@@ -5,16 +5,16 @@ import (
 	"net/http"
 )
 
-// ensures it implements problem at compile time
-var _ problem = ErrNotFound{}
+// ensures it implements problem at compile time.
+var _ problem = NotFoundError{}
 
-// ErrNotFound is returned when a resource is not found.
-type ErrNotFound struct {
-	Resource string
-	ID       any
+// NotFoundError is returned when a resource is not found.
+type NotFoundError struct {
+	Resource string `exhaustruct:"optional"`
+	ID       any    `exhaustruct:"optional"`
 }
 
-func (e ErrNotFound) Error() string {
+func (e NotFoundError) Error() string {
 	switch {
 	case e.Resource != "" && e.ID != nil:
 		return fmt.Sprintf("%s %v not found", e.Resource, e.ID)
@@ -27,16 +27,16 @@ func (e ErrNotFound) Error() string {
 	}
 }
 
-// Slug implements problem
-func (e ErrNotFound) Slug() slug { return SlugNotFound }
+// Slug implements problem.
+func (e NotFoundError) Slug() slug { return SlugNotFound }
 
-// Status implements problem
-func (e ErrNotFound) Status() int { return http.StatusNotFound }
+// Status implements problem.
+func (e NotFoundError) Status() int { return http.StatusNotFound }
 
-// DocURL implements problem
-func (e ErrNotFound) DocURL() string { return "-" }
+// DocURL implements problem.
+func (e NotFoundError) DocURL() string { return "-" }
 
-// Params implements problem
-func (e ErrNotFound) Params() map[string]any {
+// Params implements problem.
+func (e NotFoundError) Params() map[string]any {
 	return map[string]any{"resource": e.Resource, "id": e.ID}
 }

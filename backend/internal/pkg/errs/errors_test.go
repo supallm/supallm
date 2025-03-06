@@ -1,37 +1,38 @@
-package errs_test
+package errs
 
 import (
-	"fmt"
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/supallm/core/internal/pkg/errs"
 )
 
 func TestErrNotFound_Error(t *testing.T) {
+	t.Parallel()
+
 	tt := []struct {
 		name string
-		err  errs.ErrNotFound
+		err  NotFoundError
 		str  string
 	}{
 		{
 			name: "resource and id",
-			err:  errs.ErrNotFound{Resource: "foo", ID: 123},
+			err:  NotFoundError{Resource: "foo", ID: 123},
 			str:  "foo 123 not found",
 		},
 		{
 			name: "resource only",
-			err:  errs.ErrNotFound{Resource: "foo"},
+			err:  NotFoundError{Resource: "foo"},
 			str:  "foo not found",
 		},
 		{
 			name: "id only",
-			err:  errs.ErrNotFound{ID: 123},
+			err:  NotFoundError{ID: 123},
 			str:  "123 not found",
 		},
 		{
 			name: "no param",
-			err:  errs.ErrNotFound{},
+			err:  NotFoundError{},
 			str:  "not found",
 		},
 	}
@@ -46,29 +47,31 @@ func TestErrNotFound_Error(t *testing.T) {
 }
 
 func TestErrDuplicate_Error(t *testing.T) {
+	t.Parallel()
+
 	tt := []struct {
 		name string
-		err  errs.ErrDuplicate
+		err  DuplicateError
 		str  string
 	}{
 		{
 			name: "resource and id",
-			err:  errs.ErrDuplicate{Resource: "foo", ID: 123},
+			err:  DuplicateError{Resource: "foo", ID: 123},
 			str:  "foo 123 already exists",
 		},
 		{
 			name: "resource only",
-			err:  errs.ErrDuplicate{Resource: "foo"},
+			err:  DuplicateError{Resource: "foo"},
 			str:  "foo already exists",
 		},
 		{
 			name: "id only",
-			err:  errs.ErrDuplicate{ID: 123},
+			err:  DuplicateError{ID: 123},
 			str:  "123 already exists",
 		},
 		{
 			name: "no param",
-			err:  errs.ErrDuplicate{},
+			err:  DuplicateError{},
 			str:  "already exists",
 		},
 	}
@@ -83,43 +86,45 @@ func TestErrDuplicate_Error(t *testing.T) {
 }
 
 func TestErrCreate_Error(t *testing.T) {
-	err := errs.ErrCreate{}
+	err := CreateError{}
 	require.Equal(t, "creation failed", err.Error())
 
-	err = errs.ErrCreate{Reason: fmt.Errorf("foo")}
+	err = CreateError{Reason: errors.New("foo")}
 	require.Equal(t, "creation: foo", err.Error())
 }
 
 func TestErrUpdate_Error(t *testing.T) {
-	err := errs.ErrUpdate{}
+	err := UpdateError{}
 	require.Equal(t, "update failed", err.Error())
 
-	err = errs.ErrUpdate{Reason: fmt.Errorf("foo")}
+	err = UpdateError{Reason: errors.New("foo")}
 	require.Equal(t, "update: foo", err.Error())
 }
 
 func TestErrDelete_Error(t *testing.T) {
-	err := errs.ErrDelete{}
+	err := DeleteError{}
 	require.Equal(t, "deletion failed", err.Error())
 
-	err = errs.ErrDelete{Reason: fmt.Errorf("foo")}
+	err = DeleteError{Reason: errors.New("foo")}
 	require.Equal(t, "deletion: foo", err.Error())
 }
 
 func TestErrRequestMissing_Error(t *testing.T) {
+	t.Parallel()
+
 	tt := []struct {
 		name string
-		err  errs.ErrReqMissing
+		err  ReqMissingError
 		str  string
 	}{
 		{
 			name: "field",
-			err:  errs.ErrReqMissing{Field: "firstname"},
+			err:  ReqMissingError{Field: "firstname"},
 			str:  "missing request.firstname",
 		},
 		{
 			name: "no param",
-			err:  errs.ErrReqMissing{},
+			err:  ReqMissingError{},
 			str:  "missing request field",
 		},
 	}
@@ -132,30 +137,33 @@ func TestErrRequestMissing_Error(t *testing.T) {
 		})
 	}
 }
+
 func TestErrRequestInvalid_Error(t *testing.T) {
+	t.Parallel()
+
 	tt := []struct {
 		name string
-		err  errs.ErrReqInvalid
+		err  ReqInvalidError
 		str  string
 	}{
 		{
 			name: "field and reason",
-			err:  errs.ErrReqInvalid{Field: "firstname", Reason: "invalid charset"},
+			err:  ReqInvalidError{Field: "firstname", Reason: "invalid charset"},
 			str:  "invalid request.firstname (invalid charset)",
 		},
 		{
 			name: "field only",
-			err:  errs.ErrReqInvalid{Field: "firstname"},
+			err:  ReqInvalidError{Field: "firstname"},
 			str:  "invalid request.firstname",
 		},
 		{
 			name: "reason only",
-			err:  errs.ErrReqInvalid{Reason: "invalid charset"},
+			err:  ReqInvalidError{Reason: "invalid charset"},
 			str:  "invalid request (invalid charset)",
 		},
 		{
 			name: "no param",
-			err:  errs.ErrReqInvalid{},
+			err:  ReqInvalidError{},
 			str:  "invalid request",
 		},
 	}
@@ -170,48 +178,50 @@ func TestErrRequestInvalid_Error(t *testing.T) {
 }
 
 func TestErrUnauthorized_Error(t *testing.T) {
-	err := errs.ErrUnauthorized{}
+	err := UnauthorizedError{}
 	require.Equal(t, "unauthorized", err.Error())
 
-	err = errs.ErrUnauthorized{Reason: fmt.Errorf("foo")}
+	err = UnauthorizedError{Reason: errors.New("foo")}
 	require.Equal(t, "unauthorized: foo", err.Error())
 }
 
 func TestErrForbidden_Error(t *testing.T) {
-	err := errs.ErrForbidden{}
+	err := ForbiddenError{}
 	require.Equal(t, "forbidden", err.Error())
 
-	err = errs.ErrForbidden{Reason: fmt.Errorf("foo")}
+	err = ForbiddenError{Reason: errors.New("foo")}
 	require.Equal(t, "forbidden: foo", err.Error())
 }
 
 func TestErrInternal_Error(t *testing.T) {
-	err := errs.ErrInternal{}
+	err := InternalError{}
 	require.Equal(t, "internal error", err.Error())
 
-	err = errs.ErrInternal{Reason: fmt.Errorf("foo")}
+	err = InternalError{Reason: errors.New("foo")}
 	require.Equal(t, "internal: foo", err.Error())
 }
 
 func TestErrNotImplemented_Error(t *testing.T) {
-	err := errs.ErrNotImplemented{}
+	err := NotImplementedError{}
 	require.Equal(t, "not implemented", err.Error())
 }
 
 func TestErrConstraint_Error(t *testing.T) {
+	t.Parallel()
+
 	tt := []struct {
 		name string
-		err  errs.ErrConstraint
+		err  ConstraintError
 		str  string
 	}{
 		{
 			name: "condition",
-			err:  errs.ErrConstraint{Condition: "already closed"},
+			err:  ConstraintError{Condition: "already closed"},
 			str:  "constrain by already closed",
 		},
 		{
 			name: "no param",
-			err:  errs.ErrConstraint{},
+			err:  ConstraintError{},
 			str:  "constraint",
 		},
 	}

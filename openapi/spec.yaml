@@ -536,6 +536,17 @@ components:
         - claude-3-5-sonnet
         - claude-3-5-haiku
 
+    ModelParameters:
+      type: object
+      properties:
+        maxTokens:
+          type: integer
+        temperature:
+          type: number
+      required:
+        - maxTokens
+        - temperature
+
     Credential:
       type: object
       properties:
@@ -602,7 +613,7 @@ components:
         systemPrompt:
           type: string
         parameters:
-          type: object
+          $ref: "#/components/schemas/ModelParameters"
         createdAt:
           type: string
           format: date-time
@@ -633,7 +644,7 @@ components:
         systemPrompt:
           type: string
         parameters:
-          type: object
+          $ref: "#/components/schemas/ModelParameters"
       required:
         - name
         - credentialId
@@ -654,7 +665,7 @@ components:
         systemPrompt:
           type: string
         parameters:
-          type: object
+          $ref: "#/components/schemas/ModelParameters"
       required:
         - name
         - credentialId

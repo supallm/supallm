@@ -1,29 +1,33 @@
 package model
 
-type Err string
+type Error string
 
-func (e Err) Error() string {
+func (e Error) Error() string {
 	return string(e)
 }
 
 const (
-	ErrInvalidID     Err = "invalid id"
-	ErrInvalidUserID Err = "invalid user id"
-	ErrInvalidName   Err = "invalid name"
+	ErrInvalidID     Error = "invalid id"
+	ErrInvalidUserID Error = "invalid user id"
+	ErrInvalidName   Error = "invalid name"
 
-	ErrProviderNameRequired Err = "provider name is required"
+	ErrProviderNameRequired Error = "provider name is required"
 
-	ErrProviderNotFound          Err = "provider not found"
-	ErrModelNotFound             Err = "model not found"
-	ErrModelExists               Err = "model already exists"
-	ErrProviderModelNotSupported Err = "provider model not supported"
-	ErrCredentialNotSupported    Err = "credential not supported"
+	ErrProviderNotFound          Error = "provider not found"
+	ErrModelNotFound             Error = "model not found"
+	ErrModelExists               Error = "model already exists"
+	ErrProviderModelNotSupported Error = "provider model not supported"
 
-	ErrInvalidModelSlug Err = "invalid model slug"
-	ErrInvalidModel     Err = "invalid model"
+	//nolint:all
+	ErrCredentialNotSupported Error = "credential not supported"
 
-	ErrCredentialNotFound Err = "credential not found"
+	ErrInvalidModelSlug Error = "invalid model slug"
+	ErrInvalidModel     Error = "invalid model"
 
-	ErrInvalidCredential    Err = "invalid credential"
-	ErrInvalidProviderModel Err = "invalid provider model"
+	//nolint:all
+	ErrCredentialNotFound Error = "credential not found"
+
+	//nolint:all
+	ErrInvalidCredential    Error = "invalid credential"
+	ErrInvalidProviderModel Error = "invalid provider model"
 )

@@ -12,7 +12,7 @@ import (
 type llm interface {
 	GenerateText(ctx context.Context, request *model.Request) (*model.Response, error)
 	StreamText(ctx context.Context, request *model.Request) (<-chan struct{}, error)
-	VerifyKey(ctx context.Context, apiKey secret.ApiKey) error
+	VerifyKey(ctx context.Context, apiKey secret.APIKey) error
 }
 
 type ProviderRegistry struct {
@@ -25,10 +25,11 @@ func NewProviderRegistry() *ProviderRegistry {
 	return &ProviderRegistry{
 		openAIClients:    make(map[string]*openaiService),
 		anthropicClients: make(map[string]*anthropicService),
+		mu:               sync.RWMutex{},
 	}
 }
 
-func (r *ProviderRegistry) getLLM(credential *model.Credential) (llm, error) {
+func (r *ProviderRegistry) getProvider(credential *model.Credential) (llm, error) {
 	r.mu.RLock()
 
 	key := credential.ID.String()
@@ -76,25 +77,25 @@ func (r *ProviderRegistry) getLLM(credential *model.Credential) (llm, error) {
 }
 
 func (r *ProviderRegistry) GenerateText(ctx context.Context, request *model.Request) (*model.Response, error) {
-	llm, err := r.getLLM(request.Model.Credential)
+	provider, err := r.getProvider(request.Model.Credential)
 	if err != nil {
 		return nil, err
 	}
-	return llm.GenerateText(ctx, request)
+	return provider.GenerateText(ctx, request)
 }
 
 func (r *ProviderRegistry) StreamText(ctx context.Context, request *model.Request) (<-chan struct{}, error) {
-	llm, err := r.getLLM(request.Model.Credential)
+	provider, err := r.getProvider(request.Model.Credential)
 	if err != nil {
 		return nil, err
 	}
-	return llm.StreamText(ctx, request)
+	return provider.StreamText(ctx, request)
 }
 
 func (r *ProviderRegistry) VerifyKey(ctx context.Context, credential *model.Credential) error {
-	llm, err := r.getLLM(credential)
+	provider, err := r.getProvider(credential)
 	if err != nil {
 		return err
 	}
-	return llm.VerifyKey(ctx, credential.APIKey)
+	return provider.VerifyKey(ctx, credential.APIKey)
 }

@@ -26,7 +26,7 @@ type AuthProvider interface {
 
 type SupabaseAuthProvider struct {
 	URL string
-	Key secret.ApiKey
+	Key secret.APIKey
 }
 
 func (s SupabaseAuthProvider) GetType() AuthProviderType {
@@ -51,8 +51,8 @@ func (s SupabaseAuthProvider) Config() map[string]any {
 }
 
 type ClerkAuthProvider struct {
-	PublishableKey secret.ApiKey
-	SecretKey      secret.ApiKey
+	PublishableKey secret.APIKey
+	SecretKey      secret.APIKey
 }
 
 func (c ClerkAuthProvider) GetType() AuthProviderType {
@@ -89,7 +89,7 @@ func UnmarshalAuthProvider(providerType AuthProviderType, config map[string]any)
 		}
 		return SupabaseAuthProvider{
 			URL: url,
-			Key: secret.ApiKey(key),
+			Key: secret.APIKey(key),
 		}, nil
 	case AuthProviderClerk:
 		publishableKey, ok := config["publishable_key"].(string)
@@ -101,8 +101,8 @@ func UnmarshalAuthProvider(providerType AuthProviderType, config map[string]any)
 			return nil, errors.New("secret key is required")
 		}
 		return ClerkAuthProvider{
-			PublishableKey: secret.ApiKey(publishableKey),
-			SecretKey:      secret.ApiKey(secretKey),
+			PublishableKey: secret.APIKey(publishableKey),
+			SecretKey:      secret.APIKey(secretKey),
 		}, nil
 	default:
 		return nil, fmt.Errorf("unsupported auth provider type: %s", providerType)
@@ -114,7 +114,7 @@ func (p *Project) NewAuthProvider(providerType AuthProviderType, config map[stri
 	if err != nil {
 		return err
 	}
-	if err := ap.Validate(); err != nil {
+	if err = ap.Validate(); err != nil {
 		return err
 	}
 	p.AuthProvider = ap

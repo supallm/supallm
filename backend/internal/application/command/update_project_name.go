@@ -11,7 +11,6 @@ import (
 )
 
 type UpdateProjectNameCommand struct {
-	ID        uuid.UUID
 	ProjectID uuid.UUID
 	Name      string
 }
@@ -36,7 +35,7 @@ func NewUpdateProjectNameHandler(
 func (h UpdateProjectNameHandler) Handle(ctx context.Context, cmd UpdateProjectNameCommand) error {
 	project, err := h.projectRepo.Retrieve(ctx, cmd.ProjectID)
 	if err != nil {
-		return errs.ErrInternal{Reason: err}
+		return errs.InternalError{Reason: err}
 	}
 
 	err = project.UpdateName(cmd.Name)

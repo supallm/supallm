@@ -64,14 +64,14 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 `
 
 type storeModelParams struct {
-	ID            uuid.UUID `json:"id"`
-	ProjectID     uuid.UUID `json:"project_id"`
-	CredentialID  uuid.UUID `json:"credential_id"`
-	Name          string    `json:"name"`
-	Slug          string    `json:"slug"`
-	ProviderModel string    `json:"provider_model"`
-	SystemPrompt  string    `json:"system_prompt"`
-	Parameters    []byte    `json:"parameters"`
+	ID            uuid.UUID       `json:"id"`
+	ProjectID     uuid.UUID       `json:"project_id"`
+	CredentialID  uuid.UUID       `json:"credential_id"`
+	Name          string          `json:"name"`
+	Slug          string          `json:"slug"`
+	ProviderModel string          `json:"provider_model"`
+	SystemPrompt  string          `json:"system_prompt"`
+	Parameters    modelParameters `json:"parameters"`
 }
 
 func (q *Queries) storeModel(ctx context.Context, arg storeModelParams) error {
@@ -102,14 +102,14 @@ DO UPDATE SET
 `
 
 type upsertModelParams struct {
-	ID            uuid.UUID `json:"id"`
-	ProjectID     uuid.UUID `json:"project_id"`
-	CredentialID  uuid.UUID `json:"credential_id"`
-	Name          string    `json:"name"`
-	Slug          string    `json:"slug"`
-	ProviderModel string    `json:"provider_model"`
-	SystemPrompt  string    `json:"system_prompt"`
-	Parameters    []byte    `json:"parameters"`
+	ID            uuid.UUID       `json:"id"`
+	ProjectID     uuid.UUID       `json:"project_id"`
+	CredentialID  uuid.UUID       `json:"credential_id"`
+	Name          string          `json:"name"`
+	Slug          string          `json:"slug"`
+	ProviderModel string          `json:"provider_model"`
+	SystemPrompt  string          `json:"system_prompt"`
+	Parameters    modelParameters `json:"parameters"`
 }
 
 func (q *Queries) upsertModel(ctx context.Context, arg upsertModelParams) error {

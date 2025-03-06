@@ -59,7 +59,7 @@ func NewGenerateTextHandler(
 func (h GenerateTextHandler) Handle(ctx context.Context, cmd GenerateTextCommand) (string, error) {
 	project, err := h.projectRepo.Retrieve(ctx, cmd.ProjectID)
 	if err != nil {
-		return "", errs.ErrNotFound{Resource: "project", ID: cmd.ProjectID}
+		return "", errs.NotFoundError{Resource: "project", ID: cmd.ProjectID}
 	}
 
 	session, err := h.getOrCreateSession(ctx, cmd.ProjectID, cmd.SessionID, cmd.UserID)
@@ -69,34 +69,39 @@ func (h GenerateTextHandler) Handle(ctx context.Context, cmd GenerateTextCommand
 
 	m, err := project.GetModel(cmd.ModelSlug)
 	if err != nil {
-		return "", errs.ErrNotFound{Resource: "model", ID: cmd.ModelSlug}
+		return "", errs.NotFoundError{Resource: "model", ID: cmd.ModelSlug}
 	}
 
 	request, err := session.NewRequest(cmd.SessionID, m, model.RequestConfig{
 		Prompt: cmd.Prompt,
 	})
 	if err != nil {
-		return "", errs.ErrNotFound{Resource: "model", ID: cmd.ModelSlug}
+		return "", errs.NotFoundError{Resource: "model", ID: cmd.ModelSlug}
 	}
 
 	response, err := h.llmProvider.GenerateText(ctx, request)
 	if err != nil {
-		return "", errs.ErrInternal{Reason: err}
+		return "", errs.InternalError{Reason: err}
 	}
 
 	err = h.saveResponse(ctx, session, response)
 	if err != nil {
-		return "", errs.ErrInternal{Reason: err}
+		return "", errs.InternalError{Reason: err}
 	}
 
 	return response.Content, nil
 }
 
-func (h GenerateTextHandler) getOrCreateSession(ctx context.Context, projectID, sessionID uuid.UUID, userID string) (*model.Session, error) {
+func (h GenerateTextHandler) getOrCreateSession(
+	ctx context.Context,
+	projectID,
+	sessionID uuid.UUID,
+	userID string,
+) (*model.Session, error) {
 	session, err := h.sessionRepo.Retrieve(ctx, sessionID)
 	if err != nil {
 		if !errors.Is(err, nil) {
-			return nil, errs.ErrInternal{Reason: err}
+			return nil, errs.InternalError{Reason: err}
 		}
 
 		session = model.NewSession(sessionID, userID, projectID)
@@ -106,7 +111,7 @@ func (h GenerateTextHandler) getOrCreateSession(ctx context.Context, projectID, 
 	return session, nil
 }
 
-func (s GenerateTextHandler) saveResponse(ctx context.Context, session *model.Session, response *model.Response) error {
+func (h GenerateTextHandler) saveResponse(ctx context.Context, session *model.Session, response *model.Response) error {
 	session.AddResponse(response)
-	return s.sessionRepo.Update(ctx, session)
+	return h.sessionRepo.Update(ctx, session)
 }

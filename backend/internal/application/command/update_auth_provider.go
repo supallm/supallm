@@ -38,12 +38,12 @@ func NewUpdateAuthProviderHandler(
 func (h UpdateAuthProviderHandler) Handle(ctx context.Context, cmd UpdateAuthProviderCommand) error {
 	project, err := h.projectRepo.Retrieve(ctx, cmd.ProjectID)
 	if err != nil {
-		return errs.ErrNotFound{Resource: "project", ID: cmd.ProjectID}
+		return errs.NotFoundError{Resource: "project", ID: cmd.ProjectID}
 	}
 
 	err = project.NewAuthProvider(cmd.ProviderType, cmd.Config)
 	if err != nil {
-		return errs.ErrReqInvalid{Reason: err.Error()}
+		return errs.ReqInvalidError{Reason: err.Error()}
 	}
 
 	return h.projectRepo.Update(ctx, project)

@@ -2,7 +2,7 @@ package errs
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -11,6 +11,7 @@ import (
 )
 
 func TestProblem(t *testing.T) {
+	t.Parallel()
 	tt := []struct {
 		name string
 		err  error
@@ -19,83 +20,88 @@ func TestProblem(t *testing.T) {
 		params map[string]any
 	}{
 		{
-			name: "ok",
-			err:  nil,
+			name:   "ok",
+			err:    nil,
+			slug:   "",
+			params: nil,
 		},
 		{
 			name:   "not found",
-			err:    ErrNotFound{Resource: "foo", ID: 123},
+			err:    NotFoundError{Resource: "foo", ID: 123},
 			slug:   SlugNotFound,
 			params: map[string]any{"resource": "foo", "id": 123},
 		},
 		{
 			name:   "duplicate",
-			err:    ErrDuplicate{Resource: "foo", ID: 123},
+			err:    DuplicateError{Resource: "foo", ID: 123},
 			slug:   SlugDuplicate,
 			params: map[string]any{"resource": "foo", "id": 123},
 		},
 		{
 			name:   "create",
-			err:    ErrCreate{Reason: fmt.Errorf("foo")},
+			err:    CreateError{Reason: errors.New("foo")},
 			slug:   SlugCreate,
 			params: map[string]any{"reason": "foo"},
 		},
 		{
 			name:   "update",
-			err:    ErrUpdate{Reason: fmt.Errorf("foo")},
+			err:    UpdateError{Reason: errors.New("foo")},
 			slug:   SlugUpdate,
 			params: map[string]any{"reason": "foo"},
 		},
 		{
 			name:   "delete",
-			err:    ErrDelete{Reason: fmt.Errorf("foo")},
+			err:    DeleteError{Reason: errors.New("foo")},
 			slug:   SlugDelete,
 			params: map[string]any{"reason": "foo"},
 		},
 		{
 			name:   "request missing",
-			err:    ErrReqMissing{Field: "foo"},
+			err:    ReqMissingError{Field: "foo"},
 			slug:   SlugRequestMissing,
 			params: map[string]any{"field": "foo"},
 		},
 		{
 			name:   "request invalid",
-			err:    ErrReqInvalid{Field: "foo", Reason: "bar"},
+			err:    ReqInvalidError{Field: "foo", Reason: "bar"},
 			slug:   SlugRequestInvalid,
 			params: map[string]any{"field": "foo", "reason": "bar"},
 		},
 		{
-			name: "unauthorized",
-			err:  ErrUnauthorized{},
-			slug: SlugUnauthorized,
+			name:   "unauthorized",
+			err:    UnauthorizedError{},
+			slug:   SlugUnauthorized,
+			params: nil,
 		},
 		{
 			name:   "forbidden",
-			err:    ErrForbidden{Reason: fmt.Errorf("foo")},
+			err:    ForbiddenError{Reason: errors.New("foo")},
 			slug:   SlugForbidden,
 			params: map[string]any{"reason": "foo"},
 		},
 		{
-			name: "not implemented",
-			err:  ErrNotImplemented{},
-			slug: SlugNotImplemented,
+			name:   "not implemented",
+			err:    NotImplementedError{},
+			slug:   SlugNotImplemented,
+			params: nil,
 		},
 		{
 			name:   "constraint",
-			err:    ErrConstraint{Condition: "foo"},
+			err:    ConstraintError{Condition: "foo"},
 			slug:   SlugConstraint,
 			params: map[string]any{"condition": "foo"},
 		},
 		{
 			name:   "internal",
-			err:    ErrInternal{Reason: fmt.Errorf("foo")},
+			err:    InternalError{Reason: errors.New("foo")},
 			slug:   SlugInternal,
 			params: map[string]any{"reason": "foo"},
 		},
 		{
-			name: "unknown",
-			err:  fmt.Errorf("custom error"),
-			slug: SlugUnknown,
+			name:   "unknown",
+			err:    errors.New("custom error"),
+			slug:   SlugUnknown,
+			params: nil,
 		},
 	}
 
@@ -117,6 +123,7 @@ func TestProblem(t *testing.T) {
 }
 
 func TestHTTP(t *testing.T) {
+	t.Parallel()
 	tt := []struct {
 		name string
 		err  error
@@ -129,67 +136,67 @@ func TestHTTP(t *testing.T) {
 		},
 		{
 			name: "not found",
-			err:  ErrNotFound{Resource: "foo", ID: 12.3},
+			err:  NotFoundError{Resource: "foo", ID: 12.3},
 			code: http.StatusNotFound,
 		},
 		{
 			name: "duplicate",
-			err:  ErrDuplicate{Resource: "foo"},
+			err:  DuplicateError{Resource: "foo"},
 			code: http.StatusConflict,
 		},
 		{
 			name: "create",
-			err:  ErrCreate{},
+			err:  CreateError{},
 			code: http.StatusInternalServerError,
 		},
 		{
 			name: "update",
-			err:  ErrUpdate{},
+			err:  UpdateError{},
 			code: http.StatusInternalServerError,
 		},
 		{
 			name: "delete",
-			err:  ErrDelete{},
+			err:  DeleteError{},
 			code: http.StatusInternalServerError,
 		},
 		{
 			name: "request missing",
-			err:  ErrReqMissing{},
+			err:  ReqMissingError{},
 			code: http.StatusBadRequest,
 		},
 		{
 			name: "request invalid",
-			err:  ErrReqInvalid{},
+			err:  ReqInvalidError{},
 			code: http.StatusBadRequest,
 		},
 		{
 			name: "unauthorized",
-			err:  ErrUnauthorized{},
+			err:  UnauthorizedError{},
 			code: http.StatusUnauthorized,
 		},
 		{
 			name: "forbidden",
-			err:  ErrForbidden{},
+			err:  ForbiddenError{},
 			code: http.StatusForbidden,
 		},
 		{
 			name: "not implemented",
-			err:  ErrNotImplemented{},
+			err:  NotImplementedError{},
 			code: http.StatusNotImplemented,
 		},
 		{
 			name: "constraint",
-			err:  ErrConstraint{},
+			err:  ConstraintError{},
 			code: http.StatusConflict,
 		},
 		{
 			name: "internal",
-			err:  ErrInternal{},
+			err:  InternalError{},
 			code: http.StatusInternalServerError,
 		},
 		{
 			name: "unknown",
-			err:  fmt.Errorf("custom error"),
+			err:  errors.New("custom error"),
 			code: http.StatusInternalServerError,
 		},
 	}

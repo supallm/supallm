@@ -9,7 +9,7 @@ func queryCredentialToDTO(credential query.Credential) gen.Credential {
 	return gen.Credential{
 		Id:        credential.ID,
 		Name:      credential.Name,
-		ApiKey:    credential.ObfuscatedApiKey,
+		ApiKey:    credential.ObfuscatedAPIKey,
 		Provider:  gen.ProviderType(credential.Provider),
 		CreatedAt: credential.CreatedAt,
 		UpdatedAt: credential.UpdatedAt,
@@ -32,8 +32,12 @@ func queryModelToDTO(model query.Model) gen.Model {
 		UpdatedAt:     model.UpdatedAt,
 		Slug:          model.Slug.String(),
 		SystemPrompt:  model.SystemPrompt,
-		CredentialId:  gen.UUID(model.CredentialID),
+		CredentialId:  model.CredentialID,
 		ProviderModel: gen.ProviderModel(model.Model),
+		Parameters: gen.ModelParameters{
+			MaxTokens:   int(model.Parameters.MaxTokens),
+			Temperature: float32(model.Parameters.Temperature),
+		},
 	}
 }
 

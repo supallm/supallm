@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"net"
 	"os"
 )
 
@@ -31,14 +32,17 @@ type (
 	}
 )
 
-func Load(ctx context.Context) Config {
+func Load(_ context.Context) Config {
 	mustGet("SECRET_KEY")
 
-	postgresURL := fmt.Sprintf("postgres://%s:%s@%s:%s/%s",
+	host := mustGet("POSTGRES_HOST")
+	port := mustGet("POSTGRES_PORT")
+	hostPort := net.JoinHostPort(host, port)
+
+	postgresURL := fmt.Sprintf("postgres://%s:%s@%s/%s",
 		mustGet("POSTGRES_USER"),
 		mustGet("POSTGRES_PASSWORD"),
-		mustGet("POSTGRES_HOST"),
-		mustGet("POSTGRES_PORT"),
+		hostPort,
 		mustGet("POSTGRES_DB"),
 	)
 

@@ -19,17 +19,14 @@ func newAnthropic(key string) *anthropicService {
 	}
 }
 
-func (a *anthropicService) GenerateText(ctx context.Context, request *model.Request) (*model.Response, error) {
-	// TODO: Implement
+func (a *anthropicService) GenerateText(_ context.Context, _ *model.Request) (*model.Response, error) {
 	return nil, nil
 }
 
-func (a *anthropicService) StreamText(ctx context.Context, request *model.Request) (<-chan struct{}, error) {
-	// TODO: Implement
+func (a *anthropicService) StreamText(_ context.Context, _ *model.Request) (<-chan struct{}, error) {
 	return nil, nil
 }
 
-func (a *anthropicService) VerifyKey(ctx context.Context, key secret.ApiKey) error {
-	// TODO: Implement
+func (a *anthropicService) VerifyKey(_ context.Context, _ secret.APIKey) error {
 	return nil
 }

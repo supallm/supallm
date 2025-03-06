@@ -41,22 +41,22 @@ func NewUpdateModelHandler(
 func (h UpdateModelHandler) Handle(ctx context.Context, cmd UpdateModelCommand) error {
 	project, err := h.projectRepo.Retrieve(ctx, cmd.ProjectID)
 	if err != nil {
-		return errs.ErrNotFound{Resource: "project", ID: cmd.ProjectID}
+		return errs.NotFoundError{Resource: "project", ID: cmd.ProjectID}
 	}
 
 	err = project.UpdateModelName(cmd.Slug, cmd.Name)
 	if err != nil {
-		return errs.ErrReqInvalid{Reason: err.Error()}
+		return errs.ReqInvalidError{Reason: err.Error()}
 	}
 
 	err = project.UpdateModelLLMCredential(cmd.Slug, cmd.LLMCredentialID)
 	if err != nil {
-		return errs.ErrReqInvalid{Reason: err.Error()}
+		return errs.ReqInvalidError{Reason: err.Error()}
 	}
 
 	err = project.UpdateModelProviderModel(cmd.Slug, cmd.LLMModel)
 	if err != nil {
-		return errs.ErrReqInvalid{Reason: err.Error()}
+		return errs.ReqInvalidError{Reason: err.Error()}
 	}
 
 	return h.projectRepo.Update(ctx, project)

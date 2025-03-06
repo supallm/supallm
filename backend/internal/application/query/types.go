@@ -35,7 +35,7 @@ type Model struct {
 }
 
 type ModelParameters struct {
-	MaxTokens   int
+	MaxTokens   uint32
 	Temperature float64
 }
 
@@ -43,7 +43,7 @@ type Credential struct {
 	ID               uuid.UUID
 	Name             string
 	Provider         string
-	ObfuscatedApiKey string
+	ObfuscatedAPIKey string
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
 }

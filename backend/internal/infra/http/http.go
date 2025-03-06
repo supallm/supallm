@@ -21,24 +21,25 @@ func NewServer(mux *server.Server, app *application.App) {
 
 	// Register API handlers with Clerk authentication
 	http.RegisterHandlersWithOptions(mux.App, s, http.FiberServerOptions{
+		BaseURL: "/",
 		Middlewares: []http.MiddlewareFunc{
 			s.server.ClerkAuthMiddleware(),
 		},
 	})
 }
 
-func (s *Server) GetAuth(c *fiber.Ctx, projectId openapi_types.UUID) error {
+func (s *Server) GetAuth(_ *fiber.Ctx, _ openapi_types.UUID) error {
 	return nil
 }
 
-func (s *Server) UpdateAuth(c *fiber.Ctx, projectId openapi_types.UUID) error {
+func (s *Server) UpdateAuth(_ *fiber.Ctx, _ openapi_types.UUID) error {
 	return nil
 }
 
-func (s *Server) GenerateText(c *fiber.Ctx, projectId openapi_types.UUID) error {
+func (s *Server) GenerateText(_ *fiber.Ctx, _ openapi_types.UUID) error {
 	return nil
 }
 
-func (s *Server) StreamText(c *fiber.Ctx, projectId openapi_types.UUID) error {
+func (s *Server) StreamText(_ *fiber.Ctx, _ openapi_types.UUID) error {
 	return nil
 }

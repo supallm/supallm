@@ -28,7 +28,7 @@ type Model struct {
 	Slug          string             `json:"slug"`
 	ProviderModel string             `json:"provider_model"`
 	SystemPrompt  string             `json:"system_prompt"`
-	Parameters    []byte             `json:"parameters"`
+	Parameters    modelParameters    `json:"parameters"`
 	CreatedAt     pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
 }

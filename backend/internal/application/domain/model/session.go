@@ -66,12 +66,13 @@ func (p Prompt) String() string {
 
 func NewSession(id uuid.UUID, userID string, projectID uuid.UUID) *Session {
 	return &Session{
-		ID:        id,
-		UserID:    userID,
-		ProjectID: projectID,
-		Requests:  make([]*Request, 0),
-		Responses: make([]*Response, 0),
-		Active:    true,
+		ID:             id,
+		UserID:         userID,
+		ProjectID:      projectID,
+		Requests:       make([]*Request, 0),
+		Responses:      make([]*Response, 0),
+		Active:         true,
+		LastActivityAt: time.Now(),
 	}
 }
 

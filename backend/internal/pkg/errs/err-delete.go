@@ -4,32 +4,32 @@ import (
 	"net/http"
 )
 
-// ensures it implements problem at compile time
-var _ problem = ErrDelete{}
+// ensures it implements problem at compile time.
+var _ problem = DeleteError{}
 
-// ErrDelete is returned when a deletion fails
-type ErrDelete struct {
-	Reason error
+// DeleteError is returned when a deletion fails.
+type DeleteError struct {
+	Reason error `exhaustruct:"optional"`
 }
 
-func (e ErrDelete) Error() string {
+func (e DeleteError) Error() string {
 	if e.Reason != nil {
 		return "deletion: " + e.Reason.Error()
 	}
 	return "deletion failed"
 }
 
-// Slug implements problem
-func (e ErrDelete) Slug() slug { return SlugDelete }
+// Slug implements problem.
+func (e DeleteError) Slug() slug { return SlugDelete }
 
-// Status implements problem
-func (e ErrDelete) Status() int { return http.StatusInternalServerError }
+// Status implements problem.
+func (e DeleteError) Status() int { return http.StatusInternalServerError }
 
-// DocURL implements problem
-func (e ErrDelete) DocURL() string { return "-" }
+// DocURL implements problem.
+func (e DeleteError) DocURL() string { return "-" }
 
-// Params implements problem
-func (e ErrDelete) Params() map[string]any {
+// Params implements problem.
+func (e DeleteError) Params() map[string]any {
 	if e.Reason == nil {
 		return nil
 	}

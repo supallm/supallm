@@ -20,18 +20,18 @@ func NewRepository(_ context.Context, pool *pgxpool.Pool) *Repository {
 	}
 }
 
-func (r Repository) Create(ctx context.Context, session *model.Session) error {
+func (r Repository) Create(_ context.Context, _ *model.Session) error {
 	return nil
 }
 
-func (r Repository) Retrieve(ctx context.Context, id uuid.UUID) (*model.Session, error) {
+func (r Repository) Retrieve(_ context.Context, _ uuid.UUID) (*model.Session, error) {
 	return nil, nil
 }
 
-func (r Repository) Update(ctx context.Context, session *model.Session) error {
+func (r Repository) Update(_ context.Context, _ *model.Session) error {
 	return nil
 }
 
-func (r Repository) Delete(ctx context.Context, id uuid.UUID) error {
+func (r Repository) Delete(_ context.Context, _ uuid.UUID) error {
 	return nil
 }

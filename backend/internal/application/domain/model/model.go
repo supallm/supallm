@@ -15,13 +15,29 @@ type Model struct {
 	Parameters    ModelParameters
 }
 
+//nolint:all
 type ModelParameters struct {
 	MaxTokens   uint32  `json:"max_tokens"`
 	Temperature float64 `json:"temperature"`
 }
 
-func (p *Project) AddModel(id uuid.UUID, name string, slug slug.Slug, credentialID uuid.UUID, providerModel ProviderModel, systemPrompt Prompt, parameters ModelParameters) error {
-	credential, err := p.GetCredential(credentialID)
+func (mp ModelParameters) Map() map[string]any {
+	return map[string]any{
+		"max_tokens":  mp.MaxTokens,
+		"temperature": mp.Temperature,
+	}
+}
+
+func (p *Project) AddModel(
+	id uuid.UUID,
+	name string,
+	slug slug.Slug,
+	credentialID uuid.UUID,
+	providerModel ProviderModel,
+	systemPrompt Prompt,
+	parameters ModelParameters,
+) error {
+	credential, err := p.getCredential(credentialID)
 	if err != nil {
 		return err
 	}
@@ -62,9 +78,9 @@ func (p *Project) UpdateModelName(slug slug.Slug, name string) error {
 		return nil
 	}
 
-	model, err := p.GetModel(slug)
-	if err != nil {
-		return err
+	model, ok := p.Models[slug]
+	if !ok {
+		return ErrModelNotFound
 	}
 
 	model.Name = name
@@ -72,9 +88,9 @@ func (p *Project) UpdateModelName(slug slug.Slug, name string) error {
 }
 
 func (p *Project) UpdateModelParameters(slug slug.Slug, systemPrompt Prompt, parameters ModelParameters) error {
-	model, err := p.GetModel(slug)
-	if err != nil {
-		return err
+	model, ok := p.Models[slug]
+	if !ok {
+		return ErrModelNotFound
 	}
 
 	model.Parameters = parameters
@@ -83,12 +99,12 @@ func (p *Project) UpdateModelParameters(slug slug.Slug, systemPrompt Prompt, par
 }
 
 func (p *Project) UpdateModelLLMCredential(slug slug.Slug, credentialID uuid.UUID) error {
-	model, err := p.GetModel(slug)
-	if err != nil {
-		return err
+	model, ok := p.Models[slug]
+	if !ok {
+		return ErrModelNotFound
 	}
 
-	credential, err := p.GetCredential(credentialID)
+	credential, err := p.getCredential(credentialID)
 	if err != nil {
 		return err
 	}
@@ -106,12 +122,12 @@ func (p *Project) UpdateModelLLMCredential(slug slug.Slug, credentialID uuid.UUI
 }
 
 func (p *Project) UpdateModelProviderModel(slug slug.Slug, providerModel ProviderModel) error {
-	model, err := p.GetModel(slug)
-	if err != nil {
-		return err
+	model, ok := p.Models[slug]
+	if !ok {
+		return ErrModelNotFound
 	}
 
-	if _, ok := providerModels[model.Credential.ProviderType][providerModel]; !ok {
+	if _, ok = providerModels[model.Credential.ProviderType][providerModel]; !ok {
 		return ErrProviderModelNotSupported
 	}
 

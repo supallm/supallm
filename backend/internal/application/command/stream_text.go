@@ -54,6 +54,6 @@ func NewStreamTextHandler(
 	}
 }
 
-func (h StreamTextHandler) Handle(ctx context.Context, cmd StreamTextCommand) (string, error) {
+func (h StreamTextHandler) Handle(_ context.Context, _ StreamTextCommand) (string, error) {
 	return "", nil
 }
