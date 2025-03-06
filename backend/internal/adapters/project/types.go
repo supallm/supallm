@@ -70,6 +70,8 @@ func (m Model) query() (query.Model, error) {
 	return query.Model{
 		ID:           m.ID,
 		Slug:         slug.Slug(m.Slug),
+		CredentialID: m.CredentialID,
+		Name:         m.Name,
 		Model:        m.ProviderModel,
 		SystemPrompt: m.SystemPrompt,
 		CreatedAt:    m.CreatedAt.Time,

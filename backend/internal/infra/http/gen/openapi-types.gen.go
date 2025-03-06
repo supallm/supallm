@@ -16,6 +16,8 @@ const (
 
 // Defines values for AuthProviderProvider.
 const (
+	AuthProviderProviderClerk    AuthProviderProvider = "clerk"
+	AuthProviderProviderFirebase AuthProviderProvider = "firebase"
 	AuthProviderProviderSupabase AuthProviderProvider = "supabase"
 )
 
@@ -36,6 +38,8 @@ const (
 
 // Defines values for UpdateAuthRequestProvider.
 const (
+	UpdateAuthRequestProviderClerk    UpdateAuthRequestProvider = "clerk"
+	UpdateAuthRequestProviderFirebase UpdateAuthRequestProvider = "firebase"
 	UpdateAuthRequestProviderSupabase UpdateAuthRequestProvider = "supabase"
 )
 
@@ -72,19 +76,19 @@ type CreateProjectRequest struct {
 // Credential defines model for Credential.
 type Credential struct {
 	ApiKey    string       `json:"apiKey"`
-	CreatedAt *time.Time   `json:"createdAt,omitempty"`
+	CreatedAt time.Time    `json:"createdAt"`
 	Id        UUID         `json:"id"`
 	Name      string       `json:"name"`
 	Provider  ProviderType `json:"provider"`
-	UpdatedAt *time.Time   `json:"updatedAt,omitempty"`
+	UpdatedAt time.Time    `json:"updatedAt"`
 }
 
 // Model defines model for Model.
 type Model struct {
 	CreatedAt     time.Time              `json:"createdAt"`
-	Credential    Credential             `json:"credential"`
+	CredentialId  UUID                   `json:"credentialId"`
 	Id            UUID                   `json:"id"`
-	Name          *string                `json:"name,omitempty"`
+	Name          string                 `json:"name"`
 	Parameters    map[string]interface{} `json:"parameters"`
 	ProviderModel ProviderModel          `json:"providerModel"`
 	Slug          string                 `json:"slug"`
