@@ -11,8 +11,8 @@ func queryCredentialToDTO(credential query.Credential) gen.Credential {
 		Name:      credential.Name,
 		ApiKey:    credential.ObfuscatedApiKey,
 		Provider:  gen.ProviderType(credential.Provider),
-		CreatedAt: &credential.CreatedAt,
-		UpdatedAt: &credential.UpdatedAt,
+		CreatedAt: credential.CreatedAt,
+		UpdatedAt: credential.UpdatedAt,
 	}
 }
 
@@ -27,12 +27,12 @@ func queryCredentialsToDTOs(credentials []query.Credential) []gen.Credential {
 func queryModelToDTO(model query.Model) gen.Model {
 	return gen.Model{
 		Id:            model.ID,
-		Name:          &model.Name,
+		Name:          model.Name,
 		CreatedAt:     model.CreatedAt,
 		UpdatedAt:     model.UpdatedAt,
 		Slug:          model.Slug.String(),
 		SystemPrompt:  model.SystemPrompt,
-		Credential:    queryCredentialToDTO(model.Credential),
+		CredentialId:  gen.UUID(model.CredentialID),
 		ProviderModel: gen.ProviderModel(model.Model),
 	}
 }

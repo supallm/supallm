@@ -558,6 +558,8 @@ components:
         - name
         - provider
         - apiKey
+        - createdAt
+        - updatedAt
 
     CreateCredentialRequest:
       type: object
@@ -593,8 +595,8 @@ components:
           type: string
         slug:
           type: string
-        credential:
-          $ref: "#/components/schemas/Credential"
+        credentialId:
+          $ref: "#/components/schemas/UUID"
         providerModel:
           $ref: "#/components/schemas/ProviderModel"
         systemPrompt:
@@ -609,8 +611,9 @@ components:
           format: date-time
       required:
         - id
+        - name
         - slug
-        - credential
+        - credentialId
         - providerModel
         - systemPrompt
         - parameters
@@ -666,6 +669,8 @@ components:
           type: string
           enum:
             - supabase
+            - clerk
+            - firebase
         config:
           type: object
       required:
@@ -679,6 +684,8 @@ components:
           type: string
           enum:
             - supabase
+            - clerk
+            - firebase
         config:
           type: object
       required:

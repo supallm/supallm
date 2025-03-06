@@ -24,7 +24,7 @@ type AuthProvider struct {
 
 type Model struct {
 	ID           uuid.UUID
-	Credential   Credential
+	CredentialID uuid.UUID
 	Name         string
 	Slug         slug.Slug
 	Model        string
