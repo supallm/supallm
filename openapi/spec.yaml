@@ -13,6 +13,8 @@ paths:
     get:
       summary: List all projects
       operationId: listProjects
+      tags:
+        - Project
       responses:
         "200":
           description: List of projects
@@ -25,6 +27,8 @@ paths:
     post:
       summary: "Create a project"
       operationId: createProject
+      tags:
+        - Project
       requestBody:
         required: true
         content:
@@ -39,6 +43,8 @@ paths:
     get:
       summary: "Get a project by ID"
       operationId: getProject
+      tags:
+        - Project
       parameters:
         - name: projectId
           in: path
@@ -57,6 +63,8 @@ paths:
     put:
       summary: "Update a project"
       operationId: updateProject
+      tags:
+        - Project
       parameters:
         - name: projectId
           in: path
@@ -77,6 +85,8 @@ paths:
     delete:
       summary: "Delete a project"
       operationId: deleteProject
+      tags:
+        - Project
       parameters:
         - name: projectId
           in: path
@@ -93,6 +103,8 @@ paths:
     get:
       summary: List all credentials for a project
       operationId: listCredentials
+      tags:
+        - Credential
       parameters:
         - name: projectId
           in: path
@@ -113,6 +125,8 @@ paths:
     post:
       summary: "Create a credential for a project"
       operationId: createCredential
+      tags:
+        - Credential
       parameters:
         - name: projectId
           in: path
@@ -137,6 +151,8 @@ paths:
     get:
       summary: "Get a credential by ID"
       operationId: getCredential
+      tags:
+        - Credential
       parameters:
         - name: projectId
           in: path
@@ -160,6 +176,8 @@ paths:
     put:
       summary: "Update a credential"
       operationId: updateCredential
+      tags:
+        - Credential
       parameters:
         - name: projectId
           in: path
@@ -187,6 +205,8 @@ paths:
     delete:
       summary: "Delete a credential"
       operationId: deleteCredential
+      tags:
+        - Credential
       parameters:
         - name: projectId
           in: path
@@ -208,6 +228,8 @@ paths:
     get:
       summary: List all models for a project
       operationId: listModels
+      tags:
+        - Model
       parameters:
         - name: projectId
           in: path
@@ -228,6 +250,8 @@ paths:
     post:
       summary: "Create a model for a project"
       operationId: createModel
+      tags:
+        - Model
       parameters:
         - name: projectId
           in: path
@@ -252,6 +276,8 @@ paths:
     get:
       summary: "Get a model by slug"
       operationId: getModel
+      tags:
+        - Model
       parameters:
         - name: projectId
           in: path
@@ -275,6 +301,8 @@ paths:
     put:
       summary: "Update a model"
       operationId: updateModel
+      tags:
+        - Model
       parameters:
         - name: projectId
           in: path
@@ -302,6 +330,8 @@ paths:
     delete:
       summary: "Delete a model"
       operationId: deleteModel
+      tags:
+        - Model
       parameters:
         - name: projectId
           in: path
@@ -323,6 +353,8 @@ paths:
     get:
       summary: "Get authentication configuration for a project"
       operationId: getAuth
+      tags:
+        - Auth
       parameters:
         - name: projectId
           in: path
@@ -341,6 +373,8 @@ paths:
     put:
       summary: "Update authentication for a project"
       operationId: updateAuth
+      tags:
+        - Projects
       parameters:
         - name: projectId
           in: path
@@ -365,6 +399,8 @@ paths:
     post:
       summary: "Generate text (HTTP blocking)"
       operationId: generateText
+      tags:
+        - Projects
       parameters:
         - name: projectId
           in: path
@@ -396,6 +432,8 @@ paths:
     post:
       summary: "Generate text in streaming (SSE)"
       operationId: streamText
+      tags:
+        - Projects
       parameters:
         - name: projectId
           in: path
