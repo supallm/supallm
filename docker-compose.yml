@@ -8,17 +8,16 @@ networks:
 services:
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile.dev
+      context: .
+      dockerfile: ./frontend/Dockerfile.dev
     container_name: supallm-frontend
     hostname: supallm-frontend
     ports:
-      - "${HTTP_PORT:-8080}:80"
+      - "${FRONTEND_PORT:-3000}:3000"
     volumes:
       - ./frontend:/src
     depends_on:
-      postgres:
-        condition: service_healthy
+      - api
     networks:
       - supallm-network
     environment:
@@ -59,7 +58,7 @@ services:
     env_file:
       - .env
     ports:
-      - "${HTTP_PORT:-8080}:80"
+      - "${BACKEND_PORT:-3001}:80"
     volumes:
       - ./backend:/src
     depends_on:
