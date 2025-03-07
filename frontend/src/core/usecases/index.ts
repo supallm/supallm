@@ -1,16 +1,20 @@
 import { MockCredentialService } from "@/services/mock-credential-service";
+import { MockFlowService } from "@/services/mock-flow-service";
 import { MockModelService } from "@/services/mock-model-service";
 import { MockProjectService } from "@/services/mock-project-service";
 import { CreateCredentialUsecase } from "./create-credential";
+import { CreateFlowUsecase } from "./create-flow";
 import { CreateModelUsecase } from "./create-model";
 import { CreateProjectUsecase } from "./create-project";
 import { DeleteCredentialUsecase } from "./delete-credential";
 import { DeleteModelUsecase } from "./delete-model";
 import { GetCurrentProjectUsecase } from "./get-current-project";
+import { GetFlowUsecase } from "./get-flow";
 import { ListCredentialsUsecase } from "./list-credentials";
 import { ListModelUsecase } from "./list-models";
 import { ListProjectsUsecase } from "./list-projects";
 import { PatchCredentialUsecase } from "./patch-credential";
+import { PatchFlowUsecase } from "./patch-flow";
 import { PatchModelUsecase } from "./patch-model";
 
 /**
@@ -61,3 +65,13 @@ export const deleteModelUsecase = new DeleteModelUsecase(
 );
 
 export const patchModelUsecase = new PatchModelUsecase(new MockModelService());
+
+/**
+ * Flows
+ */
+
+export const createFlowUsecase = new CreateFlowUsecase(new MockFlowService());
+
+export const patchFlowUsecase = new PatchFlowUsecase(new MockFlowService());
+
+export const getFlowUsecase = new GetFlowUsecase(new MockFlowService());

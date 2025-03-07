@@ -1,4 +1,5 @@
 import { Credential, ProviderType } from "./entities/credential";
+import { Flow, FlowEdge, FlowNode } from "./entities/flow";
 import { Model } from "./entities/model";
 import { Project } from "./entities/project";
 
@@ -49,4 +50,15 @@ export interface ModelService {
   ) => Promise<void>;
 
   delete: (id: string) => Promise<void>;
+}
+
+export interface FlowService {
+  create: (data: {
+    name: string;
+    projectId: string;
+    nodes: FlowNode[];
+    edges: FlowEdge[];
+  }) => Promise<Flow>;
+  patch: (id: string, data: Partial<Flow>) => Promise<void>;
+  getById: (id: string) => Promise<Flow | null>;
 }

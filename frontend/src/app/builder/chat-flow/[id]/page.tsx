@@ -8,6 +8,10 @@ import openAIChatCompletionNode from "@/components/builder/nodes/chat/openai-cha
 import entrypointNode from "@/components/builder/nodes/fixed/entrypoint-node";
 import resultNode from "@/components/builder/nodes/fixed/result-node";
 import { Button } from "@/components/ui/button";
+import { FlowNode } from "@/core/entities/flow";
+import { useCurrentFlowStore } from "@/core/store/flow";
+import { patchFlowUsecase } from "@/core/usecases";
+import { hookifyFunction } from "@/hooks/hookify-function";
 
 import {
   addEdge,
@@ -16,7 +20,7 @@ import {
   Connection,
   Controls,
   MiniMap,
-  Node,
+  NodeChange,
   Panel,
   ReactFlow,
   useEdgesState,
@@ -25,36 +29,36 @@ import {
   useStoreApi,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { PlusIcon } from "lucide-react";
+import { PlusIcon, SaveIcon } from "lucide-react";
 
 import { useCallback } from "react";
-
-const initialNodes: (Node & { type: NodeType })[] = [
-  {
-    id: "entrypoint",
-    type: "entrypoint",
-    data: {},
-    position: { x: 100, y: 200 },
-    deletable: false,
-  },
-  {
-    id: "result",
-    type: "result",
-    data: {},
-    position: { x: 900, y: 200 },
-    deletable: false,
-  },
-];
 
 const initialEdges = [
   { id: "e1-2", source: "prompt", target: "model", targetHandle: "prompt" },
 ];
 
 const ChatFlowPage = () => {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  /**
+   * Current flow is set while fetching the flow using the FlowOnly guard
+   * At this point it MUST be set to the current flow
+   */
+  const { currentFlow } = useCurrentFlowStore();
+
+  if (!currentFlow) {
+    throw new Error(
+      "Current flow is not set. Make sure this component is used inside a <FlowOnly /> guard component.",
+    );
+  }
+
+  const { execute: saveFlow, isLoading: isSaving } = hookifyFunction(
+    patchFlowUsecase.execute.bind(patchFlowUsecase),
+  );
+
+  const [nodes, setNodes, onNodesChange] = useNodesState(currentFlow.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
   const store = useStoreApi();
-  const { screenToFlowPosition } = useReactFlow();
+  const { screenToFlowPosition, addNodes } = useReactFlow();
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -93,6 +97,11 @@ const ChatFlowPage = () => {
   //     }
   //   };
 
+  const handleNodeChange = (changes: NodeChange<FlowNode>[]) => {
+    onNodesChange(changes);
+    console.log("changed", changes);
+  };
+
   const addNode = (node: AvailableNode) => {
     const { domNode } = store.getState();
     const boundingRect = domNode?.getBoundingClientRect();
@@ -108,13 +117,13 @@ const ChatFlowPage = () => {
         y: center.y - NODE_WIDTH / 2,
       };
 
-      setNodes((nds) => [
-        ...nds,
+      addNodes([
         {
           id: crypto.randomUUID(),
           type: node.type,
           data: {},
           position: { x: centerCoords.x, y: centerCoords.y },
+          zIndex: nodes.length + 1,
         },
       ]);
     }
@@ -124,20 +133,39 @@ const ChatFlowPage = () => {
     addNode(node);
   };
 
+  const onSave = () => {
+    saveFlow(currentFlow.id, {
+      nodes,
+      edges: [],
+    });
+  };
+
   return (
     <div className="h-screen w-screen pt-[40px]">
       <ReactFlow
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}
-        onNodesChange={onNodesChange}
+        onNodesChange={handleNodeChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
       >
         <Panel position="top-left">
           <AddNodeDialog onNodeSelected={onNodeSelected}>
-            <Button startContent={<PlusIcon className="w-4 h-4" />}>Add</Button>
+            <Button startContent={<PlusIcon className="w-4 h-4" />}>
+              Add node
+            </Button>
           </AddNodeDialog>
+        </Panel>
+        <Panel position="top-right">
+          <Button
+            isLoading={isSaving}
+            onClick={onSave}
+            startContent={<SaveIcon className="w-4 h-4" />}
+            variant={"outline"}
+          >
+            Save
+          </Button>
         </Panel>
         <Controls />
         <MiniMap />
