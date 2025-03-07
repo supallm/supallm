@@ -19,6 +19,7 @@ import {
   BackgroundVariant,
   Connection,
   Controls,
+  EdgeChange,
   MiniMap,
   NodeChange,
   Panel,
@@ -31,11 +32,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import { PlusIcon, SaveIcon } from "lucide-react";
 
-import { useCallback } from "react";
-
-const initialEdges = [
-  { id: "e1-2", source: "prompt", target: "model", targetHandle: "prompt" },
-];
+import { useCallback, useMemo } from "react";
 
 const ChatFlowPage = () => {
   /**
@@ -55,7 +52,7 @@ const ChatFlowPage = () => {
   );
 
   const [nodes, setNodes, onNodesChange] = useNodesState(currentFlow.nodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(currentFlow.edges);
 
   const store = useStoreApi();
   const { screenToFlowPosition, addNodes } = useReactFlow();
@@ -65,41 +62,25 @@ const ChatFlowPage = () => {
     [setEdges],
   );
 
-  const nodeTypes: Record<NodeType, any> = {
-    "chat-openai": openAIChatCompletionNode,
-    result: resultNode,
-    // promptTemplateNode: promptTemplateNode,
-    entrypoint: entrypointNode,
-    "chat-anthropic": () => null,
-    "chat-google": () => null,
-    "chat-azure": () => null,
-  };
-
-  //   const addEntrypointNode = () => {
-  //     const { domNode } = store.getState();
-  //     const boundingRect = domNode?.getBoundingClientRect();
-
-  //     if (boundingRect) {
-  //       const coords = screenToFlowPosition({
-  //         x: VIEWPORT_X_PADDING,
-  //         y: VIEWPORT_Y_PADDING,
-  //       });
-
-  //       setNodes((nds) => [
-  //         ...nds,
-  //         {
-  //           id: crypto.randomUUID(),
-  //           type: 'entrypoint'
-  //           data: {},
-  //           position: { x: coords.x, y: coords.y },
-  //         },
-  //       ]);
-  //     }
-  //   };
+  const nodeTypes: Record<NodeType, any> = useMemo(
+    () => ({
+      "chat-openai": openAIChatCompletionNode,
+      result: resultNode,
+      // promptTemplateNode: promptTemplateNode,
+      entrypoint: entrypointNode,
+      "chat-anthropic": () => null,
+      "chat-google": () => null,
+      "chat-azure": () => null,
+    }),
+    [],
+  );
 
   const handleNodeChange = (changes: NodeChange<FlowNode>[]) => {
     onNodesChange(changes);
-    console.log("changed", changes);
+  };
+
+  const handleEdgeChange = (changes: EdgeChange[]) => {
+    onEdgesChange(changes);
   };
 
   const addNode = (node: AvailableNode) => {
@@ -136,7 +117,7 @@ const ChatFlowPage = () => {
   const onSave = () => {
     saveFlow(currentFlow.id, {
       nodes,
-      edges: [],
+      edges,
     });
   };
 
@@ -147,7 +128,7 @@ const ChatFlowPage = () => {
         edges={edges}
         nodeTypes={nodeTypes}
         onNodesChange={handleNodeChange}
-        onEdgesChange={onEdgesChange}
+        onEdgesChange={handleEdgeChange}
         onConnect={onConnect}
       >
         <Panel position="top-left">
