@@ -20,6 +20,8 @@ import {
   ReactFlow,
   useEdgesState,
   useNodesState,
+  useReactFlow,
+  useStoreApi,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { PlusIcon } from "lucide-react";
@@ -50,6 +52,8 @@ const initialEdges = [
 const ChatFlowPage = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const store = useStoreApi();
+  const { screenToFlowPosition } = useReactFlow();
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -67,15 +71,30 @@ const ChatFlowPage = () => {
   };
 
   const addNode = (node: AvailableNode) => {
-    setNodes((nds) => [
-      ...nds,
-      {
-        id: node.name,
-        type: node.type,
-        data: {},
-        position: { x: 500, y: 300 },
-      },
-    ]);
+    const { domNode } = store.getState();
+    const boundingRect = domNode?.getBoundingClientRect();
+
+    if (boundingRect) {
+      const center = screenToFlowPosition({
+        x: boundingRect.x + boundingRect.width / 2,
+        y: boundingRect.y + boundingRect.height / 2,
+      });
+
+      const centerCoords = {
+        x: center.x - 300 / 2,
+        y: center.y - 300 / 2,
+      };
+
+      setNodes((nds) => [
+        ...nds,
+        {
+          id: crypto.randomUUID(),
+          type: node.type,
+          data: {},
+          position: { x: centerCoords.x, y: centerCoords.y },
+        },
+      ]);
+    }
   };
 
   const onNodeSelected = (node: AvailableNode) => {

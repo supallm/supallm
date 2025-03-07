@@ -8,6 +8,7 @@ import {
   useEffect,
   useState,
 } from "react";
+import { NODE_WIDTH } from "./constants";
 import { LabeledHandle } from "./labeled-handle";
 
 export type BaseNodeProps = {
@@ -34,9 +35,10 @@ const BaseNode: FC<PropsWithChildren<BaseNodeProps>> = ({
   return (
     <div
       className={cn(
-        "rounded-xl w-[270px] p-0 gap-0 bg-white border transition-colors duration-500",
+        "rounded-xl p-0 gap-0 bg-white border transition-colors duration-500",
         active ? "border-green-500 shadow shadow-green-500" : "border-gray-300",
       )}
+      style={{ width: `${NODE_WIDTH}px` }}
     >
       <div className="flex flex-row items-center border-b gap-2 py-2 px-3">
         {header}
