@@ -2,10 +2,11 @@
 
 import { AddNodeDialog } from "@/components/builder/add-node-dialog/add-node-dialog";
 import { AvailableNode } from "@/components/builder/add-node-dialog/available-nodes";
-import entrypointNode from "@/components/builder/entrypoint-node";
-import modelNode from "@/components/builder/model-node";
+import { NODE_WIDTH } from "@/components/builder/constants";
 import { NodeType } from "@/components/builder/node-types";
-import resultNode from "@/components/builder/result-node";
+import openAIChatCompletionNode from "@/components/builder/nodes/chat/openai-chat-completion-node";
+import entrypointNode from "@/components/builder/nodes/fixed/entrypoint-node";
+import resultNode from "@/components/builder/nodes/fixed/result-node";
 import { Button } from "@/components/ui/button";
 
 import {
@@ -61,7 +62,7 @@ const ChatFlowPage = () => {
   );
 
   const nodeTypes: Record<NodeType, any> = {
-    "chat-openai": modelNode,
+    "chat-openai": openAIChatCompletionNode,
     result: resultNode,
     // promptTemplateNode: promptTemplateNode,
     entrypoint: entrypointNode,
@@ -69,6 +70,28 @@ const ChatFlowPage = () => {
     "chat-google": () => null,
     "chat-azure": () => null,
   };
+
+  //   const addEntrypointNode = () => {
+  //     const { domNode } = store.getState();
+  //     const boundingRect = domNode?.getBoundingClientRect();
+
+  //     if (boundingRect) {
+  //       const coords = screenToFlowPosition({
+  //         x: VIEWPORT_X_PADDING,
+  //         y: VIEWPORT_Y_PADDING,
+  //       });
+
+  //       setNodes((nds) => [
+  //         ...nds,
+  //         {
+  //           id: crypto.randomUUID(),
+  //           type: 'entrypoint'
+  //           data: {},
+  //           position: { x: coords.x, y: coords.y },
+  //         },
+  //       ]);
+  //     }
+  //   };
 
   const addNode = (node: AvailableNode) => {
     const { domNode } = store.getState();
@@ -81,8 +104,8 @@ const ChatFlowPage = () => {
       });
 
       const centerCoords = {
-        x: center.x - 300 / 2,
-        y: center.y - 300 / 2,
+        x: center.x - NODE_WIDTH / 2,
+        y: center.y - NODE_WIDTH / 2,
       };
 
       setNodes((nds) => [

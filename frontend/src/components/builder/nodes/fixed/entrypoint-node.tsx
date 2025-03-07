@@ -1,6 +1,6 @@
 import { Flag } from "lucide-react";
 import { FC, memo } from "react";
-import BaseNode from "./base-node";
+import BaseNode from "../common/base-node";
 
 export type EntrypointNodeData = {
   type: "model";

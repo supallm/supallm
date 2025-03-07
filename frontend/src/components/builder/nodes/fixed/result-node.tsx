@@ -1,8 +1,8 @@
 import { Position } from "@xyflow/react";
 import { FolderSymlink } from "lucide-react";
 import { FC, memo } from "react";
-import BaseNode from "./base-node";
-import { LabeledHandle } from "./labeled-handle";
+import { LabeledHandle } from "../../labeled-handle";
+import BaseNode from "../common/base-node";
 
 export type ModelFlowNodeData = {
   type: "model";

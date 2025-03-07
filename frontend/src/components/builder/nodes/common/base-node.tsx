@@ -8,8 +8,8 @@ import {
   useEffect,
   useState,
 } from "react";
-import { NODE_WIDTH } from "./constants";
-import { LabeledHandle } from "./labeled-handle";
+import { NODE_WIDTH } from "../../constants";
+import { LabeledHandle } from "../../labeled-handle";
 
 export type BaseNodeProps = {
   header: ReactNode;
