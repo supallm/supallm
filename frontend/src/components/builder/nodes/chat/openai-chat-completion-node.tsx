@@ -1,3 +1,4 @@
+import { AppSelect } from "@/components/app-select";
 import { SelectCredentials } from "@/components/select-credentials";
 import { SelectModel } from "@/components/select-model";
 import { Button } from "@/components/ui/button";
@@ -9,49 +10,28 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { NumberInput } from "@/components/ui/number-input";
+import { ChatOpenAINodeData } from "@/core/entities/flow/flow-openai";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Position } from "@xyflow/react";
-import { FC, memo, useState } from "react";
+import { FC, memo } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { ProviderLogo } from "../../../logos/provider-logo";
-import { Input } from "../../../ui/input";
 import { LabeledHandle } from "../../labeled-handle";
 import BaseNode from "../common/base-node";
 import { BaseNodeContent } from "../common/base-node-content";
 import { ConfigureModelMessagesDialog } from "../model-messages/configure-model-messages-dialog";
-import { Message } from "../model-messages/model-message-form";
 
-export type ModelFlowNodeData = {
-  type: "model";
-  model: string;
-};
-
-const OpenAIChatCompletionNode: FC<{ data: ModelFlowNodeData }> = ({
+const OpenAIChatCompletionNode: FC<{ data: ChatOpenAINodeData }> = ({
   data,
 }) => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "system",
-      content: "You are a helpful assistant. Answer in a friendly manner.",
-    },
-  ]);
   const formSchema = z.object({
     credentialId: z.string().min(2),
     model: z.string().min(2),
     temperature: z.number().min(0).max(2),
-    maxCompletionTokens: z.number().min(100).nullable(),
-    systemMessage: z.string().min(0),
-    initialMessages: z.array(
-      z.object({
-        role: z.enum(["user", "assistant", "system"]),
-        content: z.object({
-          type: z.enum(["text", "image_url", "audio_url"]),
-          text: z.string().min(2),
-        }),
-      }),
-    ),
-    allowImageUpload: z.boolean(),
+    maxCompletionTokens: z.number().min(100).optional(),
+    developerMessage: z.string().min(0),
     imageResolution: z.enum(["low", "high", "auto"]),
     responseFormat: z.object({
       type: z.enum(["text", "json_object"]),
@@ -61,13 +41,12 @@ const OpenAIChatCompletionNode: FC<{ data: ModelFlowNodeData }> = ({
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      credentialId: "",
-      model: "",
-      temperature: 1,
-      maxCompletionTokens: null,
-      initialMessages: [],
-      allowImageUpload: false,
-      imageResolution: "auto",
+      credentialId: data.credentialId ?? "",
+      model: data.model ?? "",
+      temperature: data.temperature ?? 1,
+      maxCompletionTokens: data.maxCompletionTokens ?? undefined,
+      developerMessage: data.developerMessage ?? "",
+      imageResolution: data.imageResolution ?? "auto",
       responseFormat: {
         type: "text",
       },
@@ -137,15 +116,7 @@ const OpenAIChatCompletionNode: FC<{ data: ModelFlowNodeData }> = ({
                   <FormItem>
                     <FormLabel>Temperature</FormLabel>
                     <FormControl>
-                      <Input
-                        step={0.1}
-                        type="number"
-                        placeholder="1"
-                        {...field}
-                        onChange={(e) => {
-                          field.onChange(Number(e.target.value));
-                        }}
-                      />
+                      <NumberInput placeholder="1" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -158,15 +129,7 @@ const OpenAIChatCompletionNode: FC<{ data: ModelFlowNodeData }> = ({
                   <FormItem>
                     <FormLabel>Max completion tokens</FormLabel>
                     <FormControl>
-                      <Input
-                        step={100}
-                        type="number"
-                        placeholder="25000"
-                        {...field}
-                        onChange={(e) => {
-                          field.onChange(Number(e.target.value));
-                        }}
-                      />
+                      <NumberInput placeholder="25000" clearable {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -174,18 +137,48 @@ const OpenAIChatCompletionNode: FC<{ data: ModelFlowNodeData }> = ({
               />
               <FormField
                 control={form.control}
-                name="messages"
+                name="developerMessage"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Messages</FormLabel>
+                    <FormLabel>Developer Message</FormLabel>
                     <FormControl>
-                      <ConfigureModelMessagesDialog initialMessages={messages}>
+                      <ConfigureModelMessagesDialog
+                        developerMessage={field.value}
+                        {...field}
+                      >
                         <Button variant="outline" size="xs" type="button">
-                          Configure messages
+                          Configure
                         </Button>
                       </ConfigureModelMessagesDialog>
                     </FormControl>
                     <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="responseFormat"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Response Format</FormLabel>
+                    <FormControl>
+                      <AppSelect
+                        onValueChange={(value) => {
+                          field.onChange({ type: value });
+                        }}
+                        defaultValue={field.value.type}
+                        choices={[
+                          {
+                            value: "text",
+                            label: "Text",
+                          },
+                          {
+                            value: "json_object",
+                            label: "JSON",
+                          },
+                        ]}
+                      ></AppSelect>
+                    </FormControl>
                   </FormItem>
                 )}
               />

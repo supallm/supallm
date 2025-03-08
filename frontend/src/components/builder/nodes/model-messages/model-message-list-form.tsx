@@ -1,6 +1,6 @@
-import { Button } from "@/components/ui/button";
 import { FC, useState } from "react";
-import ModelMessageForm, { Message } from "./model-message-form";
+import DeveloperMessageForm from "./developer-message-form";
+import { Message } from "./model-message-form";
 
 type ModelMessageListFormProps = {
   messages: Message[];
@@ -13,20 +13,15 @@ const ModelMessageListForm: FC<ModelMessageListFormProps> = ({ messages }) => {
     setMessageList([...messageList, { role: "user", content: "" }]);
   };
 
+  const removeMessage = (index: number) => {
+    const newMessageList = [...messageList];
+    newMessageList.splice(index, 1);
+    setMessageList(newMessageList);
+  };
+
   return (
     <div className="flex flex-col gap-2">
-      {messageList.map((message, index) => (
-        <ModelMessageForm key={index} {...message} />
-      ))}
-      <Button
-        type="button"
-        size="xs"
-        variant="outline"
-        className="w-full"
-        onClick={addMessage}
-      >
-        Add Message
-      </Button>
+      <DeveloperMessageForm />
     </div>
   );
 };

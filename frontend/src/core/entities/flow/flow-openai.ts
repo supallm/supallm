@@ -65,9 +65,7 @@ export type ChatOpenAINodeData = {
   model: OpenAIModel;
   temperature: number;
   maxCompletionTokens: number;
-  allowImageUpload: boolean;
   developerMessage: string;
-  initialMessages: OpenAIMessage[];
   imageResolution: "low" | "high" | "auto";
   responseFormat: OpenAIResponseFormat;
 };
