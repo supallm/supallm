@@ -1,3 +1,5 @@
+import { ChatOpenAINodeData } from "./flow-openai";
+
 export type FlowNodeType =
   | "chat-openai"
   | "entrypoint"
@@ -6,7 +8,7 @@ export type FlowNodeType =
   | "chat-google"
   | "chat-azure";
 
-export type FlowNodeData = any;
+export type FlowNodeData = ChatOpenAINodeData;
 
 export type FlowNode = {
   id: string;

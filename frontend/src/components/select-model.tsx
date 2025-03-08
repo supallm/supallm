@@ -1,6 +1,7 @@
 "use client";
 
 import { ProviderType } from "@/core/entities/credential";
+import { OpenAIModels } from "@/core/entities/flow/flow-openai";
 import { FC, useMemo } from "react";
 import { FormControl } from "./ui/form";
 import {
@@ -11,8 +12,8 @@ import {
   SelectValue,
 } from "./ui/select";
 
-export const ProviderModels: Record<ProviderType, string[]> = {
-  openai: ["gpt-4o", "gpt-4o-mini"],
+export const ProviderModels: Record<ProviderType, Readonly<string[]>> = {
+  openai: OpenAIModels,
   anthropic: [],
   google: [],
   azure: [],

@@ -40,12 +40,22 @@ const OpenAIChatCompletionNode: FC<{ data: ModelFlowNodeData }> = ({
     credentialId: z.string().min(2),
     model: z.string().min(2),
     temperature: z.number().min(0).max(2),
-    messages: z.array(
+    maxCompletionTokens: z.number().min(100).nullable(),
+    systemMessage: z.string().min(0),
+    initialMessages: z.array(
       z.object({
         role: z.enum(["user", "assistant", "system"]),
-        content: z.string().min(2),
+        content: z.object({
+          type: z.enum(["text", "image_url", "audio_url"]),
+          text: z.string().min(2),
+        }),
       }),
     ),
+    allowImageUpload: z.boolean(),
+    imageResolution: z.enum(["low", "high", "auto"]),
+    responseFormat: z.object({
+      type: z.enum(["text", "json_object"]),
+    }),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -54,6 +64,13 @@ const OpenAIChatCompletionNode: FC<{ data: ModelFlowNodeData }> = ({
       credentialId: "",
       model: "",
       temperature: 1,
+      maxCompletionTokens: null,
+      initialMessages: [],
+      allowImageUpload: false,
+      imageResolution: "auto",
+      responseFormat: {
+        type: "text",
+      },
     },
   });
 
@@ -124,6 +141,27 @@ const OpenAIChatCompletionNode: FC<{ data: ModelFlowNodeData }> = ({
                         step={0.1}
                         type="number"
                         placeholder="1"
+                        {...field}
+                        onChange={(e) => {
+                          field.onChange(Number(e.target.value));
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="maxCompletionTokens"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Max completion tokens</FormLabel>
+                    <FormControl>
+                      <Input
+                        step={100}
+                        type="number"
+                        placeholder="25000"
                         {...field}
                         onChange={(e) => {
                           field.onChange(Number(e.target.value));
