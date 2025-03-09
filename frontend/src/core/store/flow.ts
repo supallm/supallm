@@ -10,6 +10,7 @@ interface CurrentFlowStoreState {
   currentFlow: Flow | null;
   setCurrentFlow: (flow: Flow) => void;
   clearCurrentFlow: () => void;
+  patch: (data: Partial<Flow>) => void;
 }
 
 export const useCurrentFlowStore = create<CurrentFlowStoreState>()(
@@ -19,6 +20,10 @@ export const useCurrentFlowStore = create<CurrentFlowStoreState>()(
         currentFlow: null,
         setCurrentFlow: (flow) => set({ currentFlow: flow }),
         clearCurrentFlow: () => set({ currentFlow: null }),
+        patch: (data: Partial<Flow>) =>
+          set((state: CurrentFlowStoreState) => ({
+            currentFlow: { ...state.currentFlow, ...data } as Flow,
+          })),
       }),
       { name: "current-flow" },
     ),
@@ -31,6 +36,10 @@ export const setCurrentFlow = (flow: Flow) => {
 
 export const clearCurrentFlow = () => {
   useCurrentFlowStore.getState().clearCurrentFlow();
+};
+
+export const patchCurrentFlow = (data: Partial<Flow>) => {
+  useCurrentFlowStore.getState().patch(data);
 };
 
 /**

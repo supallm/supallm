@@ -8,6 +8,7 @@ import { CredentialsRoute } from "@/routes";
 import { PlusIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FC } from "react";
+import { AddCredentialDialog } from "./add-credential-dialog";
 import { Button } from "./ui/button";
 import { FormControl } from "./ui/form";
 import {
@@ -57,16 +58,18 @@ export const SelectCredentials: FC<{
         {!isLoading && !filteredItems?.length && (
           <div className="p-6 text-muted-foreground text-sm flex flex-col items-center gap-2 justify-center">
             No credentials found for this provider.{" "}
-            <Button
-              onClick={() => {
-                router.push(CredentialsRoute.path());
-              }}
-              size="xs"
-              variant="outline"
-              startContent={<PlusIcon className="h-2 w-2" />}
-            >
-              Create credentials
-            </Button>
+            <AddCredentialDialog isOpen={false} onOpenChange={() => {}}>
+              <Button
+                onClick={() => {
+                  router.push(CredentialsRoute.path());
+                }}
+                size="xs"
+                variant="outline"
+                startContent={<PlusIcon className="h-2 w-2" />}
+              >
+                Create credentials
+              </Button>
+            </AddCredentialDialog>
           </div>
         )}
         {!isLoading && !!filteredItems?.length && (

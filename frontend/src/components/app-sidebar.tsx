@@ -5,6 +5,7 @@ import {
   FileSliders,
   Home,
   KeyRoundIcon,
+  MessageSquareCode,
   Settings,
   User2,
   Users,
@@ -21,7 +22,12 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { CredentialsRoute, ModelsRoute, OverviewRoute } from "@/routes";
+import {
+  ChatFlowsRoute,
+  CredentialsRoute,
+  ModelsRoute,
+  OverviewRoute,
+} from "@/routes";
 import { useAuth } from "@clerk/nextjs";
 import Link from "next/link";
 import {
@@ -37,6 +43,11 @@ const items = [
     title: "Overview",
     url: OverviewRoute.path(),
     icon: Home,
+  },
+  {
+    title: "Chat flows",
+    url: ChatFlowsRoute.path(),
+    icon: MessageSquareCode,
   },
   {
     title: "Models",

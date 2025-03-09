@@ -1,6 +1,6 @@
 import { Flow } from "../entities/flow";
 import { FlowService } from "../interfaces";
-import { patchFlow } from "../store/flow";
+import { patchCurrentFlow, patchFlow } from "../store/flow";
 
 export class PatchFlowUsecase {
   constructor(private readonly service: FlowService) {}
@@ -8,5 +8,6 @@ export class PatchFlowUsecase {
   async execute(id: string, data: Partial<Flow>) {
     await this.service.patch(id, data);
     patchFlow(id, data);
+    patchCurrentFlow(data);
   }
 }

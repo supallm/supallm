@@ -61,4 +61,6 @@ export interface FlowService {
   }) => Promise<Flow>;
   patch: (id: string, data: Partial<Flow>) => Promise<void>;
   getById: (id: string) => Promise<Flow | null>;
+  listAll(): Promise<Flow[]>;
+  delete: (id: string) => Promise<void>;
 }
