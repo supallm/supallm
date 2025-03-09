@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["nodes", "edges"],
+  "properties": {
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "type", "position", "data"],
+        "properties": {
+          "id": { "type": "string" },
+          "type": { "type": "string" },
+          "position": {
+            "type": "object",
+            "required": ["x", "y"],
+            "properties": {
+              "x": { "type": "number" },
+              "y": { "type": "number" }
+            }
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "label": { "type": "string" },
+              "credentialId": { "type": ["string", "null"] },
+              "providerType": { "type": ["string", "null"] },
+              "modelType": { "type": ["string", "null"] },
+              "prompt": { "type": ["string", "null"] },
+              "temperature": {
+                "type": ["number", "null"],
+                "minimum": 0,
+                "maximum": 1
+              },
+              "maxTokens": { "type": ["integer", "null"], "minimum": 1 }
+            }
+          },
+          "width": { "type": ["number", "null"] },
+          "height": { "type": ["number", "null"] },
+          "selected": { "type": ["boolean", "null"] },
+          "positionAbsolute": {
+            "type": ["object", "null"],
+            "properties": {
+              "x": { "type": "number" },
+              "y": { "type": "number" }
+            }
+          },
+          "dragging": { "type": ["boolean", "null"] }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "source", "target"],
+        "properties": {
+          "id": { "type": "string" },
+          "source": { "type": "string" },
+          "target": { "type": "string" },
+          "sourceHandle": { "type": ["string", "null"] },
+          "targetHandle": { "type": ["string", "null"] },
+          "type": { "type": ["string", "null"] },
+          "animated": { "type": ["boolean", "null"] },
+          "style": { "type": ["object", "null"] },
+          "label": { "type": ["string", "null"] },
+          "selected": { "type": ["boolean", "null"] }
+        }
+      }
+    },
+    "viewport": {
+      "type": "object",
+      "required": ["x", "y", "zoom"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "zoom": { "type": "number" }
+      }
+    }
+  }
+}

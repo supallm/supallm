@@ -66,3 +66,15 @@ services:
         condition: service_healthy
     networks:
       - supallm-network
+
+  runner:
+    build:
+      context: ./runner
+      dockerfile: Dockerfile
+    ports:
+      - "50051:50051"
+    volumes:
+      - ./runner:/app
+    environment:
+      - PORT=50051
+      - LOG_LEVEL=info

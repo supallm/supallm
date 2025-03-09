@@ -2,6 +2,7 @@
 /dist
 /node_modules
 /build
+**/node_modules
 
 # Logs
 logs
@@ -11,6 +12,9 @@ pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
+
+# runner/logs
+*.log
 
 .pakcage-lock.json
 

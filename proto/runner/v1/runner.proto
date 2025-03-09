@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package runner.v1;
+
+option go_package = "github.com/supallm/core/proto/runner/v1;runnerv1";
+
+service WorkflowRunner {
+  rpc ExecuteWorkflow(ExecuteWorkflowRequest) returns (stream ExecutionEvent) {}
+  rpc StopWorkflow(StopWorkflowRequest) returns (StopWorkflowResponse) {}
+}
+
+message ExecuteWorkflowRequest {
+  string workflow_id = 1;
+  bytes computed_definition = 2;
+  bytes inputs = 3;
+}
+
+message ExecutionEvent {
+  string type = 1;
+  string workflow_id = 2;
+  string node_id = 3;
+  string message = 4;
+  bytes data = 5;
+  int64 timestamp = 6;
+}
+
+message StopWorkflowRequest { string workflow_id = 1; }
+
+message StopWorkflowResponse {
+  bool success = 1;
+  string message = 2;
+}

@@ -1,0 +1,5 @@
+version: v2
+plugins:
+  - local: protoc-gen-es
+    opt: target=ts
+    out: ../runner/src/gen
