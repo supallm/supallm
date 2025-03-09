@@ -1,10 +1,7 @@
 "use client";
 
 import { EmptyState } from "@/components/empty-state";
-import {
-  FlowTable,
-  FlowTableColumns,
-} from "@/components/flow-table/flow-table";
+import { FlowCard } from "@/components/flow-card/flow-card";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
 import { Spacer } from "@/components/spacer";
@@ -24,12 +21,6 @@ const PageSkeleton = () => {
   return (
     <div className="">
       <PageContainer>
-        <div className="flex justify-end">
-          <Button disabled startContent={<PlusIcon className="w-3 h-3" />}>
-            Add flow
-          </Button>
-        </div>
-        <Spacer />
         <div className="space-y-4 w-full flex flex-col grow">
           <Skeleton className="h-[125px] w-fill rounded-xl" />
           <Skeleton className="h-[125px] w-fill rounded-xl" />
@@ -80,7 +71,11 @@ const Page = () => {
   return (
     <div>
       {/* <AddFlowDialog isOpen={isDialogOpen} onOpenChange={setIsDialogOpen} /> */}
-      <PageHeader title="Flows" />
+      <PageHeader
+        title="Flows"
+        actions={addFlowButton}
+        actionsLoading={isLoading}
+      />
       <Spacer />
       <PageContainer>
         {isLoading && <PageSkeleton />}
@@ -95,10 +90,11 @@ const Page = () => {
 
         {!isLoading && !!flows?.length && (
           <div>
-            <div className="flex justify-end">{addFlowButton}</div>
-            <Spacer />
-
-            <FlowTable data={flows} columns={FlowTableColumns} />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {flows.map((flow) => (
+                <FlowCard key={flow.id} flow={flow} />
+              ))}
+            </div>
           </div>
         )}
       </PageContainer>

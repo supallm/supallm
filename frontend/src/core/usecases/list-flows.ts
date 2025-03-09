@@ -1,6 +1,6 @@
 import { FlowService } from "@/core/interfaces";
 import { Flow } from "../entities/flow";
-import { addFlow } from "../store/flow";
+import { setFlowList } from "../store/flow";
 
 export class ListFlowsUsecase {
   constructor(private readonly flowService: FlowService) {}
@@ -8,7 +8,7 @@ export class ListFlowsUsecase {
   async execute(): Promise<Flow[]> {
     const flows = await this.flowService.listAll();
 
-    flows.forEach((flow) => addFlow(flow));
+    setFlowList(flows);
 
     return flows;
   }

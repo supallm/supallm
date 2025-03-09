@@ -52,6 +52,10 @@ export const getFlowState = () => {
   return useFlowStore.getState().list;
 };
 
+export const setFlowList = (flows: Flow[]) => {
+  useFlowStore.getState().set(flows);
+};
+
 export const addFlow = (flow: Flow) => {
   useFlowStore.getState().add(flow);
 };
