@@ -33,10 +33,23 @@ export class RunnerServer {
   private server: grpc.Server;
   private workflowExecutor: WorkflowExecutor;
   private reflection: grpcReflection.ReflectionService;
+  private CHUNK_THRESHOLD = 10;
+  private chunkBuffer = "";
   [method: string]: any;
 
   constructor(private port: number = 50051) {
-    this.server = new grpc.Server();
+    const serverOptions = {
+      "grpc.initial_window_size": 1024 * 1024 * 16, // 4 MB
+      "grpc.initial_connection_window_size": 1024 * 1024 * 32, // 8 MB
+      "grpc.http2.min_time_between_pings_ms": 5000,
+      "grpc.http2.max_pings_without_data": 0,
+      "grpc.keepalive_time_ms": 5000,
+      "grpc.keepalive_timeout_ms": 2000,
+      "grpc.max_receive_message_length": 1024 * 1024 * 100,
+      "grpc.max_send_message_length": 1024 * 1024 * 100,
+    };
+
+    this.server = new grpc.Server(serverOptions);
     this.workflowExecutor = new WorkflowExecutor();
     this.reflection = new grpcReflection.ReflectionService(packageDefinition);
 
@@ -93,7 +106,10 @@ export class RunnerServer {
       this.setupEventListeners(call);
 
       this.workflowExecutor
-        .execute(workflowId, definition, { inputs })
+        .execute(workflowId, definition, {
+          inputs,
+          sessionId: sessionId,
+        })
         .catch((error) =>
           this.handleExecutionError(error, workflowId, sessionId, call)
         );
@@ -234,6 +250,34 @@ export class RunnerServer {
 
       call.end();
     });
+
+    this.workflowExecutor.on("nodeStreaming", (data) => {
+      call.write({
+        type: "NODE_STREAMING",
+        workflow_id: data.workflowId || "",
+        session_id: data.sessionId || "",
+        node_id: data.nodeId || "",
+        message: "Streaming chunk received",
+        data_json: data.chunk,
+        timestamp: Date.now().toString(),
+      });
+    });
+
+    // Event: node end streaming
+    this.workflowExecutor.on("nodeEndStreaming", (data) => {
+      const rawEvent = {
+        type: "NODE_END_STREAMING",
+        workflow_id: data.workflowId || "",
+        session_id: data.sessionId || "",
+        node_id: data.nodeId || "",
+        message: "Streaming chunk received",
+        data_json: data.fullText,
+        timestamp: Date.now().toString(),
+      };
+
+      call.write(rawEvent);
+      logger.info(`Streaming complete for node ${data.nodeId}`);
+    });
   }
 
   /**
@@ -249,18 +293,31 @@ export class RunnerServer {
       data?: any;
     }
   ): ExecutionEvent {
-    // Convertir les données en chaîne JSON
-    const dataJson = params.data ? JSON.stringify(params.data) : undefined;
-
-    return new ExecutionEvent({
+    // Créer l'événement
+    const event = new ExecutionEvent({
       type,
-      sessionId: params.sessionId,
-      workflowId: params.workflowId,
-      nodeId: params.nodeId,
+      sessionId: params.sessionId || "",
+      workflowId: params.workflowId || "",
+      nodeId: params.nodeId || "",
       message: params.message,
-      dataJson: dataJson,
+      dataJson: params.data !== undefined ? JSON.stringify(params.data) : "",
       timestamp: Date.now().toString(),
     });
+
+    // Déboguer l'événement créé
+    logger.debug(
+      `Created event object: ${JSON.stringify({
+        type: event.type,
+        workflowId: event.workflowId,
+        sessionId: event.sessionId,
+        nodeId: event.nodeId,
+        message: event.message,
+        dataJsonLength: event.dataJson ? event.dataJson.length : 0,
+        timestamp: event.timestamp,
+      })}`
+    );
+
+    return event;
   }
 
   /**

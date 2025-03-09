@@ -32,11 +32,26 @@ export class OpenAIProvider implements BaseLLMProvider {
 
     try {
       if (this.model instanceof ChatOpenAI) {
-        const response = await this.model.stream(prompt);
-        return response;
+        const stream = await this.model.stream(prompt);
+
+        // Transformer le stream pour qu'il soit plus facile à utiliser
+        return {
+          [Symbol.asyncIterator]: async function* () {
+            for await (const chunk of stream) {
+              if (chunk.content) {
+                yield { content: chunk.content };
+              }
+            }
+          },
+        };
       } else {
+        // Pour les modèles non-chat, simuler un stream avec une seule réponse
         const response = await this.model.invoke(prompt);
-        return { text: response };
+        return {
+          [Symbol.asyncIterator]: async function* () {
+            yield { text: response };
+          },
+        };
       }
     } catch (error) {
       logger.error(`Error streaming with OpenAI: ${error}`);

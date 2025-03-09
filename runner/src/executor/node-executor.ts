@@ -5,13 +5,15 @@ import {
 } from "../models/workflow";
 import { ProviderFactory } from "../providers/provider-factory";
 import { logger } from "../utils/logger";
+import { EventEmitter } from "events";
 
-export class NodeExecutor {
+export class NodeExecutor extends EventEmitter {
   private providerFactory: ProviderFactory;
   private maxTokens: number;
   private temperature: number;
 
   constructor() {
+    super();
     this.providerFactory = new ProviderFactory();
     this.maxTokens = 5000;
     this.temperature = 0.7;
@@ -58,6 +60,7 @@ export class NodeExecutor {
     inputs: Record<string, any>
   ): Promise<any> {
     const auth = node.auth || {};
+    const useStreaming = node.streaming === true;
 
     const provider = this.providerFactory.createLLMProvider({
       provider: auth.provider,
@@ -72,6 +75,64 @@ export class NodeExecutor {
 
     if (inputs.variables && typeof prompt === "string") {
       prompt = this.replaceVariables(prompt, inputs.variables);
+    }
+
+    if (useStreaming) {
+      logger.info(`Using streaming for node ${node.id}`);
+
+      const streamStartTime = Date.now();
+      let chunkCount = 0;
+      let totalChars = 0;
+
+      let fullText = "";
+      const stream = await provider.stream(prompt, {
+        temperature: node.parameters?.temperature || this.temperature,
+        maxTokens: node.parameters?.maxTokens || this.maxTokens,
+      });
+
+      for await (const chunk of stream) {
+        let content = "";
+        if (chunk.content) {
+          content = chunk.content;
+        } else if (chunk.text) {
+          content = chunk.text;
+        } else if (typeof chunk === "string") {
+          content = chunk;
+        } else if (chunk.choices && chunk.choices[0]?.delta?.content) {
+          content = chunk.choices[0].delta.content;
+        }
+
+        if (!content) continue;
+
+        fullText += content;
+
+        logger.debug(
+          `Streaming chunk for node ${node.id}: ${content.length} chars`
+        );
+
+        this.emit("nodeStreaming", {
+          nodeId: node.id,
+          chunk: content,
+        });
+      }
+
+      this.emit("nodeEndStreaming", {
+        nodeId: node.id,
+        fullText: fullText,
+      });
+
+      const streamEndTime = Date.now();
+      const streamDuration = streamEndTime - streamStartTime;
+
+      logger.info(
+        `Streaming stats for node ${
+          node.id
+        }: duration=${streamDuration}ms, chunks=${chunkCount}, chars=${totalChars}, chars/sec=${Math.round(
+          totalChars / (streamDuration / 1000)
+        )}`
+      );
+
+      return { text: fullText };
     }
 
     const result = await provider.generate(prompt, {

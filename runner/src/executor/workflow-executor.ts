@@ -14,13 +14,34 @@ export class WorkflowExecutor extends EventEmitter {
   constructor() {
     super();
     this.nodeExecutor = new NodeExecutor();
+
+    // Relayer les événements de streaming
+    this.nodeExecutor.on("nodeStreaming", (data) => {
+      // Log pour déboguer
+      logger.debug(
+        `Relaying streaming event: nodeId=${data.nodeId}, workflowId=${this.currentWorkflowId}, sessionId=${this.currentSessionId}`
+      );
+
+      this.emit("nodeStreaming", {
+        ...data,
+        workflowId: this.currentWorkflowId,
+        sessionId: this.currentSessionId,
+        timestamp: Date.now(),
+      });
+    });
   }
+
+  // Stocker l'ID du workflow et de la session en cours
+  private currentWorkflowId: string = "";
+  private currentSessionId: string = "";
 
   async execute(
     workflowId: string,
     definition: WorkflowDefinition,
     options: WorkflowExecutionOptions = {}
   ): Promise<WorkflowExecutionResult> {
+    this.currentWorkflowId = workflowId;
+    this.currentSessionId = options.sessionId || "";
     const startTime = Date.now();
     logger.info(`Starting execution of workflow ${workflowId}`);
 
@@ -94,7 +115,8 @@ export class WorkflowExecutor extends EventEmitter {
 
       this.emit("workflowCompleted", {
         workflowId,
-        output: finalOutput,
+        sessionId: this.currentSessionId,
+        output: result.output,
       });
 
       return result;

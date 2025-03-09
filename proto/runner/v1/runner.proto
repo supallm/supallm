@@ -27,6 +27,15 @@ message ExecutionEvent {
   string timestamp = 7;
 }
 
+// ExecutionEvent.type peut être:
+// - "STARTED" - Workflow started
+// - "NODE_STARTED" - Node execution started
+// - "NODE_STREAMING" - Node streaming chunk received
+// - "NODE_COMPLETED" - Node execution completed
+// - "NODE_FAILED" - Node execution failed
+// - "COMPLETED" - Workflow completed
+// - "FAILED" - Workflow failed
+
 message ValidateWorkflowRequest {
   string workflow_id = 1;
   string session_id = 2;

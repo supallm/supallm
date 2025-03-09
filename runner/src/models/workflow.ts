@@ -21,6 +21,7 @@ export enum NodeType {
 export interface NodeDefinition {
   id: string;
   type: NodeType;
+  streaming?: boolean;
   [key: string]: any;
 }
 
@@ -52,4 +53,5 @@ export interface NodeExecutionResult {
 export interface WorkflowExecutionOptions {
   inputs?: Record<string, any>;
   timeout?: number;
+  sessionId?: string;
 }
