@@ -29,11 +29,18 @@ import { ProviderLogo } from "./logos/provider-logo";
 import { Card, CardContent, CardHeader } from "./ui/card";
 import { Input } from "./ui/input";
 
-export const EditCredentialDialog: FC<
-  PropsWithChildren<{
-    provider: Credential;
-  }>
-> = ({ provider, children }) => {
+interface EditCredentialDialogProps extends PropsWithChildren<{}> {
+  provider: Credential;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
+  provider,
+  children,
+  isOpen: controlledIsOpen,
+  onOpenChange: controlledOnOpenChange,
+}) => {
   const { currentProject } = useAppConfigStore();
 
   const { execute: patchCredential, isLoading: isPatchingCredential } =
@@ -45,7 +52,7 @@ export const EditCredentialDialog: FC<
     throw new Error("Unexpected error: current project is not set");
   }
 
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<ProviderType | null>(
     null,
   );
@@ -86,12 +93,20 @@ export const EditCredentialDialog: FC<
 
   const handleOpenChange = (open: boolean) => {
     reset();
-    setOpen(open);
+    if (controlledOnOpenChange) {
+      controlledOnOpenChange(open);
+    } else {
+      setInternalOpen(open);
+    }
   };
 
+  useEffect(() => {
+    setInternalOpen(!!controlledIsOpen);
+  }, [controlledIsOpen]);
+
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+    <Dialog open={internalOpen} onOpenChange={handleOpenChange}>
+      {!!children ? <DialogTrigger asChild>{children}</DialogTrigger> : null}
       <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>Edit Credential</DialogTitle>
@@ -109,7 +124,7 @@ export const EditCredentialDialog: FC<
               <CardHeader className="flex flex-row items-center justify-between">
                 <div className="flex flex-row gap-2 items-center">
                   <ProviderLogo name={provider.providerType} />
-                  <h2 className="text-lg font-medium">{selectedProvider}</h2>
+                  <h2 className="text-lg font-medium">{provider.name}</h2>
                 </div>
               </CardHeader>
               <CardContent>

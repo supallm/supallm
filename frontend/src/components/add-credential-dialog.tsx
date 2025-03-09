@@ -21,7 +21,8 @@ import { createCredentialUsecase } from "@/core/usecases";
 import { hookifyFunction } from "@/hooks/hookify-function";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FC, useEffect, useState } from "react";
+import { DialogTrigger } from "@radix-ui/react-dialog";
+import { FC, PropsWithChildren, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { ProviderCardList } from "./credentials/provider-card-list";
@@ -29,10 +30,12 @@ import { ProviderLogo } from "./logos/provider-logo";
 import { Card, CardContent, CardHeader } from "./ui/card";
 import { Input } from "./ui/input";
 
-export const AddCredentialDialog: FC<{
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
-}> = ({ isOpen, onOpenChange }) => {
+export const AddCredentialDialog: FC<
+  PropsWithChildren<{
+    isOpen: boolean;
+    onOpenChange: (open: boolean) => void;
+  }>
+> = ({ isOpen, onOpenChange, children }) => {
   const { currentProject } = useAppConfigStore();
   const { execute: createCredential, isLoading: isCreatingCredential } =
     hookifyFunction(
@@ -91,6 +94,7 @@ export const AddCredentialDialog: FC<{
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
+      {!!children && <DialogTrigger asChild>{children}</DialogTrigger>}
       <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>Add Credential</DialogTitle>

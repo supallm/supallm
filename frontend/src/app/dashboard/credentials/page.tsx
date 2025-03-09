@@ -1,7 +1,10 @@
 "use client";
 
 import { AddCredentialDialog } from "@/components/add-credential-dialog";
-import { CredentialCard } from "@/components/credentials/credential-card";
+import {
+  CredentialTable,
+  CredentialTableColumns,
+} from "@/components/credential-table/credential-table";
 import { EmptyState } from "@/components/empty-state";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
@@ -18,12 +21,6 @@ const PageSkeleton = () => {
   return (
     <div className="">
       <PageContainer>
-        <div className="flex justify-end">
-          <Button disabled startContent={<PlusIcon className="w-3 h-3" />}>
-            Add Credential
-          </Button>
-        </div>
-        <Spacer />
         <div className="space-y-4 w-full flex flex-col grow">
           <Skeleton className="h-[125px] w-fill rounded-xl" />
           <Skeleton className="h-[125px] w-fill rounded-xl" />
@@ -59,7 +56,11 @@ const ProjectPage = () => {
         isOpen={isDialogOpen}
         onOpenChange={setIsDialogOpen}
       />
-      <PageHeader title="Credentials" />
+      <PageHeader
+        title="Credentials"
+        actions={addCredentialButton}
+        actionsLoading={isLoading}
+      />
       <Spacer />
       <PageContainer>
         {isLoading && <PageSkeleton />}
@@ -74,14 +75,10 @@ const ProjectPage = () => {
 
         {!isLoading && !!llmProviders?.length && (
           <div>
-            <div className="flex justify-end">{addCredentialButton}</div>
-            <Spacer />
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {Object.entries(llmProviders).map(([key, value]) => (
-                <CredentialCard onEdit={() => {}} key={key} provider={value} />
-              ))}
-            </div>
+            <CredentialTable
+              columns={CredentialTableColumns}
+              data={llmProviders}
+            />
           </div>
         )}
       </PageContainer>

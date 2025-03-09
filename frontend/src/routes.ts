@@ -13,3 +13,11 @@ export const NoProjectRoute = {
 export const ModelsRoute = {
   path: () => `/dashboard/models`,
 };
+
+export const ChatFlowsRoute = {
+  path: () => `/dashboard/flows`,
+};
+
+export const FlowBuilderRoute = {
+  path: (id: string) => `/builder/chat-flow/${id}`,
+};

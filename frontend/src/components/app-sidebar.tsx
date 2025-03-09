@@ -1,8 +1,8 @@
 "use client";
 
 import {
+  BrainCircuit,
   ChevronUp,
-  FileSliders,
   Home,
   KeyRoundIcon,
   Settings,
@@ -21,7 +21,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { CredentialsRoute, ModelsRoute, OverviewRoute } from "@/routes";
+import { ChatFlowsRoute, CredentialsRoute, OverviewRoute } from "@/routes";
 import { useAuth } from "@clerk/nextjs";
 import Link from "next/link";
 import {
@@ -39,9 +39,9 @@ const items = [
     icon: Home,
   },
   {
-    title: "Models",
-    url: ModelsRoute.path(),
-    icon: FileSliders,
+    title: "AI flows",
+    url: ChatFlowsRoute.path(),
+    icon: BrainCircuit,
   },
   {
     title: "Credentials",

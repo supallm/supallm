@@ -1,6 +1,6 @@
+import type {} from "@redux-devtools/extension"; // required for devtools typing
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
-import type {} from "@redux-devtools/extension"; // required for devtools typing
 
 export interface CrudState<T extends Partial<{ id: string }>> {
   list: T[];
@@ -8,6 +8,7 @@ export interface CrudState<T extends Partial<{ id: string }>> {
   add: (item: T) => void;
   patch: (id: string, data: Partial<T>) => void;
   delete: (id: string) => void;
+  upsert: (data: T) => void;
 }
 
 export const createCrudStore = <T extends { id: string }>(name: string) => {
@@ -33,6 +34,14 @@ export const createCrudStore = <T extends { id: string }>(name: string) => {
           delete: (id) =>
             set((state) => ({
               list: state.list.filter((item) => item.id !== id),
+            })),
+          upsert: (data) =>
+            set((state) => ({
+              list: state.list.find((item) => item.id === data.id)
+                ? state.list.map((item) =>
+                    item.id === data.id ? { ...item, ...data } : item,
+                  )
+                : [...state.list, data],
             })),
         }),
         {

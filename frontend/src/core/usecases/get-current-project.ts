@@ -8,8 +8,6 @@ export class GetCurrentProjectUsecase {
   async execute(userId: string): Promise<Project | null> {
     const projects = await this.projectService.listAll(userId);
 
-    console.log("get current project", projects);
-
     if (!projects?.length) {
       return null;
     }
