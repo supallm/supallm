@@ -4,9 +4,13 @@ import { logger } from "../utils/logger";
 
 export class NodeExecutor {
   private providerFactory: ProviderFactory;
+  private maxTokens: number;
+  private temperature: number;
 
   constructor() {
     this.providerFactory = new ProviderFactory();
+    this.maxTokens = 5000;
+    this.temperature = 0.7;
   }
 
   async executeNode(
@@ -61,30 +65,26 @@ export class NodeExecutor {
     node: NodeDefinition,
     inputs: Record<string, any>
   ): Promise<any> {
-    // Get the LLM provider
+    const auth = node.auth || {};
+
     const provider = this.providerFactory.createLLMProvider({
-      provider: node.auth?.provider,
-      apiKey: node.auth?.apiKey,
-      model: node.model,
+      provider: auth.provider || "openai",
+      apiKey: auth.apiKey || "sk-test",
+      model: node.model || "gpt-4o-mini",
     });
 
-    // Get the prompt
     let prompt = node.prompt;
-
-    // If there's an input prompt, use it instead
     if (inputs.prompt) {
       prompt = inputs.prompt;
     }
 
-    // Replace variables in the prompt
     if (inputs.variables && typeof prompt === "string") {
       prompt = this.replaceVariables(prompt, inputs.variables);
     }
 
-    // Execute the LLM call
     const result = await provider.generate(prompt, {
-      temperature: node.parameters?.temperature || 0.7,
-      maxTokens: node.parameters?.maxTokens || 1000,
+      temperature: node.parameters?.temperature || this.temperature,
+      maxTokens: node.parameters?.maxTokens || this.maxTokens,
     });
 
     return result;
@@ -96,7 +96,6 @@ export class NodeExecutor {
   ): Promise<any> {
     let template = node.template;
 
-    // Replace variables in the template
     const variables = { ...node.variables, ...inputs };
     const prompt = this.replaceVariables(template, variables);
 
@@ -107,7 +106,6 @@ export class NodeExecutor {
     node: NodeDefinition,
     inputs: Record<string, any>
   ): Promise<any> {
-    // Implementation depends on the specific retriever type
     switch (node.source) {
       case "web":
         // Implement web retrieval
@@ -119,7 +117,6 @@ export class NodeExecutor {
         throw new Error(`Unsupported retriever source: ${node.source}`);
     }
 
-    // Placeholder
     return { documents: [] };
   }
 
@@ -127,7 +124,6 @@ export class NodeExecutor {
     node: NodeDefinition,
     inputs: Record<string, any>
   ): Promise<any> {
-    // Implementation depends on the specific tool
     switch (node.toolName) {
       case "calculator":
         // Implement calculator
@@ -139,7 +135,6 @@ export class NodeExecutor {
         throw new Error(`Unsupported tool: ${node.toolName}`);
     }
 
-    // Placeholder
     return { result: null };
   }
 
@@ -147,7 +142,6 @@ export class NodeExecutor {
     node: NodeDefinition,
     inputs: Record<string, any>
   ): Promise<any> {
-    // Format the output according to the specified format
     switch (node.format) {
       case "json":
         try {

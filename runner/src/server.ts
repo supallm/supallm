@@ -246,7 +246,7 @@ export class RunnerServer {
       nodeId: params.nodeId,
       message: params.message,
       dataJson: dataJson,
-      timestamp: BigInt(Date.now()),
+      timestamp: Date.now().toString(),
     });
   }
 

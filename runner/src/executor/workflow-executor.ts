@@ -27,37 +27,29 @@ export class WorkflowExecutor extends EventEmitter {
     this.emit("workflowStarted", { workflowId });
 
     try {
-      // Validate workflow definition
       this.validateWorkflow(definition);
 
-      // Initialize execution context
       const context = {
         inputs: options.inputs || {},
         outputs: {} as Record<string, any>,
         nodeResults: {} as Record<string, NodeExecutionResult>,
       };
 
-      // Determine execution order based on connections
       const executionOrder = this.determineExecutionOrder(definition);
 
-      // Execute nodes in order
       for (const nodeId of executionOrder) {
         const node = definition.nodes[nodeId];
 
         this.emit("nodeStarted", { workflowId, nodeId });
 
         try {
-          // Get input values for this node from previous nodes
           const nodeInputs = this.resolveNodeInputs(
             nodeId,
             definition,
             context
           );
-
-          // Execute the node
           const result = await this.nodeExecutor.executeNode(node, nodeInputs);
 
-          // Store the result
           context.nodeResults[nodeId] = result;
           context.outputs[nodeId] = result.output;
 
@@ -90,7 +82,6 @@ export class WorkflowExecutor extends EventEmitter {
         }
       }
 
-      // Determine final output
       const finalOutput = this.determineFinalOutput(definition, context);
 
       const result: WorkflowExecutionResult = {
@@ -130,13 +121,10 @@ export class WorkflowExecutor extends EventEmitter {
   }
 
   private validateWorkflow(definition: WorkflowDefinition): void {
-    console.log("definition", definition);
-    // Ensure workflow has nodes
     if (!definition.nodes || Object.keys(definition.nodes).length === 0) {
       throw new Error("Workflow must have at least one node");
     }
 
-    // Ensure all connections reference valid nodes
     for (const connection of definition.connections) {
       if (!definition.nodes[connection.from]) {
         throw new Error(

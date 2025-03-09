@@ -21,7 +21,7 @@ message ExecutionEvent {
   string node_id = 3;
   string message = 4;
   string data_json = 5;
-  int64 timestamp = 6;
+  string timestamp = 6;
 }
 
 message StopWorkflowRequest { string workflow_id = 1; }

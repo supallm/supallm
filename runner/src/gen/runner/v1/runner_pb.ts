@@ -4,7 +4,7 @@
 // @ts-nocheck
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
-import { Message, proto3, protoInt64 } from "@bufbuild/protobuf";
+import { Message, proto3 } from "@bufbuild/protobuf";
 
 /**
  * @generated from message runner.v1.ExecuteWorkflowRequest
@@ -85,9 +85,9 @@ export class ExecutionEvent extends Message<ExecutionEvent> {
   dataJson = "";
 
   /**
-   * @generated from field: int64 timestamp = 6;
+   * @generated from field: string timestamp = 6;
    */
-  timestamp = protoInt64.zero;
+  timestamp = "";
 
   constructor(data?: PartialMessage<ExecutionEvent>) {
     super();
@@ -102,7 +102,7 @@ export class ExecutionEvent extends Message<ExecutionEvent> {
     { no: 3, name: "node_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 4, name: "message", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 5, name: "data_json", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 6, name: "timestamp", kind: "scalar", T: 3 /* ScalarType.INT64 */ },
+    { no: 6, name: "timestamp", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ExecutionEvent {
