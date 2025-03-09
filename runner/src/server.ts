@@ -9,6 +9,7 @@ import {
   StopWorkflowRequest,
   StopWorkflowResponse,
 } from "./gen/runner/v1/runner_pb";
+import * as grpcReflection from "@grpc/reflection";
 
 // Load the gRPC service
 const PROTO_PATH = path.resolve(
@@ -31,12 +32,15 @@ const WorkflowRunnerService = runnerProto.WorkflowRunner;
 export class RunnerServer {
   private server: grpc.Server;
   private workflowExecutor: WorkflowExecutor;
+  private reflection: grpcReflection.ReflectionService;
   [method: string]: any;
 
   constructor(private port: number = 50051) {
     this.server = new grpc.Server();
     this.workflowExecutor = new WorkflowExecutor();
+    this.reflection = new grpcReflection.ReflectionService(packageDefinition);
 
+    this.reflection.addToServer(this.server);
     this.server.addService(WorkflowRunnerService.service, {
       executeWorkflow: this.executeWorkflow.bind(this),
       stopWorkflow: this.stopWorkflow.bind(this),

@@ -17,6 +17,7 @@
     "@bufbuild/protoc-gen-es": "^1.4.2",
     "@grpc/grpc-js": "^1.8.0",
     "@grpc/proto-loader": "^0.7.0",
+    "@grpc/reflection": "^1.0.4",
     "@langchain/anthropic": "^0.3.15",
     "@langchain/core": "^0.3.42",
     "@langchain/openai": "^0.4.4",
@@ -28,10 +29,10 @@
     "@types/jest": "^29.5.0",
     "@types/node": "^18.15.11",
     "jest": "^29.5.0",
+    "nodemon": "^3.0.1",
     "ts-jest": "^29.1.0",
     "ts-node": "^10.9.1",
     "ts-proto": "^1.146.0",
-    "typescript": "^5.0.4",
-    "nodemon": "^3.0.1"
+    "typescript": "^5.0.4"
   }
 }
