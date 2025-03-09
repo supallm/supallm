@@ -60,7 +60,7 @@ export class NodeExecutor extends EventEmitter {
     inputs: Record<string, any>
   ): Promise<any> {
     const auth = node.auth || {};
-    const useStreaming = node.streaming === true;
+    const useRealStreaming = node.streaming === true;
 
     const provider = this.providerFactory.createLLMProvider({
       provider: auth.provider,
@@ -77,14 +77,16 @@ export class NodeExecutor extends EventEmitter {
       prompt = this.replaceVariables(prompt, inputs.variables);
     }
 
-    if (useStreaming) {
-      logger.info(`Using streaming for node ${node.id}`);
+    logger.info(
+      `Executing node ${node.id} with ${
+        useRealStreaming ? "real" : "simulated"
+      } streaming`
+    );
 
-      const streamStartTime = Date.now();
-      let chunkCount = 0;
-      let totalChars = 0;
+    const startTime = Date.now();
+    let fullText = "";
 
-      let fullText = "";
+    if (useRealStreaming) {
       const stream = await provider.stream(prompt, {
         temperature: node.parameters?.temperature || this.temperature,
         maxTokens: node.parameters?.maxTokens || this.maxTokens,
@@ -115,32 +117,31 @@ export class NodeExecutor extends EventEmitter {
           chunk: content,
         });
       }
-
-      this.emit("nodeEndStreaming", {
-        nodeId: node.id,
-        fullText: fullText,
+    } else {
+      const result = await provider.generate(prompt, {
+        temperature: node.parameters?.temperature || this.temperature,
+        maxTokens: node.parameters?.maxTokens || this.maxTokens,
       });
 
-      const streamEndTime = Date.now();
-      const streamDuration = streamEndTime - streamStartTime;
+      fullText = result.text || "";
 
-      logger.info(
-        `Streaming stats for node ${
-          node.id
-        }: duration=${streamDuration}ms, chunks=${chunkCount}, chars=${totalChars}, chars/sec=${Math.round(
-          totalChars / (streamDuration / 1000)
-        )}`
-      );
-
-      return { text: fullText };
+      this.emit("nodeStreaming", {
+        nodeId: node.id,
+        chunk: fullText,
+      });
     }
 
-    const result = await provider.generate(prompt, {
-      temperature: node.parameters?.temperature || this.temperature,
-      maxTokens: node.parameters?.maxTokens || this.maxTokens,
+    this.emit("nodeEndStreaming", {
+      nodeId: node.id,
+      fullText: fullText,
     });
 
-    return result;
+    const duration = Date.now() - startTime;
+    logger.info(
+      `Node ${node.id} execution completed in ${duration}ms, text length: ${fullText.length}`
+    );
+
+    return { text: fullText };
   }
 
   private replaceVariables(

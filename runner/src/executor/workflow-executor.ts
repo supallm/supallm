@@ -17,12 +17,17 @@ export class WorkflowExecutor extends EventEmitter {
 
     // Relayer les événements de streaming
     this.nodeExecutor.on("nodeStreaming", (data) => {
-      // Log pour déboguer
-      logger.debug(
-        `Relaying streaming event: nodeId=${data.nodeId}, workflowId=${this.currentWorkflowId}, sessionId=${this.currentSessionId}`
-      );
-
       this.emit("nodeStreaming", {
+        ...data,
+        workflowId: this.currentWorkflowId,
+        sessionId: this.currentSessionId,
+        timestamp: Date.now(),
+      });
+    });
+
+    // Relayer les événements de fin de streaming
+    this.nodeExecutor.on("nodeEndStreaming", (data) => {
+      this.emit("nodeEndStreaming", {
         ...data,
         workflowId: this.currentWorkflowId,
         sessionId: this.currentSessionId,
