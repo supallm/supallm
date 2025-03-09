@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
-    "dev": "ts-node src/index.ts",
+    "dev": "nodemon",
+    "dev:debug": "nodemon --inspect",
     "test": "jest",
     "proto:generate": "cd ../proto && buf generate"
   },
@@ -30,6 +31,7 @@
     "ts-jest": "^29.1.0",
     "ts-node": "^10.9.1",
     "ts-proto": "^1.146.0",
-    "typescript": "^5.0.4"
+    "typescript": "^5.0.4",
+    "nodemon": "^3.0.1"
   }
 }

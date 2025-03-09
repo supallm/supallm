@@ -130,6 +130,7 @@ export class WorkflowExecutor extends EventEmitter {
   }
 
   private validateWorkflow(definition: WorkflowDefinition): void {
+    console.log("definition", definition);
     // Ensure workflow has nodes
     if (!definition.nodes || Object.keys(definition.nodes).length === 0) {
       throw new Error("Workflow must have at least one node");

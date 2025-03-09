@@ -11,8 +11,8 @@ service WorkflowRunner {
 
 message ExecuteWorkflowRequest {
   string workflow_id = 1;
-  bytes computed_definition = 2;
-  bytes inputs = 3;
+  string computed_definition_json = 2;
+  string inputs_json = 3;
 }
 
 message ExecutionEvent {
@@ -20,7 +20,7 @@ message ExecutionEvent {
   string workflow_id = 2;
   string node_id = 3;
   string message = 4;
-  bytes data = 5;
+  string data_json = 5;
   int64 timestamp = 6;
 }
 

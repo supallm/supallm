@@ -16,14 +16,14 @@ export class ExecuteWorkflowRequest extends Message<ExecuteWorkflowRequest> {
   workflowId = "";
 
   /**
-   * @generated from field: bytes computed_definition = 2;
+   * @generated from field: string computed_definition_json = 2;
    */
-  computedDefinition = new Uint8Array(0);
+  computedDefinitionJson = "";
 
   /**
-   * @generated from field: bytes inputs = 3;
+   * @generated from field: string inputs_json = 3;
    */
-  inputs = new Uint8Array(0);
+  inputsJson = "";
 
   constructor(data?: PartialMessage<ExecuteWorkflowRequest>) {
     super();
@@ -34,8 +34,8 @@ export class ExecuteWorkflowRequest extends Message<ExecuteWorkflowRequest> {
   static readonly typeName = "runner.v1.ExecuteWorkflowRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "workflow_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: "computed_definition", kind: "scalar", T: 12 /* ScalarType.BYTES */ },
-    { no: 3, name: "inputs", kind: "scalar", T: 12 /* ScalarType.BYTES */ },
+    { no: 2, name: "computed_definition_json", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "inputs_json", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ExecuteWorkflowRequest {
@@ -80,9 +80,9 @@ export class ExecutionEvent extends Message<ExecutionEvent> {
   message = "";
 
   /**
-   * @generated from field: bytes data = 5;
+   * @generated from field: string data_json = 5;
    */
-  data = new Uint8Array(0);
+  dataJson = "";
 
   /**
    * @generated from field: int64 timestamp = 6;
@@ -101,7 +101,7 @@ export class ExecutionEvent extends Message<ExecutionEvent> {
     { no: 2, name: "workflow_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 3, name: "node_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 4, name: "message", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 5, name: "data", kind: "scalar", T: 12 /* ScalarType.BYTES */ },
+    { no: 5, name: "data_json", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 6, name: "timestamp", kind: "scalar", T: 3 /* ScalarType.INT64 */ },
   ]);
 

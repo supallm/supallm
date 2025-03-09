@@ -48,17 +48,17 @@ const transports = [
   new winston.transports.Console({
     format: consoleFormat,
   }),
-  // File transport for errors
-  new winston.transports.File({
-    filename: "logs/error.log",
-    level: "error",
-    format: fileFormat,
-  }),
-  // File transport for all logs
-  new winston.transports.File({
-    filename: "logs/all.log",
-    format: fileFormat,
-  }),
+  // // File transport for errors
+  // new winston.transports.File({
+  //   filename: "logs/error.log",
+  //   level: "error",
+  //   format: fileFormat,
+  // }),
+  // // File transport for all logs
+  // new winston.transports.File({
+  //   filename: "logs/all.log",
+  //   format: fileFormat,
+  // }),
 ];
 
 // Create logger instance
