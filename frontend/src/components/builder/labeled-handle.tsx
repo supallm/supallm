@@ -1,15 +1,29 @@
 import { cn } from "@/lib/utils";
 import { HandleProps } from "@xyflow/react";
-import { forwardRef, HTMLAttributes, ReactNode } from "react";
+import { FC, forwardRef, HTMLAttributes, ReactNode } from "react";
 
 import { BaseHandle } from "@/components/base-handle";
 import { IconTooltip } from "@/components/icon-tooltip";
+import { ImageIcon, TextIcon } from "lucide-react";
 
 const flexDirections = {
   top: "flex-col",
   right: "justify-end",
   bottom: "flex-col-reverse justify-end",
   left: "flex-row",
+};
+
+export type LabeledHandleType = "image" | "text" | "text-stream";
+
+const HandleTypeIcon: FC<{ type: LabeledHandleType }> = ({
+  type,
+}): ReactNode => {
+  switch (type) {
+    case "image":
+      return <ImageIcon className="w-4 h-4" />;
+    case "text":
+      return <TextIcon className="w-4 h-4" />;
+  }
 };
 
 export const LabeledHandle = forwardRef<
@@ -20,6 +34,7 @@ export const LabeledHandle = forwardRef<
       handleClassName?: string;
       labelClassName?: string;
       tooltip?: ReactNode;
+      handleType: LabeledHandleType;
     }
 >(
   (
@@ -30,6 +45,7 @@ export const LabeledHandle = forwardRef<
       title,
       position,
       tooltip,
+      handleType,
       ...props
     },
     ref,
@@ -55,9 +71,20 @@ export const LabeledHandle = forwardRef<
           labelClassName,
         )}
       >
+        {position === "left" && (
+          <>
+            <HandleTypeIcon type={handleType} />
+          </>
+        )}
         {!!tooltip && position === "right" && <IconTooltip content={tooltip} />}
         {title}
         {!!tooltip && position === "left" && <IconTooltip content={tooltip} />}
+
+        {position === "right" && (
+          <>
+            <HandleTypeIcon type={handleType} />
+          </>
+        )}
       </label>
     </div>
   ),

@@ -21,7 +21,7 @@ export type BaseNodeHandle = {
    */
   id: string;
   tooltip?: string | ReactNode;
-  type: "text" | "image";
+  type: "text" | "text-stream" | "image";
 };
 
 export type BaseNodeProps = {
@@ -67,6 +67,7 @@ const BaseNode: FC<PropsWithChildren<BaseNodeProps>> = ({
                 title={handle.label}
                 type="source"
                 id={handle.id}
+                handleType={handle.type}
                 tooltip={handle.tooltip}
                 position={Position.Left}
               />
@@ -87,6 +88,7 @@ const BaseNode: FC<PropsWithChildren<BaseNodeProps>> = ({
                 title={handle.label}
                 type="target"
                 id={handle.id}
+                handleType={handle.type}
                 tooltip={handle.tooltip}
                 position={Position.Right}
               />

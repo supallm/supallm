@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { FormControl, FormLabel } from "./ui/form";
 import {
@@ -10,6 +11,8 @@ import {
   SelectValue,
 } from "./ui/select";
 
+export type AppSelectSize = "sm" | "md";
+
 export function AppSelect<T extends string>(props: {
   onValueChange: (value: T) => void;
   defaultValue: T;
@@ -18,7 +21,15 @@ export function AppSelect<T extends string>(props: {
     label: string;
   }[];
   label?: string;
+  size?: AppSelectSize;
 }) {
+  const sizeClasses: Record<AppSelectSize, string> = {
+    sm: "h-7 rounded-sm",
+    md: "h-9 rounded-md",
+  } as const;
+
+  const sizeClass = sizeClasses[props.size ?? "md"];
+
   const { onValueChange, defaultValue, choices, label } = props;
   const [value, setValue] = useState(defaultValue);
   useEffect(() => {
@@ -35,7 +46,7 @@ export function AppSelect<T extends string>(props: {
         defaultValue={defaultValue}
         value={value}
       >
-        <FormControl className="w-full">
+        <FormControl className={cn("w-full", sizeClass)}>
           <SelectTrigger>
             <SelectValue placeholder="Select the model to use" />
           </SelectTrigger>

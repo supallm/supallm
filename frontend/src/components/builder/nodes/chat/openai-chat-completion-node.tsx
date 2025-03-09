@@ -11,8 +11,12 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { NumberInput } from "@/components/ui/number-input";
-import { ChatOpenAINodeData } from "@/core/entities/flow/flow-openai";
+import {
+  ChatOpenAINodeData,
+  OpenAIModels,
+} from "@/core/entities/flow/flow-openai";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { NodeProps, useReactFlow } from "@xyflow/react";
 import { FC, memo } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -21,12 +25,19 @@ import BaseNode from "../common/base-node";
 import { BaseNodeContent } from "../common/base-node-content";
 import { ConfigureModelMessagesDialog } from "../model-messages/configure-model-messages-dialog";
 
-const OpenAIChatCompletionNode: FC<{ data: ChatOpenAINodeData }> = ({
+type OpenAIChatCompletionNodeProps = NodeProps & {
+  data: ChatOpenAINodeData;
+};
+
+const OpenAIChatCompletionNode: FC<OpenAIChatCompletionNodeProps> = ({
   data,
+  id: nodeId,
 }) => {
+  const { updateNodeData } = useReactFlow();
+
   const formSchema = z.object({
     credentialId: z.string().min(2),
-    model: z.string().min(2),
+    model: z.enum(OpenAIModels),
     temperature: z.number().min(0).max(2),
     maxCompletionTokens: z.number().min(100).optional(),
     developerMessage: z.string().min(0),
@@ -38,6 +49,7 @@ const OpenAIChatCompletionNode: FC<{ data: ChatOpenAINodeData }> = ({
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
+    mode: "onChange",
     defaultValues: {
       credentialId: data.credentialId ?? "",
       model: data.model ?? "",
@@ -56,6 +68,28 @@ const OpenAIChatCompletionNode: FC<{ data: ChatOpenAINodeData }> = ({
     console.log(values);
   }
 
+  async function onInvalid(data: any) {
+    console.log("invalid");
+    console.log(data);
+  }
+
+  const saveNode = () => {
+    const formValues = form.getValues();
+
+    const data: ChatOpenAINodeData = {
+      credentialId: formValues.credentialId,
+      providerType: "openai",
+      model: formValues.model,
+      temperature: formValues.temperature,
+      maxCompletionTokens: formValues.maxCompletionTokens ?? null,
+      developerMessage: formValues.developerMessage,
+      imageResolution: formValues.imageResolution,
+      responseFormat: formValues.responseFormat,
+    };
+
+    updateNodeData(nodeId, data);
+  };
+
   return (
     <BaseNode
       outputHandles={[
@@ -63,22 +97,25 @@ const OpenAIChatCompletionNode: FC<{ data: ChatOpenAINodeData }> = ({
           label: "Response message",
           id: "chatResponse",
           tooltip: "The response message from the AI",
+          type: "text",
         },
         {
-          label: "All messages",
+          label: "Response message stream",
           id: "chatResponse",
-          tooltip:
-            "This will include the full conversation history in the format: [user_message, ai_message, user_message, ai_message, ...]",
+          tooltip: "The response message from the AI",
+          type: "text-stream",
         },
       ]}
       inputHandles={[
         {
           label: "Prompt",
           id: "prompt",
+          type: "text",
         },
         {
           label: "Images",
           id: "images",
+          type: "image",
         },
       ]}
       header={
@@ -91,7 +128,11 @@ const OpenAIChatCompletionNode: FC<{ data: ChatOpenAINodeData }> = ({
       <BaseNodeContent>
         <div className="flex flex-col gap-2">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form
+              onChange={saveNode}
+              // onChange={form.handleSubmit(onSubmit, onInvalid)}
+              className="space-y-4"
+            >
               <FormField
                 control={form.control}
                 name="credentialId"
