@@ -3,6 +3,7 @@ import { HandleProps } from "@xyflow/react";
 import { forwardRef, HTMLAttributes } from "react";
 
 import { BaseHandle } from "@/components/base-handle";
+import { IconTooltip } from "@/components/icon-tooltip";
 
 const flexDirections = {
   top: "flex-col",
@@ -18,17 +19,26 @@ export const LabeledHandle = forwardRef<
       title: string;
       handleClassName?: string;
       labelClassName?: string;
+      tooltip?: string;
     }
 >(
   (
-    { className, labelClassName, handleClassName, title, position, ...props },
+    {
+      className,
+      labelClassName,
+      handleClassName,
+      title,
+      position,
+      tooltip,
+      ...props
+    },
     ref,
   ) => (
     <div
       ref={ref}
       title={title}
       className={cn(
-        "relative flex items-center text-sm py-2",
+        "relative flex items-center text-sm py-1.6",
         flexDirections[position],
         className,
       )}
@@ -38,8 +48,16 @@ export const LabeledHandle = forwardRef<
         className={cn("!w-2.5 !h-2.5 !bg-gray-400", handleClassName)}
         {...props}
       />
-      <label className={cn("px-3 text-foreground", labelClassName)}>
+
+      <label
+        className={cn(
+          "px-3 text-foreground flex items-center gap-x-1",
+          labelClassName,
+        )}
+      >
+        {!!tooltip && position === "right" && <IconTooltip content={tooltip} />}
         {title}
+        {!!tooltip && position === "left" && <IconTooltip content={tooltip} />}
       </label>
     </div>
   ),

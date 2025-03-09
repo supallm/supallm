@@ -13,12 +13,10 @@ import {
 import { NumberInput } from "@/components/ui/number-input";
 import { ChatOpenAINodeData } from "@/core/entities/flow/flow-openai";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Position } from "@xyflow/react";
 import { FC, memo } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { ProviderLogo } from "../../../logos/provider-logo";
-import { LabeledHandle } from "../../labeled-handle";
 import BaseNode from "../common/base-node";
 import { BaseNodeContent } from "../common/base-node-content";
 import { ConfigureModelMessagesDialog } from "../model-messages/configure-model-messages-dialog";
@@ -60,7 +58,29 @@ const OpenAIChatCompletionNode: FC<{ data: ChatOpenAINodeData }> = ({
 
   return (
     <BaseNode
-      outputLabel="Chat response"
+      outputHandles={[
+        {
+          label: "Response message",
+          id: "chatResponse",
+          tooltip: "The response message from the AI",
+        },
+        {
+          label: "All messages",
+          id: "chatResponse",
+          tooltip:
+            "This will include the full conversation history in the format: [user_message, ai_message, user_message, ai_message, ...]",
+        },
+      ]}
+      inputHandles={[
+        {
+          label: "Prompt",
+          id: "prompt",
+        },
+        {
+          label: "Images",
+          id: "images",
+        },
+      ]}
       header={
         <>
           <ProviderLogo name="openai" />
@@ -68,13 +88,6 @@ const OpenAIChatCompletionNode: FC<{ data: ChatOpenAINodeData }> = ({
         </>
       }
     >
-      <LabeledHandle
-        title="Input"
-        type="source"
-        id="input"
-        position={Position.Left}
-      />
-
       <BaseNodeContent>
         <div className="flex flex-col gap-2">
           <Form {...form}>

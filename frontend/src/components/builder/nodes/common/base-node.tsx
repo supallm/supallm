@@ -11,19 +11,29 @@ import {
 import { NODE_WIDTH } from "../../constants";
 import { LabeledHandle } from "../../labeled-handle";
 
+export type BaseNodeHandle = {
+  /**
+   * Name displayed in the node
+   */
+  label: string;
+  /**
+   * Name of the handle used in the node data flow
+   */
+  id: string;
+  tooltip?: string | ReactNode;
+};
+
 export type BaseNodeProps = {
   header: ReactNode;
-  outputLabel: string;
-  noOutput?: boolean;
-  noInput?: boolean;
+  inputHandles: BaseNodeHandle[];
+  outputHandles: BaseNodeHandle[];
 };
 
 const BaseNode: FC<PropsWithChildren<BaseNodeProps>> = ({
   children,
   header,
-  outputLabel,
-  noOutput,
-  noInput,
+  inputHandles,
+  outputHandles,
 }) => {
   const [active, setActive] = useState(true);
 
@@ -43,25 +53,43 @@ const BaseNode: FC<PropsWithChildren<BaseNodeProps>> = ({
       <div className="flex flex-row items-center border-b gap-2 py-2 px-3">
         {header}
       </div>
-      {!noInput && (
+      {!!inputHandles.length && (
         <>
           <div className="flex flex-col gap-2 text-center py-1 bg-gray-50 border-b text-sm">
             Inputs
           </div>
-          <div className="py-3">{children}</div>
+
+          <div className="py-3">
+            {inputHandles.map((handle, index) => (
+              <LabeledHandle
+                key={`input-${handle.id}-${index}`}
+                title={handle.label}
+                type="source"
+                id={handle.id}
+                tooltip={handle.tooltip}
+                position={Position.Left}
+              />
+            ))}
+            {children}
+          </div>
         </>
       )}
-      {!noOutput && (
+      {!!outputHandles.length && (
         <>
           <div className="flex flex-col gap-2 text-center py-1 bg-gray-50 border-y text-sm">
             Output
           </div>
-          <div className="flex flex-col gap-2 text-center py-1 bg-gray-50 rounded-b-xl">
-            <LabeledHandle
-              title={outputLabel}
-              type="target"
-              position={Position.Right}
-            />
+          <div className="flex flex-col gap-2 text-center py-3 bg-gray-50 rounded-b-xl">
+            {outputHandles.map((handle, index) => (
+              <LabeledHandle
+                key={`output-${handle.id}-${index}`}
+                title={handle.label}
+                type="target"
+                id={handle.id}
+                tooltip={handle.tooltip}
+                position={Position.Right}
+              />
+            ))}
           </div>
         </>
       )}
