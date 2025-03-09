@@ -4,6 +4,7 @@ import path from "path";
 import { WorkflowExecutor } from "./executor/workflow-executor";
 import { logger } from "./utils/logger";
 import {
+  EventType,
   ExecuteWorkflowRequest,
   ExecutionEvent,
   ValidateWorkflowRequest,
@@ -27,14 +28,12 @@ const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
 const protoDescriptor = grpc.loadPackageDefinition(packageDefinition);
 // @ts-ignore - Ignore type error
 const runnerProto = protoDescriptor.runner.v1;
-const WorkflowRunnerService = runnerProto.WorkflowRunner;
+const RunnerService = runnerProto.RunnerService;
 
 export class RunnerServer {
   private server: grpc.Server;
   private workflowExecutor: WorkflowExecutor;
   private reflection: grpcReflection.ReflectionService;
-  private CHUNK_THRESHOLD = 10;
-  private chunkBuffer = "";
   [method: string]: any;
 
   constructor(private port: number = 50051) {
@@ -54,7 +53,7 @@ export class RunnerServer {
     this.reflection = new grpcReflection.ReflectionService(packageDefinition);
 
     this.reflection.addToServer(this.server);
-    this.server.addService(WorkflowRunnerService.service, {
+    this.server.addService(RunnerService.service, {
       executeWorkflow: this.executeWorkflow.bind(this),
       validateWorkflow: this.validateWorkflow.bind(this),
     });
@@ -114,7 +113,7 @@ export class RunnerServer {
           this.handleExecutionError(error, workflowId, sessionId, call)
         );
     } catch (error) {
-      this.handleParsingError(error, workflowId, sessionId, call);
+      this.handleParsingError(error as Error, workflowId, sessionId, call);
     }
   }
 
@@ -172,7 +171,7 @@ export class RunnerServer {
     // Event: workflow started
     this.workflowExecutor.on("workflowStarted", (data) => {
       call.write(
-        this.createEvent("STARTED", {
+        this.createEvent(EventType.STARTED, {
           sessionId: data.sessionId,
           workflowId: data.workflowId,
           message: "Workflow execution started",
@@ -185,12 +184,12 @@ export class RunnerServer {
     // Event: node started
     this.workflowExecutor.on("nodeStarted", (data) => {
       call.write(
-        this.createEvent("NODE_STARTED", {
+        this.createEvent(EventType.NODE_STARTED, {
           sessionId: data.sessionId,
           workflowId: data.workflowId,
           nodeId: data.nodeId,
           data: data.inputs,
-          message: `Node ${data.nodeId} execution started`,
+          message: "Node started",
         })
       );
     });
@@ -198,25 +197,12 @@ export class RunnerServer {
     // Event: node completed
     this.workflowExecutor.on("nodeCompleted", (data) => {
       call.write(
-        this.createEvent("NODE_COMPLETED", {
+        this.createEvent(EventType.NODE_COMPLETED, {
           sessionId: data.sessionId,
           workflowId: data.workflowId,
           nodeId: data.nodeId,
-          message: `Node ${data.nodeId} execution completed`,
           data: data.output,
-        })
-      );
-    });
-
-    // Event: node failed
-    this.workflowExecutor.on("nodeFailed", (data) => {
-      call.write(
-        this.createEvent("NODE_FAILED", {
-          sessionId: data.sessionId,
-          workflowId: data.workflowId,
-          nodeId: data.nodeId,
-          message: `Node ${data.nodeId} execution failed: ${data.error}`,
-          data: data.error,
+          message: "Node completed",
         })
       );
     });
@@ -224,147 +210,103 @@ export class RunnerServer {
     // Event: workflow completed
     this.workflowExecutor.on("workflowCompleted", (data) => {
       call.write(
-        this.createEvent("COMPLETED", {
+        this.createEvent(EventType.COMPLETED, {
           sessionId: data.sessionId,
           workflowId: data.workflowId,
-          nodeId: data.nodeId,
-          message: "Workflow execution completed",
-          data: data.output,
+          message: "Workflow completed",
         })
       );
 
+      logger.info(`Workflow completed: ${data.workflowId}`);
       call.end();
     });
 
     // Event: workflow failed
     this.workflowExecutor.on("workflowFailed", (data) => {
       call.write(
-        this.createEvent("FAILED", {
+        this.createEvent(EventType.FAILED, {
           sessionId: data.sessionId,
           workflowId: data.workflowId,
-          nodeId: "",
-          message: `Workflow execution failed: ${data.error}`,
-          data: data.error,
+          message: "Workflow failed",
         })
       );
 
+      logger.error(`Workflow failed: ${data.workflowId}`);
       call.end();
     });
 
+    // Event: node streaming
     this.workflowExecutor.on("nodeStreaming", (data) => {
-      call.write({
-        type: "NODE_STREAMING",
-        workflow_id: data.workflowId || "",
-        session_id: data.sessionId || "",
-        node_id: data.nodeId || "",
-        message: "Streaming chunk received",
-        data_json: data.chunk,
-        timestamp: Date.now().toString(),
-      });
+      call.write(
+        this.createEvent(EventType.NODE_STREAMING, {
+          sessionId: data.sessionId,
+          workflowId: data.workflowId,
+          nodeId: data.nodeId,
+          message: "Node streaming",
+        })
+      );
     });
-
     // Event: node end streaming
     this.workflowExecutor.on("nodeEndStreaming", (data) => {
-      const rawEvent = {
-        type: "NODE_END_STREAMING",
-        workflow_id: data.workflowId || "",
-        session_id: data.sessionId || "",
-        node_id: data.nodeId || "",
-        message: "Streaming chunk received",
-        data_json: data.fullText,
-        timestamp: Date.now().toString(),
-      };
-
-      call.write(rawEvent);
-      logger.info(`Streaming complete for node ${data.nodeId}`);
+      call.write(
+        this.createEvent(EventType.NODE_END_STREAMING, {
+          sessionId: data.sessionId,
+          workflowId: data.workflowId,
+          nodeId: data.nodeId,
+          message: "Node end streaming",
+        })
+      );
     });
   }
 
-  /**
-   * Create an ExecutionEvent object
-   */
   private createEvent(
-    type: string,
-    params: {
-      sessionId: string;
-      workflowId: string;
-      nodeId: string;
-      message: string;
-      data?: any;
-    }
+    eventType: EventType,
+    data: Record<string, any>
   ): ExecutionEvent {
-    // Créer l'événement
-    const event = new ExecutionEvent({
-      type,
-      sessionId: params.sessionId || "",
-      workflowId: params.workflowId || "",
-      nodeId: params.nodeId || "",
-      message: params.message,
-      dataJson: params.data !== undefined ? JSON.stringify(params.data) : "",
+    return new ExecutionEvent({
+      type: eventType,
+      sessionId: data.sessionId,
+      workflowId: data.workflowId,
+      nodeId: data.nodeId,
+      dataJson: JSON.stringify(data.data),
+      message: data.message,
       timestamp: Date.now().toString(),
     });
-
-    // Déboguer l'événement créé
-    logger.debug(
-      `Created event object: ${JSON.stringify({
-        type: event.type,
-        workflowId: event.workflowId,
-        sessionId: event.sessionId,
-        nodeId: event.nodeId,
-        message: event.message,
-        dataJsonLength: event.dataJson ? event.dataJson.length : 0,
-        timestamp: event.timestamp,
-      })}`
-    );
-
-    return event;
   }
 
-  /**
-   * Handle workflow execution errors
-   */
   private handleExecutionError(
-    error: any,
+    error: Error,
     workflowId: string,
     sessionId: string,
     call: grpc.ServerWritableStream<any, any>
   ): void {
-    logger.error(`Error executing workflow ${workflowId}: ${error}`);
-
     call.write(
-      this.createEvent("FAILED", {
+      this.createEvent(EventType.FAILED, {
         sessionId,
         workflowId,
-        nodeId: "",
-        message: `Unexpected error: ${error.message}`,
-        data: error,
+        message: error.message,
       })
     );
 
+    logger.error(`Error executing workflow: ${error.message}`);
     call.end();
   }
 
-  /**
-   * Handle workflow parsing errors
-   */
   private handleParsingError(
-    error: any,
+    error: Error,
     workflowId: string,
     sessionId: string,
     call: grpc.ServerWritableStream<any, any>
   ): void {
-    logger.error(`Error parsing workflow definition: ${error}`);
-
     call.write(
-      this.createEvent("FAILED", {
+      this.createEvent(EventType.FAILED, {
         sessionId,
         workflowId,
-        nodeId: "",
-        message: `Error parsing workflow definition: ${error}`,
-        data: error,
+        message: error.message,
       })
     );
 
+    logger.error(`Error parsing workflow: ${error.message}`);
     call.end();
   }
 }

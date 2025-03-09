@@ -7,6 +7,68 @@ import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialM
 import { Message, proto3 } from "@bufbuild/protobuf";
 
 /**
+ * @generated from enum runner.v1.EventType
+ */
+export enum EventType {
+  /**
+   * @generated from enum value: UNKNOWN = 0;
+   */
+  UNKNOWN = 0,
+
+  /**
+   * @generated from enum value: STARTED = 1;
+   */
+  STARTED = 1,
+
+  /**
+   * @generated from enum value: COMPLETED = 2;
+   */
+  COMPLETED = 2,
+
+  /**
+   * @generated from enum value: FAILED = 3;
+   */
+  FAILED = 3,
+
+  /**
+   * @generated from enum value: NODE_STARTED = 4;
+   */
+  NODE_STARTED = 4,
+
+  /**
+   * @generated from enum value: NODE_COMPLETED = 5;
+   */
+  NODE_COMPLETED = 5,
+
+  /**
+   * @generated from enum value: NODE_FAILED = 6;
+   */
+  NODE_FAILED = 6,
+
+  /**
+   * @generated from enum value: NODE_STREAMING = 7;
+   */
+  NODE_STREAMING = 7,
+
+  /**
+   * @generated from enum value: NODE_END_STREAMING = 8;
+   */
+  NODE_END_STREAMING = 8,
+}
+// Retrieve enum metadata with: proto3.getEnumType(EventType)
+proto3.util.setEnumType(EventType, "runner.v1.EventType", [
+  { no: 0, name: "UNKNOWN" },
+  { no: 1, name: "STARTED" },
+  { no: 2, name: "COMPLETED" },
+  { no: 3, name: "FAILED" },
+  { no: 4, name: "NODE_STARTED" },
+  { no: 5, name: "NODE_COMPLETED" },
+  { no: 6, name: "NODE_FAILED" },
+  { no: 7, name: "NODE_STREAMING" },
+  { no: 8, name: "NODE_END_STREAMING" },
+]);
+
+/**
  * @generated from message runner.v1.ExecuteWorkflowRequest
  */
 export class ExecuteWorkflowRequest extends Message<ExecuteWorkflowRequest> {
@@ -30,6 +92,11 @@ export class ExecuteWorkflowRequest extends Message<ExecuteWorkflowRequest> {
    */
   inputsJson = "";
 
+  /**
+   * @generated from field: string credentials_json = 5;
+   */
+  credentialsJson = "";
+
   constructor(data?: PartialMessage<ExecuteWorkflowRequest>) {
     super();
     proto3.util.initPartial(data, this);
@@ -42,6 +109,7 @@ export class ExecuteWorkflowRequest extends Message<ExecuteWorkflowRequest> {
     { no: 2, name: "workflow_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 3, name: "computed_workflow_json", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 4, name: "inputs_json", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: "credentials_json", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ExecuteWorkflowRequest {
@@ -66,9 +134,9 @@ export class ExecuteWorkflowRequest extends Message<ExecuteWorkflowRequest> {
  */
 export class ExecutionEvent extends Message<ExecutionEvent> {
   /**
-   * @generated from field: string type = 1;
+   * @generated from field: runner.v1.EventType type = 1;
    */
-  type = "";
+  type = EventType.UNKNOWN;
 
   /**
    * @generated from field: string workflow_id = 2;
@@ -108,7 +176,7 @@ export class ExecutionEvent extends Message<ExecutionEvent> {
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "runner.v1.ExecutionEvent";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "type", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 1, name: "type", kind: "enum", T: proto3.getEnumType(EventType) },
     { no: 2, name: "workflow_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 3, name: "session_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 4, name: "node_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },

@@ -21,7 +21,8 @@ export class NodeExecutor extends EventEmitter {
 
   async executeNode(
     node: NodeDefinition,
-    inputs: Record<string, any>
+    inputs: Record<string, any>,
+    credentials?: Record<string, any>
   ): Promise<NodeExecutionResult> {
     const startTime = Date.now();
     logger.info(`Executing node ${node.id} of type ${node.type}`);
@@ -31,7 +32,19 @@ export class NodeExecutor extends EventEmitter {
 
       switch (node.type) {
         case NodeType.LLM:
-          output = await this.executeLLMNode(node, inputs);
+          output = await this.executeLLMNode(node, inputs, credentials);
+          break;
+        case NodeType.TRANSFORM:
+          output = await this.executeTransformNode(node, inputs);
+          break;
+        case NodeType.MERGE:
+          output = this.executeMergeNode(inputs);
+          break;
+        case NodeType.ENTRYPOINT:
+          output = inputs;
+          break;
+        case NodeType.RESULT:
+          output = inputs;
           break;
         default:
           throw new Error(`Unsupported node type: ${node.type}`);
@@ -57,28 +70,32 @@ export class NodeExecutor extends EventEmitter {
 
   private async executeLLMNode(
     node: NodeDefinition,
-    inputs: Record<string, any>
+    inputs: Record<string, any>,
+    credentials?: Record<string, any>
   ): Promise<any> {
-    const auth = node.auth || {};
+    const auth = this.resolveAuth(node, credentials);
     const useRealStreaming = node.streaming === true;
 
     const provider = this.providerFactory.createLLMProvider({
-      provider: auth.provider,
+      provider: node.provider || auth.provider,
       apiKey: auth.apiKey,
-      model: node.model,
+      model: node.model || "",
     });
 
-    let prompt = node.prompt;
-    if (inputs.prompt) {
-      prompt = inputs.prompt;
-    }
+    // Build the prompt
+    let prompt = node.userPrompt || "";
 
-    if (inputs.variables && typeof prompt === "string") {
-      prompt = this.replaceVariables(prompt, inputs.variables);
+    // Replace variables in the prompt
+    if (prompt) {
+      prompt = this.replaceVariables(prompt, inputs);
+    } else if (Object.keys(inputs).length === 1) {
+      // If no prompt defined but one input, use it as prompt
+      const inputKey = Object.keys(inputs)[0];
+      prompt = inputs[inputKey];
     }
 
     logger.info(
-      `Executing node ${node.id} with ${
+      `Executing LLM node ${node.id} with ${
         useRealStreaming ? "real" : "simulated"
       } streaming`
     );
@@ -88,8 +105,9 @@ export class NodeExecutor extends EventEmitter {
 
     if (useRealStreaming) {
       const stream = await provider.stream(prompt, {
-        temperature: node.parameters?.temperature || this.temperature,
-        maxTokens: node.parameters?.maxTokens || this.maxTokens,
+        systemPrompt: node.systemPrompt,
+        temperature: node.parameters?.temperature || 0.7,
+        maxTokens: node.parameters?.maxTokens || 2000,
       });
 
       for await (const chunk of stream) {
@@ -119,8 +137,9 @@ export class NodeExecutor extends EventEmitter {
       }
     } else {
       const result = await provider.generate(prompt, {
-        temperature: node.parameters?.temperature || this.temperature,
-        maxTokens: node.parameters?.maxTokens || this.maxTokens,
+        systemPrompt: node.systemPrompt,
+        temperature: node.parameters?.temperature || 0.7,
+        maxTokens: node.parameters?.maxTokens || 2000,
       });
 
       fullText = result.text || "";
@@ -136,12 +155,49 @@ export class NodeExecutor extends EventEmitter {
       fullText: fullText,
     });
 
-    const duration = Date.now() - startTime;
     logger.info(
-      `Node ${node.id} execution completed in ${duration}ms, text length: ${fullText.length}`
+      `LLM node ${node.id} execution completed in ${
+        Date.now() - startTime
+      }ms, generated ${fullText.length} chars`
     );
 
+    // Determine the output format
+    const responseFormat = node.parameters?.responseFormat || "text";
+
+    if (responseFormat === "json") {
+      try {
+        return { text: fullText, json: JSON.parse(fullText) };
+      } catch (e) {
+        logger.warn(`Failed to parse JSON response: ${e}`);
+        return { text: fullText };
+      }
+    }
+
     return { text: fullText };
+  }
+
+  private async executeTransformNode(
+    node: NodeDefinition,
+    inputs: Record<string, any>
+  ): Promise<any> {
+    const code = node.code;
+
+    if (!code) {
+      throw new Error("Transform node requires code property");
+    }
+
+    try {
+      // Create a function from the code
+      const transformFn = new Function("inputs", code);
+      return transformFn(inputs);
+    } catch (error) {
+      throw new Error(`Error executing transform: ${error}`);
+    }
+  }
+
+  private executeMergeNode(inputs: Record<string, any>): any {
+    // The merge node simply combines all inputs into an object
+    return inputs;
   }
 
   private replaceVariables(
@@ -149,10 +205,65 @@ export class NodeExecutor extends EventEmitter {
     variables: Record<string, any>
   ): string {
     return template.replace(/\{\{(.*?)\}\}/g, (match, variable) => {
-      const trimmedVar = variable.trim();
-      return variables[trimmedVar] !== undefined
-        ? String(variables[trimmedVar])
-        : match;
+      const path = variable.trim().split(".");
+
+      if (path[0] === "inputs") {
+        path.shift(); // Remove 'inputs'
+
+        let value = variables;
+        for (const prop of path) {
+          if (value === undefined || value === null) break;
+          value = value[prop];
+        }
+
+        if (value === undefined) return match;
+
+        if (typeof value === "object") {
+          return JSON.stringify(value);
+        }
+
+        return String(value);
+      }
+
+      if (path[0] === "JSON") {
+        if (path[1] === "stringify" && path.length > 2) {
+          const objPath = path.slice(2);
+          let value = variables;
+
+          for (const prop of objPath) {
+            if (value === undefined || value === null) break;
+            value = value[prop];
+          }
+
+          if (value === undefined) return match;
+
+          return JSON.stringify(value);
+        }
+      }
+
+      return match;
     });
+  }
+
+  private resolveAuth(
+    node: NodeDefinition,
+    credentials?: Record<string, any>
+  ): Record<string, any> {
+    // If no auth defined, return an empty object
+    if (!node.auth) {
+      return {};
+    }
+
+    // If credentials are provided and there is a reference to a provider
+    if (credentials && node.auth.provider) {
+      const providerKey = node.auth.provider;
+      return {
+        provider: providerKey,
+        apiKey: credentials[providerKey] || node.auth.apiKey,
+      };
+    }
+
+    // Otherwise, use the auth defined in the node
+    return node.auth;
   }
 }

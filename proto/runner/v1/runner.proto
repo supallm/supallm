@@ -4,10 +4,10 @@ package runner.v1;
 
 option go_package = "github.com/supallm/core/proto/runner/v1;runnerv1";
 
-service WorkflowRunner {
-  rpc ExecuteWorkflow(ExecuteWorkflowRequest) returns (stream ExecutionEvent) {}
+service RunnerService {
+  rpc ExecuteWorkflow(ExecuteWorkflowRequest) returns (stream ExecutionEvent);
   rpc ValidateWorkflow(ValidateWorkflowRequest)
-      returns (ValidateWorkflowResponse) {}
+      returns (ValidateWorkflowResponse);
 }
 
 message ExecuteWorkflowRequest {
@@ -15,10 +15,23 @@ message ExecuteWorkflowRequest {
   string workflow_id = 2;
   string computed_workflow_json = 3;
   string inputs_json = 4;
+  string credentials_json = 5;
+}
+
+enum EventType {
+  UNKNOWN = 0;
+  STARTED = 1;
+  COMPLETED = 2;
+  FAILED = 3;
+  NODE_STARTED = 4;
+  NODE_COMPLETED = 5;
+  NODE_FAILED = 6;
+  NODE_STREAMING = 7;
+  NODE_END_STREAMING = 8;
 }
 
 message ExecutionEvent {
-  string type = 1;
+  EventType type = 1;
   string workflow_id = 2;
   string session_id = 3;
   string node_id = 4;
@@ -26,15 +39,6 @@ message ExecutionEvent {
   string data_json = 6;
   string timestamp = 7;
 }
-
-// ExecutionEvent.type peut être:
-// - "STARTED" - Workflow started
-// - "NODE_STARTED" - Node execution started
-// - "NODE_STREAMING" - Node streaming chunk received
-// - "NODE_COMPLETED" - Node execution completed
-// - "NODE_FAILED" - Node execution failed
-// - "COMPLETED" - Workflow completed
-// - "FAILED" - Workflow failed
 
 message ValidateWorkflowRequest {
   string workflow_id = 1;
