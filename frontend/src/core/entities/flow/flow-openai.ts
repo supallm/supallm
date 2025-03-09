@@ -58,8 +58,6 @@ export type OpenAIModel = (typeof OpenAIModels)[number];
 export type OpenAIMessage = OpenAIUserMessage | OpenAIAIAssistantMessage;
 
 export type ChatOpenAINodeData = {
-  name: string;
-  slug: string;
   credentialId: string;
   providerType: "openai";
   model: OpenAIModel;

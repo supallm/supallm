@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import { HandleProps } from "@xyflow/react";
-import { forwardRef, HTMLAttributes } from "react";
+import { forwardRef, HTMLAttributes, ReactNode } from "react";
 
 import { BaseHandle } from "@/components/base-handle";
 import { IconTooltip } from "@/components/icon-tooltip";
@@ -19,7 +19,7 @@ export const LabeledHandle = forwardRef<
       title: string;
       handleClassName?: string;
       labelClassName?: string;
-      tooltip?: string;
+      tooltip?: ReactNode;
     }
 >(
   (

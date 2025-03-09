@@ -21,6 +21,7 @@ export type BaseNodeHandle = {
    */
   id: string;
   tooltip?: string | ReactNode;
+  type: "text" | "image";
 };
 
 export type BaseNodeProps = {
@@ -70,10 +71,10 @@ const BaseNode: FC<PropsWithChildren<BaseNodeProps>> = ({
                 position={Position.Left}
               />
             ))}
-            {children}
           </div>
         </>
       )}
+      {!!children && <div className="p-3">{children}</div>}
       {!!outputHandles.length && (
         <>
           <div className="flex flex-col gap-2 text-center py-1 bg-gray-50 border-y text-sm">
