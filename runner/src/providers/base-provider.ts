@@ -9,4 +9,12 @@ export interface BaseLLMProvider {
    * @returns The generated text and any additional metadata
    */
   generate(prompt: string | any, options?: any): Promise<any>;
+
+  /**
+   * Stream text from a prompt
+   * @param prompt The prompt to stream from
+   * @param options Additional options for streaming
+   * @returns The streamed text and any additional metadata
+   */
+  stream(prompt: string | any, options?: any): Promise<any>;
 }

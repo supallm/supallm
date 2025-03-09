@@ -6,8 +6,8 @@ import { logger } from "./utils/logger";
 import {
   ExecuteWorkflowRequest,
   ExecutionEvent,
-  StopWorkflowRequest,
-  StopWorkflowResponse,
+  ValidateWorkflowRequest,
+  ValidateWorkflowResponse,
 } from "./gen/runner/v1/runner_pb";
 import * as grpcReflection from "@grpc/reflection";
 
@@ -43,7 +43,7 @@ export class RunnerServer {
     this.reflection.addToServer(this.server);
     this.server.addService(WorkflowRunnerService.service, {
       executeWorkflow: this.executeWorkflow.bind(this),
-      stopWorkflow: this.stopWorkflow.bind(this),
+      validateWorkflow: this.validateWorkflow.bind(this),
     });
   }
 
@@ -87,36 +87,36 @@ export class RunnerServer {
     const request = this.parseExecuteWorkflowRequest(call.request);
     const { workflowId, definition, inputs } =
       this.extractWorkflowData(request);
+    const sessionId = request.sessionId;
 
     try {
       this.setupEventListeners(call);
 
       this.workflowExecutor
         .execute(workflowId, definition, { inputs })
-        .catch((error) => this.handleExecutionError(error, workflowId, call));
+        .catch((error) =>
+          this.handleExecutionError(error, workflowId, sessionId, call)
+        );
     } catch (error) {
-      this.handleParsingError(error, workflowId, call);
+      this.handleParsingError(error, workflowId, sessionId, call);
     }
   }
 
   /**
    * Stop a workflow execution
    */
-  stopWorkflow(
+  validateWorkflow(
     call: grpc.ServerUnaryCall<any, any>,
     callback: grpc.sendUnaryData<any>
   ): void {
-    const request = new StopWorkflowRequest({
+    const request = new ValidateWorkflowRequest({
       workflowId: call.request.workflow_id,
+      sessionId: call.request.session_id,
     });
 
-    const workflowId = request.workflowId;
-
-    // TODO: Implement workflow stopping logic
-
-    const response = new StopWorkflowResponse({
-      success: true,
-      message: `Workflow ${workflowId} stopped`,
+    // TODO: Implement workflow validation logic
+    const response = new ValidateWorkflowResponse({
+      computedWorkflowJson: JSON.stringify({}),
     });
 
     callback(null, response);
@@ -129,8 +129,9 @@ export class RunnerServer {
     console.log("Raw request:", rawRequest);
 
     return new ExecuteWorkflowRequest({
+      sessionId: rawRequest.session_id,
       workflowId: rawRequest.workflow_id,
-      computedDefinitionJson: rawRequest.computed_definition_json,
+      computedWorkflowJson: rawRequest.computed_workflow_json,
       inputsJson: rawRequest.inputs_json,
     });
   }
@@ -145,7 +146,7 @@ export class RunnerServer {
   } {
     const workflowId = request.workflowId;
 
-    let definition = JSON.parse(request.computedDefinitionJson) || {};
+    let definition = JSON.parse(request.computedWorkflowJson) || {};
     let inputs = JSON.parse(request.inputsJson) || {};
 
     return { workflowId, definition, inputs };
@@ -156,6 +157,7 @@ export class RunnerServer {
     this.workflowExecutor.on("workflowStarted", (data) => {
       call.write(
         this.createEvent("STARTED", {
+          sessionId: data.sessionId,
           workflowId: data.workflowId,
           message: "Workflow execution started",
           data: data.inputs,
@@ -168,6 +170,7 @@ export class RunnerServer {
     this.workflowExecutor.on("nodeStarted", (data) => {
       call.write(
         this.createEvent("NODE_STARTED", {
+          sessionId: data.sessionId,
           workflowId: data.workflowId,
           nodeId: data.nodeId,
           data: data.inputs,
@@ -180,6 +183,7 @@ export class RunnerServer {
     this.workflowExecutor.on("nodeCompleted", (data) => {
       call.write(
         this.createEvent("NODE_COMPLETED", {
+          sessionId: data.sessionId,
           workflowId: data.workflowId,
           nodeId: data.nodeId,
           message: `Node ${data.nodeId} execution completed`,
@@ -192,6 +196,7 @@ export class RunnerServer {
     this.workflowExecutor.on("nodeFailed", (data) => {
       call.write(
         this.createEvent("NODE_FAILED", {
+          sessionId: data.sessionId,
           workflowId: data.workflowId,
           nodeId: data.nodeId,
           message: `Node ${data.nodeId} execution failed: ${data.error}`,
@@ -204,6 +209,7 @@ export class RunnerServer {
     this.workflowExecutor.on("workflowCompleted", (data) => {
       call.write(
         this.createEvent("COMPLETED", {
+          sessionId: data.sessionId,
           workflowId: data.workflowId,
           nodeId: data.nodeId,
           message: "Workflow execution completed",
@@ -218,6 +224,7 @@ export class RunnerServer {
     this.workflowExecutor.on("workflowFailed", (data) => {
       call.write(
         this.createEvent("FAILED", {
+          sessionId: data.sessionId,
           workflowId: data.workflowId,
           nodeId: "",
           message: `Workflow execution failed: ${data.error}`,
@@ -235,6 +242,7 @@ export class RunnerServer {
   private createEvent(
     type: string,
     params: {
+      sessionId: string;
       workflowId: string;
       nodeId: string;
       message: string;
@@ -246,6 +254,7 @@ export class RunnerServer {
 
     return new ExecutionEvent({
       type,
+      sessionId: params.sessionId,
       workflowId: params.workflowId,
       nodeId: params.nodeId,
       message: params.message,
@@ -260,12 +269,14 @@ export class RunnerServer {
   private handleExecutionError(
     error: any,
     workflowId: string,
+    sessionId: string,
     call: grpc.ServerWritableStream<any, any>
   ): void {
     logger.error(`Error executing workflow ${workflowId}: ${error}`);
 
     call.write(
       this.createEvent("FAILED", {
+        sessionId,
         workflowId,
         nodeId: "",
         message: `Unexpected error: ${error.message}`,
@@ -282,12 +293,14 @@ export class RunnerServer {
   private handleParsingError(
     error: any,
     workflowId: string,
+    sessionId: string,
     call: grpc.ServerWritableStream<any, any>
   ): void {
     logger.error(`Error parsing workflow definition: ${error}`);
 
     call.write(
       this.createEvent("FAILED", {
+        sessionId,
         workflowId,
         nodeId: "",
         message: `Error parsing workflow definition: ${error}`,

@@ -6,27 +6,31 @@ option go_package = "github.com/supallm/core/proto/runner/v1;runnerv1";
 
 service WorkflowRunner {
   rpc ExecuteWorkflow(ExecuteWorkflowRequest) returns (stream ExecutionEvent) {}
-  rpc StopWorkflow(StopWorkflowRequest) returns (StopWorkflowResponse) {}
+  rpc ValidateWorkflow(ValidateWorkflowRequest)
+      returns (ValidateWorkflowResponse) {}
 }
 
 message ExecuteWorkflowRequest {
-  string workflow_id = 1;
-  string computed_definition_json = 2;
-  string inputs_json = 3;
+  string session_id = 1;
+  string workflow_id = 2;
+  string computed_workflow_json = 3;
+  string inputs_json = 4;
 }
 
 message ExecutionEvent {
   string type = 1;
   string workflow_id = 2;
-  string node_id = 3;
-  string message = 4;
-  string data_json = 5;
-  string timestamp = 6;
+  string session_id = 3;
+  string node_id = 4;
+  string message = 5;
+  string data_json = 6;
+  string timestamp = 7;
 }
 
-message StopWorkflowRequest { string workflow_id = 1; }
-
-message StopWorkflowResponse {
-  bool success = 1;
-  string message = 2;
+message ValidateWorkflowRequest {
+  string workflow_id = 1;
+  string session_id = 2;
+  string workflow_json = 3;
 }
+
+message ValidateWorkflowResponse { string computed_workflow_json = 1; }

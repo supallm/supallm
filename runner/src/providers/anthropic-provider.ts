@@ -20,4 +20,16 @@ export class AnthropicProvider implements BaseLLMProvider {
       throw error;
     }
   }
+
+  async stream(prompt: string, options: any = {}): Promise<any> {
+    logger.info(`Streaming with Anthropic: ${prompt.substring(0, 50)}...`);
+
+    try {
+      const response = await this.model.stream(prompt);
+      return response;
+    } catch (error) {
+      logger.error(`Error streaming with Anthropic: ${error}`);
+      throw error;
+    }
+  }
 }

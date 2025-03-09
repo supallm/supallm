@@ -11,17 +11,22 @@ import { Message, proto3 } from "@bufbuild/protobuf";
  */
 export class ExecuteWorkflowRequest extends Message<ExecuteWorkflowRequest> {
   /**
-   * @generated from field: string workflow_id = 1;
+   * @generated from field: string session_id = 1;
+   */
+  sessionId = "";
+
+  /**
+   * @generated from field: string workflow_id = 2;
    */
   workflowId = "";
 
   /**
-   * @generated from field: string computed_definition_json = 2;
+   * @generated from field: string computed_workflow_json = 3;
    */
-  computedDefinitionJson = "";
+  computedWorkflowJson = "";
 
   /**
-   * @generated from field: string inputs_json = 3;
+   * @generated from field: string inputs_json = 4;
    */
   inputsJson = "";
 
@@ -33,9 +38,10 @@ export class ExecuteWorkflowRequest extends Message<ExecuteWorkflowRequest> {
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "runner.v1.ExecuteWorkflowRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "workflow_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: "computed_definition_json", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 3, name: "inputs_json", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 1, name: "session_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "workflow_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "computed_workflow_json", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: "inputs_json", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ExecuteWorkflowRequest {
@@ -70,22 +76,27 @@ export class ExecutionEvent extends Message<ExecutionEvent> {
   workflowId = "";
 
   /**
-   * @generated from field: string node_id = 3;
+   * @generated from field: string session_id = 3;
+   */
+  sessionId = "";
+
+  /**
+   * @generated from field: string node_id = 4;
    */
   nodeId = "";
 
   /**
-   * @generated from field: string message = 4;
+   * @generated from field: string message = 5;
    */
   message = "";
 
   /**
-   * @generated from field: string data_json = 5;
+   * @generated from field: string data_json = 6;
    */
   dataJson = "";
 
   /**
-   * @generated from field: string timestamp = 6;
+   * @generated from field: string timestamp = 7;
    */
   timestamp = "";
 
@@ -99,10 +110,11 @@ export class ExecutionEvent extends Message<ExecutionEvent> {
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "type", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 2, name: "workflow_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 3, name: "node_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 4, name: "message", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 5, name: "data_json", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 6, name: "timestamp", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "session_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: "node_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: "message", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 6, name: "data_json", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 7, name: "timestamp", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ExecutionEvent {
@@ -123,82 +135,88 @@ export class ExecutionEvent extends Message<ExecutionEvent> {
 }
 
 /**
- * @generated from message runner.v1.StopWorkflowRequest
+ * @generated from message runner.v1.ValidateWorkflowRequest
  */
-export class StopWorkflowRequest extends Message<StopWorkflowRequest> {
+export class ValidateWorkflowRequest extends Message<ValidateWorkflowRequest> {
   /**
    * @generated from field: string workflow_id = 1;
    */
   workflowId = "";
 
-  constructor(data?: PartialMessage<StopWorkflowRequest>) {
+  /**
+   * @generated from field: string session_id = 2;
+   */
+  sessionId = "";
+
+  /**
+   * @generated from field: string workflow_json = 3;
+   */
+  workflowJson = "";
+
+  constructor(data?: PartialMessage<ValidateWorkflowRequest>) {
     super();
     proto3.util.initPartial(data, this);
   }
 
   static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "runner.v1.StopWorkflowRequest";
+  static readonly typeName = "runner.v1.ValidateWorkflowRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "workflow_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "session_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "workflow_json", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): StopWorkflowRequest {
-    return new StopWorkflowRequest().fromBinary(bytes, options);
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ValidateWorkflowRequest {
+    return new ValidateWorkflowRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): StopWorkflowRequest {
-    return new StopWorkflowRequest().fromJson(jsonValue, options);
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ValidateWorkflowRequest {
+    return new ValidateWorkflowRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): StopWorkflowRequest {
-    return new StopWorkflowRequest().fromJsonString(jsonString, options);
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ValidateWorkflowRequest {
+    return new ValidateWorkflowRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: StopWorkflowRequest | PlainMessage<StopWorkflowRequest> | undefined, b: StopWorkflowRequest | PlainMessage<StopWorkflowRequest> | undefined): boolean {
-    return proto3.util.equals(StopWorkflowRequest, a, b);
+  static equals(a: ValidateWorkflowRequest | PlainMessage<ValidateWorkflowRequest> | undefined, b: ValidateWorkflowRequest | PlainMessage<ValidateWorkflowRequest> | undefined): boolean {
+    return proto3.util.equals(ValidateWorkflowRequest, a, b);
   }
 }
 
 /**
- * @generated from message runner.v1.StopWorkflowResponse
+ * @generated from message runner.v1.ValidateWorkflowResponse
  */
-export class StopWorkflowResponse extends Message<StopWorkflowResponse> {
+export class ValidateWorkflowResponse extends Message<ValidateWorkflowResponse> {
   /**
-   * @generated from field: bool success = 1;
+   * @generated from field: string computed_workflow_json = 1;
    */
-  success = false;
+  computedWorkflowJson = "";
 
-  /**
-   * @generated from field: string message = 2;
-   */
-  message = "";
-
-  constructor(data?: PartialMessage<StopWorkflowResponse>) {
+  constructor(data?: PartialMessage<ValidateWorkflowResponse>) {
     super();
     proto3.util.initPartial(data, this);
   }
 
   static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "runner.v1.StopWorkflowResponse";
+  static readonly typeName = "runner.v1.ValidateWorkflowResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "success", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
-    { no: 2, name: "message", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 1, name: "computed_workflow_json", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): StopWorkflowResponse {
-    return new StopWorkflowResponse().fromBinary(bytes, options);
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ValidateWorkflowResponse {
+    return new ValidateWorkflowResponse().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): StopWorkflowResponse {
-    return new StopWorkflowResponse().fromJson(jsonValue, options);
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ValidateWorkflowResponse {
+    return new ValidateWorkflowResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): StopWorkflowResponse {
-    return new StopWorkflowResponse().fromJsonString(jsonString, options);
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ValidateWorkflowResponse {
+    return new ValidateWorkflowResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(a: StopWorkflowResponse | PlainMessage<StopWorkflowResponse> | undefined, b: StopWorkflowResponse | PlainMessage<StopWorkflowResponse> | undefined): boolean {
-    return proto3.util.equals(StopWorkflowResponse, a, b);
+  static equals(a: ValidateWorkflowResponse | PlainMessage<ValidateWorkflowResponse> | undefined, b: ValidateWorkflowResponse | PlainMessage<ValidateWorkflowResponse> | undefined): boolean {
+    return proto3.util.equals(ValidateWorkflowResponse, a, b);
   }
 }
 

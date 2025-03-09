@@ -14,9 +14,13 @@ export interface WorkflowDefinition {
   };
 }
 
+export enum NodeType {
+  LLM = "llm",
+}
+
 export interface NodeDefinition {
   id: string;
-  type: string;
+  type: NodeType;
   [key: string]: any;
 }
 

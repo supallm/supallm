@@ -1,4 +1,8 @@
-import { NodeDefinition, NodeExecutionResult } from "../models/workflow";
+import {
+  NodeDefinition,
+  NodeExecutionResult,
+  NodeType,
+} from "../models/workflow";
 import { ProviderFactory } from "../providers/provider-factory";
 import { logger } from "../utils/logger";
 
@@ -24,20 +28,8 @@ export class NodeExecutor {
       let output: any;
 
       switch (node.type) {
-        case "llm":
+        case NodeType.LLM:
           output = await this.executeLLMNode(node, inputs);
-          break;
-        case "prompt":
-          output = await this.executePromptNode(node, inputs);
-          break;
-        case "retriever":
-          output = await this.executeRetrieverNode(node, inputs);
-          break;
-        case "tool":
-          output = await this.executeToolNode(node, inputs);
-          break;
-        case "output":
-          output = await this.executeOutputNode(node, inputs);
           break;
         default:
           throw new Error(`Unsupported node type: ${node.type}`);
@@ -68,9 +60,9 @@ export class NodeExecutor {
     const auth = node.auth || {};
 
     const provider = this.providerFactory.createLLMProvider({
-      provider: auth.provider || "openai",
-      apiKey: auth.apiKey || "sk-test",
-      model: node.model || "gpt-4o-mini",
+      provider: auth.provider,
+      apiKey: auth.apiKey,
+      model: node.model,
     });
 
     let prompt = node.prompt;
@@ -88,74 +80,6 @@ export class NodeExecutor {
     });
 
     return result;
-  }
-
-  private async executePromptNode(
-    node: NodeDefinition,
-    inputs: Record<string, any>
-  ): Promise<any> {
-    let template = node.template;
-
-    const variables = { ...node.variables, ...inputs };
-    const prompt = this.replaceVariables(template, variables);
-
-    return { prompt, variables };
-  }
-
-  private async executeRetrieverNode(
-    node: NodeDefinition,
-    inputs: Record<string, any>
-  ): Promise<any> {
-    switch (node.source) {
-      case "web":
-        // Implement web retrieval
-        break;
-      case "pdf":
-        // Implement PDF retrieval
-        break;
-      default:
-        throw new Error(`Unsupported retriever source: ${node.source}`);
-    }
-
-    return { documents: [] };
-  }
-
-  private async executeToolNode(
-    node: NodeDefinition,
-    inputs: Record<string, any>
-  ): Promise<any> {
-    switch (node.toolName) {
-      case "calculator":
-        // Implement calculator
-        break;
-      case "webSearch":
-        // Implement web search
-        break;
-      default:
-        throw new Error(`Unsupported tool: ${node.toolName}`);
-    }
-
-    return { result: null };
-  }
-
-  private async executeOutputNode(
-    node: NodeDefinition,
-    inputs: Record<string, any>
-  ): Promise<any> {
-    switch (node.format) {
-      case "json":
-        try {
-          return typeof inputs.input === "string"
-            ? JSON.parse(inputs.input)
-            : inputs.input;
-        } catch (e) {
-          return { text: inputs.input };
-        }
-      case "text":
-        return { text: String(inputs.input) };
-      default:
-        return inputs.input;
-    }
   }
 
   private replaceVariables(
