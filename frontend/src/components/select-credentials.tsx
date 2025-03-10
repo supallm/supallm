@@ -4,7 +4,6 @@ import { ProviderType } from "@/core/entities/credential";
 import { useAppConfigStore } from "@/core/store/app-config";
 import { useCredentialStore } from "@/core/store/credentials";
 import { useListCredentials } from "@/hooks/use-list-credentials";
-import { CredentialsRoute } from "@/routes";
 import { PlusIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FC } from "react";
@@ -45,7 +44,7 @@ export const SelectCredentials: FC<{
     <Select onValueChange={onValueChange} defaultValue={defaultValue}>
       <FormControl className="w-full">
         <SelectTrigger>
-          <SelectValue placeholder="Select the credentials to use" />
+          <SelectValue placeholder="Please select an option" />
         </SelectTrigger>
       </FormControl>
       <SelectContent className="w-full">
@@ -60,9 +59,6 @@ export const SelectCredentials: FC<{
             No credentials found for this provider.{" "}
             <AddCredentialDialog isOpen={false} onOpenChange={() => {}}>
               <Button
-                onClick={() => {
-                  router.push(CredentialsRoute.path());
-                }}
                 size="xs"
                 variant="outline"
                 startContent={<PlusIcon className="h-2 w-2" />}
