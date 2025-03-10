@@ -26,12 +26,12 @@ export const FlowCard: FC<FlowCardProps> = ({ flow }) => {
     await deleteFlow(flow.id);
   };
 
-  const handleEdit = () => {
+  const handleEdit = (e: React.MouseEvent<HTMLDivElement>) => {
     router.push(FlowBuilderRoute.path(flow.id)); // Navigate to the flow editing route
   };
 
   return (
-    <Card className="bg-gradient-to-bl from-green-50 via-white to-gray-50 hover:scale-101 transition-all duration-300 cursor-pointer">
+    <Card className="bg-gradient-to-bl from-green-50 via-white to-gray-50 hover:scale-101 transition-all duration-300">
       <CardHeader>
         <div className="flex justify-between items-center">
           <h2 className="text-lg font-medium">{flow.name}</h2>

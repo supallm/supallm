@@ -1,15 +1,33 @@
-import { cn } from "@/lib/utils";
+import { assertUnreachable, cn } from "@/lib/utils";
 import { HandleProps } from "@xyflow/react";
-import { forwardRef, HTMLAttributes, ReactNode } from "react";
+import { FC, forwardRef, HTMLAttributes, ReactNode } from "react";
 
 import { BaseHandle } from "@/components/base-handle";
-import { IconTooltip } from "@/components/icon-tooltip";
+import { TooltipWraper } from "@/components/icon-tooltip";
+import { AlignJustify, ImageIcon, Logs } from "lucide-react";
 
 const flexDirections = {
   top: "flex-col",
   right: "justify-end",
   bottom: "flex-col-reverse justify-end",
   left: "flex-row",
+};
+
+export type LabeledHandleType = "image" | "text" | "text-stream";
+
+const HandleTypeIcon: FC<{ type: LabeledHandleType }> = ({
+  type,
+}): ReactNode => {
+  switch (type) {
+    case "image":
+      return <ImageIcon className="w-4 h-4" />;
+    case "text":
+      return <AlignJustify className="w-4 h-4" />;
+    case "text-stream":
+      return <Logs className="w-4 h-4" />;
+    default:
+      assertUnreachable(type);
+  }
 };
 
 export const LabeledHandle = forwardRef<
@@ -20,6 +38,7 @@ export const LabeledHandle = forwardRef<
       handleClassName?: string;
       labelClassName?: string;
       tooltip?: ReactNode;
+      handleType: LabeledHandleType;
     }
 >(
   (
@@ -30,6 +49,7 @@ export const LabeledHandle = forwardRef<
       title,
       position,
       tooltip,
+      handleType,
       ...props
     },
     ref,
@@ -43,22 +63,33 @@ export const LabeledHandle = forwardRef<
         className,
       )}
     >
-      <BaseHandle
-        position={position}
-        className={cn("!w-2.5 !h-2.5 !bg-gray-400", handleClassName)}
-        {...props}
-      />
+      <TooltipWraper content={tooltip}>
+        <BaseHandle
+          position={position}
+          className={cn("!w-2.5 !h-2.5 !bg-gray-400", handleClassName)}
+          {...props}
+        />
 
-      <label
-        className={cn(
-          "px-3 text-foreground flex items-center gap-x-1",
-          labelClassName,
-        )}
-      >
-        {!!tooltip && position === "right" && <IconTooltip content={tooltip} />}
-        {title}
-        {!!tooltip && position === "left" && <IconTooltip content={tooltip} />}
-      </label>
+        <label
+          className={cn(
+            "px-3 text-foreground flex items-center gap-x-1",
+            labelClassName,
+          )}
+        >
+          {position === "left" && (
+            <>
+              <HandleTypeIcon type={handleType} />
+            </>
+          )}
+          {title}
+
+          {position === "right" && (
+            <>
+              <HandleTypeIcon type={handleType} />
+            </>
+          )}
+        </label>
+      </TooltipWraper>
     </div>
   ),
 );

@@ -19,3 +19,9 @@ export const sanitizeString = (str: string) => {
 export const toSanitizedCamelCase = (str: string) => {
   return sanitizeString(toCamelCase(str));
 };
+
+export const assertUnreachable = (x: never): never => {
+  throw new Error(
+    "Unreachable code. If you see this, it means your type is not exhaustive.",
+  );
+};

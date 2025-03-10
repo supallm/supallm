@@ -11,9 +11,14 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { NumberInput } from "@/components/ui/number-input";
-import { ChatOpenAINodeData } from "@/core/entities/flow/flow-openai";
+import {
+  ChatOpenAINodeData,
+  OpenAIModels,
+} from "@/core/entities/flow/flow-openai";
+import { assertUnreachable } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FC, memo } from "react";
+import { NodeProps, useReactFlow, useUpdateNodeInternals } from "@xyflow/react";
+import { FC, memo, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { ProviderLogo } from "../../../logos/provider-logo";
@@ -21,12 +26,20 @@ import BaseNode from "../common/base-node";
 import { BaseNodeContent } from "../common/base-node-content";
 import { ConfigureModelMessagesDialog } from "../model-messages/configure-model-messages-dialog";
 
-const OpenAIChatCompletionNode: FC<{ data: ChatOpenAINodeData }> = ({
+type OpenAIChatCompletionNodeProps = NodeProps & {
+  data: ChatOpenAINodeData;
+};
+
+const OpenAIChatCompletionNode: FC<OpenAIChatCompletionNodeProps> = ({
   data,
+  id: nodeId,
 }) => {
+  const { updateNodeData } = useReactFlow();
+  const updateNodeInternals = useUpdateNodeInternals();
+
   const formSchema = z.object({
     credentialId: z.string().min(2),
-    model: z.string().min(2),
+    model: z.enum(OpenAIModels),
     temperature: z.number().min(0).max(2),
     maxCompletionTokens: z.number().min(100).optional(),
     developerMessage: z.string().min(0),
@@ -34,10 +47,12 @@ const OpenAIChatCompletionNode: FC<{ data: ChatOpenAINodeData }> = ({
     responseFormat: z.object({
       type: z.enum(["text", "json_object"]),
     }),
+    outputMode: z.enum(["text", "text-stream"]),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
+    mode: "onChange",
     defaultValues: {
       credentialId: data.credentialId ?? "",
       model: data.model ?? "",
@@ -48,6 +63,7 @@ const OpenAIChatCompletionNode: FC<{ data: ChatOpenAINodeData }> = ({
       responseFormat: {
         type: "text",
       },
+      outputMode: data.outputMode ?? "text",
     },
   });
 
@@ -56,42 +72,94 @@ const OpenAIChatCompletionNode: FC<{ data: ChatOpenAINodeData }> = ({
     console.log(values);
   }
 
+  async function onInvalid(data: any) {
+    console.log("invalid");
+    console.log(data);
+  }
+
+  const saveNode = () => {
+    const formValues = form.getValues();
+
+    const data: ChatOpenAINodeData = {
+      credentialId: formValues.credentialId,
+      providerType: "openai",
+      model: formValues.model,
+      temperature: formValues.temperature,
+      maxCompletionTokens: formValues.maxCompletionTokens ?? null,
+      developerMessage: formValues.developerMessage,
+      imageResolution: formValues.imageResolution,
+      responseFormat: formValues.responseFormat,
+      outputMode: formValues.outputMode,
+    };
+
+    updateNodeData(nodeId, data);
+  };
+
+  const outputMode = form.watch("outputMode");
+
+  const outputHandles = useMemo(() => {
+    console.log("outputMode", outputMode);
+    switch (outputMode) {
+      case "text":
+        return [
+          {
+            label: "Response",
+            id: "chatResponse",
+            type: "text",
+          } as const,
+        ];
+      case "text-stream":
+        return [
+          {
+            label: "Response stream",
+            id: "chatResponse",
+            type: "text-stream",
+          } as const,
+        ];
+      default:
+        assertUnreachable(outputMode);
+        return [];
+    }
+  }, [outputMode]);
+
+  useEffect(() => {
+    /**
+     * See:
+     * https://reactflow.dev/api-reference/hooks/use-update-node-internals
+     */
+    updateNodeInternals(nodeId);
+  }, [nodeId, outputHandles, updateNodeInternals]);
+
   return (
     <BaseNode
-      outputHandles={[
-        {
-          label: "Response message",
-          id: "chatResponse",
-          tooltip: "The response message from the AI",
-        },
-        {
-          label: "All messages",
-          id: "chatResponse",
-          tooltip:
-            "This will include the full conversation history in the format: [user_message, ai_message, user_message, ai_message, ...]",
-        },
-      ]}
+      outputHandles={outputHandles}
       inputHandles={[
         {
           label: "Prompt",
           id: "prompt",
+          type: "text",
         },
         {
           label: "Images",
           id: "images",
+          type: "image",
         },
       ]}
       header={
         <>
           <ProviderLogo name="openai" />
-          <span className="font-medium text-sm">Chat OpenAI</span>
+          <span className="font-medium text-sm">OpenAI Chat Completion</span>
         </>
       }
     >
       <BaseNodeContent>
         <div className="flex flex-col gap-2">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form
+              onChange={saveNode}
+              // onChange={form.handleSubmit(onSubmit, onInvalid)}
+              className="space-y-4"
+            >
               <FormField
                 control={form.control}
                 name="credentialId"
@@ -163,6 +231,35 @@ const OpenAIChatCompletionNode: FC<{ data: ChatOpenAINodeData }> = ({
                           Configure
                         </Button>
                       </ConfigureModelMessagesDialog>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="outputMode"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Output mode</FormLabel>
+                    <FormControl>
+                      <AppSelect
+                        placeholder="Select output mode"
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                        }}
+                        defaultValue={field.value}
+                        choices={[
+                          {
+                            value: "text",
+                            label: "Normal",
+                          },
+                          {
+                            value: "text-stream",
+                            label: "Stream",
+                          },
+                        ]}
+                      ></AppSelect>
                     </FormControl>
                     <FormMessage />
                   </FormItem>

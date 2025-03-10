@@ -76,10 +76,12 @@ const ChatFlowPage = () => {
   );
 
   const handleNodeChange = (changes: NodeChange<FlowNode>[]) => {
+    console.log("handleNodeChange", changes);
     onNodesChange(changes);
   };
 
   const handleEdgeChange = (changes: EdgeChange[]) => {
+    console.log("handleEdgeChange", changes);
     onEdgesChange(changes);
   };
 
