@@ -2,7 +2,7 @@ import { AppSelect } from "@/components/app-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EntrypointHandle } from "@/core/entities/flow/flow-entrypoint";
-import { toSanitizedCamelCase } from "@/lib/utils";
+import { generateHandleId, sanitizeHandleLabel } from "@/lib/handles";
 import { CheckIcon } from "lucide-react";
 import { FC, useRef, useState } from "react";
 
@@ -18,10 +18,10 @@ export const NewHandleInput: FC<{
   const submit = () => {
     if (!handleLabel.length || !handleType) return;
 
-    const id = toSanitizedCamelCase(handleLabel);
+    const id = generateHandleId(handleType, handleLabel);
     // Here we use the camelCase value for the label,
     // because it will be easier to understand in the UI
-    const label = id;
+    const label = sanitizeHandleLabel(handleLabel);
 
     onChange({ type: handleType, label: label, id });
     reset();

@@ -11,6 +11,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import BaseNode from "../common/base-node";
 
+import { generateHandleId } from "@/lib/handles";
 import { NodeProps, useUpdateNodeInternals } from "@xyflow/react";
 import { NewHandleInput } from "./new-handle-input";
 
@@ -36,7 +37,7 @@ const EntrypointNode: FC<NodeProps & { data: EntrypointNodeData }> = ({
       handles: data.handles ?? [
         {
           type: "text",
-          id: "prompt",
+          id: generateHandleId("text", "prompt"),
           label: "prompt",
         },
       ],

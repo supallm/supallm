@@ -12,6 +12,7 @@ export class CreateFlowUsecase {
         type: "entrypoint",
         position: { x: 100, y: 200 },
         data: {},
+        deletable: false,
         zIndex: 0,
       },
       {
@@ -19,6 +20,7 @@ export class CreateFlowUsecase {
         type: "result",
         position: { x: 900, y: 200 },
         data: {},
+        deletable: false,
         zIndex: 1,
       },
     ];

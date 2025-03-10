@@ -12,6 +12,7 @@ import { FlowNode } from "@/core/entities/flow";
 import { useCurrentFlowStore } from "@/core/store/flow";
 import { patchFlowUsecase } from "@/core/usecases";
 import { hookifyFunction } from "@/hooks/hookify-function";
+import { parseHandleId } from "@/lib/handles";
 
 import {
   addEdge,
@@ -20,6 +21,7 @@ import {
   Connection,
   Controls,
   EdgeChange,
+  IsValidConnection,
   MiniMap,
   NodeChange,
   Panel,
@@ -58,9 +60,24 @@ const ChatFlowPage = () => {
   const { screenToFlowPosition, addNodes } = useReactFlow();
 
   const onConnect = useCallback(
-    (params: Connection) => setEdges((eds) => addEdge(params, eds)),
+    (params: Connection) => {
+      return setEdges((eds) => addEdge(params, eds));
+    },
     [setEdges],
   );
+
+  const isValidConnection: IsValidConnection<any> = (params: Connection) => {
+    const { sourceHandle, targetHandle } = params;
+
+    if (!sourceHandle || !targetHandle) {
+      return params.source !== params.target;
+    }
+
+    const { type: sourceType } = parseHandleId(sourceHandle);
+    const { type: targetType } = parseHandleId(targetHandle);
+
+    return sourceType === targetType;
+  };
 
   const nodeTypes: Record<NodeType, any> = useMemo(
     () => ({
@@ -132,6 +149,7 @@ const ChatFlowPage = () => {
         onNodesChange={handleNodeChange}
         onEdgesChange={handleEdgeChange}
         onConnect={onConnect}
+        isValidConnection={isValidConnection}
       >
         <Panel position="top-left">
           <AddNodeDialog onNodeSelected={onNodeSelected}>

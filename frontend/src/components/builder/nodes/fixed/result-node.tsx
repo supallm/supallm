@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { ResultHandle, ResultNodeData } from "@/core/entities/flow/flow-result";
+import { generateHandleId } from "@/lib/handles";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { NodeProps, useUpdateNodeInternals } from "@xyflow/react";
 import { FolderSymlink, XIcon } from "lucide-react";
@@ -31,7 +32,7 @@ const ResultNode: FC<ResultNodeProps> = ({ data, id: nodeId }) => {
       handles: [
         {
           type: "text",
-          id: "result",
+          id: generateHandleId("text", "result"),
           label: "result",
         },
       ],

@@ -16,6 +16,7 @@ export type FlowNode = {
   data: FlowNodeData;
   position: { x: number; y: number };
   zIndex: number;
+  deletable: boolean;
 };
 
 export type FlowEdge = {

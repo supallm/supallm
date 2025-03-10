@@ -15,6 +15,7 @@ import {
   ChatOpenAINodeData,
   OpenAIModels,
 } from "@/core/entities/flow/flow-openai";
+import { generateHandleId } from "@/lib/handles";
 import { assertUnreachable } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { NodeProps, useReactFlow, useUpdateNodeInternals } from "@xyflow/react";
@@ -104,7 +105,7 @@ const OpenAIChatCompletionNode: FC<OpenAIChatCompletionNodeProps> = ({
         return [
           {
             label: "Response",
-            id: "chatResponse",
+            id: generateHandleId("text", "response"),
             type: "text",
           } as const,
         ];
@@ -112,7 +113,7 @@ const OpenAIChatCompletionNode: FC<OpenAIChatCompletionNodeProps> = ({
         return [
           {
             label: "Response stream",
-            id: "chatResponse",
+            id: generateHandleId("text-stream", "response-stream"),
             type: "text-stream",
           } as const,
         ];
@@ -136,12 +137,12 @@ const OpenAIChatCompletionNode: FC<OpenAIChatCompletionNodeProps> = ({
       inputHandles={[
         {
           label: "Prompt",
-          id: "prompt",
+          id: generateHandleId("text", "prompt"),
           type: "text",
         },
         {
-          label: "Images",
-          id: "images",
+          label: "Image",
+          id: generateHandleId("image", "image"),
           type: "image",
         },
       ]}
