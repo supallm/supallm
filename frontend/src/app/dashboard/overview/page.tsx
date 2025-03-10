@@ -8,21 +8,29 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { CodeBlock } from "@/components/ui/code-block";
 import { useAppConfigStore } from "@/core/store/app-config";
-import { BrainCircuit, FileSliders, Users } from "lucide-react";
+import { ChatFlowsRoute } from "@/routes";
+import { BrainCircuit, Users } from "lucide-react";
+import { useRouter } from "next/navigation";
 
-const code = `import { streamText } from 'supallm';
-import { openai } from '@supallm/openai';
+const code = `import { Supallm } from 'supallm';
 
-// Use this directly in your frontend
-// Supallm will handle the streaming of the response
-// and the authentication for you
-const stream = streamText({
-    model: openai('gpt-4o'), // Replace with your model
-    prompt: 'What is the weather in Tokyo?',
+const supallm = new Supallm({
+    apiKey: 'YOUR_API_KEY',
 });
 
-stream.on('data', (data) => {
-    console.log(data);
+const stream = supallm.run({
+  flowId: 'YOUR_FLOW_ID',
+  input: {
+    prompt: 'What is the weather in Tokyo?',
+  },
+})
+
+stream.on('stream', (data) => {
+    console.log('stream', data);
+});
+
+stream.on('end', (fullResponse) => {
+    console.log('stream', fullResponse);
 });
 `;
 
@@ -32,6 +40,8 @@ const OverviewPage = () => {
   if (!currentProject) {
     throw new Error("Project must be defined");
   }
+
+  const router = useRouter();
 
   return (
     <div className="pb-15">
@@ -51,27 +61,21 @@ const OverviewPage = () => {
                   <Badge variant={"outline"} className="mr-2">
                     Step 1
                   </Badge>
-                  Configure your AI model
+                  Create an AI Flow
                 </h1>
                 <p className="text-md text-muted-foreground">
-                  Start by adding your first Credential. Then you can call it
-                  directly by your frontend using the Supallm frontend sdk.
+                  Start by creating an AI Flow. Then you can call it directly
+                  using our frontend or backend SDK.
                 </p>
               </div>
               <div className="space-x-4">
                 <Button
+                  onClick={() => router.push(ChatFlowsRoute.path())}
                   variant="outline"
                   size={"sm"}
                   className="cursor-pointer"
                 >
-                  <BrainCircuit /> Add your first Credential
-                </Button>
-                <Button
-                  variant="outline"
-                  size={"sm"}
-                  className="cursor-pointer"
-                >
-                  <FileSliders /> Configure your model
+                  <BrainCircuit /> Create an AI Flow
                 </Button>
               </div>
             </CardContent>
@@ -83,7 +87,7 @@ const OverviewPage = () => {
                   <Badge variant={"outline"} className="mr-2">
                     Step 2
                   </Badge>
-                  Install the Supallm frontend sdk
+                  Install the Supallm sdk
                 </h1>
                 <p className="text-md text-muted-foreground">
                   Start by adding your first Credential. Then you can call it
@@ -94,13 +98,13 @@ const OverviewPage = () => {
                 <CodeBlock
                   filename=""
                   language="bash"
-                  highlightLines={[9, 13, 14, 18]}
-                  code={"npm install supallm @supallm/openai"}
+                  highlightLines={[]}
+                  code={"npm install supallm"}
                 />
                 <CodeBlock
                   language="jsx"
-                  filename="DummyComponent.jsx"
-                  highlightLines={[9, 13, 14, 18]}
+                  filename="YourComponent.tsx"
+                  highlightLines={[]}
                   code={code}
                 />
               </div>
