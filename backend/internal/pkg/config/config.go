@@ -52,12 +52,17 @@ func Load(_ context.Context) Config {
 		mustGet("POSTGRES_DB"),
 	)
 
+	redisHost := fmt.Sprintf("%s:%s",
+		mustGet("REDIS_HOST"),
+		mustGet("REDIS_PORT"),
+	)
+
 	return Config{
 		Server: Server{
 			Port: httpPort,
 		},
 		Redis: Redis{
-			Host:     mustGet("REDIS_HOST"),
+			Host:     redisHost,
 			Password: mustGet("REDIS_PASSWORD"),
 		},
 		Postgres: Postgres{

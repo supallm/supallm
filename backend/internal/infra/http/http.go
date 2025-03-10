@@ -1,7 +1,6 @@
 package http
 
 import (
-	"github.com/gofiber/fiber/v2"
 	"github.com/supallm/core/internal/application"
 	http "github.com/supallm/core/internal/infra/http/gen"
 	"github.com/supallm/core/internal/pkg/server"
@@ -25,14 +24,4 @@ func NewServer(mux *server.Server, app *application.App) {
 			s.server.ClerkAuthMiddleware(),
 		},
 	})
-}
-
-// (GET /projects/{projectId}/workflows/{workflowId}/listen/{triggerId})
-func (s *Server) ListenWorkflowTrigger(_ *fiber.Ctx, _ http.UUID, _ http.UUID, _ http.UUID) error {
-	return nil
-}
-
-// (POST /projects/{projectId}/workflows/{workflowId}/trigger)
-func (s *Server) TriggerWorkflow(_ *fiber.Ctx, _ http.UUID, _ http.UUID) error {
-	return nil
 }

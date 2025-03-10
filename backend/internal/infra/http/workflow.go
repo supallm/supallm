@@ -99,3 +99,25 @@ func (s *Server) ListWorkflows(c *fiber.Ctx, projectID gen.UUID) error {
 	}
 	return s.server.Respond(c, fiber.StatusOK, queryWorkflowsToDTOs(workflows))
 }
+
+func (s *Server) ListenWorkflowTrigger(_ *fiber.Ctx, _ gen.UUID, _ gen.UUID, _ gen.UUID) error {
+	return nil
+}
+
+func (s *Server) TriggerWorkflow(c *fiber.Ctx, projectID gen.UUID, workflowID gen.UUID) error {
+	var req gen.TriggerWorkflowRequest
+	if err := c.BodyParser(&req); err != nil {
+		return err
+	}
+
+	err := s.app.Commands.TriggerWorkflow.Handle(c.Context(), command.TriggerWorkflowCommand{
+		ProjectID:  projectID,
+		WorkflowID: workflowID,
+		Inputs:     req.Inputs,
+	})
+	if err != nil {
+		return err
+	}
+
+	return s.server.Respond(c, fiber.StatusNoContent, nil)
+}

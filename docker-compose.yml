@@ -35,7 +35,7 @@ services:
       - supallm_data:/var/lib/postgresql/data
       - ./backend/sql/schemas.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-      - "${POSTGRES_PORT}:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     networks:
       - supallm-network
     command:
@@ -46,6 +46,20 @@ services:
       - "maintenance_work_mem=1GB"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7.4
+    container_name: supallm-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    networks:
+      - supallm-network
+    command: redis-server --requirepass ${REDIS_PASSWORD} --maxmemory 1GB --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "-h", "localhost", "-p", "6379", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -63,6 +77,8 @@ services:
       - ./backend:/src
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - supallm-network

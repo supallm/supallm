@@ -8,6 +8,6 @@ import (
 
 type (
 	RunnerService interface {
-		QueueWorkflow(ctx context.Context, workflow *model.Workflow) error
+		QueueWorkflow(ctx context.Context, workflow *model.Workflow, inputs map[string]any) error
 	}
 )

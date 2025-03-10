@@ -70,13 +70,8 @@ type Credential struct {
 	UpdatedAt time.Time    `json:"updatedAt"`
 }
 
-// ListenTriggerRequest defines model for ListenTriggerRequest.
-type ListenTriggerRequest struct {
-	TriggerId UUID `json:"triggerId"`
-}
-
-// ListenTriggerResponse defines model for ListenTriggerResponse.
-type ListenTriggerResponse struct {
+// ListenWorkflowResponse defines model for ListenWorkflowResponse.
+type ListenWorkflowResponse struct {
 	Data      map[string]interface{} `json:"data"`
 	EventType string                 `json:"eventType"`
 }
@@ -97,8 +92,7 @@ type ProviderType string
 
 // TriggerWorkflowRequest defines model for TriggerWorkflowRequest.
 type TriggerWorkflowRequest struct {
-	Inputs     map[string]interface{} `json:"inputs"`
-	WorkflowId UUID                   `json:"workflowId"`
+	Inputs map[string]interface{} `json:"inputs"`
 }
 
 // UUID defines model for UUID.

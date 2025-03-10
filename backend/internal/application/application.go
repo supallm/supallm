@@ -33,16 +33,20 @@ type Commands struct {
 	UpdateCredential command.UpdateCredentialHandler
 	RemoveCredential command.RemoveCredentialHandler
 
-	QueueWorkflow command.QueueWorkflowHandler
+	TriggerWorkflow command.TriggerWorkflowHandler
 }
 
 type Queries struct {
-	GetProject      query.GetProjectHandler
-	ListProjects    query.ListProjectsHandler
-	ListWorkflows   query.ListWorkflowsHandler
+	GetProject   query.GetProjectHandler
+	ListProjects query.ListProjectsHandler
+
+	ListWorkflows query.ListWorkflowsHandler
+	GetWorkflow   query.GetWorkflowHandler
+
 	ListCredentials query.ListCredentialsHandler
-	GetWorkflow     query.GetWorkflowHandler
 	GetCredential   query.GetCredentialHandler
+
+	ListenWorkflow query.ListenWorkflowHandler
 }
 
 func New(
@@ -73,15 +77,19 @@ func New(
 			UpdateCredential: command.NewUpdateCredentialHandler(projectRepo),
 			RemoveCredential: command.NewRemoveCredentialHandler(projectRepo),
 
-			QueueWorkflow: command.NewQueueWorkflowHandler(projectRepo, runnerService),
+			TriggerWorkflow: command.NewTriggerWorkflowHandler(projectRepo, runnerService),
 		},
 		Queries: &Queries{
-			GetProject:      query.NewGetProjectHandler(projectRepo),
-			ListProjects:    query.NewListProjectsHandler(projectRepo),
-			ListWorkflows:   query.NewListWorkflowsHandler(projectRepo),
+			GetProject:   query.NewGetProjectHandler(projectRepo),
+			ListProjects: query.NewListProjectsHandler(projectRepo),
+
 			ListCredentials: query.NewListCredentialsHandler(projectRepo),
-			GetWorkflow:     query.NewGetWorkflowHandler(projectRepo),
 			GetCredential:   query.NewGetCredentialHandler(projectRepo),
+
+			ListWorkflows: query.NewListWorkflowsHandler(projectRepo),
+			GetWorkflow:   query.NewGetWorkflowHandler(projectRepo),
+
+			ListenWorkflow: query.NewListenWorkflowHandler(projectRepo),
 		},
 	}
 

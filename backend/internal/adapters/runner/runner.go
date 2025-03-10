@@ -17,6 +17,6 @@ func NewService(_ context.Context, client *redis.Client) *Service {
 	}
 }
 
-func (s *Service) QueueWorkflow(ctx context.Context, workflow *model.Workflow) error {
+func (s *Service) QueueWorkflow(ctx context.Context, workflow *model.Workflow, inputs map[string]any) error {
 	return nil
 }

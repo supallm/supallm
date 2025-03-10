@@ -432,7 +432,7 @@ paths:
           content:
             text/event-stream:
               schema:
-                $ref: "#/components/schemas/ListenTriggerResponse"
+                $ref: "#/components/schemas/ListenWorkflowResponse"
         "404":
           description: Project or workflow not found
 
@@ -631,23 +631,12 @@ components:
     TriggerWorkflowRequest:
       type: object
       properties:
-        workflowId:
-          $ref: "#/components/schemas/UUID"
         inputs:
           type: object
       required:
-        - workflowId
         - inputs
 
-    ListenTriggerRequest:
-      type: object
-      properties:
-        triggerId:
-          $ref: "#/components/schemas/UUID"
-      required:
-        - triggerId
-
-    ListenTriggerResponse:
+    ListenWorkflowResponse:
       type: object
       properties:
         eventType:
