@@ -2,16 +2,16 @@ package application
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/supallm/core/internal/adapters/llm"
 	"github.com/supallm/core/internal/adapters/project"
-	"github.com/supallm/core/internal/adapters/session"
+	"github.com/supallm/core/internal/adapters/runner"
 	"github.com/supallm/core/internal/application/command"
 	"github.com/supallm/core/internal/application/query"
 	"github.com/supallm/core/internal/pkg/config"
+	"github.com/supallm/core/internal/pkg/postgres"
+	"github.com/supallm/core/internal/pkg/redis"
 )
 
 type App struct {
@@ -25,24 +25,23 @@ type Commands struct {
 	UpdateProjectName  command.UpdateProjectNameHandler
 	UpdateAuthProvider command.UpdateAuthProviderHandler
 
-	AddModel    command.AddModelHandler
-	UpdateModel command.UpdateModelHandler
-	RemoveModel command.RemoveModelHandler
+	AddWorkflow    command.AddWorkflowHandler
+	UpdateWorkflow command.UpdateWorkflowHandler
+	RemoveWorkflow command.RemoveWorkflowHandler
 
 	AddCredential    command.AddCredentialHandler
 	UpdateCredential command.UpdateCredentialHandler
 	RemoveCredential command.RemoveCredentialHandler
 
-	GenerateText command.GenerateTextHandler
-	StreamText   command.StreamTextHandler
+	QueueWorkflow command.QueueWorkflowHandler
 }
 
 type Queries struct {
 	GetProject      query.GetProjectHandler
 	ListProjects    query.ListProjectsHandler
-	ListModels      query.ListModelsHandler
+	ListWorkflows   query.ListWorkflowsHandler
 	ListCredentials query.ListCredentialsHandler
-	GetModel        query.GetModelHandler
+	GetWorkflow     query.GetWorkflowHandler
 	GetCredential   query.GetCredentialHandler
 }
 
@@ -50,19 +49,14 @@ func New(
 	ctx context.Context,
 	conf config.Config,
 ) (*App, error) {
-	pool, err := pgxpool.New(ctx, conf.Postgres.URL)
+	pool := postgres.NewClient(ctx, conf.Postgres)
+	redisQueue, err := redis.NewClient(conf.Redis, redis.DBQueue)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create pgxpool: %w", err)
+		return nil, err
 	}
-	err = pool.Ping(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to ping database: %w", err)
-	}
-	slog.Info("connected to postgres")
 
 	projectRepo := project.NewRepository(ctx, pool)
-	sessionRepo := session.NewRepository(ctx, pool)
-	llmRegistry := llm.NewProviderRegistry()
+	runnerService := runner.NewService(ctx, redisQueue)
 
 	app := &App{
 		pool: pool,
@@ -71,23 +65,22 @@ func New(
 			UpdateProjectName:  command.NewUpdateProjectNameHandler(projectRepo),
 			UpdateAuthProvider: command.NewUpdateAuthProviderHandler(projectRepo),
 
-			AddModel:    command.NewAddModelHandler(projectRepo),
-			UpdateModel: command.NewUpdateModelHandler(projectRepo),
-			RemoveModel: command.NewRemoveModelHandler(projectRepo),
+			AddWorkflow:    command.NewAddWorkflowHandler(projectRepo),
+			UpdateWorkflow: command.NewUpdateWorkflowHandler(projectRepo),
+			RemoveWorkflow: command.NewRemoveWorkflowHandler(projectRepo),
 
-			AddCredential:    command.NewAddCredentialHandler(projectRepo, llmRegistry),
+			AddCredential:    command.NewAddCredentialHandler(projectRepo),
 			UpdateCredential: command.NewUpdateCredentialHandler(projectRepo),
 			RemoveCredential: command.NewRemoveCredentialHandler(projectRepo),
 
-			GenerateText: command.NewGenerateTextHandler(projectRepo, sessionRepo, llmRegistry),
-			StreamText:   command.NewStreamTextHandler(projectRepo, sessionRepo, llmRegistry),
+			QueueWorkflow: command.NewQueueWorkflowHandler(projectRepo, runnerService),
 		},
 		Queries: &Queries{
 			GetProject:      query.NewGetProjectHandler(projectRepo),
 			ListProjects:    query.NewListProjectsHandler(projectRepo),
-			ListModels:      query.NewListModelsHandler(projectRepo),
+			ListWorkflows:   query.NewListWorkflowsHandler(projectRepo),
 			ListCredentials: query.NewListCredentialsHandler(projectRepo),
-			GetModel:        query.NewGetModelHandler(projectRepo),
+			GetWorkflow:     query.NewGetWorkflowHandler(projectRepo),
 			GetCredential:   query.NewGetCredentialHandler(projectRepo),
 		},
 	}

@@ -24,34 +24,28 @@ func queryCredentialsToDTOs(credentials []query.Credential) []gen.Credential {
 	return dtos
 }
 
-func queryModelToDTO(model query.Model) gen.Model {
-	return gen.Model{
-		Name:          model.Name,
-		CreatedAt:     model.CreatedAt,
-		UpdatedAt:     model.UpdatedAt,
-		Slug:          model.Slug.String(),
-		SystemPrompt:  model.SystemPrompt,
-		CredentialId:  model.CredentialID,
-		ProviderModel: gen.ProviderModel(model.Model),
-		Parameters: gen.ModelParameters{
-			MaxTokens:   int(model.Parameters.MaxTokens),
-			Temperature: float32(model.Parameters.Temperature),
-		},
+func queryWorkflowToDTO(workflow query.Workflow) gen.Workflow {
+	return gen.Workflow{
+		Id:          workflow.ID,
+		Name:        workflow.Name,
+		CreatedAt:   workflow.CreatedAt,
+		UpdatedAt:   workflow.UpdatedAt,
+		BuilderFlow: workflow.BuilderFlow,
 	}
 }
 
-func queryModelsToDTOs(models []query.Model) []gen.Model {
-	dtos := make([]gen.Model, len(models))
-	for i, model := range models {
-		dtos[i] = queryModelToDTO(model)
+func queryWorkflowsToDTOs(workflows []query.Workflow) []gen.Workflow {
+	dtos := make([]gen.Workflow, len(workflows))
+	for i, workflow := range workflows {
+		dtos[i] = queryWorkflowToDTO(workflow)
 	}
 	return dtos
 }
 
 func queryProjectToDTO(project query.Project) gen.Project {
-	models := make([]gen.Model, len(project.Models))
-	for i, model := range project.Models {
-		models[i] = queryModelToDTO(model)
+	workflows := make([]gen.Workflow, len(project.Workflows))
+	for i, workflow := range project.Workflows {
+		workflows[i] = queryWorkflowToDTO(workflow)
 	}
 
 	credentials := make([]gen.Credential, len(project.Credentials))
@@ -67,7 +61,7 @@ func queryProjectToDTO(project query.Project) gen.Project {
 			Config:   project.AuthProvider.Config,
 		},
 		Credentials: credentials,
-		Models:      models,
+		Workflows:   workflows,
 		CreatedAt:   project.CreatedAt,
 		UpdatedAt:   project.UpdatedAt,
 	}

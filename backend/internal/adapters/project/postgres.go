@@ -2,6 +2,7 @@ package project
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 
@@ -9,7 +10,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/supallm/core/internal/application/domain/model"
 	"github.com/supallm/core/internal/application/query"
-	"github.com/supallm/core/internal/pkg/slug"
 )
 
 type Repository struct {
@@ -67,41 +67,41 @@ func (r Repository) Create(ctx context.Context, project *model.Project) error {
 	})
 }
 
-func (r Repository) retrieveDependencies(ctx context.Context, projectID uuid.UUID) ([]Credential, []Model, error) {
+func (r Repository) retrieveDependencies(ctx context.Context, projectID uuid.UUID) ([]Credential, []Workflow, error) {
 	llmCredentials, err := r.queries.credentialsByProjectId(ctx, projectID)
 	if err != nil {
 		return nil, nil, r.errorDecoder(err)
 	}
 
-	models, err := r.queries.modelsByProjectId(ctx, projectID)
+	workflows, err := r.queries.workflowsByProjectId(ctx, projectID)
 	if err != nil {
 		return nil, nil, r.errorDecoder(err)
 	}
 
-	return llmCredentials, models, nil
+	return llmCredentials, workflows, nil
 }
 
-func (r Repository) retrieve(ctx context.Context, projectID uuid.UUID) (Project, []Credential, []Model, error) {
+func (r Repository) retrieve(ctx context.Context, projectID uuid.UUID) (Project, []Credential, []Workflow, error) {
 	project, err := r.queries.projectById(ctx, projectID)
 	if err != nil {
 		return Project{}, nil, nil, r.errorDecoder(err)
 	}
 
-	llmCredentials, models, err := r.retrieveDependencies(ctx, projectID)
+	llmCredentials, workflows, err := r.retrieveDependencies(ctx, projectID)
 	if err != nil {
 		return Project{}, nil, nil, r.errorDecoder(err)
 	}
 
-	return project, llmCredentials, models, nil
+	return project, llmCredentials, workflows, nil
 }
 
 func (r Repository) Retrieve(ctx context.Context, projectID uuid.UUID) (*model.Project, error) {
-	project, llmProviders, models, err := r.retrieve(ctx, projectID)
+	project, llmProviders, workflows, err := r.retrieve(ctx, projectID)
 	if err != nil {
 		return nil, err
 	}
 
-	return project.domain(llmProviders, models)
+	return project.domain(llmProviders, workflows)
 }
 
 func (r Repository) Update(ctx context.Context, project *model.Project) error {
@@ -116,8 +116,8 @@ func (r Repository) Update(ctx context.Context, project *model.Project) error {
 			}
 		}
 
-		if project.Models != nil {
-			if err := r.updateModels(ctx, q, project); err != nil {
+		if project.Workflows != nil {
+			if err := r.updateWorkflows(ctx, q, project); err != nil {
 				return err
 			}
 		}
@@ -172,28 +172,28 @@ func (r Repository) updateCredentials(ctx context.Context, q *Queries, project *
 	return nil
 }
 
-func (r Repository) updateModels(ctx context.Context, q *Queries, project *model.Project) error {
-	for slug, model := range project.Models {
-		if model == nil {
+func (r Repository) updateWorkflows(ctx context.Context, q *Queries, project *model.Project) error {
+	for _, workflow := range project.Workflows {
+		if workflow == nil {
 			continue
 		}
 
-		if model.Credential == nil {
-			return ErrCredentialNotFound
+		builderFlow, err := json.Marshal(workflow.BuilderFlow)
+		if err != nil {
+			return r.errorDecoder(err)
 		}
 
-		err := q.upsertModel(ctx, upsertModelParams{
-			ID:            model.ID,
-			ProjectID:     project.ID,
-			CredentialID:  model.Credential.ID,
-			Name:          model.Name,
-			Slug:          slug.String(),
-			ProviderModel: model.ProviderModel.String(),
-			SystemPrompt:  model.SystemPrompt.String(),
-			Parameters: modelParameters{
-				MaxTokens:   model.Parameters.MaxTokens,
-				Temperature: model.Parameters.Temperature,
-			},
+		runnerFlow, err := json.Marshal(workflow.RunnerFlow)
+		if err != nil {
+			return r.errorDecoder(err)
+		}
+
+		err = q.upsertWorkflow(ctx, upsertWorkflowParams{
+			ID:          workflow.ID,
+			ProjectID:   project.ID,
+			Name:        workflow.Name,
+			BuilderFlow: builderFlow,
+			RunnerFlow:  runnerFlow,
 		})
 		if err != nil {
 			return r.errorDecoder(err)
@@ -218,8 +218,8 @@ func (r Repository) DeleteCredential(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-func (r Repository) DeleteModel(ctx context.Context, slug slug.Slug) error {
-	err := r.queries.deleteModel(ctx, slug.String())
+func (r Repository) DeleteWorkflow(ctx context.Context, id uuid.UUID) error {
+	err := r.queries.deleteWorkflow(ctx, id)
 	if err != nil {
 		return r.errorDecoder(err)
 	}
@@ -247,15 +247,16 @@ func (r Repository) ReadCredential(
 	return credential.query(), nil
 }
 
-func (r Repository) ReadModel(ctx context.Context, projectID uuid.UUID, modelSlug slug.Slug) (query.Model, error) {
-	model, err := r.queries.modelBySlug(ctx, modelBySlugParams{
-		ProjectID: projectID,
-		Slug:      modelSlug.String(),
-	})
+func (r Repository) ReadWorkflow(
+	ctx context.Context,
+	projectID uuid.UUID,
+	workflowID uuid.UUID,
+) (query.Workflow, error) {
+	workflow, err := r.queries.workflowById(ctx, workflowID)
 	if err != nil {
-		return query.Model{}, err
+		return query.Workflow{}, err
 	}
-	return model.query(), nil
+	return *workflow.query(), nil
 }
 
 func (r Repository) ListProjects(ctx context.Context, userID string) ([]query.Project, error) {
@@ -267,13 +268,13 @@ func (r Repository) ListProjects(ctx context.Context, userID string) ([]query.Pr
 	queryProjects := make([]query.Project, len(projects))
 	for i, project := range projects {
 		var llmProviders []Credential
-		var models []Model
+		var workflows []Workflow
 
-		llmProviders, models, err = r.retrieveDependencies(ctx, project.ID)
+		llmProviders, workflows, err = r.retrieveDependencies(ctx, project.ID)
 		if err != nil {
 			return nil, err
 		}
-		queryProjects[i] = project.query(llmProviders, models)
+		queryProjects[i] = project.query(llmProviders, workflows)
 	}
 
 	return queryProjects, nil

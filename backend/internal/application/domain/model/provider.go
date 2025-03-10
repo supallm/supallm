@@ -26,14 +26,14 @@ const (
 )
 
 //nolint:gochecknoglobals // map to be used in multiple files of this package
-var providerModels = map[ProviderType]map[ProviderModel]struct{}{
-	ProviderTypeOpenAI: {
-		ModelGPT4o:     {},
-		ModelGPT4oMini: {},
-	},
-	ProviderTypeAnthropic: {
-		ModelClaude37Sonnet: {},
-		ModelClaude35Sonnet: {},
-		ModelClaude35Haiku:  {},
-	},
-}
+// var providerModels = map[ProviderType]map[ProviderModel]struct{}{
+// 	ProviderTypeOpenAI: {
+// 		ModelGPT4o:     {},
+// 		ModelGPT4oMini: {},
+// 	},
+// 	ProviderTypeAnthropic: {
+// 		ModelClaude37Sonnet: {},
+// 		ModelClaude35Sonnet: {},
+// 		ModelClaude35Haiku:  {},
+// 	},
+// }

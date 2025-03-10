@@ -12,7 +12,7 @@ import (
 	"github.com/supallm/core/internal/pkg/secret"
 )
 
-type AddCredentialCommand struct {
+type QueueWorkflowCommand struct {
 	ID           uuid.UUID
 	ProjectID    uuid.UUID
 	Name         string
@@ -20,33 +20,46 @@ type AddCredentialCommand struct {
 	APIKey       secret.APIKey
 }
 
-type AddCredentialHandler struct {
-	projectRepo repository.ProjectRepository
+type QueueWorkflowHandler struct {
+	projectRepo   repository.ProjectRepository
+	runnerService RunnerService
 }
 
-func NewAddCredentialHandler(
+func NewQueueWorkflowHandler(
 	projectRepo repository.ProjectRepository,
-) AddCredentialHandler {
+	runnerService RunnerService,
+) QueueWorkflowHandler {
 	if projectRepo == nil {
 		slog.Error("projectRepo is nil")
 		os.Exit(1)
 	}
 
-	return AddCredentialHandler{
-		projectRepo: projectRepo,
+	if runnerService == nil {
+		slog.Error("runnerService is nil")
+		os.Exit(1)
+	}
+
+	return QueueWorkflowHandler{
+		projectRepo:   projectRepo,
+		runnerService: runnerService,
 	}
 }
 
-func (h AddCredentialHandler) Handle(ctx context.Context, cmd AddCredentialCommand) error {
+func (h QueueWorkflowHandler) Handle(ctx context.Context, cmd QueueWorkflowCommand) error {
 	project, err := h.projectRepo.Retrieve(ctx, cmd.ProjectID)
 	if err != nil {
 		return errs.NotFoundError{Resource: "project", ID: cmd.ProjectID}
 	}
 
-	err = project.AddCredential(cmd.ID, cmd.Name, cmd.ProviderType, cmd.APIKey)
+	workflow, err := project.GetWorkflow(cmd.ID)
+	if err != nil {
+		return errs.NotFoundError{Resource: "workflow", ID: cmd.ID}
+	}
+
+	err = h.runnerService.QueueWorkflow(ctx, workflow)
 	if err != nil {
 		return errs.InvalidError{Reason: err.Error()}
 	}
 
-	return h.projectRepo.Update(ctx, project)
+	return nil
 }

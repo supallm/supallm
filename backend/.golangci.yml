@@ -134,6 +134,7 @@ linters-settings:
       - "^github.com/gofiber/fiber/v2/middleware/cors.Config$"
       - "^github.com/gofiber/fiber/v2/middleware/recover.Config$"
       - "^github.com/gofiber/fiber/v2/middleware/logger.Config$"
+      - "^github.com/redis/go-redis/v9.Options$"
 
   funlen:
     # Checks the number of lines in a function.

@@ -3,7 +3,6 @@ package model
 import (
 	"github.com/google/uuid"
 	"github.com/supallm/core/internal/pkg/errs"
-	"github.com/supallm/core/internal/pkg/slug"
 )
 
 type Project struct {
@@ -12,7 +11,7 @@ type Project struct {
 	Name         string
 	AuthProvider AuthProvider
 	Credentials  map[uuid.UUID]*Credential
-	Models       map[slug.Slug]*Model
+	Workflows    map[uuid.UUID]*Workflow
 }
 
 func NewProject(id uuid.UUID, userID string, name string) (*Project, error) {
@@ -34,7 +33,7 @@ func NewProject(id uuid.UUID, userID string, name string) (*Project, error) {
 		Name:         name,
 		AuthProvider: nil,
 		Credentials:  map[uuid.UUID]*Credential{},
-		Models:       map[slug.Slug]*Model{},
+		Workflows:    map[uuid.UUID]*Workflow{},
 	}, nil
 }
 

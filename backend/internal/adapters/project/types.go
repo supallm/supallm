@@ -1,13 +1,12 @@
 package project
 
 import (
-	"fmt"
+	"encoding/json"
 
 	"github.com/google/uuid"
 	"github.com/supallm/core/internal/application/domain/model"
 	"github.com/supallm/core/internal/application/query"
 	"github.com/supallm/core/internal/pkg/secret"
-	"github.com/supallm/core/internal/pkg/slug"
 )
 
 type authProvider struct {
@@ -26,11 +25,6 @@ func (a authProvider) domain() (model.AuthProvider, error) {
 	}
 
 	return ap, nil
-}
-
-type modelParameters struct {
-	MaxTokens   uint32  `json:"max_tokens"`
-	Temperature float64 `json:"temperature"`
 }
 
 func (a authProvider) query() query.AuthProvider {
@@ -72,38 +66,42 @@ func (l Credential) query() query.Credential {
 	}
 }
 
-func (m Model) domain(credential *model.Credential) *model.Model {
-	return &model.Model{
-		ID:   m.ID,
-		Slug: slug.Slug(m.Slug),
-		Name: m.Name,
-		Parameters: model.ModelParameters{
-			MaxTokens:   m.Parameters.MaxTokens,
-			Temperature: m.Parameters.Temperature,
-		},
-		Credential:    credential,
-		ProviderModel: model.ProviderModel(m.ProviderModel),
-		SystemPrompt:  model.Prompt(m.SystemPrompt),
+func (w Workflow) domain() (*model.Workflow, error) {
+	builderFlow := model.BuilderFlow{}
+	if err := json.Unmarshal(w.BuilderFlow, &builderFlow); err != nil {
+		return nil, err
+	}
+
+	runnerFlow := model.RunnerFlow{}
+	if err := json.Unmarshal(w.RunnerFlow, &runnerFlow); err != nil {
+		return nil, err
+	}
+
+	return &model.Workflow{
+		ID:          w.ID,
+		Status:      model.WorkflowStatus(w.Status),
+		Name:        w.Name,
+		BuilderFlow: builderFlow,
+		RunnerFlow:  runnerFlow,
+	}, nil
+}
+
+func (w Workflow) query() *query.Workflow {
+	builderFlow := make(map[string]any)
+	if err := json.Unmarshal(w.BuilderFlow, &builderFlow); err != nil {
+		return nil
+	}
+
+	return &query.Workflow{
+		ID:          w.ID,
+		Name:        w.Name,
+		BuilderFlow: builderFlow,
+		CreatedAt:   w.CreatedAt.Time,
+		UpdatedAt:   w.UpdatedAt.Time,
 	}
 }
 
-func (m Model) query() query.Model {
-	return query.Model{
-		Slug:         slug.Slug(m.Slug),
-		CredentialID: m.CredentialID,
-		Name:         m.Name,
-		Model:        m.ProviderModel,
-		SystemPrompt: m.SystemPrompt,
-		Parameters: query.ModelParameters{
-			MaxTokens:   m.Parameters.MaxTokens,
-			Temperature: m.Parameters.Temperature,
-		},
-		CreatedAt: m.CreatedAt.Time,
-		UpdatedAt: m.UpdatedAt.Time,
-	}
-}
-
-func (p Project) domain(cs []Credential, ms []Model) (*model.Project, error) {
+func (p Project) domain(cs []Credential, ws []Workflow) (*model.Project, error) {
 	ap, err := p.AuthProvider.domain()
 	if err != nil {
 		return nil, err
@@ -117,13 +115,15 @@ func (p Project) domain(cs []Credential, ms []Model) (*model.Project, error) {
 		}
 	}
 
-	models := make(map[slug.Slug]*model.Model)
-	for _, m := range ms {
-		credential, ok := llmCredentials[m.CredentialID]
-		if !ok {
-			return nil, fmt.Errorf("credential not found: %s", m.CredentialID)
+	workflows := make(map[uuid.UUID]*model.Workflow)
+	for _, w := range ws {
+		var workflow *model.Workflow
+		workflow, err = w.domain()
+		if err != nil {
+			return nil, err
 		}
-		models[slug.Slug(m.Slug)] = m.domain(credential)
+
+		workflows[w.ID] = workflow
 	}
 
 	return &model.Project{
@@ -132,11 +132,11 @@ func (p Project) domain(cs []Credential, ms []Model) (*model.Project, error) {
 		Name:         p.Name,
 		AuthProvider: ap,
 		Credentials:  llmCredentials,
-		Models:       models,
+		Workflows:    workflows,
 	}, nil
 }
 
-func (p Project) query(cs []Credential, ms []Model) query.Project {
+func (p Project) query(cs []Credential, ws []Workflow) query.Project {
 	ap := p.AuthProvider.query()
 
 	llmCredentials := make([]query.Credential, len(cs))
@@ -144,9 +144,9 @@ func (p Project) query(cs []Credential, ms []Model) query.Project {
 		llmCredentials[i] = llmCredential.query()
 	}
 
-	models := make([]query.Model, len(ms))
-	for i, m := range ms {
-		models[i] = m.query()
+	workflows := make([]query.Workflow, len(ws))
+	for i, w := range ws {
+		workflows[i] = *w.query()
 	}
 
 	return query.Project{
@@ -154,7 +154,7 @@ func (p Project) query(cs []Credential, ms []Model) query.Project {
 		Name:         p.Name,
 		AuthProvider: ap,
 		Credentials:  llmCredentials,
-		Models:       models,
+		Workflows:    workflows,
 		CreatedAt:    p.CreatedAt.Time,
 		UpdatedAt:    p.UpdatedAt.Time,
 	}

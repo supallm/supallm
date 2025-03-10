@@ -17,6 +17,11 @@ type (
 		Port string
 	}
 
+	Redis struct {
+		Host     string
+		Password string
+	}
+
 	Clerk struct {
 		SecretKey string
 	}
@@ -27,6 +32,7 @@ type (
 
 	Config struct {
 		Server   Server
+		Redis    Redis
 		Postgres Postgres
 		Clerk    Clerk
 	}
@@ -49,6 +55,10 @@ func Load(_ context.Context) Config {
 	return Config{
 		Server: Server{
 			Port: httpPort,
+		},
+		Redis: Redis{
+			Host:     mustGet("REDIS_HOST"),
+			Password: mustGet("REDIS_PASSWORD"),
 		},
 		Postgres: Postgres{
 			URL: postgresURL,

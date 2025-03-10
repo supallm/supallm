@@ -5,6 +5,8 @@
 package project
 
 import (
+	"encoding/json"
+
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -20,19 +22,6 @@ type Credential struct {
 	UpdatedAt        pgtype.Timestamptz `json:"updated_at"`
 }
 
-type Model struct {
-	ID            uuid.UUID          `json:"id"`
-	ProjectID     uuid.UUID          `json:"project_id"`
-	CredentialID  uuid.UUID          `json:"credential_id"`
-	Name          string             `json:"name"`
-	Slug          string             `json:"slug"`
-	ProviderModel string             `json:"provider_model"`
-	SystemPrompt  string             `json:"system_prompt"`
-	Parameters    modelParameters    `json:"parameters"`
-	CreatedAt     pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt     pgtype.Timestamptz `json:"updated_at"`
-}
-
 type Project struct {
 	ID           uuid.UUID          `json:"id"`
 	UserID       string             `json:"user_id"`
@@ -40,4 +29,15 @@ type Project struct {
 	AuthProvider authProvider       `json:"auth_provider"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+}
+
+type Workflow struct {
+	ID          uuid.UUID          `json:"id"`
+	ProjectID   uuid.UUID          `json:"project_id"`
+	Name        string             `json:"name"`
+	Status      string             `json:"status"`
+	BuilderFlow json.RawMessage    `json:"builder_flow"`
+	RunnerFlow  json.RawMessage    `json:"runner_flow"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
 }

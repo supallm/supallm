@@ -26,10 +26,10 @@ type (
 	}
 
 	Request struct {
-		ID     uuid.UUID
-		Model  Model
-		Status RequestStatus
-		Config RequestConfig
+		ID       uuid.UUID
+		Workflow *Workflow
+		Status   RequestStatus
+		Config   RequestConfig
 	}
 
 	TokenUsage struct {
@@ -92,20 +92,20 @@ const (
 	ResponseStatusInterrupted ResponseStatus = "interrupted"
 )
 
-func (s *Session) NewRequest(id uuid.UUID, model *Model, config RequestConfig) (*Request, error) {
+func (s *Session) NewRequest(id uuid.UUID, workflow *Workflow, config RequestConfig) (*Request, error) {
 	if id == uuid.Nil {
 		return nil, ErrInvalidID
 	}
 
-	if model == nil {
-		return nil, ErrInvalidModel
+	if workflow == nil {
+		return nil, ErrInvalidWorkflow
 	}
 
 	request := &Request{
-		ID:     id,
-		Model:  *model,
-		Config: config,
-		Status: RequestStatusPending,
+		ID:       id,
+		Workflow: workflow,
+		Config:   config,
+		Status:   RequestStatusPending,
 	}
 	s.Requests = append(s.Requests, request)
 	return request, nil

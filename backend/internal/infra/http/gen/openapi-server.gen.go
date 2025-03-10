@@ -45,27 +45,27 @@ type ServerInterface interface {
 	// Update a credential
 	// (PATCH /projects/{projectId}/credentials/{credentialId})
 	UpdateCredential(c *fiber.Ctx, projectId UUID, credentialId UUID) error
-	// Generate text (HTTP blocking)
-	// (POST /projects/{projectId}/generateText)
-	GenerateText(c *fiber.Ctx, projectId UUID) error
-	// List all models for a project
-	// (GET /projects/{projectId}/models)
-	ListModels(c *fiber.Ctx, projectId UUID) error
-	// Create a model for a project
-	// (POST /projects/{projectId}/models)
-	CreateModel(c *fiber.Ctx, projectId UUID) error
-	// Delete a model
-	// (DELETE /projects/{projectId}/models/{slug})
-	DeleteModel(c *fiber.Ctx, projectId UUID, slug string) error
-	// Get a model by slug
-	// (GET /projects/{projectId}/models/{slug})
-	GetModel(c *fiber.Ctx, projectId UUID, slug string) error
-	// Update a model
-	// (PUT /projects/{projectId}/models/{slug})
-	UpdateModel(c *fiber.Ctx, projectId UUID, slug string) error
-	// Generate text in streaming (SSE)
-	// (POST /projects/{projectId}/streamText)
-	StreamText(c *fiber.Ctx, projectId UUID) error
+	// List all workflows for a project
+	// (GET /projects/{projectId}/workflows)
+	ListWorkflows(c *fiber.Ctx, projectId UUID) error
+	// Create a workflow for a project
+	// (POST /projects/{projectId}/workflows)
+	CreateWorkflow(c *fiber.Ctx, projectId UUID) error
+	// Delete a workflow
+	// (DELETE /projects/{projectId}/workflows/{workflowId})
+	DeleteWorkflow(c *fiber.Ctx, projectId UUID, workflowId UUID) error
+	// Get a workflow by ID
+	// (GET /projects/{projectId}/workflows/{workflowId})
+	GetWorkflow(c *fiber.Ctx, projectId UUID, workflowId string) error
+	// Update a workflow
+	// (PUT /projects/{projectId}/workflows/{workflowId})
+	UpdateWorkflow(c *fiber.Ctx, projectId UUID, workflowId string) error
+	// Listen to a workflow trigger
+	// (GET /projects/{projectId}/workflows/{workflowId}/listen/{triggerId})
+	ListenWorkflowTrigger(c *fiber.Ctx, projectId UUID, workflowId UUID, triggerId UUID) error
+	// Trigger a workflow
+	// (POST /projects/{projectId}/workflows/{workflowId}/trigger)
+	TriggerWorkflow(c *fiber.Ctx, projectId UUID, workflowId UUID) error
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -277,8 +277,8 @@ func (siw *ServerInterfaceWrapper) UpdateCredential(c *fiber.Ctx) error {
 	return siw.Handler.UpdateCredential(c, projectId, credentialId)
 }
 
-// GenerateText operation middleware
-func (siw *ServerInterfaceWrapper) GenerateText(c *fiber.Ctx) error {
+// ListWorkflows operation middleware
+func (siw *ServerInterfaceWrapper) ListWorkflows(c *fiber.Ctx) error {
 
 	var err error
 
@@ -292,11 +292,11 @@ func (siw *ServerInterfaceWrapper) GenerateText(c *fiber.Ctx) error {
 
 	c.Context().SetUserValue(BearerAuthScopes, []string{})
 
-	return siw.Handler.GenerateText(c, projectId)
+	return siw.Handler.ListWorkflows(c, projectId)
 }
 
-// ListModels operation middleware
-func (siw *ServerInterfaceWrapper) ListModels(c *fiber.Ctx) error {
+// CreateWorkflow operation middleware
+func (siw *ServerInterfaceWrapper) CreateWorkflow(c *fiber.Ctx) error {
 
 	var err error
 
@@ -310,11 +310,11 @@ func (siw *ServerInterfaceWrapper) ListModels(c *fiber.Ctx) error {
 
 	c.Context().SetUserValue(BearerAuthScopes, []string{})
 
-	return siw.Handler.ListModels(c, projectId)
+	return siw.Handler.CreateWorkflow(c, projectId)
 }
 
-// CreateModel operation middleware
-func (siw *ServerInterfaceWrapper) CreateModel(c *fiber.Ctx) error {
+// DeleteWorkflow operation middleware
+func (siw *ServerInterfaceWrapper) DeleteWorkflow(c *fiber.Ctx) error {
 
 	var err error
 
@@ -326,13 +326,21 @@ func (siw *ServerInterfaceWrapper) CreateModel(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter projectId: %w", err).Error())
 	}
 
+	// ------------- Path parameter "workflowId" -------------
+	var workflowId UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "workflowId", c.Params("workflowId"), &workflowId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter workflowId: %w", err).Error())
+	}
+
 	c.Context().SetUserValue(BearerAuthScopes, []string{})
 
-	return siw.Handler.CreateModel(c, projectId)
+	return siw.Handler.DeleteWorkflow(c, projectId, workflowId)
 }
 
-// DeleteModel operation middleware
-func (siw *ServerInterfaceWrapper) DeleteModel(c *fiber.Ctx) error {
+// GetWorkflow operation middleware
+func (siw *ServerInterfaceWrapper) GetWorkflow(c *fiber.Ctx) error {
 
 	var err error
 
@@ -344,21 +352,21 @@ func (siw *ServerInterfaceWrapper) DeleteModel(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter projectId: %w", err).Error())
 	}
 
-	// ------------- Path parameter "slug" -------------
-	var slug string
+	// ------------- Path parameter "workflowId" -------------
+	var workflowId string
 
-	err = runtime.BindStyledParameterWithOptions("simple", "slug", c.Params("slug"), &slug, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	err = runtime.BindStyledParameterWithOptions("simple", "workflowId", c.Params("workflowId"), &workflowId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter slug: %w", err).Error())
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter workflowId: %w", err).Error())
 	}
 
 	c.Context().SetUserValue(BearerAuthScopes, []string{})
 
-	return siw.Handler.DeleteModel(c, projectId, slug)
+	return siw.Handler.GetWorkflow(c, projectId, workflowId)
 }
 
-// GetModel operation middleware
-func (siw *ServerInterfaceWrapper) GetModel(c *fiber.Ctx) error {
+// UpdateWorkflow operation middleware
+func (siw *ServerInterfaceWrapper) UpdateWorkflow(c *fiber.Ctx) error {
 
 	var err error
 
@@ -370,21 +378,21 @@ func (siw *ServerInterfaceWrapper) GetModel(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter projectId: %w", err).Error())
 	}
 
-	// ------------- Path parameter "slug" -------------
-	var slug string
+	// ------------- Path parameter "workflowId" -------------
+	var workflowId string
 
-	err = runtime.BindStyledParameterWithOptions("simple", "slug", c.Params("slug"), &slug, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	err = runtime.BindStyledParameterWithOptions("simple", "workflowId", c.Params("workflowId"), &workflowId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter slug: %w", err).Error())
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter workflowId: %w", err).Error())
 	}
 
 	c.Context().SetUserValue(BearerAuthScopes, []string{})
 
-	return siw.Handler.GetModel(c, projectId, slug)
+	return siw.Handler.UpdateWorkflow(c, projectId, workflowId)
 }
 
-// UpdateModel operation middleware
-func (siw *ServerInterfaceWrapper) UpdateModel(c *fiber.Ctx) error {
+// ListenWorkflowTrigger operation middleware
+func (siw *ServerInterfaceWrapper) ListenWorkflowTrigger(c *fiber.Ctx) error {
 
 	var err error
 
@@ -396,21 +404,29 @@ func (siw *ServerInterfaceWrapper) UpdateModel(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter projectId: %w", err).Error())
 	}
 
-	// ------------- Path parameter "slug" -------------
-	var slug string
+	// ------------- Path parameter "workflowId" -------------
+	var workflowId UUID
 
-	err = runtime.BindStyledParameterWithOptions("simple", "slug", c.Params("slug"), &slug, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	err = runtime.BindStyledParameterWithOptions("simple", "workflowId", c.Params("workflowId"), &workflowId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter slug: %w", err).Error())
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter workflowId: %w", err).Error())
+	}
+
+	// ------------- Path parameter "triggerId" -------------
+	var triggerId UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "triggerId", c.Params("triggerId"), &triggerId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter triggerId: %w", err).Error())
 	}
 
 	c.Context().SetUserValue(BearerAuthScopes, []string{})
 
-	return siw.Handler.UpdateModel(c, projectId, slug)
+	return siw.Handler.ListenWorkflowTrigger(c, projectId, workflowId, triggerId)
 }
 
-// StreamText operation middleware
-func (siw *ServerInterfaceWrapper) StreamText(c *fiber.Ctx) error {
+// TriggerWorkflow operation middleware
+func (siw *ServerInterfaceWrapper) TriggerWorkflow(c *fiber.Ctx) error {
 
 	var err error
 
@@ -422,9 +438,17 @@ func (siw *ServerInterfaceWrapper) StreamText(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter projectId: %w", err).Error())
 	}
 
+	// ------------- Path parameter "workflowId" -------------
+	var workflowId UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "workflowId", c.Params("workflowId"), &workflowId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter workflowId: %w", err).Error())
+	}
+
 	c.Context().SetUserValue(BearerAuthScopes, []string{})
 
-	return siw.Handler.StreamText(c, projectId)
+	return siw.Handler.TriggerWorkflow(c, projectId, workflowId)
 }
 
 // FiberServerOptions provides options for the Fiber server.
@@ -470,18 +494,18 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 
 	router.Patch(options.BaseURL+"/projects/:projectId/credentials/:credentialId", wrapper.UpdateCredential)
 
-	router.Post(options.BaseURL+"/projects/:projectId/generateText", wrapper.GenerateText)
+	router.Get(options.BaseURL+"/projects/:projectId/workflows", wrapper.ListWorkflows)
 
-	router.Get(options.BaseURL+"/projects/:projectId/models", wrapper.ListModels)
+	router.Post(options.BaseURL+"/projects/:projectId/workflows", wrapper.CreateWorkflow)
 
-	router.Post(options.BaseURL+"/projects/:projectId/models", wrapper.CreateModel)
+	router.Delete(options.BaseURL+"/projects/:projectId/workflows/:workflowId", wrapper.DeleteWorkflow)
 
-	router.Delete(options.BaseURL+"/projects/:projectId/models/:slug", wrapper.DeleteModel)
+	router.Get(options.BaseURL+"/projects/:projectId/workflows/:workflowId", wrapper.GetWorkflow)
 
-	router.Get(options.BaseURL+"/projects/:projectId/models/:slug", wrapper.GetModel)
+	router.Put(options.BaseURL+"/projects/:projectId/workflows/:workflowId", wrapper.UpdateWorkflow)
 
-	router.Put(options.BaseURL+"/projects/:projectId/models/:slug", wrapper.UpdateModel)
+	router.Get(options.BaseURL+"/projects/:projectId/workflows/:workflowId/listen/:triggerId", wrapper.ListenWorkflowTrigger)
 
-	router.Post(options.BaseURL+"/projects/:projectId/streamText", wrapper.StreamText)
+	router.Post(options.BaseURL+"/projects/:projectId/workflows/:workflowId/trigger", wrapper.TriggerWorkflow)
 
 }

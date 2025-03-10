@@ -10,13 +10,13 @@ import (
 )
 
 type Request struct {
-	ID        uuid.UUID          `json:"id"`
-	SessionID uuid.UUID          `json:"session_id"`
-	ModelID   uuid.UUID          `json:"model_id"`
-	Config    []byte             `json:"config"`
-	Status    string             `json:"status"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+	ID         uuid.UUID          `json:"id"`
+	SessionID  uuid.UUID          `json:"session_id"`
+	WorkflowID uuid.UUID          `json:"workflow_id"`
+	Config     []byte             `json:"config"`
+	Status     string             `json:"status"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
 }
 
 type Response struct {

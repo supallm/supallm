@@ -8,30 +8,30 @@ import (
 	"github.com/google/uuid"
 )
 
-type ListModelsQuery struct {
+type ListWorkflowsQuery struct {
 	ProjectID uuid.UUID
 }
 
-type ListModelsHandler struct {
+type ListWorkflowsHandler struct {
 	projectReader ProjectReader
 }
 
-func NewListModelsHandler(projectReader ProjectReader) ListModelsHandler {
+func NewListWorkflowsHandler(projectReader ProjectReader) ListWorkflowsHandler {
 	if projectReader == nil {
 		slog.Error("projectReader is nil")
 		os.Exit(1)
 	}
 
-	return ListModelsHandler{
+	return ListWorkflowsHandler{
 		projectReader: projectReader,
 	}
 }
 
-func (h ListModelsHandler) Handle(ctx context.Context, query ListModelsQuery) ([]Model, error) {
+func (h ListWorkflowsHandler) Handle(ctx context.Context, query ListWorkflowsQuery) ([]Workflow, error) {
 	project, err := h.projectReader.ReadProject(ctx, query.ProjectID)
 	if err != nil {
 		return nil, err
 	}
 
-	return project.Models, nil
+	return project.Workflows, nil
 }

@@ -14,15 +14,14 @@ const (
 	ErrProviderNameRequired Error = "provider name is required"
 
 	ErrProviderNotFound          Error = "provider not found"
-	ErrModelNotFound             Error = "model not found"
-	ErrModelExists               Error = "model already exists"
+	ErrWorkflowNotFound          Error = "workflow not found"
+	ErrWorkflowExists            Error = "workflow already exists"
 	ErrProviderModelNotSupported Error = "provider model not supported"
 
 	//nolint:all
 	ErrCredentialNotSupported Error = "credential not supported"
 
-	ErrInvalidModelSlug Error = "invalid model slug"
-	ErrInvalidModel     Error = "invalid model"
+	ErrInvalidWorkflow Error = "invalid workflow"
 
 	//nolint:all
 	ErrCredentialNotFound Error = "credential not found"

@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/supallm/core/internal/pkg/slug"
 )
 
 type Project struct {
@@ -12,7 +11,7 @@ type Project struct {
 	Name         string
 	AuthProvider AuthProvider
 	Credentials  []Credential
-	Models       []Model
+	Workflows    []Workflow
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 }
@@ -22,15 +21,12 @@ type AuthProvider struct {
 	Config   map[string]any
 }
 
-type Model struct {
-	Slug         slug.Slug
-	Name         string
-	CredentialID uuid.UUID
-	Model        string
-	SystemPrompt string
-	Parameters   ModelParameters
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+type Workflow struct {
+	ID          uuid.UUID
+	Name        string
+	BuilderFlow map[string]any
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
 type ModelParameters struct {

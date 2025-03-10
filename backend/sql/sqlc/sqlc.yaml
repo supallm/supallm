@@ -8,7 +8,7 @@ sql:
   - schema: "../schemas.sql"
     queries:
       - "./project_queries.sql"
-      - "./model_queries.sql"
+      - "./workflow_queries.sql"
       - "./credential_queries.sql"
     engine: "postgresql"
     gen:
@@ -27,9 +27,13 @@ sql:
             go_type:
               type: "authProvider"
             nullable: true
-          - column: "models.parameters"
+          - column: "workflows.builder_flow"
             go_type:
-              type: "modelParameters"
+              type: "json.RawMessage"
+            nullable: true
+          - column: "workflows.runner_flow"
+            go_type:
+              type: "json.RawMessage"
             nullable: true
   - schema: "../schemas.sql"
     queries:

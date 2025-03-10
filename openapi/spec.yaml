@@ -248,12 +248,12 @@ paths:
         "404":
           description: Credential or project not found
 
-  /projects/{projectId}/models:
+  /projects/{projectId}/workflows:
     get:
-      summary: List all models for a project
-      operationId: listModels
+      summary: List all workflows for a project
+      operationId: listWorkflows
       tags:
-        - Model
+        - Workflow
       parameters:
         - name: projectId
           in: path
@@ -262,20 +262,20 @@ paths:
             $ref: "#/components/schemas/UUID"
       responses:
         "200":
-          description: List of models
+          description: List of workflows
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Model"
+                  $ref: "#/components/schemas/Workflow"
         "404":
           description: Project not found
     post:
-      summary: "Create a model for a project"
-      operationId: createModel
+      summary: "Create a workflow for a project"
+      operationId: createWorkflow
       tags:
-        - Model
+        - Workflow
       parameters:
         - name: projectId
           in: path
@@ -287,53 +287,53 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateModelRequest"
+              $ref: "#/components/schemas/CreateWorkflowRequest"
       responses:
         "201":
-          description: "Model created"
+          description: "Workflow created"
         "400":
           description: Bad request
         "404":
           description: Project not found
 
-  /projects/{projectId}/models/{slug}:
+  /projects/{projectId}/workflows/{workflowId}:
     get:
-      summary: "Get a model by slug"
-      operationId: getModel
+      summary: "Get a workflow by ID"
+      operationId: getWorkflow
       tags:
-        - Model
+        - Workflow
       parameters:
         - name: projectId
           in: path
           required: true
           schema:
             $ref: "#/components/schemas/UUID"
-        - name: slug
+        - name: workflowId
           in: path
           required: true
           schema:
             type: string
       responses:
         "200":
-          description: "Model details"
+          description: "Workflow details"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Model"
+                $ref: "#/components/schemas/Workflow"
         "404":
-          description: Model or project not found
+          description: Workflow or project not found
     put:
-      summary: "Update a model"
-      operationId: updateModel
+      summary: "Update a workflow"
+      operationId: updateWorkflow
       tags:
-        - Model
+        - Workflow
       parameters:
         - name: projectId
           in: path
           required: true
           schema:
             $ref: "#/components/schemas/UUID"
-        - name: slug
+        - name: workflowId
           in: path
           required: true
           schema:
@@ -343,44 +343,49 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateModelRequest"
+              $ref: "#/components/schemas/UpdateWorkflowRequest"
       responses:
         "200":
-          description: "Model updated"
+          description: "Workflow updated"
         "400":
           description: Bad request
         "404":
-          description: Model or project not found
+          description: Workflow or project not found
     delete:
-      summary: "Delete a model"
-      operationId: deleteModel
+      summary: "Delete a workflow"
+      operationId: deleteWorkflow
       tags:
-        - Model
+        - Workflow
       parameters:
         - name: projectId
           in: path
           required: true
           schema:
             $ref: "#/components/schemas/UUID"
-        - name: slug
+        - name: workflowId
           in: path
           required: true
           schema:
-            type: string
+            $ref: "#/components/schemas/UUID"
       responses:
         "204":
-          description: "Model deleted"
+          description: "Workflow deleted"
         "404":
-          description: Model or project not found
+          description: Workflow or project not found
 
-  /projects/{projectId}/generateText:
+  /projects/{projectId}/workflows/{workflowId}/trigger:
     post:
-      summary: "Generate text (HTTP blocking)"
-      operationId: generateText
+      summary: "Trigger a workflow"
+      operationId: triggerWorkflow
       tags:
-        - Projects
+        - Workflow
       parameters:
         - name: projectId
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/UUID"
+        - name: workflowId
           in: path
           required: true
           schema:
@@ -390,52 +395,46 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/TextGenerationRequest"
+              $ref: "#/components/schemas/TriggerWorkflowRequest"
       responses:
         "200":
-          description: "Generated text"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  text:
-                    type: string
+          description: "Workflow triggered"
         "400":
           description: Bad request
         "404":
-          description: Project not found
+          description: Project or workflow not found
 
-  /projects/{projectId}/streamText:
-    post:
-      summary: "Generate text in streaming (SSE)"
-      operationId: streamText
+  /projects/{projectId}/workflows/{workflowId}/listen/{triggerId}:
+    get:
+      summary: "Listen to a workflow trigger"
+      operationId: listenWorkflowTrigger
       tags:
-        - Projects
+        - Workflow
       parameters:
         - name: projectId
           in: path
           required: true
           schema:
             $ref: "#/components/schemas/UUID"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/TextGenerationRequest"
+        - name: workflowId
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/UUID"
+        - name: triggerId
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/UUID"
       responses:
         "200":
-          description: "SSE stream of generated text"
+          description: "Workflow trigger listened"
           content:
             text/event-stream:
               schema:
-                type: string
-                example: 'data: {''text'': ''Hello world''}\n\n'
-        "400":
-          description: Bad request
+                $ref: "#/components/schemas/ListenTriggerResponse"
         "404":
-          description: Project not found
+          description: Project or workflow not found
 
 components:
   securitySchemes:
@@ -463,10 +462,10 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Credential"
-        models:
+        workflows:
           type: array
           items:
-            $ref: "#/components/schemas/Model"
+            $ref: "#/components/schemas/Workflow"
         createdAt:
           type: string
           format: date-time
@@ -479,7 +478,7 @@ components:
         - userId
         - authProvider
         - credentials
-        - models
+        - workflows
         - createdAt
         - updatedAt
 
@@ -504,26 +503,6 @@ components:
       enum:
         - openai
         - anthropic
-
-    ProviderModel:
-      type: string
-      enum:
-        - gpt-4o
-        - gpt-4o-mini
-        - claude-3-7-sonnet
-        - claude-3-5-sonnet
-        - claude-3-5-haiku
-
-    ModelParameters:
-      type: object
-      properties:
-        maxTokens:
-          type: integer
-        temperature:
-          type: number
-      required:
-        - maxTokens
-        - temperature
 
     Credential:
       type: object
@@ -575,21 +554,15 @@ components:
         - name
         - apiKey
 
-    Model:
+    Workflow:
       type: object
       properties:
-        slug:
-          type: string
+        id:
+          $ref: "#/components/schemas/UUID"
         name:
           type: string
-        credentialId:
-          $ref: "#/components/schemas/UUID"
-        providerModel:
-          $ref: "#/components/schemas/ProviderModel"
-        systemPrompt:
-          type: string
-        parameters:
-          $ref: "#/components/schemas/ModelParameters"
+        builderFlow:
+          type: object
         createdAt:
           type: string
           format: date-time
@@ -599,55 +572,31 @@ components:
       required:
         - id
         - name
-        - slug
-        - credentialId
-        - providerModel
-        - systemPrompt
-        - parameters
+        - builderFlow
         - createdAt
         - updatedAt
 
-    CreateModelRequest:
+    CreateWorkflowRequest:
       type: object
       properties:
         name:
           type: string
-        credentialId:
-          type: string
-          format: uuid
-        providerModel:
-          type: string
-        systemPrompt:
-          type: string
-        parameters:
-          $ref: "#/components/schemas/ModelParameters"
+        builderFlow:
+          type: object
       required:
         - name
-        - credentialId
-        - providerModel
-        - systemPrompt
-        - parameters
+        - builderFlow
 
-    UpdateModelRequest:
+    UpdateWorkflowRequest:
       type: object
       properties:
         name:
           type: string
-        credentialId:
-          type: string
-          format: uuid
-        providerModel:
-          $ref: "#/components/schemas/ProviderModel"
-        systemPrompt:
-          type: string
-        parameters:
-          $ref: "#/components/schemas/ModelParameters"
+        builderFlow:
+          type: object
       required:
         - name
-        - credentialId
-        - providerModel
-        - systemPrompt
-        - parameters
+        - builderFlow
 
     AuthProvider:
       type: object
@@ -679,13 +628,32 @@ components:
         - provider
         - config
 
-    TextGenerationRequest:
+    TriggerWorkflowRequest:
       type: object
       properties:
-        modelSlug:
-          type: string
-        prompt:
-          type: string
+        workflowId:
+          $ref: "#/components/schemas/UUID"
+        inputs:
+          type: object
       required:
-        - modelSlug
-        - prompt
+        - workflowId
+        - inputs
+
+    ListenTriggerRequest:
+      type: object
+      properties:
+        triggerId:
+          $ref: "#/components/schemas/UUID"
+      required:
+        - triggerId
+
+    ListenTriggerResponse:
+      type: object
+      properties:
+        eventType:
+          type: string
+        data:
+          type: object
+      required:
+        - eventType
+        - data

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	uuid "github.com/google/uuid"
-	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
 const (
@@ -19,15 +18,6 @@ const (
 	AuthProviderProviderClerk    AuthProviderProvider = "clerk"
 	AuthProviderProviderFirebase AuthProviderProvider = "firebase"
 	AuthProviderProviderSupabase AuthProviderProvider = "supabase"
-)
-
-// Defines values for ProviderModel.
-const (
-	Claude35Haiku  ProviderModel = "claude-3-5-haiku"
-	Claude35Sonnet ProviderModel = "claude-3-5-sonnet"
-	Claude37Sonnet ProviderModel = "claude-3-7-sonnet"
-	Gpt4o          ProviderModel = "gpt-4o"
-	Gpt4oMini      ProviderModel = "gpt-4o-mini"
 )
 
 // Defines values for ProviderType.
@@ -59,18 +49,15 @@ type CreateCredentialRequest struct {
 	Provider ProviderType `json:"provider"`
 }
 
-// CreateModelRequest defines model for CreateModelRequest.
-type CreateModelRequest struct {
-	CredentialId  openapi_types.UUID `json:"credentialId"`
-	Name          string             `json:"name"`
-	Parameters    ModelParameters    `json:"parameters"`
-	ProviderModel string             `json:"providerModel"`
-	SystemPrompt  string             `json:"systemPrompt"`
-}
-
 // CreateProjectRequest defines model for CreateProjectRequest.
 type CreateProjectRequest struct {
 	Name string `json:"name"`
+}
+
+// CreateWorkflowRequest defines model for CreateWorkflowRequest.
+type CreateWorkflowRequest struct {
+	BuilderFlow map[string]interface{} `json:"builderFlow"`
+	Name        string                 `json:"name"`
 }
 
 // Credential defines model for Credential.
@@ -83,22 +70,15 @@ type Credential struct {
 	UpdatedAt time.Time    `json:"updatedAt"`
 }
 
-// Model defines model for Model.
-type Model struct {
-	CreatedAt     time.Time       `json:"createdAt"`
-	CredentialId  UUID            `json:"credentialId"`
-	Name          string          `json:"name"`
-	Parameters    ModelParameters `json:"parameters"`
-	ProviderModel ProviderModel   `json:"providerModel"`
-	Slug          string          `json:"slug"`
-	SystemPrompt  string          `json:"systemPrompt"`
-	UpdatedAt     time.Time       `json:"updatedAt"`
+// ListenTriggerRequest defines model for ListenTriggerRequest.
+type ListenTriggerRequest struct {
+	TriggerId UUID `json:"triggerId"`
 }
 
-// ModelParameters defines model for ModelParameters.
-type ModelParameters struct {
-	MaxTokens   int     `json:"maxTokens"`
-	Temperature float32 `json:"temperature"`
+// ListenTriggerResponse defines model for ListenTriggerResponse.
+type ListenTriggerResponse struct {
+	Data      map[string]interface{} `json:"data"`
+	EventType string                 `json:"eventType"`
 }
 
 // Project defines model for Project.
@@ -107,21 +87,18 @@ type Project struct {
 	CreatedAt    time.Time    `json:"createdAt"`
 	Credentials  []Credential `json:"credentials"`
 	Id           UUID         `json:"id"`
-	Models       []Model      `json:"models"`
 	Name         string       `json:"name"`
 	UpdatedAt    time.Time    `json:"updatedAt"`
+	Workflows    []Workflow   `json:"workflows"`
 }
-
-// ProviderModel defines model for ProviderModel.
-type ProviderModel string
 
 // ProviderType defines model for ProviderType.
 type ProviderType string
 
-// TextGenerationRequest defines model for TextGenerationRequest.
-type TextGenerationRequest struct {
-	ModelSlug string `json:"modelSlug"`
-	Prompt    string `json:"prompt"`
+// TriggerWorkflowRequest defines model for TriggerWorkflowRequest.
+type TriggerWorkflowRequest struct {
+	Inputs     map[string]interface{} `json:"inputs"`
+	WorkflowId UUID                   `json:"workflowId"`
 }
 
 // UUID defines model for UUID.
@@ -142,18 +119,24 @@ type UpdateCredentialRequest struct {
 	Name   string `json:"name"`
 }
 
-// UpdateModelRequest defines model for UpdateModelRequest.
-type UpdateModelRequest struct {
-	CredentialId  openapi_types.UUID `json:"credentialId"`
-	Name          string             `json:"name"`
-	Parameters    ModelParameters    `json:"parameters"`
-	ProviderModel ProviderModel      `json:"providerModel"`
-	SystemPrompt  string             `json:"systemPrompt"`
-}
-
 // UpdateProjectRequest defines model for UpdateProjectRequest.
 type UpdateProjectRequest struct {
 	Name string `json:"name"`
+}
+
+// UpdateWorkflowRequest defines model for UpdateWorkflowRequest.
+type UpdateWorkflowRequest struct {
+	BuilderFlow map[string]interface{} `json:"builderFlow"`
+	Name        string                 `json:"name"`
+}
+
+// Workflow defines model for Workflow.
+type Workflow struct {
+	BuilderFlow map[string]interface{} `json:"builderFlow"`
+	CreatedAt   time.Time              `json:"createdAt"`
+	Id          UUID                   `json:"id"`
+	Name        string                 `json:"name"`
+	UpdatedAt   time.Time              `json:"updatedAt"`
 }
 
 // CreateProjectJSONRequestBody defines body for CreateProject for application/json ContentType.
@@ -171,14 +154,11 @@ type CreateCredentialJSONRequestBody = CreateCredentialRequest
 // UpdateCredentialJSONRequestBody defines body for UpdateCredential for application/json ContentType.
 type UpdateCredentialJSONRequestBody = UpdateCredentialRequest
 
-// GenerateTextJSONRequestBody defines body for GenerateText for application/json ContentType.
-type GenerateTextJSONRequestBody = TextGenerationRequest
+// CreateWorkflowJSONRequestBody defines body for CreateWorkflow for application/json ContentType.
+type CreateWorkflowJSONRequestBody = CreateWorkflowRequest
 
-// CreateModelJSONRequestBody defines body for CreateModel for application/json ContentType.
-type CreateModelJSONRequestBody = CreateModelRequest
+// UpdateWorkflowJSONRequestBody defines body for UpdateWorkflow for application/json ContentType.
+type UpdateWorkflowJSONRequestBody = UpdateWorkflowRequest
 
-// UpdateModelJSONRequestBody defines body for UpdateModel for application/json ContentType.
-type UpdateModelJSONRequestBody = UpdateModelRequest
-
-// StreamTextJSONRequestBody defines body for StreamText for application/json ContentType.
-type StreamTextJSONRequestBody = TextGenerationRequest
+// TriggerWorkflowJSONRequestBody defines body for TriggerWorkflow for application/json ContentType.
+type TriggerWorkflowJSONRequestBody = TriggerWorkflowRequest
