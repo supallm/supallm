@@ -51,6 +51,18 @@ Output: {"is_active": true}
 
 Now, convert the following Yaml to Json:`;
 
+const exampleImageAnalyst = `You are an image analyst. Given an image, you must answer the question sent by the user.
+
+Here are a few examples:
+
+Input Prompt: "What is the image about?"
+Output: "The image is a beautiful sunset over a calm ocean with a clear sky and a few clouds."
+
+Input: "What is the image about?"
+Output: "The image is a close-up of a red apple with a few specks of dust on the surface."
+
+Now, answer the user's questions.`;
+
 export const ConfigureModelMessagesDialog: FC<
   PropsWithChildren<{
     developerMessage: string;
@@ -115,6 +127,13 @@ export const ConfigureModelMessagesDialog: FC<
                 onClick={() => setMessage(fewShotExampleJsonAnalysis)}
               >
                 Yaml to Json Converter
+              </Button>
+              <Button
+                className="rounded-lg"
+                variant={"outline"}
+                onClick={() => setMessage(exampleImageAnalyst)}
+              >
+                Image analyst
               </Button>
             </div>
           </FormItem>
