@@ -1,11 +1,12 @@
+import { cn } from "@/lib/utils";
 import { ClipboardCheckIcon, ClipboardIcon } from "lucide-react";
 import { FC, useState } from "react";
-import { cn } from "@/lib/utils";
 
-export const Copiable: FC<{ value: string; width: "sm" | "md" | "full" }> = ({
-  value,
-  width = "sm",
-}) => {
+export const Copiable: FC<{
+  value: string;
+  width: "sm" | "md" | "full";
+  size: "xs" | "sm" | "md";
+}> = ({ value, width = "sm", size = "xs" }) => {
   const [isCopied, setIsCopied] = useState(false);
 
   const widthClasses = {
@@ -14,7 +15,14 @@ export const Copiable: FC<{ value: string; width: "sm" | "md" | "full" }> = ({
     full: "w-full",
   };
 
+  const sizeClasses = {
+    xs: "px-2 py-1 text-xs",
+    sm: "px-2 py-1 text-sm",
+    md: "px-4 py-2 text-md",
+  };
+
   const widthClass = widthClasses[width];
+  const sizeClass = sizeClasses[size];
 
   const handleCopy = () => {
     try {
@@ -31,8 +39,9 @@ export const Copiable: FC<{ value: string; width: "sm" | "md" | "full" }> = ({
   return (
     <div
       className={cn(
-        "cursor-pointer px-2 py-1 border rounded-md flex items-center gap-1 text-xs",
+        "cursor-pointer border rounded-md flex items-center gap-1",
         widthClass,
+        sizeClass,
       )}
       onClick={handleCopy}
     >
