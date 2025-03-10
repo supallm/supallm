@@ -404,38 +404,6 @@ paths:
         "404":
           description: Project or workflow not found
 
-  /projects/{projectId}/workflows/{workflowId}/listen/{triggerId}:
-    get:
-      summary: "Listen to a workflow trigger"
-      operationId: listenWorkflowTrigger
-      tags:
-        - Workflow
-      parameters:
-        - name: projectId
-          in: path
-          required: true
-          schema:
-            $ref: "#/components/schemas/UUID"
-        - name: workflowId
-          in: path
-          required: true
-          schema:
-            $ref: "#/components/schemas/UUID"
-        - name: triggerId
-          in: path
-          required: true
-          schema:
-            $ref: "#/components/schemas/UUID"
-      responses:
-        "200":
-          description: "Workflow trigger listened"
-          content:
-            text/event-stream:
-              schema:
-                $ref: "#/components/schemas/ListenWorkflowResponse"
-        "404":
-          description: Project or workflow not found
-
 components:
   securitySchemes:
     BearerAuth:
@@ -635,14 +603,3 @@ components:
           type: object
       required:
         - inputs
-
-    ListenWorkflowResponse:
-      type: object
-      properties:
-        eventType:
-          type: string
-        data:
-          type: object
-      required:
-        - eventType
-        - data

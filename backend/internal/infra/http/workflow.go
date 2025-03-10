@@ -100,10 +100,6 @@ func (s *Server) ListWorkflows(c *fiber.Ctx, projectID gen.UUID) error {
 	return s.server.Respond(c, fiber.StatusOK, queryWorkflowsToDTOs(workflows))
 }
 
-func (s *Server) ListenWorkflowTrigger(_ *fiber.Ctx, _ gen.UUID, _ gen.UUID, _ gen.UUID) error {
-	return nil
-}
-
 func (s *Server) TriggerWorkflow(c *fiber.Ctx, projectID gen.UUID, workflowID gen.UUID) error {
 	var req gen.TriggerWorkflowRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -122,11 +118,5 @@ func (s *Server) TriggerWorkflow(c *fiber.Ctx, projectID gen.UUID, workflowID ge
 	}
 
 	return s.server.RespondWithContentLocation(
-		c,
-		fiber.StatusAccepted,
-		"/projects/%s/workflows/%s/triggers/%s",
-		projectID,
-		workflowID,
-		triggerID,
-	)
+		c, fiber.StatusAccepted, "/projects/%s/workflows/%s/triggers/%s", projectID, workflowID, triggerID)
 }

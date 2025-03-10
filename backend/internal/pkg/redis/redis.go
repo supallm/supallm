@@ -14,7 +14,7 @@ import (
 // as a trade-off between operational complexity and perfect isolation.
 // This can be split into separate instances if needed in the future.
 const (
-	DBQueue = 0
+	DBWorkflows = 0
 
 	maxRetries   = 3
 	poolSize     = 100

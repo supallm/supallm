@@ -3,18 +3,19 @@ package runner
 import (
 	"context"
 
+	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/google/uuid"
-	"github.com/redis/go-redis/v9"
 	"github.com/supallm/core/internal/application/domain/model"
+	"github.com/supallm/core/internal/application/event"
 )
 
 type Service struct {
-	client *redis.Client
+	publisher message.Publisher
 }
 
-func NewService(_ context.Context, client *redis.Client) *Service {
+func NewService(_ context.Context, publisher message.Publisher) *Service {
 	return &Service{
-		client: client,
+		publisher: publisher,
 	}
 }
 
@@ -24,5 +25,23 @@ func (s *Service) QueueWorkflow(
 	workflow *model.Workflow,
 	inputs map[string]any,
 ) error {
-	return nil
+	definitionJSON, err := workflow.GetRunnerFlowJSON()
+	if err != nil {
+		return err
+	}
+
+	queueMsg := event.WorkflowQueueMessage{
+		WorkflowID: workflow.ID,
+		TriggerID:  triggerID,
+		ProjectID:  workflow.ProjectID,
+		Definition: definitionJSON,
+		Inputs:     inputs,
+	}
+
+	msg, err := queueMsg.ToMessage()
+	if err != nil {
+		return err
+	}
+
+	return s.publisher.Publish(event.TopicWorkflowQueue, msg)
 }

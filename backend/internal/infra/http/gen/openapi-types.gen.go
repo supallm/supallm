@@ -70,12 +70,6 @@ type Credential struct {
 	UpdatedAt time.Time    `json:"updatedAt"`
 }
 
-// ListenWorkflowResponse defines model for ListenWorkflowResponse.
-type ListenWorkflowResponse struct {
-	Data      map[string]interface{} `json:"data"`
-	EventType string                 `json:"eventType"`
-}
-
 // Project defines model for Project.
 type Project struct {
 	AuthProvider AuthProvider `json:"authProvider"`

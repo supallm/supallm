@@ -60,9 +60,6 @@ type ServerInterface interface {
 	// Update a workflow
 	// (PUT /projects/{projectId}/workflows/{workflowId})
 	UpdateWorkflow(c *fiber.Ctx, projectId UUID, workflowId string) error
-	// Listen to a workflow trigger
-	// (GET /projects/{projectId}/workflows/{workflowId}/listen/{triggerId})
-	ListenWorkflowTrigger(c *fiber.Ctx, projectId UUID, workflowId UUID, triggerId UUID) error
 	// Trigger a workflow
 	// (POST /projects/{projectId}/workflows/{workflowId}/trigger)
 	TriggerWorkflow(c *fiber.Ctx, projectId UUID, workflowId UUID) error
@@ -391,40 +388,6 @@ func (siw *ServerInterfaceWrapper) UpdateWorkflow(c *fiber.Ctx) error {
 	return siw.Handler.UpdateWorkflow(c, projectId, workflowId)
 }
 
-// ListenWorkflowTrigger operation middleware
-func (siw *ServerInterfaceWrapper) ListenWorkflowTrigger(c *fiber.Ctx) error {
-
-	var err error
-
-	// ------------- Path parameter "projectId" -------------
-	var projectId UUID
-
-	err = runtime.BindStyledParameterWithOptions("simple", "projectId", c.Params("projectId"), &projectId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter projectId: %w", err).Error())
-	}
-
-	// ------------- Path parameter "workflowId" -------------
-	var workflowId UUID
-
-	err = runtime.BindStyledParameterWithOptions("simple", "workflowId", c.Params("workflowId"), &workflowId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter workflowId: %w", err).Error())
-	}
-
-	// ------------- Path parameter "triggerId" -------------
-	var triggerId UUID
-
-	err = runtime.BindStyledParameterWithOptions("simple", "triggerId", c.Params("triggerId"), &triggerId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, fmt.Errorf("Invalid format for parameter triggerId: %w", err).Error())
-	}
-
-	c.Context().SetUserValue(BearerAuthScopes, []string{})
-
-	return siw.Handler.ListenWorkflowTrigger(c, projectId, workflowId, triggerId)
-}
-
 // TriggerWorkflow operation middleware
 func (siw *ServerInterfaceWrapper) TriggerWorkflow(c *fiber.Ctx) error {
 
@@ -503,8 +466,6 @@ func RegisterHandlersWithOptions(router fiber.Router, si ServerInterface, option
 	router.Get(options.BaseURL+"/projects/:projectId/workflows/:workflowId", wrapper.GetWorkflow)
 
 	router.Put(options.BaseURL+"/projects/:projectId/workflows/:workflowId", wrapper.UpdateWorkflow)
-
-	router.Get(options.BaseURL+"/projects/:projectId/workflows/:workflowId/listen/:triggerId", wrapper.ListenWorkflowTrigger)
 
 	router.Post(options.BaseURL+"/projects/:projectId/workflows/:workflowId/trigger", wrapper.TriggerWorkflow)
 

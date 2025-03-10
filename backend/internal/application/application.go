@@ -4,10 +4,13 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/ThreeDotsLabs/watermill"
+	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/supallm/core/internal/adapters/project"
 	"github.com/supallm/core/internal/adapters/runner"
 	"github.com/supallm/core/internal/application/command"
+	"github.com/supallm/core/internal/application/event"
 	"github.com/supallm/core/internal/application/query"
 	"github.com/supallm/core/internal/pkg/config"
 	"github.com/supallm/core/internal/pkg/postgres"
@@ -17,7 +20,9 @@ import (
 type App struct {
 	Commands *Commands
 	Queries  *Queries
-	pool     *pgxpool.Pool
+
+	Subscriber message.Subscriber
+	pool       *pgxpool.Pool
 }
 
 type Commands struct {
@@ -53,17 +58,24 @@ func New(
 	ctx context.Context,
 	conf config.Config,
 ) (*App, error) {
+	logger := watermill.NewStdLogger(false, false)
 	pool := postgres.NewClient(ctx, conf.Postgres)
-	redisQueue, err := redis.NewClient(conf.Redis, redis.DBQueue)
+	redisWorkflows, err := redis.NewClient(conf.Redis, redis.DBWorkflows)
 	if err != nil {
 		return nil, err
 	}
 
+	router := event.CreateRouter(event.Config{
+		WorkflowsRedis: redisWorkflows,
+		Logger:         logger,
+	})
+
 	projectRepo := project.NewRepository(ctx, pool)
-	runnerService := runner.NewService(ctx, redisQueue)
+	runnerService := runner.NewService(ctx, router.Publisher)
 
 	app := &App{
-		pool: pool,
+		pool:       pool,
+		Subscriber: router.Subscriber,
 		Commands: &Commands{
 			CreateProject:      command.NewCreateProjectHandler(projectRepo),
 			UpdateProjectName:  command.NewUpdateProjectNameHandler(projectRepo),
@@ -97,7 +109,7 @@ func New(
 }
 
 // Shutdown gracefully closes all application resources.
-func (a *App) Shutdown(_ context.Context) error {
+func (a *App) Shutdown(ctx context.Context) error {
 	slog.Info("shutting down application resources")
 
 	// Close database connection pool
@@ -105,6 +117,9 @@ func (a *App) Shutdown(_ context.Context) error {
 		slog.Info("closing database connection pool")
 		a.pool.Close()
 	}
+
+	// Close Redis connection pools
+	redis.CloseAll()
 
 	return nil
 }

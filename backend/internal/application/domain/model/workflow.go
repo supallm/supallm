@@ -17,6 +17,7 @@ const (
 
 type Workflow struct {
 	ID          uuid.UUID
+	ProjectID   uuid.UUID
 	Name        string
 	Status      WorkflowStatus
 	BuilderFlow BuilderFlow `exhaustruct:"optional"`
@@ -115,9 +116,10 @@ type RunnerInput struct {
 
 func (p *Project) AddWorkflow(id uuid.UUID, name string, builderFlow json.RawMessage) error {
 	w := &Workflow{
-		ID:     id,
-		Name:   name,
-		Status: WorkflowStatusDraft,
+		ID:        id,
+		ProjectID: p.ID,
+		Name:      name,
+		Status:    WorkflowStatusDraft,
 		BuilderFlow: BuilderFlow{
 			Nodes: []BuilderNode{},
 			Edges: []BuilderEdge{},

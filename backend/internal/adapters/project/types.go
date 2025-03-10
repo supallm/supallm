@@ -79,6 +79,7 @@ func (w Workflow) domain() (*model.Workflow, error) {
 
 	return &model.Workflow{
 		ID:          w.ID,
+		ProjectID:   w.ProjectID,
 		Status:      model.WorkflowStatus(w.Status),
 		Name:        w.Name,
 		BuilderFlow: builderFlow,
