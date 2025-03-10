@@ -1,10 +1,10 @@
-import { cn } from "@/lib/utils";
+import { assertUnreachable, cn } from "@/lib/utils";
 import { HandleProps } from "@xyflow/react";
 import { FC, forwardRef, HTMLAttributes, ReactNode } from "react";
 
 import { BaseHandle } from "@/components/base-handle";
-import { IconTooltip } from "@/components/icon-tooltip";
-import { ImageIcon, TextIcon } from "lucide-react";
+import { TooltipWraper } from "@/components/icon-tooltip";
+import { AlignJustify, ImageIcon, Logs } from "lucide-react";
 
 const flexDirections = {
   top: "flex-col",
@@ -22,7 +22,11 @@ const HandleTypeIcon: FC<{ type: LabeledHandleType }> = ({
     case "image":
       return <ImageIcon className="w-4 h-4" />;
     case "text":
-      return <TextIcon className="w-4 h-4" />;
+      return <AlignJustify className="w-4 h-4" />;
+    case "text-stream":
+      return <Logs className="w-4 h-4" />;
+    default:
+      assertUnreachable(type);
   }
 };
 
@@ -59,33 +63,33 @@ export const LabeledHandle = forwardRef<
         className,
       )}
     >
-      <BaseHandle
-        position={position}
-        className={cn("!w-2.5 !h-2.5 !bg-gray-400", handleClassName)}
-        {...props}
-      />
+      <TooltipWraper content={tooltip}>
+        <BaseHandle
+          position={position}
+          className={cn("!w-2.5 !h-2.5 !bg-gray-400", handleClassName)}
+          {...props}
+        />
 
-      <label
-        className={cn(
-          "px-3 text-foreground flex items-center gap-x-1",
-          labelClassName,
-        )}
-      >
-        {position === "left" && (
-          <>
-            <HandleTypeIcon type={handleType} />
-          </>
-        )}
-        {!!tooltip && position === "right" && <IconTooltip content={tooltip} />}
-        {title}
-        {!!tooltip && position === "left" && <IconTooltip content={tooltip} />}
+        <label
+          className={cn(
+            "px-3 text-foreground flex items-center gap-x-1",
+            labelClassName,
+          )}
+        >
+          {position === "left" && (
+            <>
+              <HandleTypeIcon type={handleType} />
+            </>
+          )}
+          {title}
 
-        {position === "right" && (
-          <>
-            <HandleTypeIcon type={handleType} />
-          </>
-        )}
-      </label>
+          {position === "right" && (
+            <>
+              <HandleTypeIcon type={handleType} />
+            </>
+          )}
+        </label>
+      </TooltipWraper>
     </div>
   ),
 );

@@ -22,6 +22,7 @@ export function AppSelect<T extends string>(props: {
   }[];
   label?: string;
   size?: AppSelectSize;
+  placeholder?: string;
 }) {
   const sizeClasses: Record<AppSelectSize, string> = {
     sm: "h-7 rounded-sm",
@@ -48,7 +49,9 @@ export function AppSelect<T extends string>(props: {
       >
         <FormControl className={cn("w-full", sizeClass)}>
           <SelectTrigger>
-            <SelectValue placeholder="Select the model to use" />
+            <SelectValue
+              placeholder={props.placeholder ?? "Select an option"}
+            />
           </SelectTrigger>
         </FormControl>
         <SelectContent className="w-full">

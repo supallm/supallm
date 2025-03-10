@@ -15,9 +15,10 @@ import {
   ChatOpenAINodeData,
   OpenAIModels,
 } from "@/core/entities/flow/flow-openai";
+import { assertUnreachable } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { NodeProps, useReactFlow } from "@xyflow/react";
-import { FC, memo } from "react";
+import { NodeProps, useReactFlow, useUpdateNodeInternals } from "@xyflow/react";
+import { FC, memo, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { ProviderLogo } from "../../../logos/provider-logo";
@@ -34,6 +35,7 @@ const OpenAIChatCompletionNode: FC<OpenAIChatCompletionNodeProps> = ({
   id: nodeId,
 }) => {
   const { updateNodeData } = useReactFlow();
+  const updateNodeInternals = useUpdateNodeInternals();
 
   const formSchema = z.object({
     credentialId: z.string().min(2),
@@ -45,6 +47,7 @@ const OpenAIChatCompletionNode: FC<OpenAIChatCompletionNodeProps> = ({
     responseFormat: z.object({
       type: z.enum(["text", "json_object"]),
     }),
+    outputMode: z.enum(["text", "text-stream"]),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -60,6 +63,7 @@ const OpenAIChatCompletionNode: FC<OpenAIChatCompletionNodeProps> = ({
       responseFormat: {
         type: "text",
       },
+      outputMode: data.outputMode ?? "text",
     },
   });
 
@@ -85,27 +89,50 @@ const OpenAIChatCompletionNode: FC<OpenAIChatCompletionNodeProps> = ({
       developerMessage: formValues.developerMessage,
       imageResolution: formValues.imageResolution,
       responseFormat: formValues.responseFormat,
+      outputMode: formValues.outputMode,
     };
 
     updateNodeData(nodeId, data);
   };
 
+  const outputMode = form.watch("outputMode");
+
+  const outputHandles = useMemo(() => {
+    console.log("outputMode", outputMode);
+    switch (outputMode) {
+      case "text":
+        return [
+          {
+            label: "Response",
+            id: "chatResponse",
+            type: "text",
+          } as const,
+        ];
+      case "text-stream":
+        return [
+          {
+            label: "Response stream",
+            id: "chatResponse",
+            type: "text-stream",
+          } as const,
+        ];
+      default:
+        assertUnreachable(outputMode);
+        return [];
+    }
+  }, [outputMode]);
+
+  useEffect(() => {
+    /**
+     * See:
+     * https://reactflow.dev/api-reference/hooks/use-update-node-internals
+     */
+    updateNodeInternals(nodeId);
+  }, [nodeId, outputHandles, updateNodeInternals]);
+
   return (
     <BaseNode
-      outputHandles={[
-        {
-          label: "Response message",
-          id: "chatResponse",
-          tooltip: "The response message from the AI",
-          type: "text",
-        },
-        {
-          label: "Response message stream",
-          id: "chatResponse",
-          tooltip: "The response message from the AI",
-          type: "text-stream",
-        },
-      ]}
+      outputHandles={outputHandles}
       inputHandles={[
         {
           label: "Prompt",
@@ -121,7 +148,7 @@ const OpenAIChatCompletionNode: FC<OpenAIChatCompletionNodeProps> = ({
       header={
         <>
           <ProviderLogo name="openai" />
-          <span className="font-medium text-sm">Chat OpenAI</span>
+          <span className="font-medium text-sm">OpenAI Chat Completion</span>
         </>
       }
     >
@@ -204,6 +231,35 @@ const OpenAIChatCompletionNode: FC<OpenAIChatCompletionNodeProps> = ({
                           Configure
                         </Button>
                       </ConfigureModelMessagesDialog>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="outputMode"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Output mode</FormLabel>
+                    <FormControl>
+                      <AppSelect
+                        placeholder="Select output mode"
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                        }}
+                        defaultValue={field.value}
+                        choices={[
+                          {
+                            value: "text",
+                            label: "Normal",
+                          },
+                          {
+                            value: "text-stream",
+                            label: "Stream",
+                          },
+                        ]}
+                      ></AppSelect>
                     </FormControl>
                     <FormMessage />
                   </FormItem>

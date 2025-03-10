@@ -66,4 +66,5 @@ export type ChatOpenAINodeData = {
   developerMessage: string;
   imageResolution: "low" | "high" | "auto";
   responseFormat: OpenAIResponseFormat;
+  outputMode: "text" | "text-stream";
 };
