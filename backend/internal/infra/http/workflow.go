@@ -110,14 +110,23 @@ func (s *Server) TriggerWorkflow(c *fiber.Ctx, projectID gen.UUID, workflowID ge
 		return err
 	}
 
+	triggerID := uuid.New()
 	err := s.app.Commands.TriggerWorkflow.Handle(c.Context(), command.TriggerWorkflowCommand{
 		ProjectID:  projectID,
 		WorkflowID: workflowID,
+		TriggerID:  triggerID,
 		Inputs:     req.Inputs,
 	})
 	if err != nil {
 		return err
 	}
 
-	return s.server.Respond(c, fiber.StatusNoContent, nil)
+	return s.server.RespondWithContentLocation(
+		c,
+		fiber.StatusAccepted,
+		"/projects/%s/workflows/%s/triggers/%s",
+		projectID,
+		workflowID,
+		triggerID,
+	)
 }

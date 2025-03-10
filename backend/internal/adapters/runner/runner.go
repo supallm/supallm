@@ -3,6 +3,7 @@ package runner
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 	"github.com/supallm/core/internal/application/domain/model"
 )
@@ -17,6 +18,11 @@ func NewService(_ context.Context, client *redis.Client) *Service {
 	}
 }
 
-func (s *Service) QueueWorkflow(ctx context.Context, workflow *model.Workflow, inputs map[string]any) error {
+func (s *Service) QueueWorkflow(
+	ctx context.Context,
+	triggerID uuid.UUID,
+	workflow *model.Workflow,
+	inputs map[string]any,
+) error {
 	return nil
 }

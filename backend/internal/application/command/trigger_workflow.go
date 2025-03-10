@@ -13,6 +13,7 @@ import (
 type TriggerWorkflowCommand struct {
 	WorkflowID uuid.UUID
 	ProjectID  uuid.UUID
+	TriggerID  uuid.UUID
 	Inputs     map[string]any
 }
 
@@ -52,7 +53,7 @@ func (h TriggerWorkflowHandler) Handle(ctx context.Context, cmd TriggerWorkflowC
 		return errs.NotFoundError{Resource: "workflow", ID: cmd.WorkflowID}
 	}
 
-	err = h.runnerService.QueueWorkflow(ctx, workflow, cmd.Inputs)
+	err = h.runnerService.QueueWorkflow(ctx, cmd.TriggerID, workflow, cmd.Inputs)
 	if err != nil {
 		return errs.InvalidError{Reason: err.Error()}
 	}
