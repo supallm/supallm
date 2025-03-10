@@ -1,6 +1,6 @@
 import { assertUnreachable, cn } from "@/lib/utils";
-import { HandleProps } from "@xyflow/react";
-import { FC, forwardRef, HTMLAttributes, ReactNode } from "react";
+import { HandleProps, useNodeConnections } from "@xyflow/react";
+import { FC, forwardRef, HTMLAttributes, ReactNode, useMemo } from "react";
 
 import { BaseHandle } from "@/components/base-handle";
 import { TooltipWraper } from "@/components/icon-tooltip";
@@ -53,45 +53,63 @@ export const LabeledHandle = forwardRef<
       ...props
     },
     ref,
-  ) => (
-    <div
-      ref={ref}
-      title={title}
-      className={cn(
-        "relative flex items-center text-sm py-1.6",
-        flexDirections[position],
-        className,
-      )}
-    >
-      <TooltipWraper content={tooltip}>
-        <BaseHandle
-          position={position}
-          className={cn("!w-2.5 !h-2.5 !bg-gray-400", handleClassName)}
-          {...props}
-        />
+  ) => {
+    const connections = useNodeConnections();
 
-        <label
-          className={cn(
-            "px-3 text-foreground flex items-center gap-x-1",
-            labelClassName,
-          )}
-        >
-          {position === "left" && (
-            <>
-              <HandleTypeIcon type={handleType} />
-            </>
-          )}
-          {title}
+    /**
+     * If this handle is already used as a targetHandle it means we shouldn't connect it twice.
+     */
+    const isConnectable = useMemo(() => {
+      if (!connections) return true;
 
-          {position === "right" && (
-            <>
-              <HandleTypeIcon type={handleType} />
-            </>
-          )}
-        </label>
-      </TooltipWraper>
-    </div>
-  ),
+      const targetHandle = connections.find((c) => c.sourceHandle === props.id);
+
+      if (!targetHandle) return true;
+
+      return false;
+    }, [connections]);
+
+    return (
+      <div
+        ref={ref}
+        title={title}
+        className={cn(
+          "relative flex items-center text-sm py-1.6",
+          flexDirections[position],
+          className,
+        )}
+      >
+        <TooltipWraper content={tooltip}>
+          <BaseHandle
+            isConnectableEnd={isConnectable}
+            position={position}
+            className={cn("!w-2.5 !h-2.5 !bg-gray-400", handleClassName)}
+            {...props}
+          />
+
+          <label
+            className={cn(
+              "px-3 text-foreground flex items-center gap-x-1",
+              labelClassName,
+            )}
+          >
+            {position === "left" && (
+              <>
+                <HandleTypeIcon type={handleType} />
+              </>
+            )}
+            {title}
+
+            {position === "right" && (
+              <>
+                <HandleTypeIcon type={handleType} />
+              </>
+            )}
+          </label>
+        </TooltipWraper>
+      </div>
+    );
+  },
 );
 
 LabeledHandle.displayName = "LabeledHandle";
