@@ -21,3 +21,7 @@ export const ChatFlowsRoute = {
 export const FlowBuilderRoute = {
   path: (id: string) => `/builder/chat-flow/${id}`,
 };
+
+export const AuthenticationRoute = {
+  path: () => `/dashboard/auth`,
+};

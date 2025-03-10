@@ -21,7 +21,12 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { ChatFlowsRoute, CredentialsRoute, OverviewRoute } from "@/routes";
+import {
+  AuthenticationRoute,
+  ChatFlowsRoute,
+  CredentialsRoute,
+  OverviewRoute,
+} from "@/routes";
 import { useAuth } from "@clerk/nextjs";
 import Link from "next/link";
 import {
@@ -50,7 +55,7 @@ const items = [
   },
   {
     title: "Authentication",
-    url: "#",
+    url: AuthenticationRoute.path(),
     icon: Users,
   },
   {
