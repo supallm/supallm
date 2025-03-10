@@ -12,13 +12,14 @@ import { z } from "zod";
 import BaseNode from "../common/base-node";
 
 import { generateHandleId } from "@/lib/handles";
-import { NodeProps, useUpdateNodeInternals } from "@xyflow/react";
+import { NodeProps, useReactFlow, useUpdateNodeInternals } from "@xyflow/react";
 import { NewHandleInput } from "./new-handle-input";
 
 const EntrypointNode: FC<NodeProps & { data: EntrypointNodeData }> = ({
   id: nodeId,
   data,
 }) => {
+  const { updateNodeData } = useReactFlow();
   const updateNodeInternals = useUpdateNodeInternals();
 
   const formSchema = z.object({
@@ -52,7 +53,10 @@ const EntrypointNode: FC<NodeProps & { data: EntrypointNodeData }> = ({
      * https://reactflow.dev/api-reference/hooks/use-update-node-internals
      */
     updateNodeInternals(nodeId);
-  }, [nodeId, formHandles, updateNodeInternals]);
+    updateNodeData(nodeId, {
+      handles: formHandles,
+    });
+  }, [nodeId, formHandles, updateNodeInternals, updateNodeData]);
 
   const onHandleChange = (handle: EntrypointHandle) => {
     const index = formHandles.findIndex((h) => h.id === handle.id);
@@ -77,7 +81,7 @@ const EntrypointNode: FC<NodeProps & { data: EntrypointNodeData }> = ({
       header={
         <>
           <Flag className="w-4 h-4" />
-          <span className="font-medium text-sm">Entrypoint</span>
+          <span className="font-medium text-sm">Flow input</span>
         </>
       }
     >

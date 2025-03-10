@@ -3,7 +3,7 @@ import { Form } from "@/components/ui/form";
 import { ResultHandle, ResultNodeData } from "@/core/entities/flow/flow-result";
 import { generateHandleId } from "@/lib/handles";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { NodeProps, useUpdateNodeInternals } from "@xyflow/react";
+import { NodeProps, useReactFlow, useUpdateNodeInternals } from "@xyflow/react";
 import { FolderSymlink, XIcon } from "lucide-react";
 import { FC, memo, useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -14,12 +14,13 @@ import { NewHandleInput } from "./new-handle-input";
 type ResultNodeProps = NodeProps & { data: ResultNodeData };
 
 const ResultNode: FC<ResultNodeProps> = ({ data, id: nodeId }) => {
+  const { updateNodeData } = useReactFlow();
   const updateNodeInternals = useUpdateNodeInternals();
 
   const formSchema = z.object({
     handles: z.array(
       z.object({
-        type: z.enum(["text", "image"]),
+        type: z.enum(["text", "image", "text-stream"]),
         id: z.string(),
         label: z.string(),
       }),
@@ -34,6 +35,11 @@ const ResultNode: FC<ResultNodeProps> = ({ data, id: nodeId }) => {
           type: "text",
           id: generateHandleId("text", "result"),
           label: "result",
+        },
+        {
+          type: "text-stream",
+          id: generateHandleId("text-stream", "resultStream"),
+          label: "resultStream",
         },
       ],
     },
@@ -63,6 +69,9 @@ const ResultNode: FC<ResultNodeProps> = ({ data, id: nodeId }) => {
      * https://reactflow.dev/api-reference/hooks/use-update-node-internals
      */
     updateNodeInternals(nodeId);
+    updateNodeData(nodeId, {
+      handles: formHandles,
+    });
   }, [nodeId, formHandles, updateNodeInternals]);
 
   return (
@@ -72,13 +81,13 @@ const ResultNode: FC<ResultNodeProps> = ({ data, id: nodeId }) => {
       header={
         <>
           <FolderSymlink className="w-4 h-4" />
-          <span className="font-medium text-sm">Final result</span>
+          <span className="font-medium text-sm">Flow output</span>
         </>
       }
     >
       <div>
         <Form {...form}>
-          <NewHandleInput onChange={onHandleChange} />
+          <NewHandleInput allowTextStream onChange={onHandleChange} />
         </Form>
 
         <div className="flex flex-col gap-1 mt-2">

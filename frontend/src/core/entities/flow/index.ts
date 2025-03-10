@@ -1,4 +1,6 @@
+import { EntrypointNodeData } from "./flow-entrypoint";
 import { ChatOpenAINodeData } from "./flow-openai";
+import { ResultNodeData } from "./flow-result";
 
 export type FlowNodeType =
   | "chat-openai"
@@ -8,7 +10,10 @@ export type FlowNodeType =
   | "chat-google"
   | "chat-azure";
 
-export type FlowNodeData = ChatOpenAINodeData;
+export type FlowNodeData =
+  | ChatOpenAINodeData
+  | ResultNodeData
+  | EntrypointNodeData;
 
 export type FlowNode = {
   id: string;

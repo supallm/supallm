@@ -1,16 +1,16 @@
 import { AppSelect } from "@/components/app-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { EntrypointHandle } from "@/core/entities/flow/flow-entrypoint";
+import { ResultHandle } from "@/core/entities/flow/flow-result";
 import { generateHandleId, sanitizeHandleLabel } from "@/lib/handles";
 import { CheckIcon } from "lucide-react";
 import { FC, useRef, useState } from "react";
 
 export const NewHandleInput: FC<{
-  onChange: (value: EntrypointHandle) => void;
-}> = ({ onChange }) => {
-  const [handleType, setHandleType] =
-    useState<EntrypointHandle["type"]>("text");
+  onChange: (value: ResultHandle) => void;
+  allowTextStream?: boolean;
+}> = ({ onChange, allowTextStream = false }) => {
+  const [handleType, setHandleType] = useState<ResultHandle["type"]>("text");
   const [handleLabel, setHandleLabel] = useState("");
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -41,15 +41,21 @@ export const NewHandleInput: FC<{
         <Input
           inputSize={"sm"}
           ref={inputRef}
+          placeholder="Enter a label"
           onChange={(e) => setHandleLabel(e.target.value)}
         />
         <AppSelect
           size={"sm"}
-          onValueChange={(value) => setHandleType(value)}
+          onValueChange={(value) =>
+            setHandleType(value as ResultHandle["type"])
+          }
           defaultValue={handleType}
           choices={[
             { value: "image", label: "Image" },
             { value: "text", label: "Text" },
+            ...(allowTextStream
+              ? [{ value: "text-stream", label: "Stream" }]
+              : []),
           ]}
         />
       </div>

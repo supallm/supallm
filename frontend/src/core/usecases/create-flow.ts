@@ -13,7 +13,7 @@ export class CreateFlowUsecase {
         position: { x: 100, y: 200 },
         data: {},
         deletable: false,
-        zIndex: 0,
+        zIndex: 1,
       },
       {
         id: "result-node",

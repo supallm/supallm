@@ -3,12 +3,15 @@
 import { AddNodeDialog } from "@/components/builder/add-node-dialog/add-node-dialog";
 import { AvailableNode } from "@/components/builder/add-node-dialog/available-nodes";
 import { NODE_WIDTH } from "@/components/builder/constants";
+import { FLowCodeDialog } from "@/components/builder/flow-code-dialog/flow-code-dialog";
 import { NodeType } from "@/components/builder/node-types";
 import openAIChatCompletionNode from "@/components/builder/nodes/chat/openai-chat-completion-node";
 import entrypointNode from "@/components/builder/nodes/fixed/entrypoint-node";
 import resultNode from "@/components/builder/nodes/fixed/result-node";
 import { Button } from "@/components/ui/button";
 import { FlowNode } from "@/core/entities/flow";
+import { EntrypointNodeData } from "@/core/entities/flow/flow-entrypoint";
+import { ResultNodeData } from "@/core/entities/flow/flow-result";
 import { useCurrentFlowStore } from "@/core/store/flow";
 import { patchFlowUsecase } from "@/core/usecases";
 import { hookifyFunction } from "@/hooks/hookify-function";
@@ -32,7 +35,7 @@ import {
   useStoreApi,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { PlusIcon, SaveIcon } from "lucide-react";
+import { Braces, PlusIcon, SaveIcon } from "lucide-react";
 
 import { useCallback, useMemo } from "react";
 
@@ -140,6 +143,22 @@ const ChatFlowPage = () => {
     });
   };
 
+  const entrypointNodeData = useMemo(
+    () =>
+      nodes.find((node) => node.type === "entrypoint")?.data as
+        | EntrypointNodeData
+        | undefined,
+    [nodes],
+  );
+
+  const resultNodeData = useMemo(
+    () =>
+      nodes.find((node) => node.type === "result")?.data as
+        | ResultNodeData
+        | undefined,
+    [nodes],
+  );
+
   return (
     <div className="h-screen w-screen pt-[40px]">
       <ReactFlow
@@ -159,14 +178,26 @@ const ChatFlowPage = () => {
           </AddNodeDialog>
         </Panel>
         <Panel position="top-right">
-          <Button
-            isLoading={isSaving}
-            onClick={onSave}
-            startContent={<SaveIcon className="w-4 h-4" />}
-            variant={"outline"}
-          >
-            Save
-          </Button>
+          <div className="space-x-2">
+            <FLowCodeDialog
+              flowId={currentFlow.id}
+              entrypointNodeData={entrypointNodeData}
+              resultNodeData={resultNodeData}
+            >
+              <Button
+                startContent={<Braces className="w-4 h-4" />}
+                variant="outline"
+              ></Button>
+            </FLowCodeDialog>
+            <Button
+              isLoading={isSaving}
+              onClick={onSave}
+              startContent={<SaveIcon className="w-4 h-4" />}
+              variant={"outline"}
+            >
+              Save
+            </Button>
+          </div>
         </Panel>
         <Controls />
         <MiniMap />

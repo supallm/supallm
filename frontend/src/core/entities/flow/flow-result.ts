@@ -1,6 +1,6 @@
 export type ResultHandle = {
   label: string;
-  type: "text" | "image";
+  type: "text" | "image" | "text-stream";
   id: string;
 };
 
