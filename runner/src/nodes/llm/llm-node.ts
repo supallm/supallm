@@ -1,5 +1,5 @@
 import { BaseNode } from "../base/base-node";
-import { NodeDefinition, ExecutionContext } from "../../interfaces/node";
+import { LLMNodeDefinition, ExecutionContext } from "../../interfaces/node";
 import { logger } from "../../utils/logger";
 import { CryptoService } from "../../services/crypto-service";
 import { BaseLLMProvider } from "./base-provider";
@@ -19,7 +19,7 @@ export class LLMNode extends BaseNode {
 
   async execute(
     nodeId: string,
-    definition: NodeDefinition,
+    definition: LLMNodeDefinition,
     inputs: Record<string, any>,
     context: ExecutionContext,
     callbacks?: {
@@ -78,7 +78,7 @@ export class LLMNode extends BaseNode {
     }
   }
 
-  private selectProvider(definition: NodeDefinition): BaseLLMProvider {
+  private selectProvider(definition: LLMNodeDefinition): BaseLLMProvider {
     const providerType = definition.provider.toLowerCase();
 
     switch (providerType) {

@@ -1,9 +1,5 @@
-import {
-  INode,
-  NodeType,
-  NodeDefinition,
-  ExecutionContext,
-} from "../interfaces/node";
+import { NodeType, NodeDefinition, ExecutionContext } from "../interfaces/node";
+import { INode } from "../nodes/base/base-node";
 import { EntrypointNode } from "../nodes/base/entrypoint-node";
 import { ResultNode } from "../nodes/base/result-node";
 import { LLMNode } from "../nodes/llm/llm-node";

@@ -1,9 +1,25 @@
 import {
-  INode,
   NodeType,
-  NodeDefinition,
+  BaseNodeDefinition,
   ExecutionContext,
 } from "../../interfaces/node";
+
+export interface INode {
+  type: NodeType;
+  execute(
+    nodeId: string,
+    definition: BaseNodeDefinition,
+    inputs: Record<string, any>,
+    context: ExecutionContext,
+    callbacks?: {
+      onNodeStream?: (
+        nodeId: string,
+        outputField: string,
+        chunk: string
+      ) => Promise<void>;
+    }
+  ): Promise<any>;
+}
 
 export abstract class BaseNode implements INode {
   type: NodeType;
@@ -14,14 +30,14 @@ export abstract class BaseNode implements INode {
 
   abstract execute(
     nodeId: string,
-    definition: NodeDefinition,
+    definition: BaseNodeDefinition,
     inputs: Record<string, any>,
     context: ExecutionContext
   ): Promise<any>;
 
   protected validateInputs(
     nodeId: string,
-    definition: NodeDefinition,
+    definition: BaseNodeDefinition,
     inputs: Record<string, any>
   ): void {
     if (!definition.inputs) return;
@@ -36,7 +52,7 @@ export abstract class BaseNode implements INode {
   }
 
   protected async resolveInputs(
-    definition: NodeDefinition,
+    definition: BaseNodeDefinition,
     context: ExecutionContext
   ): Promise<Record<string, any>> {
     const resolvedInputs: Record<string, any> = {};

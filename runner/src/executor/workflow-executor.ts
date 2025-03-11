@@ -3,7 +3,11 @@ import {
   WorkflowExecutionResult,
   WorkflowExecutionOptions,
 } from "../interfaces/workflow";
-import { NodeExecutionResult, ExecutionContext } from "../interfaces/node";
+import {
+  NodeExecutionResult,
+  ExecutionContext,
+  NodeDefinition,
+} from "../interfaces/node";
 import { NodeManager } from "./node-manager";
 import { logger } from "../utils/logger";
 import { EventEmitter } from "events";
@@ -216,7 +220,7 @@ export class WorkflowExecutor extends EventEmitter {
 
   private async executeNode(
     nodeId: string,
-    node: any,
+    node: NodeDefinition,
     context: ExecutionContext
   ): Promise<any> {
     this.emit(WorkflowEvents.NODE_STARTED, {

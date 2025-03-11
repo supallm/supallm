@@ -1,5 +1,5 @@
 import { BaseNode } from "./base-node";
-import { NodeDefinition, ExecutionContext } from "../../interfaces/node";
+import { BaseNodeDefinition, ExecutionContext } from "../../interfaces/node";
 import { logger } from "../../utils/logger";
 
 export class ResultNode extends BaseNode {
@@ -9,7 +9,7 @@ export class ResultNode extends BaseNode {
 
   async execute(
     nodeId: string,
-    definition: NodeDefinition,
+    definition: BaseNodeDefinition,
     inputs: Record<string, any>,
     context: ExecutionContext,
     callbacks?: {

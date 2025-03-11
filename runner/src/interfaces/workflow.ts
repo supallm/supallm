@@ -1,7 +1,23 @@
-import { NodeDefinition, NodeExecutionResult } from "./node";
+import { NodeDefinition, NodeExecutionResult, InputValue } from "./node";
+
+export type WorkflowInputs = Record<string, InputValue>;
 
 export interface WorkflowDefinition {
+  version: string;
   nodes: Record<string, NodeDefinition>;
+  edges?: Array<{
+    source: string;
+    sourceOutput: string;
+    target: string;
+    targetInput: string;
+  }>;
+  metadata?: {
+    name?: string;
+    description?: string;
+    tags?: string[];
+    createdAt?: string;
+    updatedAt?: string;
+  };
 }
 
 export interface WorkflowExecutionResult {
@@ -25,7 +41,7 @@ export interface WorkflowExecutionCallbacks {
 }
 
 export interface WorkflowExecutionOptions {
-  inputs: Record<string, any>;
+  inputs: WorkflowInputs;
   sessionId: string;
   triggerId: string;
 }

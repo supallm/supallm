@@ -1,24 +1,39 @@
-export type NodeType = "llm" | "entrypoint" | "result" | "transform" | "merge";
+export type NodeType = "llm" | "entrypoint" | "result";
+
+export type InputValue =
+  | { type: "string"; value: string }
+  | { type: "file"; value: string; mimeType: string };
 
 export interface NodeInput {
   type: string;
-  source?: string;
+  source?: string; // format: "nodeId.outputField"
   required?: boolean;
+  default?: InputValue;
 }
 
 export interface NodeOutput {
   type: string;
-  propagateToOutput?: boolean;
   outputField?: string;
 }
 
-export interface NodeDefinition {
-  id: string;
+export interface BaseNodeDefinition {
   type: NodeType;
   inputs?: Record<string, NodeInput>;
   outputs?: Record<string, NodeOutput>;
-  [key: string]: any;
 }
+
+export interface LLMNodeDefinition extends BaseNodeDefinition {
+  type: "llm";
+  provider: string;
+  model: string;
+  apiKey: string;
+  temperature?: number;
+  maxTokens?: number;
+  systemPrompt?: string;
+  streaming?: boolean;
+}
+
+export type NodeDefinition = BaseNodeDefinition | LLMNodeDefinition;
 
 export interface NodeExecutionResult {
   nodeId: string;
@@ -26,23 +41,6 @@ export interface NodeExecutionResult {
   output: any;
   error?: string;
   executionTime: number;
-}
-
-export interface INode {
-  type: NodeType;
-  execute(
-    nodeId: string,
-    definition: NodeDefinition,
-    inputs: Record<string, any>,
-    context: ExecutionContext,
-    callbacks?: {
-      onNodeStream?: (
-        nodeId: string,
-        outputField: string,
-        chunk: string
-      ) => Promise<void>;
-    }
-  ): Promise<any>;
 }
 
 export interface ExecutionContext {
