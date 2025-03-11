@@ -70,4 +70,5 @@ export interface AuthProviderService {
   listAll: (projectId: string) => Promise<AuthProvider[]>;
   create: (data: Omit<AuthProvider, "id">) => Promise<AuthProvider>;
   delete: (id: string) => Promise<void>;
+  patch: (id: string, data: { secretKey: string }) => Promise<void>;
 }

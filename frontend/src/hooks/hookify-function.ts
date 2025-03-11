@@ -16,21 +16,26 @@ export const hookifyFunction = <Args extends any[], ReturnType>(
   const [error, setError] = useState<Error | null>(null);
   // eslint-disable-next-line
   const [result, setResult] = useState<ReturnType | null>(null);
+  // eslint-disable-next-line
+  const [isSuccess, setIsSuccess] = useState<undefined | boolean>(undefined);
 
   const reset = () => {
     setError(null);
     setResult(null);
     setIsLoading(false);
+    setIsSuccess(undefined);
   };
 
   // eslint-disable-next-line
   const wrappedFeature: AsyncFunction<Args, ReturnType> = useCallback(
     async (...args: Args) => {
+      reset();
       setIsLoading(true);
       setError(null);
       try {
         const result = await feature(...args);
         setResult(result);
+        setIsSuccess(true);
         return result; // Return the result so it can be used immediately
       } catch (e) {
         setError(e instanceof Error ? e : new Error(String(e)));
@@ -42,5 +47,12 @@ export const hookifyFunction = <Args extends any[], ReturnType>(
     [feature],
   );
 
-  return { result, isLoading, error, reset, execute: wrappedFeature };
+  return {
+    result,
+    isLoading,
+    error,
+    reset,
+    execute: wrappedFeature,
+    isSuccess,
+  };
 };

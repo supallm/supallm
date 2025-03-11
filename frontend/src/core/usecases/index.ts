@@ -19,6 +19,7 @@ import { ListCredentialsUsecase } from "./list-credentials";
 import { ListFlowsUsecase } from "./list-flows";
 import { ListModelUsecase } from "./list-models";
 import { ListProjectsUsecase } from "./list-projects";
+import { PatchAuthProviderUsecase } from "./patch-auth-provider";
 import { PatchCredentialUsecase } from "./patch-credential";
 import { PatchFlowUsecase } from "./patch-flow";
 import { PatchModelUsecase } from "./patch-model";
@@ -98,5 +99,9 @@ export const deleteAuthProviderUsecase = new DeleteAuthProviderUsercase(
 );
 
 export const createAuthProviderUsecase = new CreateAuthProviderUsecase(
+  new MockAuthProviderService(),
+);
+
+export const patchAuthProviderUsecase = new PatchAuthProviderUsecase(
   new MockAuthProviderService(),
 );

@@ -1,5 +1,6 @@
 "use client";
 
+import { AlertMessage } from "@/components/alert-message";
 import { ConfigureAuthProviderDialog } from "@/components/auth-providers/configure-auth-provider-dialog";
 import { ConfirmDangerDialog } from "@/components/confirm-danger-dialog";
 import { CopiableKey } from "@/components/copiable-key";
@@ -11,13 +12,27 @@ import { Spacer } from "@/components/spacer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { CodeBlock } from "@/components/ui/code-block";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getCurrentAuthProvider } from "@/core/store/auth-provider";
-import { deleteAuthProviderUsecase } from "@/core/usecases";
+import {
+  deleteAuthProviderUsecase,
+  patchAuthProviderUsecase,
+} from "@/core/usecases";
 import { hookifyFunction } from "@/hooks/hookify-function";
 import { useCurrentProjectOrThrow } from "@/hooks/use-current-project-or-throw";
 import { useListAuthProviders } from "@/hooks/use-list-auth-providers";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 const PageSkeleton = () => {
   return (
@@ -44,6 +59,13 @@ supallm.run({
 
 const Page = () => {
   const currentProject = useCurrentProjectOrThrow();
+  const {
+    execute: patchAuthProvider,
+    isLoading: isPatchingProvider,
+    isSuccess: updatedSuccessfullly,
+  } = hookifyFunction(
+    patchAuthProviderUsecase.execute.bind(patchAuthProviderUsecase),
+  );
   const [openProviderDialog, setOpenProviderDialog] = useState(false);
 
   const { execute: deleteAuthProvider, isLoading: isDeletingAuthProvider } =
@@ -60,6 +82,26 @@ const Page = () => {
   const currentProvider = getCurrentAuthProvider();
 
   const { isLoading } = useListAuthProviders(currentProject.id);
+
+  const secretFormSchema = z.object({
+    secretKey: z.string().min(2, "Secret key is required"),
+  });
+
+  const secretForm = useForm<z.infer<typeof secretFormSchema>>({
+    resolver: zodResolver(secretFormSchema),
+    mode: "onSubmit",
+    defaultValues: {
+      secretKey: "",
+    },
+  });
+
+  const handleSecretSubmit = async (
+    values: z.infer<typeof secretFormSchema>,
+  ) => {
+    await patchAuthProvider(currentProvider.id, {
+      secretKey: values.secretKey,
+    });
+  };
 
   const handleDeleteProvider = async (id: string) => {
     await deleteAuthProvider(id);
@@ -136,18 +178,45 @@ const Page = () => {
                       JWT Secret
                     </span>
                     <p className="text-muted-foreground text-sm">
-                      This is the JWT secret of your supabase project, do not
-                      share this with anyone.
+                      For security reasons, we do not show the JWT secret of
+                      your supabase project. You can update it using this form.
                     </p>
                   </div>
-                  <div className="shrink-0">
-                    <CopiableKey
-                      isSecret
-                      className="w-[500px]"
-                      width="full"
-                      size="md"
-                      value={`eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJanVxbWlycWtnZ3V2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA5ODk5MzUsImV4cCI6MjA1NjU2NTkzNX0.A42ENSTqP7JNjSri4YP0JKcPk1NIkyBWwI1DKlJ0VxA`}
-                    />
+                  <div className="shrink-0 flex flex-col gap-3 items-end">
+                    <Form {...secretForm}>
+                      <form
+                        onSubmit={secretForm.handleSubmit(handleSecretSubmit)}
+                        className="space-y-3 w-full items-end flex flex-col"
+                      >
+                        <FormField
+                          control={secretForm.control}
+                          name="secretKey"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Input
+                                  placeholder="Leave empty to keep the current secret"
+                                  className="bg-white w-[500px]"
+                                  type="password"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        {updatedSuccessfullly && (
+                          <AlertMessage
+                            size="sm"
+                            message="Secret updated successfully"
+                            variant="success"
+                          />
+                        )}
+                        <Button isLoading={isPatchingProvider} type="submit">
+                          Update secret
+                        </Button>
+                      </form>
+                    </Form>
                   </div>
                 </div>
                 <div className="py-4 px-6 flex flex-col justify-between gap-4 py-6">
