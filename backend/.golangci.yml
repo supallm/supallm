@@ -139,6 +139,9 @@ linters-settings:
       - "^github.com/ThreeDotsLabs/watermill-redisstream/pkg/redisstream.SubscriberConfig"
       - "^github.com/ThreeDotsLabs/watermill/pubsub/gochannel.Config"
       - "^github.com/ThreeDotsLabs/watermill/message.RouterConfig"
+      - "^github.com/ThreeDotsLabs/watermill/pubsub/gochannel.Config"
+      - "^github.com/ThreeDotsLabs/watermill-redisstream/pkg/redisstream.PublisherConfig"
+      - "^github.com/ThreeDotsLabs/watermill-redisstream/pkg/redisstream.SubscriberConfig"
   funlen:
     # Checks the number of lines in a function.
     # If lower than 0, disable the check.

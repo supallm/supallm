@@ -2,6 +2,7 @@ package runner
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/google/uuid"
@@ -27,12 +28,14 @@ func (s *Service) QueueWorkflow(
 ) error {
 	definitionJSON, err := workflow.GetRunnerFlowJSON()
 	if err != nil {
+		slog.Error("failed to get runner flow JSON", "error", err)
 		return err
 	}
 
 	queueMsg := event.WorkflowQueueMessage{
 		WorkflowID: workflow.ID,
 		TriggerID:  triggerID,
+		SessionID:  uuid.New(),
 		ProjectID:  workflow.ProjectID,
 		Definition: definitionJSON,
 		Inputs:     inputs,
@@ -40,8 +43,21 @@ func (s *Service) QueueWorkflow(
 
 	msg, err := queueMsg.ToMessage()
 	if err != nil {
+		slog.Error("failed to create message", "error", err)
 		return err
 	}
 
-	return s.publisher.Publish(event.TopicWorkflowQueue, msg)
+	slog.Info("publishing workflow queue message",
+		"workflow_id", workflow.ID,
+		"trigger_id", triggerID,
+		"topic", event.TopicWorkflowQueue)
+
+	err = s.publisher.Publish(event.TopicWorkflowQueue, msg)
+	if err != nil {
+		slog.Error("failed to publish message", "error", err)
+		return err
+	}
+
+	slog.Info("successfully published workflow queue message")
+	return nil
 }

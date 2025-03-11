@@ -7,10 +7,10 @@ export class RedisQueueConsumer implements IQueueConsumer {
   private readonly QUEUE_TOPIC = "workflows:queue";
   private readonly CONSUMER_GROUP = "runner-group";
   private readonly CONSUMER_NAME: string;
-  private isConsuming: boolean = false;
 
   constructor(redisUrl: string) {
-    this.redis = new Redis(redisUrl);
+    const redisOptions = { password: process.env.REDIS_PASSWORD };
+    this.redis = new Redis(redisUrl, redisOptions);
     this.CONSUMER_NAME = `runner-${Math.random()
       .toString(36)
       .substring(2, 10)}`;
@@ -50,70 +50,61 @@ export class RedisQueueConsumer implements IQueueConsumer {
     }
   }
 
-  consumeWorkflowQueue(
+  async consumeWorkflowQueue(
     handler: (message: WorkflowMessage) => Promise<void>
-  ): void {
-    if (this.isConsuming) {
-      logger.warn("already consuming from workflow queue");
-      return;
-    }
+  ): Promise<void> {
+    try {
+      while (true) {
+        const result = await this.redis.xreadgroup(
+          "GROUP",
+          this.CONSUMER_GROUP,
+          this.CONSUMER_NAME,
+          "COUNT",
+          1,
+          "BLOCK",
+          0,
+          "STREAMS",
+          this.QUEUE_TOPIC,
+          ">"
+        );
 
-    this.isConsuming = true;
+        if (!result) continue;
 
-    const consumeMessages = async () => {
-      while (this.isConsuming) {
-        try {
-          // read unprocessed messages
-          const messages = (await this.redis.xreadgroup(
-            "GROUP",
-            this.CONSUMER_GROUP,
-            this.CONSUMER_NAME,
-            "COUNT",
-            1,
-            "BLOCK",
-            1000,
-            "STREAMS",
-            this.QUEUE_TOPIC,
-            ">"
-          )) as Array<[string, Array<[string, string[]]>]>;
+        for (const [_, messages] of result as [
+          string,
+          [string, string[]][]
+        ][]) {
+          for (const [messageId, fields] of messages) {
+            try {
+              const payload = fields.find(
+                (_, index) => fields[index - 1] === "payload"
+              );
 
-          if (!messages || messages.length === 0) {
-            continue;
-          }
-
-          for (const [_, entries] of messages) {
-            for (const [id, fields] of entries) {
-              try {
-                // extract the message
-                const messageStr = fields[1] as string;
-                const message: WorkflowMessage = JSON.parse(messageStr);
-
-                // process the message
-                await handler(message);
-
-                // acknowledge the message
-                await this.redis.xack(
-                  this.QUEUE_TOPIC,
-                  this.CONSUMER_GROUP,
-                  id
-                );
-              } catch (err) {
-                logger.error(`error processing message ${id}: ${err}`);
+              if (!payload) {
+                logger.error(`no payload found in message ${messageId}`);
+                continue;
               }
+
+              const message: WorkflowMessage = JSON.parse(payload);
+              await handler(message);
+              await this.redis.xack(
+                this.QUEUE_TOPIC,
+                this.CONSUMER_GROUP,
+                messageId
+              );
+            } catch (err) {
+              logger.error(`error processing message ${messageId}: ${err}`);
             }
           }
-        } catch (err) {
-          logger.error(`error consuming from workflow queue: ${err}`);
-          await new Promise((resolve) => setTimeout(resolve, 1000));
         }
       }
-    };
-
-    consumeMessages();
+    } catch (err) {
+      logger.error(`redis error: ${err}`);
+      throw err;
+    }
   }
 
   async close(): Promise<void> {
-    this.isConsuming = false;
     await this.redis.quit();
   }
 }

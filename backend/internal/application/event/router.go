@@ -2,7 +2,6 @@ package event
 
 import (
 	"context"
-	"encoding/json"
 	"log/slog"
 	"os"
 
@@ -34,7 +33,7 @@ func CreateRouter(config Config) *EventRouter {
 
 	router.AddPlugin(plugin.SignalsHandler)
 
-	publisher := gochannel.NewGoChannel(
+	pubsub := gochannel.NewGoChannel(
 		gochannel.Config{},
 		config.Logger,
 	)
@@ -43,6 +42,7 @@ func CreateRouter(config Config) *EventRouter {
 		redisstream.SubscriberConfig{
 			Client:        config.WorkflowsRedis,
 			ConsumerGroup: "core",
+			Unmarshaller:  CustomMarshaller{},
 		},
 		config.Logger,
 	)
@@ -51,27 +51,18 @@ func CreateRouter(config Config) *EventRouter {
 		os.Exit(1)
 	}
 
-	router.AddHandler(
+	router.AddNoPublisherHandler(
 		"workflow-event-router",
 		TopicWorkflowEventsIn,
 		subscriber,
-		TopicWorkflowEventsOut,
-		publisher,
-		func(msg *message.Message) (messages []*message.Message, err error) {
+		func(msg *message.Message) error {
 			defer func() {
 				if err != nil {
-					config.Logger.Error("Error while logging workflow event message", err, nil)
+					config.Logger.Error("error while logging workflow event message", err, nil)
 				}
 			}()
 
-			var event WorkflowEventMessage
-			err = json.Unmarshal(msg.Payload, &event)
-			if err != nil {
-				config.Logger.Error("Error while unmarshalling workflow event message", err, nil)
-				return nil, nil
-			}
-
-			return []*message.Message{msg}, nil
+			return nil
 		},
 	)
 
@@ -86,8 +77,8 @@ func CreateRouter(config Config) *EventRouter {
 
 	return &EventRouter{
 		router:     router,
-		Subscriber: subscriber,
-		Publisher:  publisher,
+		Subscriber: pubsub,
+		Publisher:  pubsub,
 	}
 }
 

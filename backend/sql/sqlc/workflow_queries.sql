@@ -1,10 +1,10 @@
 -- name: storeWorkflow :exec
-INSERT INTO workflows (id, project_id, name, builder_flow, runner_flow)
-VALUES ($1, $2, $3, $4, $5);
+INSERT INTO workflows (id, project_id, name, status, builder_flow, runner_flow)
+VALUES ($1, $2, $3, $4, $5, $6);
 
 -- name: upsertWorkflow :exec
-INSERT INTO workflows (id, project_id, name, builder_flow, runner_flow)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO workflows (id, project_id, name, status, builder_flow, runner_flow)
+VALUES ($1, $2, $3, $4, $5, $6)
 ON CONFLICT (id)
 DO UPDATE SET
     name = EXCLUDED.name,

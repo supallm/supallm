@@ -48,7 +48,7 @@ export class LLMNode extends BaseNode {
         model: definition.model || "",
         apiKey: this.cryptoService.decrypt(definition.apiKey),
         temperature: definition.temperature || 0.5,
-        maxTokens: definition.maxTokens,
+        maxTokens: definition.maxTokens || 1000,
         systemPrompt: definition.systemPrompt || "",
         streaming: definition.streaming === true,
         nodeId,

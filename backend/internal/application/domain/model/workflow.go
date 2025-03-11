@@ -9,6 +9,10 @@ import (
 
 type WorkflowStatus string
 
+func (s WorkflowStatus) String() string {
+	return string(s)
+}
+
 const (
 	WorkflowStatusDraft     WorkflowStatus = "draft"
 	WorkflowStatusPublished WorkflowStatus = "published"
@@ -20,8 +24,8 @@ type Workflow struct {
 	ProjectID   uuid.UUID
 	Name        string
 	Status      WorkflowStatus
-	BuilderFlow BuilderFlow `exhaustruct:"optional"`
-	RunnerFlow  RunnerFlow  `exhaustruct:"optional"`
+	BuilderFlow BuilderFlow     `exhaustruct:"optional"`
+	RunnerFlow  json.RawMessage `exhaustruct:"optional"`
 }
 
 type BuilderFlow struct {
@@ -124,9 +128,7 @@ func (p *Project) AddWorkflow(id uuid.UUID, name string, builderFlow json.RawMes
 			Nodes: []BuilderNode{},
 			Edges: []BuilderEdge{},
 		},
-		RunnerFlow: RunnerFlow{
-			Nodes: make(map[string]RunnerNode),
-		},
+		RunnerFlow: json.RawMessage{},
 	}
 
 	if err := w.SetBuilderFlow(builderFlow); err != nil {
@@ -177,11 +179,11 @@ func (w *Workflow) SetBuilderFlow(builderFlowJSON json.RawMessage) error {
 }
 
 func (w *Workflow) SetRunnerFlow(runnerFlowJSON json.RawMessage) error {
-	var runnerFlow RunnerFlow
-	if err := json.Unmarshal(runnerFlowJSON, &runnerFlow); err != nil {
-		return err
-	}
-	w.RunnerFlow = runnerFlow
+	// var runnerFlow RunnerFlow
+	// if err := json.Unmarshal(runnerFlowJSON, &runnerFlow); err != nil {
+	// 	return err
+	// }
+	w.RunnerFlow = runnerFlowJSON
 	return nil
 }
 

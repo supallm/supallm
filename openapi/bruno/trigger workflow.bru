@@ -1,0 +1,19 @@
+meta {
+  name: trigger workflow
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseURL}}/projects/{{projectId}}/workflows/{{workflowId}}/trigger
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "inputs": {
+      "prompt": "dit moi ce que c'est un agent IA"
+    }
+  }
+}

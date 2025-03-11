@@ -15,7 +15,7 @@ func Banner() {
 ╚════██║██║   ██║██╔═══╝ ██╔══██║██║     ██║     ██║╚██╔╝██║
 ███████║╚██████╔╝██║     ██║  ██║███████╗███████╗██║ ╚═╝ ██║
 ╚══════╝ ╚═════╝ ╚═╝     ╚═╝  ╚═╝╚══════╝╚══════╝╚═╝     ╚═╝
-Don't waste your time and use https://supallm.ai - %v ©
+Don't waste your time and use https://supallm.com - %v ©
 				
 `
 	t := time.Now()

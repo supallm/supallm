@@ -35,7 +35,6 @@ export class WorkflowExecutor extends EventEmitter {
     const startTime = Date.now();
     logger.info(`starting execution of workflow ${workflowId}`);
 
-    // emit workflow started event
     this.emit(WorkflowEvents.WORKFLOW_STARTED, {
       workflowId,
       triggerId: this.currentTriggerId,
@@ -51,7 +50,6 @@ export class WorkflowExecutor extends EventEmitter {
         streamOutputs: {},
       };
 
-      // build dependency graph
       const { dependencies } = this.buildDependencyGraph(definition);
 
       const completedNodes = new Set<string>();
@@ -68,6 +66,7 @@ export class WorkflowExecutor extends EventEmitter {
 
         if (readyNodes.length === 0) {
           if (completedNodes.size < allNodes.size) {
+            // should not happen, but just in case
             throw new Error("circular dependency detected in workflow");
           }
           break;
@@ -78,7 +77,6 @@ export class WorkflowExecutor extends EventEmitter {
           const node = definition.nodes[nodeId];
           const startNodeTime = Date.now();
           try {
-            // execute node with streaming support
             const output = await this.executeNode(nodeId, node, context);
 
             // store result in context

@@ -9,7 +9,7 @@ import (
 
 const (
 	// Topics
-	TopicWorkflowQueue     = "workflow.queue"
+	TopicWorkflowQueue     = "workflows:queue"
 	TopicWorkflowEventsIn  = "workflow.events.in"
 	TopicWorkflowEventsOut = "workflow.events.out"
 
@@ -36,6 +36,7 @@ type WorkflowQueueMessage struct {
 	WorkflowID uuid.UUID       `json:"workflow_id"`
 	TriggerID  uuid.UUID       `json:"trigger_id"`
 	ProjectID  uuid.UUID       `json:"project_id"`
+	SessionID  uuid.UUID       `json:"session_id"`
 	Definition json.RawMessage `json:"definition"`
 	Inputs     map[string]any  `json:"inputs"`
 }

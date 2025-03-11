@@ -22,6 +22,7 @@
     "@langchain/core": "^0.3.42",
     "@langchain/openai": "^0.4.4",
     "@node-redis/json": "^1.0.2",
+    "dotenv": "^16.4.7",
     "ioredis": "^5.6.0",
     "langchain": "^0.0.92",
     "uuid": "^11.1.0",

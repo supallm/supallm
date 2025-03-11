@@ -1,9 +1,11 @@
+import dotenv from "dotenv";
 import { RunnerServer } from "./server";
 import { logger } from "./utils/logger";
+dotenv.config();
 
 async function main() {
   try {
-    const redisUrl = process.env.REDIS_URL || "redis://localhost:6379/0";
+    const redisUrl = `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`;
     const server = new RunnerServer(redisUrl);
 
     process.on("SIGINT", async () => {

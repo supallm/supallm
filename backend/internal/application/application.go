@@ -3,8 +3,10 @@ package application
 import (
 	"context"
 	"log/slog"
+	"os"
 
 	"github.com/ThreeDotsLabs/watermill"
+	"github.com/ThreeDotsLabs/watermill-redisstream/pkg/redisstream"
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/supallm/core/internal/adapters/project"
@@ -70,8 +72,20 @@ func New(
 		Logger:         logger,
 	})
 
+	publisher, err := redisstream.NewPublisher(
+		redisstream.PublisherConfig{
+			Client:     redisWorkflows,
+			Marshaller: redisstream.DefaultMarshallerUnmarshaller{},
+		},
+		logger,
+	)
+	if err != nil {
+		slog.Error("error creating redis stream publisher", "error", err)
+		os.Exit(1)
+	}
+
 	projectRepo := project.NewRepository(ctx, pool)
-	runnerService := runner.NewService(ctx, router.Publisher)
+	runnerService := runner.NewService(ctx, publisher)
 
 	app := &App{
 		pool:       pool,

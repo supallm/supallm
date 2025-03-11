@@ -5,9 +5,15 @@ import { logger } from "../../utils/logger";
 export class RedisNotifier implements INotifier {
   private redis: Redis;
   private readonly EVENTS_TOPIC = "workflow.events.in";
+  private MAX_STREAM_LENGTH: number = 1000; // default max length for the stream
 
-  constructor(redisUrl: string) {
-    this.redis = new Redis(redisUrl);
+  constructor(redisUrl: string, maxStreamLength?: number) {
+    const redisOptions = { password: process.env.REDIS_PASSWORD };
+    this.redis = new Redis(redisUrl, redisOptions);
+
+    if (maxStreamLength !== undefined) {
+      this.MAX_STREAM_LENGTH = maxStreamLength;
+    }
 
     this.redis.on("error", (err) => {
       logger.error(`redis error: ${err}`);
@@ -37,6 +43,9 @@ export class RedisNotifier implements INotifier {
 
       const id = await this.redis.xadd(
         this.EVENTS_TOPIC,
+        "MAXLEN",
+        "~",
+        this.MAX_STREAM_LENGTH,
         "*",
         "payload",
         JSON.stringify(message.payload),

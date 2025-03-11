@@ -72,10 +72,10 @@ func (w Workflow) domain() (*model.Workflow, error) {
 		return nil, err
 	}
 
-	runnerFlow := model.RunnerFlow{}
-	if err := json.Unmarshal(w.RunnerFlow, &runnerFlow); err != nil {
-		return nil, err
-	}
+	// runnerFlow := model.RunnerFlow{}
+	// if err := json.Unmarshal(w.RunnerFlow, &runnerFlow); err != nil {
+	// 	return nil, err
+	// }
 
 	return &model.Workflow{
 		ID:          w.ID,
@@ -83,7 +83,7 @@ func (w Workflow) domain() (*model.Workflow, error) {
 		Status:      model.WorkflowStatus(w.Status),
 		Name:        w.Name,
 		BuilderFlow: builderFlow,
-		RunnerFlow:  runnerFlow,
+		RunnerFlow:  w.RunnerFlow,
 	}, nil
 }
 

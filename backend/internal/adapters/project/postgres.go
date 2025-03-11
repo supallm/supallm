@@ -70,11 +70,13 @@ func (r Repository) Create(ctx context.Context, project *model.Project) error {
 func (r Repository) retrieveDependencies(ctx context.Context, projectID uuid.UUID) ([]Credential, []Workflow, error) {
 	llmCredentials, err := r.queries.credentialsByProjectId(ctx, projectID)
 	if err != nil {
+		slog.Error("error retrieving llm credentials", "error", err)
 		return nil, nil, r.errorDecoder(err)
 	}
 
 	workflows, err := r.queries.workflowsByProjectId(ctx, projectID)
 	if err != nil {
+		slog.Error("error retrieving workflows", "error", err)
 		return nil, nil, r.errorDecoder(err)
 	}
 
@@ -84,11 +86,13 @@ func (r Repository) retrieveDependencies(ctx context.Context, projectID uuid.UUI
 func (r Repository) retrieve(ctx context.Context, projectID uuid.UUID) (Project, []Credential, []Workflow, error) {
 	project, err := r.queries.projectById(ctx, projectID)
 	if err != nil {
+		slog.Error("error retrieving project", "error", err)
 		return Project{}, nil, nil, r.errorDecoder(err)
 	}
 
 	llmCredentials, workflows, err := r.retrieveDependencies(ctx, projectID)
 	if err != nil {
+		slog.Error("error retrieving dependencies", "error", err)
 		return Project{}, nil, nil, r.errorDecoder(err)
 	}
 
@@ -192,6 +196,7 @@ func (r Repository) updateWorkflows(ctx context.Context, q *Queries, project *mo
 			ID:          workflow.ID,
 			ProjectID:   project.ID,
 			Name:        workflow.Name,
+			Status:      workflow.Status.String(),
 			BuilderFlow: builderFlow,
 			RunnerFlow:  runnerFlow,
 		})
