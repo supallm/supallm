@@ -3,8 +3,8 @@ import { logger } from "./utils/logger";
 
 async function main() {
   try {
-    const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 50051;
-    const server = new RunnerServer(port);
+    const redisUrl = process.env.REDIS_URL || "redis://localhost:6379/0";
+    const server = new RunnerServer(redisUrl);
 
     // Handle graceful shutdown
     process.on("SIGINT", async () => {

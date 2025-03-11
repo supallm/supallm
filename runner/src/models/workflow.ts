@@ -64,10 +64,17 @@ export interface NodeExecutionResult {
   executionTime: number;
 }
 
-export interface WorkflowExecutionOptions {
-  inputs?: Record<string, any>;
-  timeout?: number;
+export interface WorkflowExecutionCallbacks {
+  onNodeStart?: (nodeId: string, nodeType: string) => Promise<void>;
+  onNodeStream?: (nodeId: string, chunk: string) => Promise<void>;
+  onNodeComplete?: (nodeId: string, output: any) => Promise<void>;
+  onNodeError?: (nodeId: string, error: Error) => Promise<void>;
   sessionId?: string;
+  inputs?: Record<string, any>;
+}
+
+export interface WorkflowExecutionOptions extends WorkflowExecutionCallbacks {
+  timeout?: number;
   credentials?: Record<string, any>;
 }
 

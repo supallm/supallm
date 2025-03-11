@@ -3,6 +3,7 @@ import {
   WorkflowExecutionResult,
   WorkflowExecutionOptions,
   ExecutionContext,
+  WorkflowExecutionCallbacks,
 } from "../models/workflow";
 import { NodeExecutor } from "./node-executor";
 import { EventEmitter } from "events";
@@ -37,7 +38,7 @@ export class WorkflowExecutor extends EventEmitter {
   async execute(
     workflowId: string,
     definition: WorkflowDefinition,
-    options: WorkflowExecutionOptions = {}
+    options: WorkflowExecutionOptions & WorkflowExecutionCallbacks = {}
   ): Promise<WorkflowExecutionResult> {
     this.currentWorkflowId = workflowId;
     this.currentSessionId = options.sessionId || "";
@@ -251,6 +252,27 @@ export class WorkflowExecutor extends EventEmitter {
         sessionId: this.currentSessionId,
         output: result.output,
       });
+
+      // Notify node start
+      if (definition.onNodeStart) {
+        await definition.onNodeStart(nodeId, node.type);
+      }
+
+      // If the node generates chunks (like an LLM)
+      if (node.type === "llm" && definition.onNodeStream) {
+        // Example of streaming for an LLM
+        // This is an example, adapt according to your actual implementation
+        model.on("chunk", async (chunk) => {
+          if (definition.onNodeStream) {
+            await definition.onNodeStream(nodeId, chunk);
+          }
+        });
+      }
+
+      // Notify node complete
+      if (definition.onNodeComplete) {
+        await definition.onNodeComplete(nodeId, result.output);
+      }
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
@@ -271,6 +293,14 @@ export class WorkflowExecutor extends EventEmitter {
         sessionId: this.currentSessionId,
         error: errorMessage,
       });
+
+      // Notify node error
+      if (definition.onNodeError) {
+        await definition.onNodeError(
+          nodeId,
+          error instanceof Error ? error : new Error(errorMessage)
+        );
+      }
 
       // Stop the execution if the configuration requires it
       if (definition.configuration.errorHandling === "stopOnError") {

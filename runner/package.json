@@ -21,6 +21,8 @@
     "@langchain/anthropic": "^0.3.15",
     "@langchain/core": "^0.3.42",
     "@langchain/openai": "^0.4.4",
+    "@node-redis/json": "^1.0.2",
+    "ioredis": "^5.6.0",
     "langchain": "^0.0.92",
     "winston": "^3.8.2",
     "zod": "^3.21.4"
