@@ -1,6 +1,5 @@
 import winston from "winston";
 
-// Define log levels and colors
 const levels = {
   error: 0,
   warn: 1,
@@ -24,10 +23,8 @@ const level = () => {
   return isDevelopment ? "debug" : process.env.LOG_LEVEL || "info";
 };
 
-// Add colors to Winston
 winston.addColors(colors);
 
-// Format for console logs
 const consoleFormat = winston.format.combine(
   winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss:ms" }),
   winston.format.colorize({ all: true }),
@@ -36,19 +33,18 @@ const consoleFormat = winston.format.combine(
   )
 );
 
-// Format for file logs
 const fileFormat = winston.format.combine(
   winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss:ms" }),
   winston.format.json()
 );
 
-// Define transports
 const transports = [
   // Console transport
   new winston.transports.Console({
     format: consoleFormat,
   }),
   // // File transport for errors
+
   // new winston.transports.File({
   //   filename: "logs/error.log",
   //   level: "error",
@@ -61,14 +57,12 @@ const transports = [
   // }),
 ];
 
-// Create logger instance
 export const logger = winston.createLogger({
   level: level(),
   levels,
   transports,
 });
 
-// If we are not in production, log also in the console
 if (process.env.NODE_ENV !== "production") {
-  logger.debug("Logging initialized at debug level");
+  logger.debug("logging initialized at debug level");
 }
