@@ -1,8 +1,7 @@
-import { WorkflowExecutor } from "./executor/workflow-executor";
+import { WorkflowExecutor, WorkflowEvents } from "./executor/workflow-executor";
 import { RedisNotifier, INotifier, NotifierEvent } from "./services/notifier";
 import { RedisQueueConsumer, IQueueConsumer } from "./services/queue";
 import { logger } from "./utils/logger";
-import { v4 as uuidv4 } from "uuid";
 
 export class RunnerServer {
   private queueConsumer: IQueueConsumer;
@@ -13,6 +12,8 @@ export class RunnerServer {
     this.queueConsumer = new RedisQueueConsumer(redisUrl);
     this.notifier = new RedisNotifier(redisUrl);
     this.executor = new WorkflowExecutor();
+
+    this.setupEventListeners();
   }
 
   async start(): Promise<void> {
@@ -20,13 +21,13 @@ export class RunnerServer {
       await this.queueConsumer.initialize();
       await this.notifier.initialize();
 
-      logger.info("Runner server started, consuming from workflow queue");
+      logger.info("runner server started, consuming from workflow queue");
 
       this.queueConsumer.consumeWorkflowQueue(
         this.handleWorkflowExecution.bind(this)
       );
     } catch (error) {
-      logger.error(`Failed to start runner server: ${error}`);
+      logger.error(`failed to start runner server: ${error}`);
       throw error;
     }
   }
@@ -34,100 +35,116 @@ export class RunnerServer {
   async stop(): Promise<void> {
     await this.queueConsumer.close();
     await this.notifier.close();
-    logger.info("Runner server stopped");
+    logger.info("runner server stopped");
   }
 
   private async handleWorkflowExecution(message: {
     workflow_id: string;
     trigger_id: string;
+    session_id: string;
     project_id: string;
     definition: any;
     inputs: Record<string, any>;
   }): Promise<void> {
-    const { workflow_id, trigger_id, definition, inputs } = message;
-    const sessionId = uuidv4();
+    const { workflow_id, trigger_id, session_id, definition, inputs } = message;
 
     try {
-      // Publish workflow started event
-      await this.notifier.publishEvent({
-        type: NotifierEvent.WORKFLOW_STARTED,
-        workflowId: workflow_id,
-        triggerId: trigger_id,
-        sessionId,
-        data: { inputs },
-      });
-
-      // Execute workflow
-      const result = await this.executor.execute(workflow_id, definition, {
+      await this.executor.execute(workflow_id, definition, {
         inputs,
-        sessionId,
-        callbacks: {
-          onNodeStart: async (nodeId: string, nodeType: string) => {
-            await this.notifier.publishEvent({
-              type: NotifierEvent.NODE_STARTED,
-              workflowId: workflow_id,
-              triggerId: trigger_id,
-              sessionId,
-              nodeId,
-              data: { type: nodeType },
-            });
-          },
-          onNodeStream: async (
-            nodeId: string,
-            outputField: string,
-            chunk: string
-          ) => {
-            await this.notifier.publishEvent({
-              type: NotifierEvent.NODE_STREAMING,
-              workflowId: workflow_id,
-              triggerId: trigger_id,
-              sessionId,
-              nodeId,
-              data: { chunk, outputField },
-            });
-          },
-          onNodeComplete: async (nodeId: string, output: any) => {
-            await this.notifier.publishEvent({
-              type: NotifierEvent.NODE_COMPLETED,
-              workflowId: workflow_id,
-              triggerId: trigger_id,
-              sessionId,
-              nodeId,
-              data: { output },
-            });
-          },
-          onNodeError: async (nodeId: string, error: Error) => {
-            await this.notifier.publishEvent({
-              type: NotifierEvent.NODE_FAILED,
-              workflowId: workflow_id,
-              triggerId: trigger_id,
-              sessionId,
-              nodeId,
-              data: { error: error.message },
-            });
-          },
-        },
-      });
-
-      // Publish workflow completed event
-      await this.notifier.publishEvent({
-        type: NotifierEvent.WORKFLOW_COMPLETED,
-        workflowId: workflow_id,
+        sessionId: session_id,
         triggerId: trigger_id,
-        sessionId,
-        data: { result: result.output },
       });
     } catch (error) {
-      logger.error(`Error executing workflow ${workflow_id}: ${error}`);
+      logger.error(`error executing workflow ${workflow_id}: ${error}`);
+    }
+  }
 
-      // Publish workflow failed event
+  private setupEventListeners(): void {
+    this.executor.on(WorkflowEvents.WORKFLOW_STARTED, async (data) => {
+      await this.notifier.publishEvent({
+        type: NotifierEvent.WORKFLOW_STARTED,
+        workflowId: data.workflowId,
+        triggerId: data.triggerId,
+        sessionId: data.sessionId,
+        data: { inputs: data.inputs },
+      });
+    });
+
+    this.executor.on(WorkflowEvents.WORKFLOW_COMPLETED, async (data) => {
+      await this.notifier.publishEvent({
+        type: NotifierEvent.WORKFLOW_COMPLETED,
+        workflowId: data.workflowId,
+        triggerId: data.triggerId,
+        sessionId: data.sessionId,
+        data: { result: data.result },
+      });
+    });
+
+    this.executor.on(WorkflowEvents.WORKFLOW_FAILED, async (data) => {
       await this.notifier.publishEvent({
         type: NotifierEvent.WORKFLOW_FAILED,
-        workflowId: workflow_id,
-        triggerId: trigger_id,
-        sessionId,
-        data: { error: error instanceof Error ? error.message : String(error) },
+        workflowId: data.workflowId,
+        triggerId: data.triggerId,
+        sessionId: data.sessionId,
+        data: { error: data.error },
       });
-    }
+    });
+
+    this.executor.on(WorkflowEvents.NODE_STARTED, async (data) => {
+      await this.notifier.publishEvent({
+        type: NotifierEvent.NODE_STARTED,
+        workflowId: data.workflowId,
+        triggerId: data.triggerId,
+        sessionId: data.sessionId,
+        data: {
+          nodeId: data.nodeId,
+          type: data.nodeType,
+          inputs: data.inputs,
+        },
+      });
+    });
+
+    this.executor.on(WorkflowEvents.NODE_STREAMING, async (data) => {
+      await this.notifier.publishEvent({
+        type: NotifierEvent.NODE_STREAMING,
+        workflowId: data.workflowId,
+        triggerId: data.triggerId,
+        sessionId: data.sessionId,
+        data: {
+          nodeId: data.nodeId,
+          nodeType: data.nodeType,
+          outputField: data.outputField,
+          data: data.data,
+        },
+      });
+    });
+
+    this.executor.on(WorkflowEvents.NODE_COMPLETED, async (data) => {
+      await this.notifier.publishEvent({
+        type: NotifierEvent.NODE_COMPLETED,
+        workflowId: data.workflowId,
+        triggerId: data.triggerId,
+        sessionId: data.sessionId,
+        data: {
+          nodeId: data.nodeId,
+          nodeType: data.nodeType,
+          output: data.output,
+        },
+      });
+    });
+
+    this.executor.on(WorkflowEvents.NODE_FAILED, async (data) => {
+      await this.notifier.publishEvent({
+        type: NotifierEvent.NODE_FAILED,
+        workflowId: data.workflowId,
+        triggerId: data.triggerId,
+        sessionId: data.sessionId,
+        data: {
+          nodeId: data.nodeId,
+          nodeType: data.nodeType,
+          error: data.error,
+        },
+      });
+    });
   }
 }

@@ -24,7 +24,7 @@ export class RedisQueueConsumer implements IQueueConsumer {
     try {
       await this.redis.ping();
 
-      // Create the consumer group if it doesn't exist
+      // create the consumer group if it doesn't exist
       try {
         await this.redis.xgroup(
           "CREATE",
@@ -37,7 +37,7 @@ export class RedisQueueConsumer implements IQueueConsumer {
           `created consumer group ${this.CONSUMER_GROUP} for ${this.QUEUE_TOPIC}`
         );
       } catch (err) {
-        // Ignore the error if the group already exists
+        // ignore the error if the group already exists
         if (!(err instanceof Error) || !err.message.includes("BUSYGROUP")) {
           throw err;
         }
@@ -63,8 +63,8 @@ export class RedisQueueConsumer implements IQueueConsumer {
     const consumeMessages = async () => {
       while (this.isConsuming) {
         try {
-          // Read unprocessed messages
-          const messages = await this.redis.xreadgroup(
+          // read unprocessed messages
+          const messages = (await this.redis.xreadgroup(
             "GROUP",
             this.CONSUMER_GROUP,
             this.CONSUMER_NAME,
@@ -75,7 +75,7 @@ export class RedisQueueConsumer implements IQueueConsumer {
             "STREAMS",
             this.QUEUE_TOPIC,
             ">"
-          );
+          )) as Array<[string, Array<[string, string[]]>]>;
 
           if (!messages || messages.length === 0) {
             continue;
@@ -84,14 +84,14 @@ export class RedisQueueConsumer implements IQueueConsumer {
           for (const [_, entries] of messages) {
             for (const [id, fields] of entries) {
               try {
-                // Extract the message
+                // extract the message
                 const messageStr = fields[1] as string;
                 const message: WorkflowMessage = JSON.parse(messageStr);
 
-                // Process the message
+                // process the message
                 await handler(message);
 
-                // Acknowledge the message
+                // acknowledge the message
                 await this.redis.xack(
                   this.QUEUE_TOPIC,
                   this.CONSUMER_GROUP,

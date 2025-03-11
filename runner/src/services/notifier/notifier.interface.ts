@@ -3,7 +3,6 @@ export interface WorkflowEvent {
   workflowId: string;
   triggerId: string;
   sessionId: string;
-  nodeId?: string;
   data?: Record<string, any>;
 }
 

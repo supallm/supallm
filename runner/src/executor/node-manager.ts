@@ -38,7 +38,7 @@ export class NodeManager {
       onNodeStream?: (
         nodeId: string,
         outputField: string,
-        chunk: string
+        data: string
       ) => Promise<void>;
     }
   ): Promise<any> {

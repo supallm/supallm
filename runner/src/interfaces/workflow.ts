@@ -25,8 +25,7 @@ export interface WorkflowExecutionCallbacks {
 }
 
 export interface WorkflowExecutionOptions {
-  inputs?: Record<string, any>;
-  sessionId?: string;
-  callbacks?: WorkflowExecutionCallbacks;
-  credentials?: Record<string, any>;
+  inputs: Record<string, any>;
+  sessionId: string;
+  triggerId: string;
 }

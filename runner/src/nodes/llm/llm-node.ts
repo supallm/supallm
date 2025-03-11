@@ -86,7 +86,7 @@ export class LLMNode extends BaseNode {
         return new OpenAIProvider();
 
       default:
-        throw new Error(`unsupported LLM provider: ${providerType}`);
+        throw new Error(`Unsupported LLM provider: ${providerType}`);
     }
   }
 }
