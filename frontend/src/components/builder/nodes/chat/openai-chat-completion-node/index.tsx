@@ -10,7 +10,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { NumberInput } from "@/components/ui/number-input";
 import {
   ChatOpenAINodeData,
   OpenAIModels,
@@ -22,10 +21,10 @@ import { NodeProps, useReactFlow, useUpdateNodeInternals } from "@xyflow/react";
 import { FC, memo, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { ProviderLogo } from "../../../logos/provider-logo";
-import BaseNode from "../common/base-node";
-import { BaseNodeContent } from "../common/base-node-content";
-import { ConfigureModelMessagesDialog } from "../model-messages/configure-model-messages-dialog";
+import { ProviderLogo } from "../../../../logos/provider-logo";
+import BaseNode from "../../common/base-node";
+import { BaseNodeContent } from "../../common/base-node-content";
+import { OpenAIChatAdvancedSettingsDialog } from "./advanced-settings-dialog";
 
 type OpenAIChatCompletionNodeProps = NodeProps & {
   data: ChatOpenAINodeData;
@@ -41,14 +40,16 @@ const OpenAIChatCompletionNode: FC<OpenAIChatCompletionNodeProps> = ({
   const formSchema = z.object({
     credentialId: z.string().min(2),
     model: z.enum(OpenAIModels),
-    temperature: z.number().min(0).max(2),
-    maxCompletionTokens: z.number().min(100).optional(),
-    developerMessage: z.string().min(0),
-    imageResolution: z.enum(["low", "high", "auto"]),
-    responseFormat: z.object({
-      type: z.enum(["text", "json_object"]),
-    }),
     outputMode: z.enum(["text", "text-stream"]),
+    advancedSettings: z.object({
+      temperature: z.number().nullable(),
+      maxCompletionTokens: z.number().nullable(),
+      developerMessage: z.string(),
+      imageResolution: z.enum(["low", "high", "auto"]),
+      responseFormat: z.object({
+        type: z.enum(["text", "json_object"]),
+      }),
+    }),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -57,49 +58,40 @@ const OpenAIChatCompletionNode: FC<OpenAIChatCompletionNodeProps> = ({
     defaultValues: {
       credentialId: data.credentialId ?? "",
       model: data.model ?? "",
-      temperature: data.temperature ?? 1,
-      maxCompletionTokens: data.maxCompletionTokens ?? undefined,
-      developerMessage: data.developerMessage ?? "",
-      imageResolution: data.imageResolution ?? "auto",
-      responseFormat: {
-        type: "text",
-      },
       outputMode: data.outputMode ?? "text",
+      advancedSettings: {
+        temperature: data.temperature ?? null,
+        maxCompletionTokens: data.maxCompletionTokens ?? null,
+        developerMessage: data.developerMessage ?? "",
+        imageResolution: data.imageResolution ?? "auto",
+        responseFormat: data.responseFormat ?? {
+          type: "text",
+        },
+      },
     },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("onSubmit");
-    console.log(values);
-  }
-
-  async function onInvalid(data: any) {
-    console.log("invalid");
-    console.log(data);
-  }
-
-  const saveNode = () => {
+  form.watch(() => {
     const formValues = form.getValues();
 
     const data: ChatOpenAINodeData = {
       credentialId: formValues.credentialId,
       providerType: "openai",
       model: formValues.model,
-      temperature: formValues.temperature,
-      maxCompletionTokens: formValues.maxCompletionTokens ?? null,
-      developerMessage: formValues.developerMessage,
-      imageResolution: formValues.imageResolution,
-      responseFormat: formValues.responseFormat,
       outputMode: formValues.outputMode,
+      temperature: formValues.advancedSettings.temperature,
+      maxCompletionTokens: formValues.advancedSettings.maxCompletionTokens,
+      developerMessage: formValues.advancedSettings.developerMessage,
+      imageResolution: formValues.advancedSettings.imageResolution,
+      responseFormat: formValues.advancedSettings.responseFormat,
     };
 
     updateNodeData(nodeId, data);
-  };
+  });
 
   const outputMode = form.watch("outputMode");
 
   const outputHandles = useMemo(() => {
-    console.log("outputMode", outputMode);
     switch (outputMode) {
       case "text":
         return [
@@ -162,7 +154,6 @@ const OpenAIChatCompletionNode: FC<OpenAIChatCompletionNodeProps> = ({
         <div className="flex flex-col gap-2">
           <Form {...form}>
             <form
-              onChange={saveNode}
               // onChange={form.handleSubmit(onSubmit, onInvalid)}
               className="space-y-4"
             >
@@ -198,52 +189,6 @@ const OpenAIChatCompletionNode: FC<OpenAIChatCompletionNodeProps> = ({
               />
               <FormField
                 control={form.control}
-                name="temperature"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Temperature</FormLabel>
-                    <FormControl>
-                      <NumberInput placeholder="1" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="maxCompletionTokens"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Max completion tokens</FormLabel>
-                    <FormControl>
-                      <NumberInput placeholder="25000" clearable {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="developerMessage"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Developer Message</FormLabel>
-                    <FormControl>
-                      <ConfigureModelMessagesDialog
-                        developerMessage={field.value}
-                        {...field}
-                      >
-                        <Button variant="outline" size="xs" type="button">
-                          Configure
-                        </Button>
-                      </ConfigureModelMessagesDialog>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
                 name="outputMode"
                 render={({ field }) => (
                   <FormItem>
@@ -273,29 +218,18 @@ const OpenAIChatCompletionNode: FC<OpenAIChatCompletionNodeProps> = ({
               />
               <FormField
                 control={form.control}
-                name="responseFormat"
+                name="advancedSettings"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Response Format</FormLabel>
-                    <FormControl>
-                      <AppSelect
-                        onValueChange={(value) => {
-                          field.onChange({ type: value });
-                        }}
-                        defaultValue={field.value.type}
-                        choices={[
-                          {
-                            value: "text",
-                            label: "Text",
-                          },
-                          {
-                            value: "json_object",
-                            label: "JSON",
-                          },
-                        ]}
-                      ></AppSelect>
-                    </FormControl>
-                  </FormItem>
+                  <OpenAIChatAdvancedSettingsDialog
+                    data={field.value}
+                    onChange={(values) => {
+                      field.onChange(values);
+                    }}
+                  >
+                    <Button variant="outline" size="xs" type="button">
+                      Advanced settings
+                    </Button>
+                  </OpenAIChatAdvancedSettingsDialog>
                 )}
               />
             </form>

@@ -61,7 +61,7 @@ export type ChatOpenAINodeData = {
   credentialId: string;
   providerType: "openai";
   model: OpenAIModel;
-  temperature: number;
+  temperature: number | null;
   maxCompletionTokens: number | null;
   developerMessage: string;
   imageResolution: "low" | "high" | "auto";

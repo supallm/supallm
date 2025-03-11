@@ -6,24 +6,22 @@ import { Button } from "./button";
 
 function NumberInput({
   className,
-  value = undefined,
+  value,
   onChange,
-  clearable = false,
   ...props
 }: React.ComponentProps<"input"> & {
-  value?: number | undefined;
-  onChange: (value: number | undefined) => void;
-  clearable?: boolean;
+  value?: number | null;
+  onChange: (value: number | null) => void;
 }) {
   const inputRef = React.useRef<HTMLInputElement | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
-    onChange(newValue === "" ? (clearable ? undefined : 0) : Number(newValue));
+    onChange(newValue === "" ? null : Number(newValue));
   };
 
   const handleClear = () => {
-    onChange(undefined);
+    onChange(null);
     if (inputRef.current) {
       inputRef.current.value = "";
     }
@@ -34,7 +32,7 @@ function NumberInput({
       <input
         ref={inputRef}
         type="number"
-        value={value !== undefined ? value : ""}
+        value={value !== null ? value : ""}
         onChange={handleInputChange}
         data-slot="input"
         className={cn(
@@ -47,7 +45,7 @@ function NumberInput({
         {...props}
         step="any"
       />
-      {value !== undefined && (
+      {value !== null && (
         <Button
           variant="icon"
           size="xs"
