@@ -14,6 +14,9 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { createAuthProviderUsecase } from "@/core/usecases";
+import { hookifyFunction } from "@/hooks/hookify-function";
+import { useCurrentProjectOrThrow } from "@/hooks/use-current-project-or-throw";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FC, useEffect, useState } from "react";
@@ -62,6 +65,12 @@ export const ConfigureAuthProviderDialog: FC<{
 }> = ({ isOpen, onOpenChange }) => {
   const [open, setOpen] = useState(isOpen);
   const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
+  const currentProject = useCurrentProjectOrThrow();
+
+  const { execute: createAuthProvider, isLoading: isCreatingAuthProvider } =
+    hookifyFunction(
+      createAuthProviderUsecase.execute.bind(createAuthProviderUsecase),
+    );
 
   useEffect(() => {
     setOpen(isOpen);
@@ -69,11 +78,12 @@ export const ConfigureAuthProviderDialog: FC<{
 
   const formSchema = z.object({
     secretKey: z.string().min(2, "Secret key is required"),
-    projectUrl: z.string().min(2, "Project URL is required"),
+    projectUrl: z.string().url("The project url must be valid"),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
+    mode: "onSubmit",
     defaultValues: {
       secretKey: "",
       projectUrl: "",
@@ -92,15 +102,21 @@ export const ConfigureAuthProviderDialog: FC<{
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    console.log("Configuring provider:", selectedProvider);
-    console.log("Secret Key:", values.secretKey);
+    await createAuthProvider({
+      projectId: currentProject.id,
+      name: "supabase",
+      config: {
+        secretKey: values.secretKey,
+        projectUrl: values.projectUrl,
+      },
+    });
     reset();
     onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-3xl max-h-screen">
+      <DialogContent className="sm:max-w-3xl max-h-screen overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Configure Authentication Provider</DialogTitle>
           <DialogDescription>
@@ -157,7 +173,7 @@ export const ConfigureAuthProviderDialog: FC<{
                     <AlertMessage
                       variant="info"
                       message={
-                        "To find these info, go to your Supabase dashboard go to Project Settings > Data API"
+                        "You can find these info in your Supabase dashboard > Project Settings > Data API"
                       }
                     ></AlertMessage>
                     <Spacer size={"sm"} />
@@ -174,7 +190,7 @@ export const ConfigureAuthProviderDialog: FC<{
                               <FormLabel>Project URL</FormLabel>
                               <FormControl>
                                 <Input
-                                  placeholder="Enter your project URL"
+                                  placeholder="https://example.supabase.co"
                                   {...field}
                                 />
                               </FormControl>
@@ -199,7 +215,10 @@ export const ConfigureAuthProviderDialog: FC<{
                             </FormItem>
                           )}
                         />
-                        <Button type="submit">
+                        <Button
+                          type="submit"
+                          isLoading={isCreatingAuthProvider}
+                        >
                           Configure {selectedProvider}
                         </Button>
                       </form>

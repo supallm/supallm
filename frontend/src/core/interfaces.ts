@@ -1,3 +1,4 @@
+import { AuthProvider } from "./entities/auth-provider";
 import { Credential, ProviderType } from "./entities/credential";
 import { Flow, FlowEdge, FlowNode } from "./entities/flow";
 import { Model } from "./entities/model";
@@ -62,5 +63,11 @@ export interface FlowService {
   patch: (id: string, data: Partial<Flow>) => Promise<void>;
   getById: (id: string) => Promise<Flow | null>;
   listAll(): Promise<Flow[]>;
+  delete: (id: string) => Promise<void>;
+}
+
+export interface AuthProviderService {
+  listAll: (projectId: string) => Promise<AuthProvider[]>;
+  create: (data: Omit<AuthProvider, "id">) => Promise<AuthProvider>;
   delete: (id: string) => Promise<void>;
 }

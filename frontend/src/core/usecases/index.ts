@@ -1,16 +1,20 @@
+import { MockAuthProviderService } from "@/services/mock-auth-provider-service";
 import { MockCredentialService } from "@/services/mock-credential-service";
 import { MockFlowService } from "@/services/mock-flow-service";
 import { MockModelService } from "@/services/mock-model-service";
 import { MockProjectService } from "@/services/mock-project-service";
+import { CreateAuthProviderUsecase } from "./create-auth-provider";
 import { CreateCredentialUsecase } from "./create-credential";
 import { CreateFlowUsecase } from "./create-flow";
 import { CreateModelUsecase } from "./create-model";
 import { CreateProjectUsecase } from "./create-project";
+import { DeleteAuthProviderUsercase } from "./delete-auth-provider";
 import { DeleteCredentialUsecase } from "./delete-credential";
 import { DeleteFlowUsecase } from "./delete-flow";
 import { DeleteModelUsecase } from "./delete-model";
 import { GetCurrentProjectUsecase } from "./get-current-project";
 import { GetFlowUsecase } from "./get-flow";
+import { ListAuthProvidersUsecase } from "./list-auth-providers";
 import { ListCredentialsUsecase } from "./list-credentials";
 import { ListFlowsUsecase } from "./list-flows";
 import { ListModelUsecase } from "./list-models";
@@ -81,3 +85,18 @@ export const getFlowUsecase = new GetFlowUsecase(new MockFlowService());
 export const listFlowsUsecase = new ListFlowsUsecase(new MockFlowService());
 
 export const deleteFlowUsecase = new DeleteFlowUsecase(new MockFlowService());
+
+/**
+ * Auth Providers
+ */
+export const listAuthProvidersUsecase = new ListAuthProvidersUsecase(
+  new MockAuthProviderService(),
+);
+
+export const deleteAuthProviderUsecase = new DeleteAuthProviderUsercase(
+  new MockAuthProviderService(),
+);
+
+export const createAuthProviderUsecase = new CreateAuthProviderUsecase(
+  new MockAuthProviderService(),
+);
