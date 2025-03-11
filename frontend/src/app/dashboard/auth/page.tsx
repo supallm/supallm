@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/page-header";
 import { Spacer } from "@/components/spacer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { CodeBlock } from "@/components/ui/code-block";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getCurrentAuthProvider } from "@/core/store/auth-provider";
 import { deleteAuthProviderUsecase } from "@/core/usecases";
@@ -30,6 +31,16 @@ const PageSkeleton = () => {
     </div>
   );
 };
+
+const supabaseExample = `const { data } = await supabase.auth.getSession();
+const accessToken = data.session.access_token;
+
+supallm.authenticateWithSupabase(accessToken);
+
+supallm.run({
+  flow: "your-flow-id",  
+})
+`;
 
 const Page = () => {
   const currentProject = useCurrentProjectOrThrow();
@@ -136,6 +147,21 @@ const Page = () => {
                       width="full"
                       size="md"
                       value={`eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJanVxbWlycWtnZ3V2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA5ODk5MzUsImV4cCI6MjA1NjU2NTkzNX0.A42ENSTqP7JNjSri4YP0JKcPk1NIkyBWwI1DKlJ0VxA`}
+                    />
+                  </div>
+                </div>
+                <div className="py-4 px-6 flex flex-col justify-between gap-4 py-6">
+                  <div>
+                    <span className="text-lg font-medium flex items-center mt-0">
+                      How to use it
+                    </span>
+                  </div>
+                  <div className="shrink-0">
+                    <CodeBlock
+                      language="ts"
+                      filename="example.ts"
+                      highlightLines={[]}
+                      code={supabaseExample}
                     />
                   </div>
                 </div>
