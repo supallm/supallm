@@ -105,6 +105,7 @@ func New(
 		},
 	}
 
+	go router.Run()
 	return app, nil
 }
 

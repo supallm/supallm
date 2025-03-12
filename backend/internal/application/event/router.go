@@ -54,6 +54,7 @@ func CreateRouter(config Config) *EventRouter {
 	}
 
 	router.AddPlugin(plugin.SignalsHandler)
+	useMiddlewares(router, config.Logger)
 
 	internalPubSub := gochannel.NewGoChannel(
 		gochannel.Config{},
@@ -84,6 +85,7 @@ func CreateRouter(config Config) *EventRouter {
 		consumerGroupSubscriber,
 		func(msg *message.Message) error {
 			// call handler to store events here
+			slog.Info("received workflow event", "event", msg.Payload)
 			return nil
 		},
 	)
@@ -114,7 +116,7 @@ func CreateRouter(config Config) *EventRouter {
 	}
 }
 
-func (r *EventRouter) Run() error {
+func (r *EventRouter) Run() {
 	go func() {
 		err := r.fi.Run(context.Background())
 		if err != nil {
@@ -133,8 +135,6 @@ func (r *EventRouter) Run() error {
 
 	<-r.router.Running()
 	<-r.fi.Running()
-
-	return nil
 }
 
 func (r *EventRouter) Close() error {
@@ -145,7 +145,7 @@ func createSubscriber(config Config, consumerGroup string) (message.Subscriber, 
 	subscriber, err := redisstream.NewSubscriber(
 		redisstream.SubscriberConfig{
 			Client:        config.WorkflowsRedis,
-			Unmarshaller:  CustomMarshaller{},
+			Unmarshaller:  redisstream.DefaultMarshallerUnmarshaller{},
 			ConsumerGroup: consumerGroup,
 		},
 		config.Logger,

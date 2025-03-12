@@ -61,7 +61,7 @@ export class RunnerServer {
 
   private setupEventListeners(): void {
     this.executor.on(WorkflowEvents.WORKFLOW_STARTED, async (data) => {
-      await this.notifier.publishEvent({
+      await this.notifier.publishWorkflowEvent({
         type: NotifierEvent.WORKFLOW_STARTED,
         workflowId: data.workflowId,
         triggerId: data.triggerId,
@@ -71,7 +71,7 @@ export class RunnerServer {
     });
 
     this.executor.on(WorkflowEvents.WORKFLOW_COMPLETED, async (data) => {
-      await this.notifier.publishEvent({
+      await this.notifier.publishWorkflowEvent({
         type: NotifierEvent.WORKFLOW_COMPLETED,
         workflowId: data.workflowId,
         triggerId: data.triggerId,
@@ -81,7 +81,7 @@ export class RunnerServer {
     });
 
     this.executor.on(WorkflowEvents.WORKFLOW_FAILED, async (data) => {
-      await this.notifier.publishEvent({
+      await this.notifier.publishWorkflowEvent({
         type: NotifierEvent.WORKFLOW_FAILED,
         workflowId: data.workflowId,
         triggerId: data.triggerId,
@@ -91,7 +91,7 @@ export class RunnerServer {
     });
 
     this.executor.on(WorkflowEvents.NODE_STARTED, async (data) => {
-      await this.notifier.publishEvent({
+      await this.notifier.publishWorkflowEvent({
         type: NotifierEvent.NODE_STARTED,
         workflowId: data.workflowId,
         triggerId: data.triggerId,
@@ -104,23 +104,8 @@ export class RunnerServer {
       });
     });
 
-    this.executor.on(WorkflowEvents.NODE_STREAMING, async (data) => {
-      await this.notifier.publishEvent({
-        type: NotifierEvent.NODE_STREAMING,
-        workflowId: data.workflowId,
-        triggerId: data.triggerId,
-        sessionId: data.sessionId,
-        data: {
-          nodeId: data.nodeId,
-          nodeType: data.nodeType,
-          outputField: data.outputField,
-          data: data.data,
-        },
-      });
-    });
-
     this.executor.on(WorkflowEvents.NODE_COMPLETED, async (data) => {
-      await this.notifier.publishEvent({
+      await this.notifier.publishWorkflowEvent({
         type: NotifierEvent.NODE_COMPLETED,
         workflowId: data.workflowId,
         triggerId: data.triggerId,
@@ -134,7 +119,7 @@ export class RunnerServer {
     });
 
     this.executor.on(WorkflowEvents.NODE_FAILED, async (data) => {
-      await this.notifier.publishEvent({
+      await this.notifier.publishWorkflowEvent({
         type: NotifierEvent.NODE_FAILED,
         workflowId: data.workflowId,
         triggerId: data.triggerId,
@@ -143,6 +128,21 @@ export class RunnerServer {
           nodeId: data.nodeId,
           nodeType: data.nodeType,
           error: data.error,
+        },
+      });
+    });
+
+    this.executor.on(WorkflowEvents.NODE_RESULT, async (data) => {
+      await this.notifier.publishNodeResult({
+        type: NotifierEvent.NODE_STREAMING,
+        workflowId: data.workflowId,
+        triggerId: data.triggerId,
+        sessionId: data.sessionId,
+        data: {
+          nodeId: data.nodeId,
+          nodeType: data.nodeType,
+          outputField: data.outputField,
+          data: data.data,
         },
       });
     });

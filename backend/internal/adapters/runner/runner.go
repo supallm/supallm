@@ -2,6 +2,7 @@ package runner
 
 import (
 	"context"
+	"encoding/json"
 	"log/slog"
 
 	"github.com/ThreeDotsLabs/watermill/message"
@@ -32,7 +33,7 @@ func (s *Service) QueueWorkflow(
 		return err
 	}
 
-	queueMsg := event.WorkflowQueueMessage{
+	queueMsg := workflowQueueMessage{
 		WorkflowID: workflow.ID,
 		TriggerID:  triggerID,
 		SessionID:  uuid.New(),
@@ -60,4 +61,25 @@ func (s *Service) QueueWorkflow(
 
 	slog.Info("successfully published workflow queue message")
 	return nil
+}
+
+type workflowQueueMessage struct {
+	WorkflowID uuid.UUID       `json:"workflow_id"`
+	TriggerID  uuid.UUID       `json:"trigger_id"`
+	ProjectID  uuid.UUID       `json:"project_id"`
+	SessionID  uuid.UUID       `json:"session_id"`
+	Definition json.RawMessage `json:"definition"`
+	Inputs     map[string]any  `json:"inputs"`
+}
+
+func (q workflowQueueMessage) ToMessage() (*message.Message, error) {
+	payload, err := json.Marshal(q)
+	if err != nil {
+		return nil, err
+	}
+
+	msg := message.NewMessage(uuid.New().String(), payload)
+	event.SetCorrelationID(msg, q.TriggerID.String())
+
+	return msg, nil
 }

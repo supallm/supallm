@@ -4,8 +4,8 @@ import { logger } from "../../utils/logger";
 
 export class RedisQueueConsumer implements IQueueConsumer {
   private redis: Redis;
-  private readonly QUEUE_TOPIC = "workflows:queue";
-  private readonly CONSUMER_GROUP = "runner-group";
+  private readonly QUEUE_TOPIC = "workflows:downstream:run";
+  private readonly CONSUMER_GROUP = "runner-consumer-group";
   private readonly CONSUMER_NAME: string;
 
   constructor(redisUrl: string) {

@@ -31,56 +31,21 @@ CREATE TABLE IF NOT EXISTS workflows (
     CONSTRAINT workflows_name_project_unique UNIQUE (name, project_id)
 );
 
-CREATE TABLE IF NOT EXISTS sessions (
+CREATE TABLE IF NOT EXISTS workflow_events (
     id UUID PRIMARY KEY,
-    user_id VARCHAR(255) NOT NULL,
-    project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
-    active BOOLEAN DEFAULT TRUE,
-    last_activity_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS requests (
-    id UUID PRIMARY KEY,
-    session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
     workflow_id UUID NOT NULL REFERENCES workflows(id) ON DELETE CASCADE,
-    config JSONB DEFAULT '{}',
-    status VARCHAR(50) NOT NULL,
+    trigger_id VARCHAR(255) NOT NULL,
+    event_type VARCHAR(50) NOT NULL,
+    data JSONB DEFAULT '{}',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS responses (
-    id UUID PRIMARY KEY,
-    request_id UUID NOT NULL REFERENCES requests(id) ON DELETE CASCADE,
-    session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
-    content TEXT NOT NULL,
-    status VARCHAR(50) NOT NULL,
-    token_usage JSONB DEFAULT '{}',
-    started_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    completed_at TIMESTAMP WITH TIME ZONE
-);
-
-CREATE TABLE IF NOT EXISTS stream_chunks (
-    id UUID PRIMARY KEY,
-    response_id UUID NOT NULL REFERENCES responses(id) ON DELETE CASCADE,
-    index INTEGER NOT NULL,
-    content TEXT NOT NULL,
-    is_last BOOLEAN DEFAULT FALSE,
-    timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    delivered BOOLEAN DEFAULT FALSE
 );
 
 CREATE INDEX idx_projects_user_id ON projects(user_id);
 CREATE INDEX idx_credentials_project_id ON credentials(project_id);
 CREATE INDEX idx_workflows_project_id ON workflows(project_id);
-CREATE INDEX idx_sessions_project_id ON sessions(project_id);
-CREATE INDEX idx_sessions_user_id ON sessions(user_id);
-CREATE INDEX idx_requests_session_id ON requests(session_id);
-CREATE INDEX idx_requests_workflow_id ON requests(workflow_id);
-CREATE INDEX idx_responses_request_id ON responses(request_id);
-CREATE INDEX idx_responses_session_id ON responses(session_id);
-CREATE INDEX idx_stream_chunks_response_id ON stream_chunks(response_id);
+CREATE INDEX idx_workflow_events_workflow_id ON workflow_events(workflow_id);
+CREATE INDEX idx_workflow_events_trigger_id ON workflow_events(trigger_id);
 
 -- Trigger to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_timestamp()
@@ -102,16 +67,3 @@ FOR EACH ROW EXECUTE FUNCTION update_timestamp();
 CREATE TRIGGER update_workflows_timestamp
 BEFORE UPDATE ON workflows
 FOR EACH ROW EXECUTE FUNCTION update_timestamp();
-
--- Update last_activity_at when a new request is added to a session
-CREATE OR REPLACE FUNCTION update_session_activity()
-RETURNS TRIGGER AS $$
-BEGIN
-   UPDATE sessions SET last_activity_at = NOW() WHERE id = NEW.session_id;
-   RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER update_session_activity_on_request
-AFTER INSERT ON requests
-FOR EACH ROW EXECUTE FUNCTION update_session_activity();

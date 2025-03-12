@@ -3,11 +3,12 @@ export interface WorkflowEvent {
   workflowId: string;
   triggerId: string;
   sessionId: string;
-  data?: Record<string, any>;
+  data: Record<string, any>;
 }
 
 export interface INotifier {
   initialize(): Promise<void>;
-  publishEvent(event: WorkflowEvent): Promise<string>;
+  publishWorkflowEvent(event: WorkflowEvent): Promise<string[]>;
+  publishNodeResult(event: WorkflowEvent): Promise<string>;
   close(): Promise<void>;
 }

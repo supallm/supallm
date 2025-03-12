@@ -18,10 +18,8 @@ type ProjectRepository interface {
 	DeleteWorkflow(ctx context.Context, id uuid.UUID) error
 }
 
-// SessionRepository defines the interface for session persistence.
-type SessionRepository interface {
-	Create(ctx context.Context, session *model.Session) error
-	Retrieve(ctx context.Context, id uuid.UUID) (*model.Session, error)
-	Update(ctx context.Context, session *model.Session) error
-	Delete(ctx context.Context, id uuid.UUID) error
+// WorkflowEventRepository defines the interface for workflow event persistence.
+type WorkflowEventRepository interface {
+	Create(ctx context.Context, workflowEvent *model.WorkflowEvent) error
+	Retrieve(ctx context.Context, id uuid.UUID) (*model.WorkflowEvent, error)
 }

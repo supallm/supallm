@@ -240,7 +240,7 @@ export class WorkflowExecutor extends EventEmitter {
         context,
         {
           onNodeStream: async (nodeId, outputField, data) => {
-            this.emit(WorkflowEvents.NODE_STREAMING, {
+            this.emit(WorkflowEvents.NODE_RESULT, {
               workflowId: this.currentWorkflowId,
               triggerId: this.currentTriggerId,
               sessionId: this.currentSessionId,
@@ -307,11 +307,11 @@ export const WorkflowEvents = {
   WORKFLOW_STARTED: "workflow:started",
   WORKFLOW_COMPLETED: "workflow:completed",
   WORKFLOW_FAILED: "workflow:failed",
-
   NODE_STARTED: "node:started",
   NODE_COMPLETED: "node:completed",
   NODE_FAILED: "node:failed",
-  NODE_STREAMING: "node:streaming",
+
+  NODE_RESULT: "node:result",
 } as const;
 
 interface BaseEventData {
@@ -341,11 +341,6 @@ interface NodeStartedEvent extends BaseNodeEvent {
   inputs: Record<string, any>;
 }
 
-interface NodeStreamingEvent extends BaseNodeEvent {
-  outputField: string;
-  data: string;
-}
-
 interface NodeCompletedEvent extends BaseNodeEvent {
   output: any;
 }
@@ -354,12 +349,17 @@ interface NodeFailedEvent extends BaseNodeEvent {
   error: string;
 }
 
+interface NodeResultEvent extends BaseNodeEvent {
+  outputField: string;
+  data: string;
+}
+
 interface WorkflowExecutorEvents {
   [WorkflowEvents.WORKFLOW_STARTED]: (event: WorkflowStartedEvent) => void;
   [WorkflowEvents.WORKFLOW_COMPLETED]: (event: WorkflowCompletedEvent) => void;
   [WorkflowEvents.WORKFLOW_FAILED]: (event: WorkflowFailedEvent) => void;
   [WorkflowEvents.NODE_STARTED]: (event: NodeStartedEvent) => void;
-  [WorkflowEvents.NODE_STREAMING]: (event: NodeStreamingEvent) => void;
+  [WorkflowEvents.NODE_RESULT]: (event: NodeResultEvent) => void;
   [WorkflowEvents.NODE_COMPLETED]: (event: NodeCompletedEvent) => void;
   [WorkflowEvents.NODE_FAILED]: (event: NodeFailedEvent) => void;
 }
