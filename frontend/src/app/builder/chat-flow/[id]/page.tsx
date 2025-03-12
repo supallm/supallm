@@ -8,6 +8,7 @@ import { NodeType } from "@/components/builder/node-types";
 import openAIChatCompletionNode from "@/components/builder/nodes/chat/openai-chat-completion-node";
 import entrypointNode from "@/components/builder/nodes/fixed/entrypoint-node";
 import resultNode from "@/components/builder/nodes/fixed/result-node";
+import { TestFlowDialog } from "@/components/builder/test-flow-dialog/test-flow-dialog";
 import { Button } from "@/components/ui/button";
 import { FlowNode } from "@/core/entities/flow";
 import { EntrypointNodeData } from "@/core/entities/flow/flow-entrypoint";
@@ -179,6 +180,9 @@ const ChatFlowPage = () => {
         </Panel>
         <Panel position="top-right">
           <div className="space-x-2">
+            <TestFlowDialog data={entrypointNodeData} onChange={() => {}}>
+              <Button>Open test flow</Button>
+            </TestFlowDialog>
             <FLowCodeDialog
               flowId={currentFlow.id}
               entrypointNodeData={entrypointNodeData}
