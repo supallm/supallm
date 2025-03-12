@@ -56,7 +56,7 @@ func (j workflowSSEMarshaller) Marshal(_ context.Context, payload any) (watermil
 	}
 
 	return watermillHTTP.ServerSentEvent{
-		Event: "message",
+		Event: "data",
 		Data:  data,
 	}, nil
 }

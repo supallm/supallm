@@ -24,7 +24,7 @@ func NewServer(mux *server.Server, app *application.App) {
 		app:    app,
 	}
 
-	s.listenWorkflowTrigger()
+	s.listenWorkflowRan()
 	gen.RegisterHandlersWithOptions(mux.App, s, gen.FiberServerOptions{
 		BaseURL: "",
 		Middlewares: []gen.MiddlewareFunc{
@@ -33,11 +33,11 @@ func NewServer(mux *server.Server, app *application.App) {
 	})
 }
 
-func (s *Server) listenWorkflowTrigger() {
+func (s *Server) listenWorkflowRan() {
 	logger := watermill.NewSlogLogger(nil)
 	sseRouter, err := http.NewSSERouter(
 		http.SSERouterConfig{
-			UpstreamSubscriber: s.app.Subscriber,
+			UpstreamSubscriber: s.app.EventsSubscriber,
 			ErrorHandler:       http.DefaultErrorHandler,
 			Marshaler:          workflowSSEMarshaller{},
 		},
@@ -48,6 +48,6 @@ func (s *Server) listenWorkflowTrigger() {
 		os.Exit(1)
 	}
 
-	sseHandler := sseRouter.AddHandler(event.TopicWorkflowEventsOut, workflowSSEAdapter{})
+	sseHandler := sseRouter.AddHandler(event.InternalEventsTopic, workflowSSEAdapter{})
 	s.server.App.Get("/projects/:projectId/workflows/:workflowId/listen/:triggerId", adaptor.HTTPHandler(sseHandler))
 }

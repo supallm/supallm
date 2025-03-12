@@ -1,8 +1,6 @@
 package event
 
 import (
-	"log/slog"
-
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/google/uuid"
 )
@@ -19,8 +17,6 @@ func (m CustomMarshaller) Marshal(msg *message.Message) (map[string]interface{},
 func (m CustomMarshaller) Unmarshal(values map[string]interface{}) (*message.Message, error) {
 	var payload string
 	var metadata message.Metadata
-
-	slog.Info("unmarshalling message", "values", values)
 
 	msg := message.NewMessage(
 		uuid.New().String(),

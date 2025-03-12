@@ -50,9 +50,9 @@ func (s *Service) QueueWorkflow(
 	slog.Info("publishing workflow queue message",
 		"workflow_id", workflow.ID,
 		"trigger_id", triggerID,
-		"topic", event.TopicWorkflowQueue)
+		"topic", event.DownstreamWorkflowRunTopic)
 
-	err = s.publisher.Publish(event.TopicWorkflowQueue, msg)
+	err = s.publisher.Publish(event.DownstreamWorkflowRunTopic, msg)
 	if err != nil {
 		slog.Error("failed to publish message", "error", err)
 		return err

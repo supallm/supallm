@@ -8,11 +8,6 @@ import (
 )
 
 const (
-	// Topics
-	TopicWorkflowQueue     = "workflows:queue"
-	TopicWorkflowEventsIn  = "workflow.events.in"
-	TopicWorkflowEventsOut = "workflow.events.out"
-
 	// Event types
 	TypeWorkflowStarted   = "WORKFLOW_STARTED"
 	TypeWorkflowCompleted = "WORKFLOW_COMPLETED"
