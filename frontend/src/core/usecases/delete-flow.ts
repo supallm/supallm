@@ -4,8 +4,8 @@ import { deleteFlow } from "../store/flow";
 export class DeleteFlowUsecase {
   constructor(private readonly flowService: FlowService) {}
 
-  async execute(id: string) {
-    await this.flowService.delete(id);
+  async execute(projectId: string, id: string) {
+    await this.flowService.delete(projectId, id);
 
     deleteFlow(id);
   }

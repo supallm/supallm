@@ -61,10 +61,14 @@ export interface FlowService {
     nodes: FlowNode[];
     edges: FlowEdge[];
   }) => Promise<Flow>;
-  patch: (id: string, data: Partial<Flow>) => Promise<void>;
-  getById: (id: string) => Promise<Flow | null>;
-  listAll(): Promise<Flow[]>;
-  delete: (id: string) => Promise<void>;
+  patch: (
+    projectId: string,
+    id: string,
+    data: Pick<Flow, "name" | "edges" | "nodes">,
+  ) => Promise<void>;
+  getById: (projectId: string, id: string) => Promise<Flow | null>;
+  listAll(projectId: string): Promise<Flow[]>;
+  delete: (projectId: string, id: string) => Promise<void>;
 }
 
 export interface AuthProviderService {
