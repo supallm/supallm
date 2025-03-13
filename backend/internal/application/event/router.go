@@ -145,7 +145,7 @@ func createSubscriber(config Config, consumerGroup string) (message.Subscriber, 
 	subscriber, err := redisstream.NewSubscriber(
 		redisstream.SubscriberConfig{
 			Client:        config.WorkflowsRedis,
-			Unmarshaller:  WorkflowEventMarshaller{},
+			Unmarshaller:  redisstream.DefaultMarshallerUnmarshaller{},
 			ConsumerGroup: consumerGroup,
 		},
 		config.Logger,
@@ -160,7 +160,7 @@ func createPublisher(config Config, defaultMaxlen int64) (message.Publisher, err
 	publisher, err := redisstream.NewPublisher(
 		redisstream.PublisherConfig{
 			Client:        config.WorkflowsRedis,
-			Marshaller:    WorkflowEventMarshaller{},
+			Marshaller:    redisstream.DefaultMarshallerUnmarshaller{},
 			DefaultMaxlen: defaultMaxlen,
 		},
 		config.Logger,
