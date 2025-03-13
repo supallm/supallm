@@ -1,11 +1,11 @@
 meta {
-  name: Get a model by slug
+  name: Get a workflow
   type: http
   seq: 3
 }
 
 get {
-  url: {{baseURL}}/projects/{{projectId}}/models/{{modelSlug}}
+  url: {{baseURL}}/projects/{{projectId}}/workflows/{{workflowId}}
   body: none
   auth: bearer
 }

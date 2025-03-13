@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/clerk/clerk-sdk-go/v2"
-	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 )
 

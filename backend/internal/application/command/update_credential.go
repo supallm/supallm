@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/google/uuid"
-	repo "github.com/supallm/core/internal/adapters/project"
+	repo "github.com/supallm/core/internal/adapters/errors"
 	"github.com/supallm/core/internal/application/domain/repository"
 	"github.com/supallm/core/internal/pkg/errs"
 	"github.com/supallm/core/internal/pkg/secret"
@@ -40,7 +40,7 @@ func NewUpdateCredentialHandler(
 func (h UpdateCredentialHandler) Handle(ctx context.Context, cmd UpdateCredentialCommand) error {
 	project, err := h.projectRepo.Retrieve(ctx, cmd.ProjectID)
 	if err != nil {
-		if errors.Is(err, repo.ErrProjectNotFound) {
+		if errors.Is(err, repo.ErrNotFound) {
 			return errs.NotFoundError{Resource: "project", ID: cmd.ProjectID}
 		}
 		return errs.InternalError{Err: err}

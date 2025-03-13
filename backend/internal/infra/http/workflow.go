@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/supallm/core/internal/application/command"
 	"github.com/supallm/core/internal/application/query"
@@ -13,8 +12,8 @@ import (
 )
 
 func (s *Server) CreateWorkflow(w http.ResponseWriter, r *http.Request, projectID gen.UUID) {
-	var req gen.CreateWorkflowRequest
-	if err := s.server.ParseBody(r, &req); err != nil {
+	req := new(gen.CreateWorkflowRequest)
+	if err := s.server.ParseBody(r, req); err != nil {
 		s.server.RespondErr(w, r, err)
 		return
 	}
@@ -37,7 +36,9 @@ func (s *Server) CreateWorkflow(w http.ResponseWriter, r *http.Request, projectI
 		return
 	}
 
-	s.server.RespondWithContentLocation(w, r, fiber.StatusCreated, "/projects/%s/workflows/%s", projectID, id)
+	s.server.Respond(w, r, http.StatusCreated, idResponse{
+		ID: id,
+	})
 }
 
 func (s *Server) GetWorkflow(w http.ResponseWriter, r *http.Request, projectID gen.UUID, workflowID string) {
@@ -50,7 +51,7 @@ func (s *Server) GetWorkflow(w http.ResponseWriter, r *http.Request, projectID g
 		return
 	}
 
-	s.server.Respond(w, r, fiber.StatusOK, queryWorkflowToDTO(workflow))
+	s.server.Respond(w, r, http.StatusOK, queryWorkflowToDTO(workflow))
 }
 
 func (s *Server) UpdateWorkflow(w http.ResponseWriter, r *http.Request, projectID gen.UUID, workflowID string) {
@@ -77,7 +78,7 @@ func (s *Server) UpdateWorkflow(w http.ResponseWriter, r *http.Request, projectI
 		return
 	}
 
-	s.server.RespondWithContentLocation(w, r, fiber.StatusNoContent, "/projects/%s/workflows/%s", projectID, workflowID)
+	s.server.RespondWithContentLocation(w, r, http.StatusNoContent, "/projects/%s/workflows/%s", projectID, workflowID)
 }
 
 func (s *Server) DeleteWorkflow(w http.ResponseWriter, r *http.Request, projectID gen.UUID, workflowID gen.UUID) {
@@ -90,7 +91,7 @@ func (s *Server) DeleteWorkflow(w http.ResponseWriter, r *http.Request, projectI
 		return
 	}
 
-	s.server.Respond(w, r, fiber.StatusNoContent, nil)
+	s.server.Respond(w, r, http.StatusNoContent, nil)
 }
 
 func (s *Server) ListWorkflows(w http.ResponseWriter, r *http.Request, projectID gen.UUID) {
@@ -102,7 +103,7 @@ func (s *Server) ListWorkflows(w http.ResponseWriter, r *http.Request, projectID
 		return
 	}
 
-	s.server.Respond(w, r, fiber.StatusOK, queryWorkflowsToDTOs(workflows))
+	s.server.Respond(w, r, http.StatusOK, queryWorkflowsToDTOs(workflows))
 }
 
 func (s *Server) TriggerWorkflow(w http.ResponseWriter, r *http.Request, projectID gen.UUID, workflowID gen.UUID) {
@@ -124,7 +125,7 @@ func (s *Server) TriggerWorkflow(w http.ResponseWriter, r *http.Request, project
 		return
 	}
 
-	s.server.Respond(w, r, fiber.StatusAccepted, map[string]any{
-		"triggerId": triggerID,
+	s.server.Respond(w, r, http.StatusAccepted, idResponse{
+		ID: triggerID,
 	})
 }

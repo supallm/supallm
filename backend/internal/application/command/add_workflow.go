@@ -3,10 +3,12 @@ package command
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"os"
 
 	"github.com/google/uuid"
+	repo "github.com/supallm/core/internal/adapters/errors"
 	"github.com/supallm/core/internal/application/domain/repository"
 	"github.com/supallm/core/internal/pkg/errs"
 )
@@ -36,12 +38,12 @@ func NewAddWorkflowHandler(
 }
 
 func (h AddWorkflowHandler) Handle(ctx context.Context, cmd AddWorkflowCommand) error {
-	project, err := h.projectRepo.Retrieve(ctx, cmd.ProjectID)
+	p, err := h.projectRepo.Retrieve(ctx, cmd.ProjectID)
 	if err != nil {
 		return errs.NotFoundError{Resource: "project", ID: cmd.ProjectID}
 	}
 
-	err = project.AddWorkflow(
+	err = p.AddWorkflow(
 		cmd.WorkflowID,
 		cmd.Name,
 		cmd.BuilderFlow,
@@ -49,5 +51,15 @@ func (h AddWorkflowHandler) Handle(ctx context.Context, cmd AddWorkflowCommand) 
 	if err != nil {
 		return errs.InvalidError{Reason: err.Error()}
 	}
-	return h.projectRepo.Update(ctx, project)
+	err = h.projectRepo.Update(ctx, p)
+	if err != nil {
+		if errors.Is(err, repo.ErrNotFound) {
+			return errs.NotFoundError{Resource: "project", ID: cmd.ProjectID}
+		}
+		if errors.Is(err, repo.ErrDuplicate) {
+			return errs.DuplicateError{Resource: "workflow", ID: cmd.WorkflowID}
+		}
+		return errs.InternalError{Err: err}
+	}
+	return nil
 }

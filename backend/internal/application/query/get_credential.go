@@ -2,10 +2,13 @@ package query
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"os"
 
 	"github.com/google/uuid"
+	reader "github.com/supallm/core/internal/adapters/errors"
+	"github.com/supallm/core/internal/pkg/errs"
 )
 
 type GetCredentialQuery struct {
@@ -31,7 +34,10 @@ func NewGetCredentialHandler(projectReader ProjectReader) GetCredentialHandler {
 func (h GetCredentialHandler) Handle(ctx context.Context, query GetCredentialQuery) (Credential, error) {
 	credential, err := h.projectReader.ReadCredential(ctx, query.ProjectID, query.CredentialID)
 	if err != nil {
-		return Credential{}, err
+		if errors.Is(err, reader.ErrNotFound) {
+			return Credential{}, errs.NotFoundError{Resource: "credential", ID: query.CredentialID, Err: err}
+		}
+		return Credential{}, errs.InternalError{Err: err}
 	}
 
 	return credential, nil

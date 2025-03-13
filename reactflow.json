@@ -1,0 +1,151 @@
+{
+  "id": "a36caf46-6d77-40d2-94dc-4a4aabf04a9b",
+  "name": "content-creation",
+  "projectId": "62b9bfe7-7615-4930-8278-4234ac2e3ec0",
+  "nodes": [
+    {
+      "id": "entrypoint-node",
+      "type": "entrypoint",
+      "position": {
+        "x": 100,
+        "y": 200
+      },
+      "data": {
+        "handles": [
+          {
+            "type": "text",
+            "id": "text__prompt",
+            "label": "prompt"
+          }
+        ]
+      },
+      "deletable": false,
+      "zIndex": 1,
+      "measured": {
+        "width": 270,
+        "height": 229
+      }
+    },
+    {
+      "id": "result-node",
+      "type": "result",
+      "position": {
+        "x": 1741,
+        "y": 242
+      },
+      "data": {
+        "handles": [
+          {
+            "type": "text-stream",
+            "id": "text-stream__resultStream",
+            "label": "resultStream"
+          },
+          {
+            "type": "text",
+            "label": "result",
+            "id": "text__result"
+          },
+          {
+            "type": "text-stream",
+            "label": "idea",
+            "id": "text-stream__idea"
+          }
+        ]
+      },
+      "deletable": false,
+      "zIndex": 1,
+      "measured": {
+        "width": 270,
+        "height": 328
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "e4fd228c-08a5-4075-a134-9ea6772ef80a",
+      "type": "chat-openai",
+      "data": {
+        "credentialId": "0460006a-0747-4f22-ba0a-314be5193009",
+        "providerType": "openai",
+        "model": "gpt-4o",
+        "temperature": 1,
+        "maxCompletionTokens": null,
+        "developerMessage": "Lorsqu'on te demande des idées de contenu, utilise le {{format 4A}} et propose des idées originales adaptées et engageantes :\n\nActionnable\n\n- Conseils\n- Outils\n- Astuces\n- Guides ultimes\n- Curation (les meilleurs livres/podcasts/fils de discussion)\n\nAnalytique (voici une décomposition)\n\n- Tendances\n- Chiffres\n- Raisons\n- Exemples\n- Démontages\n\nAspirationnelle (oui, vous pouvez)\n(inspirer votre public cible avec des histoires sur vous-même (authenticité, relation) ou sur votre client (crédibilité) avec lequel il peut s'identifier. Ces contenus aspiratoires parlent des frustrations, des rêves, des objectifs, des erreurs, des regrets, du FOMO du public cible).\n\n- Leçons\n- Erreurs\n- Réflexions\n- Histoires personnelles\n- Histoires de croissance\n- Traits sous-estimés\n- Conseils à son ancien moi\n\nAnthropologique (voici pourquoi)\n(expliquer à votre public cible comment il peut surmonter ses erreurs et ses difficultés. Aidez-les ou faites-les se sentir spéciaux grâce à une analyse ou à des histoires)\n\n- Peurs\n- Échecs\n- Luttes\n- Paradoxes\n- Observations\n- Comparaisons\n- Pourquoi les autres ont tort\n- Pourquoi vous avez été induit en erreur\n\nAdapte chaque idée aux 3 étapes du funnel : tofu, mofu, bofu\nÉcris chaque idée pour créer de l'engagement et une curiosity loop, avec ce plan :\n- Accroche: \n- Plan:\n- CTA:",
+        "imageResolution": "auto",
+        "responseFormat": {
+          "type": "text"
+        },
+        "outputMode": "text-stream"
+      },
+      "position": {
+        "x": 653.5,
+        "y": 166.875
+      },
+      "zIndex": 3,
+      "measured": {
+        "width": 270,
+        "height": 764
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "60c7bd2e-f5e6-4949-b648-591e262d54ea",
+      "type": "chat-openai",
+      "data": {
+        "credentialId": "0460006a-0747-4f22-ba0a-314be5193009",
+        "providerType": "openai",
+        "model": "gpt-4o-mini",
+        "temperature": 1,
+        "maxCompletionTokens": null,
+        "developerMessage": "",
+        "imageResolution": "auto",
+        "responseFormat": {
+          "type": "text"
+        },
+        "outputMode": "text-stream"
+      },
+      "position": {
+        "x": 1137.5,
+        "y": 131.875
+      },
+      "zIndex": 4,
+      "measured": {
+        "width": 270,
+        "height": 764
+      },
+      "selected": false,
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "source": "e4fd228c-08a5-4075-a134-9ea6772ef80a",
+      "sourceHandle": "text__prompt",
+      "target": "entrypoint-node",
+      "targetHandle": "text__prompt",
+      "id": "xy-edge__e4fd228c-08a5-4075-a134-9ea6772ef80atext__prompt-entrypoint-nodetext__prompt"
+    },
+    {
+      "source": "60c7bd2e-f5e6-4949-b648-591e262d54ea",
+      "sourceHandle": "text__prompt",
+      "target": "e4fd228c-08a5-4075-a134-9ea6772ef80a",
+      "targetHandle": "text__response",
+      "id": "xy-edge__60c7bd2e-f5e6-4949-b648-591e262d54eatext__prompt-e4fd228c-08a5-4075-a134-9ea6772ef80atext__response"
+    },
+    {
+      "source": "result-node",
+      "sourceHandle": "text-stream__resultStream",
+      "target": "60c7bd2e-f5e6-4949-b648-591e262d54ea",
+      "targetHandle": "text-stream__responseStream",
+      "id": "xy-edge__result-nodetext-stream__resultStream-60c7bd2e-f5e6-4949-b648-591e262d54eatext-stream__responseStream"
+    },
+    {
+      "source": "result-node",
+      "sourceHandle": "text-stream__idea",
+      "target": "e4fd228c-08a5-4075-a134-9ea6772ef80a",
+      "targetHandle": "text-stream__responseStream",
+      "id": "xy-edge__result-nodetext-stream__idea-e4fd228c-08a5-4075-a134-9ea6772ef80atext-stream__responseStream"
+    }
+  ]
+}

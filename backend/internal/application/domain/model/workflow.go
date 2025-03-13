@@ -2,9 +2,9 @@ package model
 
 import (
 	"encoding/json"
-	"errors"
 
 	"github.com/google/uuid"
+	"github.com/supallm/core/internal/pkg/errs"
 )
 
 type WorkflowStatus string
@@ -142,7 +142,7 @@ func (p *Project) AddWorkflow(id uuid.UUID, name string, builderFlow json.RawMes
 func (p *Project) UpdateWorkflowName(id uuid.UUID, name string) error {
 	w, ok := p.Workflows[id]
 	if !ok {
-		return errors.New("workflow not found")
+		return errs.NotFoundError{Resource: "workflow", ID: id}
 	}
 	w.Name = name
 	p.Workflows[id] = w
@@ -152,7 +152,7 @@ func (p *Project) UpdateWorkflowName(id uuid.UUID, name string) error {
 func (p *Project) UpdateWorkflowBuilderFlow(id uuid.UUID, builderFlow json.RawMessage) error {
 	w, ok := p.Workflows[id]
 	if !ok {
-		return errors.New("workflow not found")
+		return errs.NotFoundError{Resource: "workflow", ID: id}
 	}
 	if err := w.SetBuilderFlow(builderFlow); err != nil {
 		return err
@@ -164,7 +164,7 @@ func (p *Project) UpdateWorkflowBuilderFlow(id uuid.UUID, builderFlow json.RawMe
 func (p *Project) GetWorkflow(id uuid.UUID) (*Workflow, error) {
 	w, ok := p.Workflows[id]
 	if !ok {
-		return nil, errors.New("workflow not found")
+		return nil, errs.NotFoundError{Resource: "workflow", ID: id}
 	}
 	return w, nil
 }
@@ -172,7 +172,7 @@ func (p *Project) GetWorkflow(id uuid.UUID) (*Workflow, error) {
 func (w *Workflow) SetBuilderFlow(builderFlowJSON json.RawMessage) error {
 	var builderFlow BuilderFlow
 	if err := json.Unmarshal(builderFlowJSON, &builderFlow); err != nil {
-		return err
+		return errs.InvalidError{Reason: "unable to unmarshal builder flow", Err: err}
 	}
 	w.BuilderFlow = builderFlow
 	return nil

@@ -2,10 +2,12 @@ package command
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"os"
 
 	"github.com/google/uuid"
+	repo "github.com/supallm/core/internal/adapters/errors"
 	"github.com/supallm/core/internal/application/domain/model"
 	"github.com/supallm/core/internal/application/domain/repository"
 	"github.com/supallm/core/internal/pkg/errs"
@@ -48,5 +50,16 @@ func (h AddCredentialHandler) Handle(ctx context.Context, cmd AddCredentialComma
 		return errs.InvalidError{Reason: err.Error()}
 	}
 
-	return h.projectRepo.Update(ctx, project)
+	err = h.projectRepo.Update(ctx, project)
+	if err != nil {
+		if errors.Is(err, repo.ErrNotFound) {
+			return errs.NotFoundError{Resource: "project", ID: cmd.ProjectID, Err: err}
+		}
+		if errors.Is(err, repo.ErrDuplicate) {
+			return errs.DuplicateError{Resource: "credential", ID: cmd.ID, Err: err}
+		}
+		return errs.InternalError{Err: err}
+	}
+
+	return nil
 }

@@ -103,8 +103,8 @@ type UpdateAuthRequestProvider string
 
 // UpdateCredentialRequest defines model for UpdateCredentialRequest.
 type UpdateCredentialRequest struct {
-	ApiKey string `json:"apiKey"`
-	Name   string `json:"name"`
+	ApiKey *string `json:"apiKey,omitempty"`
+	Name   string  `json:"name"`
 }
 
 // UpdateProjectRequest defines model for UpdateProjectRequest.

@@ -27,7 +27,7 @@ func (s *Service) QueueWorkflow(
 	workflow *model.Workflow,
 	inputs map[string]any,
 ) error {
-	definitionJSON, err := workflow.GetRunnerFlowJSON()
+	definitionJSON, err := getRunnerConfig()
 	if err != nil {
 		slog.Error("failed to get runner flow JSON", "error", err)
 		return err

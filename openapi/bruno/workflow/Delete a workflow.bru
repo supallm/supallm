@@ -1,11 +1,11 @@
 meta {
-  name: Delete a model
+  name: Delete a workflow
   type: http
   seq: 5
 }
 
 delete {
-  url: {{baseURL}}/projects/{{projectId}}/models/{{modeSlug}}
+  url: {{baseURL}}/projects/{{projectId}}/workflows/{{workflowId}}
   body: none
   auth: bearer
 }

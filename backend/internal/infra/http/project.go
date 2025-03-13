@@ -3,7 +3,6 @@ package http
 import (
 	"net/http"
 
-	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/supallm/core/internal/application/command"
 	"github.com/supallm/core/internal/application/domain/model"
@@ -29,7 +28,9 @@ func (s *Server) CreateProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.server.RespondWithContentLocation(w, r, fiber.StatusCreated, "/projects/%s", projectID.String())
+	s.server.Respond(w, r, http.StatusCreated, idResponse{
+		ID: projectID,
+	})
 }
 
 func (s *Server) GetProject(w http.ResponseWriter, r *http.Request, projectID gen.UUID) {
@@ -41,7 +42,7 @@ func (s *Server) GetProject(w http.ResponseWriter, r *http.Request, projectID ge
 		return
 	}
 
-	s.server.Respond(w, r, fiber.StatusOK, queryProjectToDTO(project))
+	s.server.Respond(w, r, http.StatusOK, queryProjectToDTO(project))
 }
 
 func (s *Server) UpdateProject(w http.ResponseWriter, r *http.Request, projectID gen.UUID) {
@@ -60,7 +61,7 @@ func (s *Server) UpdateProject(w http.ResponseWriter, r *http.Request, projectID
 		return
 	}
 
-	s.server.Respond(w, r, fiber.StatusOK, nil)
+	s.server.RespondWithContentLocation(w, r, http.StatusNoContent, "/projects/%s", projectID)
 }
 
 func (s *Server) UpdateAuth(w http.ResponseWriter, r *http.Request, projectID gen.UUID) {
@@ -80,11 +81,11 @@ func (s *Server) UpdateAuth(w http.ResponseWriter, r *http.Request, projectID ge
 		return
 	}
 
-	s.server.RespondWithContentLocation(w, r, fiber.StatusNoContent, "/projects/%s/auth", projectID)
+	s.server.RespondWithContentLocation(w, r, http.StatusNoContent, "/projects/%s/auth", projectID)
 }
 
 func (s *Server) DeleteProject(w http.ResponseWriter, r *http.Request, _ gen.UUID) {
-	s.server.Respond(w, r, fiber.StatusOK, nil)
+	s.server.Respond(w, r, http.StatusOK, nil)
 }
 
 func (s *Server) ListProjects(w http.ResponseWriter, r *http.Request) {
@@ -96,5 +97,5 @@ func (s *Server) ListProjects(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.server.Respond(w, r, fiber.StatusOK, queryProjectsToDTOs(projects))
+	s.server.Respond(w, r, http.StatusOK, queryProjectsToDTOs(projects))
 }

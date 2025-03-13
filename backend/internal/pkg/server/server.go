@@ -87,6 +87,7 @@ func (s *Server) Respond(w http.ResponseWriter, _ *http.Request, status int, dat
 
 func (s *Server) RespondErr(w http.ResponseWriter, r *http.Request, err error) {
 	if err == nil {
+		s.Respond(w, r, http.StatusOK, nil)
 		return
 	}
 

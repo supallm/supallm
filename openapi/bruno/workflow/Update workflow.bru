@@ -1,11 +1,11 @@
 meta {
-  name: Create a workflow for a project
+  name: Update workflow
   type: http
-  seq: 2
+  seq: 4
 }
 
-post {
-  url: {{baseURL}}/projects/{{projectId}}/workflows
+put {
+  url: {{baseURL}}/projects/{{projectId}}/workflows/{{workflowId}}
   body: json
   auth: bearer
 }
@@ -16,7 +16,7 @@ auth:bearer {
 
 body:json {
   {
-    "name": "gpt 4o bazznker",
+    "name": "gpt 4o bazznaaaaaaaaker",
     "builderFlow": {
       "id": "a36caf46-6d77-40d2-94dc-4a4aabf04a9b",
       "name": "content-creation",
@@ -169,8 +169,4 @@ body:json {
       ]
     }
   }
-}
-
-tests {
-  bru.setEnvVar("workflowId", res.body.id);
 }

@@ -3,7 +3,6 @@ package http
 import (
 	"net/http"
 
-	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/supallm/core/internal/application/command"
 	"github.com/supallm/core/internal/application/domain/model"
@@ -13,8 +12,8 @@ import (
 )
 
 func (s *Server) CreateCredential(w http.ResponseWriter, r *http.Request, projectID gen.UUID) {
-	var req gen.CreateCredentialRequest
-	if err := s.server.ParseBody(r, &req); err != nil {
+	req := new(gen.CreateCredentialRequest)
+	if err := s.server.ParseBody(r, req); err != nil {
 		s.server.RespondErr(w, r, err)
 		return
 	}
@@ -32,7 +31,9 @@ func (s *Server) CreateCredential(w http.ResponseWriter, r *http.Request, projec
 		return
 	}
 
-	s.server.RespondWithContentLocation(w, r, fiber.StatusCreated, "/projects/%s/credentials/%s", projectID, id)
+	s.server.Respond(w, r, http.StatusCreated, idResponse{
+		ID: id,
+	})
 }
 
 func (s *Server) GetCredential(w http.ResponseWriter, r *http.Request, projectID gen.UUID, credentialID gen.UUID) {
@@ -45,28 +46,33 @@ func (s *Server) GetCredential(w http.ResponseWriter, r *http.Request, projectID
 		return
 	}
 
-	s.server.Respond(w, r, fiber.StatusOK, queryCredentialToDTO(credential))
+	s.server.Respond(w, r, http.StatusOK, queryCredentialToDTO(credential))
 }
 
 func (s *Server) UpdateCredential(w http.ResponseWriter, r *http.Request, projectID gen.UUID, credentialID gen.UUID) {
-	var req gen.UpdateCredentialRequest
-	if err := s.server.ParseBody(r, &req); err != nil {
+	req := new(gen.UpdateCredentialRequest)
+	if err := s.server.ParseBody(r, req); err != nil {
 		s.server.RespondErr(w, r, err)
 		return
+	}
+
+	apiKey := ""
+	if req.ApiKey != nil {
+		apiKey = *req.ApiKey
 	}
 
 	err := s.app.Commands.UpdateCredential.Handle(r.Context(), command.UpdateCredentialCommand{
 		ID:        credentialID,
 		ProjectID: projectID,
 		Name:      req.Name,
-		APIKey:    secret.APIKey(req.ApiKey),
+		APIKey:    secret.APIKey(apiKey),
 	})
 	if err != nil {
 		s.server.RespondErr(w, r, err)
 		return
 	}
 
-	s.server.RespondWithContentLocation(w, r, fiber.StatusOK, "/projects/%s/credentials/%s", projectID, credentialID)
+	s.server.RespondWithContentLocation(w, r, http.StatusOK, "/projects/%s/credentials/%s", projectID, credentialID)
 }
 
 func (s *Server) DeleteCredential(w http.ResponseWriter, r *http.Request, _ gen.UUID, credentialID gen.UUID) {
@@ -77,7 +83,7 @@ func (s *Server) DeleteCredential(w http.ResponseWriter, r *http.Request, _ gen.
 		s.server.RespondErr(w, r, err)
 		return
 	}
-	s.server.Respond(w, r, fiber.StatusNoContent, nil)
+	s.server.Respond(w, r, http.StatusNoContent, nil)
 }
 
 func (s *Server) ListCredentials(w http.ResponseWriter, r *http.Request, projectID gen.UUID) {
@@ -88,5 +94,5 @@ func (s *Server) ListCredentials(w http.ResponseWriter, r *http.Request, project
 		s.server.RespondErr(w, r, err)
 		return
 	}
-	s.server.Respond(w, r, fiber.StatusOK, queryCredentialsToDTOs(credentials))
+	s.server.Respond(w, r, http.StatusOK, queryCredentialsToDTOs(credentials))
 }

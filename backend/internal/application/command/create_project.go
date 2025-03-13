@@ -2,10 +2,12 @@ package command
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"os"
 
 	"github.com/google/uuid"
+	repo "github.com/supallm/core/internal/adapters/errors"
 	"github.com/supallm/core/internal/application/domain/model"
 	"github.com/supallm/core/internal/application/domain/repository"
 	"github.com/supallm/core/internal/pkg/errs"
@@ -40,5 +42,13 @@ func (h CreateProjectHandler) Handle(ctx context.Context, cmd CreateProjectComma
 		return errs.InvalidError{Reason: err.Error()}
 	}
 
-	return h.projectRepo.Create(ctx, project)
+	err = h.projectRepo.Create(ctx, project)
+	if err != nil {
+		if errors.Is(err, repo.ErrDuplicate) {
+			return errs.DuplicateError{Resource: "project", ID: cmd.ID, Err: err}
+		}
+		return errs.InternalError{Err: err}
+	}
+
+	return nil
 }

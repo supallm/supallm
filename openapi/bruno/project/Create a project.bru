@@ -16,13 +16,10 @@ auth:bearer {
 
 body:json {
   {
-    "name": "test"
+    "name": "tes222t"
   }
 }
 
 tests {
-  let cl = res.getHeader("content-location")
-  let part = cl.split("/")
-  let projectId = part[2]
-  bru.setVar("projectId", projectId)
+  bru.setVar("projectId", res.body.id)
 }

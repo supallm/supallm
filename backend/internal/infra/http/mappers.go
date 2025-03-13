@@ -1,13 +1,14 @@
 package http
 
 import (
+	"github.com/google/uuid"
 	"github.com/supallm/core/internal/application/query"
 	"github.com/supallm/core/internal/infra/http/gen"
 )
 
-// type triggerInputs struct {
-// 	Inputs map[string]any `json:"inputs"`
-// }
+type idResponse struct {
+	ID uuid.UUID `json:"id"`
+}
 
 func queryCredentialToDTO(credential query.Credential) gen.Credential {
 	return gen.Credential{

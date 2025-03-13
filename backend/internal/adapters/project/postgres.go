@@ -3,11 +3,15 @@ package project
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
+	adapterrors "github.com/supallm/core/internal/adapters/errors"
 	"github.com/supallm/core/internal/application/domain/model"
 	"github.com/supallm/core/internal/application/query"
 )
@@ -50,6 +54,28 @@ func (r Repository) withTx(ctx context.Context, fn func(*Queries) error) error {
 	isCommitted = true
 
 	return nil
+}
+
+func (r Repository) errorDecoder(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		return fmt.Errorf("%w: %v", adapterrors.ErrNotFound, err.Error())
+	}
+
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		switch pgErr.Code {
+		case "23505", "23514":
+			return fmt.Errorf("%w: %v", adapterrors.ErrDuplicate, err.Error())
+		case "23503", "23502", "22P02", "42P01", "42703":
+			return fmt.Errorf("%w: %v", adapterrors.ErrInvalid, err.Error())
+		}
+	}
+
+	return err
 }
 
 func (r Repository) Create(ctx context.Context, project *model.Project) error {
@@ -184,13 +210,13 @@ func (r Repository) updateWorkflows(ctx context.Context, q *Queries, project *mo
 
 		builderFlow, err := json.Marshal(workflow.BuilderFlow)
 		if err != nil {
-			return r.errorDecoder(err)
+			return fmt.Errorf("unable to marshal builder flow: %w", err)
 		}
 
-		runnerFlow, err := json.Marshal(workflow.RunnerFlow)
-		if err != nil {
-			return r.errorDecoder(err)
-		}
+		// runnerFlow, err := json.Marshal(workflow.RunnerFlow)
+		// if err != nil {
+		// 	return r.errorDecoder(err)
+		// }
 
 		err = q.upsertWorkflow(ctx, upsertWorkflowParams{
 			ID:          workflow.ID,
@@ -198,7 +224,7 @@ func (r Repository) updateWorkflows(ctx context.Context, q *Queries, project *mo
 			Name:        workflow.Name,
 			Status:      workflow.Status.String(),
 			BuilderFlow: builderFlow,
-			RunnerFlow:  runnerFlow,
+			RunnerFlow:  nil,
 		})
 		if err != nil {
 			return r.errorDecoder(err)
@@ -247,7 +273,7 @@ func (r Repository) ReadCredential(
 ) (query.Credential, error) {
 	credential, err := r.queries.credentialById(ctx, credentialID)
 	if err != nil {
-		return query.Credential{}, err
+		return query.Credential{}, r.errorDecoder(err)
 	}
 	return credential.query(), nil
 }

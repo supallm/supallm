@@ -1,0 +1,21 @@
+meta {
+  name: List all workflows of a project
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseURL}}/projects/{{projectId}}/workflows
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+tests {
+  let jsonData = res.getBody();
+  if(!jsonData[0]) return
+  bru.setEnvVar("workflowId", jsonData[0].id);
+}

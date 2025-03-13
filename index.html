@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        #events {
+            margin: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+        }
+
+        #events div {
+            margin-bottom: 5px;
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>SSE POST Test</h1>
+</body>
+
+<script>
+    // SSE workflow test script
+    document.addEventListener('DOMContentLoaded', function () {
+        const projectId = '2953be5d-fcbc-4c2d-ad4c-66abd99e91a6';
+        const workflowId = '9b293002-99fa-4430-8042-af4028aeac12';
+        const triggerUrl = `http://localhost:3001/projects/${projectId}/workflows/${workflowId}/trigger`;
+
+
+        // Create a div to display events
+        const eventsDiv = document.createElement('div');
+        eventsDiv.id = 'events';
+        document.body.appendChild(eventsDiv);
+
+        // Create a button to trigger the workflow
+        const triggerButton = document.createElement('button');
+        triggerButton.textContent = 'Trigger Workflow';
+        document.body.insertBefore(triggerButton, eventsDiv);
+
+        // Function to log events to the page
+        function logEvent(text, isError = false) {
+            const eventElement = document.createElement('div');
+            eventElement.textContent = text;
+            if (isError) {
+                eventElement.style.color = 'red';
+            }
+            eventsDiv.appendChild(eventElement);
+            eventsDiv.scrollTop = eventsDiv.scrollHeight;
+            console.log(text);
+        }
+
+        // Function to trigger the workflow
+        function triggerWorkflow() {
+
+
+            logEvent('Triggering workflow...');
+
+            // Make the POST request to trigger the workflow
+            fetch(triggerUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    "inputs": {
+                        "prompt": "dit moi ce que c'est un agent IA"
+                    }
+                })
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    logEvent(`Workflow triggered successfully. Trigger ID: ${data.triggerId}`);
+                    // Now that we have the trigger ID, we can listen for events
+                    const listenUrl = `http://localhost:3001/projects/${projectId}/workflows/${workflowId}/listen/${data.triggerId}`;
+                    listenForEvents(listenUrl);
+                })
+                .catch(error => {
+                    logEvent(`Error triggering workflow: ${error.message}`, true);
+                });
+        }
+
+        // Function to listen for SSE events
+        function listenForEvents(url) {
+            logEvent('Connecting to event stream...');
+
+            const eventSource = new EventSource(url);
+
+            eventSource.onopen = function () {
+                logEvent('Event stream connected');
+            };
+
+            eventSource.addEventListener('data', function (e) {
+                try {
+                    const data = JSON.parse(e.data);
+                    logEvent(`Data event: ${JSON.stringify(data)}`);
+                } catch (error) {
+                    logEvent(`Data event (raw): ${e.data}`);
+                }
+            });
+
+            eventSource.addEventListener('workflow', function (e) {
+                try {
+                    const data = JSON.parse(e.data);
+                    logEvent(`Workflow event: ${JSON.stringify(data)}`);
+                } catch (error) {
+                    logEvent(`Workflow event (raw): ${e.data}`);
+                }
+            });
+
+            eventSource.onerror = function (error) {
+                logEvent('Event stream error', true);
+                eventSource.close();
+            };
+        }
+
+        // Add click event to the button
+        triggerButton.addEventListener('click', triggerWorkflow);
+    });
+</script>
+
+</html>
