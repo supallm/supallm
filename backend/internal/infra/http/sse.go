@@ -88,6 +88,9 @@ func (j workflowSSEMarshaller) Marshal(_ context.Context, payload any) (watermil
 		if msg.Type != model.WorkflowEventNodeResult {
 			eventType = "workflow"
 		}
+		if msg.Type == model.WorkflowCompleted {
+			eventType = "complete"
+		}
 	}
 
 	return watermillHTTP.ServerSentEvent{
