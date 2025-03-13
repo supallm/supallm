@@ -17,9 +17,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Credential, ProviderType } from "@/core/entities/credential";
-import { useAppConfigStore } from "@/core/store/app-config";
 import { patchCredentialUsecase } from "@/core/usecases";
 import { hookifyFunction } from "@/hooks/hookify-function";
+import { useCurrentProjectOrThrow } from "@/hooks/use-current-project-or-throw";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FC, PropsWithChildren, useEffect, useState } from "react";
@@ -41,16 +41,12 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
   isOpen: controlledIsOpen,
   onOpenChange: controlledOnOpenChange,
 }) => {
-  const { currentProject } = useAppConfigStore();
+  const currentProject = useCurrentProjectOrThrow();
 
   const { execute: patchCredential, isLoading: isPatchingCredential } =
     hookifyFunction(
       patchCredentialUsecase.execute.bind(patchCredentialUsecase),
     );
-
-  if (!currentProject) {
-    throw new Error("Unexpected error: current project is not set");
-  }
 
   const [internalOpen, setInternalOpen] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<ProviderType | null>(
@@ -59,7 +55,7 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
 
   const formSchema = z.object({
     name: z.string().min(2).max(50),
-    apiKey: z.string().optional(),
+    apiKey: z.string().min(10).optional(),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -81,6 +77,7 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
     await patchCredential(provider.id, {
       name: values.name,
       apiKey: values.apiKey,
+      projectId: currentProject.id,
     });
 
     handleOpenChange(false);

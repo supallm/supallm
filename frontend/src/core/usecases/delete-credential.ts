@@ -4,8 +4,8 @@ import { deleteCredential } from "../store/credentials";
 export class DeleteCredentialUsecase {
   constructor(private readonly credentialService: CredentialService) {}
 
-  async execute(id: string) {
-    await this.credentialService.delete(id);
+  async execute(projectId: string, id: string) {
+    await this.credentialService.delete(projectId, id);
 
     deleteCredential(id);
   }

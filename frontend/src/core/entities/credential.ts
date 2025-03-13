@@ -13,6 +13,7 @@ export type Credential = {
   providerType: ProviderType;
   name: string;
   apiKeyPreview: string;
+  projectId: string;
 };
 
 export const ProviderTypeLabelMap: Record<ProviderType, string> = {

@@ -20,11 +20,12 @@ export interface CredentialService {
   patch: (
     id: string,
     data: {
+      projectId: string;
       name: string;
       apiKey: string | undefined;
     },
   ) => Promise<void>;
-  delete: (id: string) => Promise<void>;
+  delete: (projectId: string, id: string) => Promise<void>;
 }
 
 export interface ModelService {

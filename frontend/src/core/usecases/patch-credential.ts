@@ -9,6 +9,7 @@ export class PatchCredentialUsecase {
     data: {
       name: string;
       apiKey: string | undefined;
+      projectId: string;
     },
   ) {
     await this.credentialService.patch(id, data);

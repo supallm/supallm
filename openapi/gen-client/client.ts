@@ -1,12 +1,16 @@
+import { getAuthToken } from "@/lib/auth";
 import { OpenAPI } from "./index";
-import { getAccessTokenPromise } from "$lib/stores/auth";
 
 /* We can overwrite the default configuration by exporting a getToken function.
  * This function will be called before each request to get a token.
  * See: https://github.com/ferdikoomen/openapi-typescript-codegen/blob/master/docs/authorization.md
  */
 export const getToken = async () => {
-    return await getAccessTokenPromise();
+    const result = await getAuthToken();
+    if (!result) {
+        return "";
+    }
+    return result;
 };
 
 OpenAPI.TOKEN = getToken;
