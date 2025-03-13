@@ -30,7 +30,7 @@ const ResultNode: FC<ResultNodeProps> = ({ data, id: nodeId }) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      handles: [
+      handles: data.handles ?? [
         {
           type: "text",
           id: generateHandleId("text", "result"),
