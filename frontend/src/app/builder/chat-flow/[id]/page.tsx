@@ -3,11 +3,11 @@
 import { AddNodeDialog } from "@/components/builder/add-node-dialog/add-node-dialog";
 import { AvailableNode } from "@/components/builder/add-node-dialog/available-nodes";
 import { NODE_WIDTH } from "@/components/builder/constants";
-import { FLowCodeDialog } from "@/components/builder/flow-code-dialog/flow-code-dialog";
 import { NodeType } from "@/components/builder/node-types";
 import openAIChatCompletionNode from "@/components/builder/nodes/chat/openai-chat-completion-node";
 import entrypointNode from "@/components/builder/nodes/fixed/entrypoint-node";
 import resultNode from "@/components/builder/nodes/fixed/result-node";
+import { TestFlowDialog } from "@/components/builder/test-flow-dialog/test-flow-dialog";
 import { Button } from "@/components/ui/button";
 import { FlowNode } from "@/core/entities/flow";
 import { EntrypointNodeData } from "@/core/entities/flow/flow-entrypoint";
@@ -35,7 +35,7 @@ import {
   useStoreApi,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { Braces, PlusIcon, SaveIcon } from "lucide-react";
+import { PlayIcon, PlusIcon, SaveIcon } from "lucide-react";
 
 import { useCallback, useMemo } from "react";
 
@@ -179,16 +179,18 @@ const ChatFlowPage = () => {
         </Panel>
         <Panel position="top-right">
           <div className="space-x-2">
-            <FLowCodeDialog
+            <TestFlowDialog
+              data={entrypointNodeData}
+              onChange={() => {}}
               flowId={currentFlow.id}
-              entrypointNodeData={entrypointNodeData}
-              resultNodeData={resultNodeData}
             >
               <Button
-                startContent={<Braces className="w-4 h-4" />}
-                variant="outline"
-              ></Button>
-            </FLowCodeDialog>
+                variant={"outline"}
+                startContent={<PlayIcon className="w-4 h-4" />}
+              >
+                Test and integrate
+              </Button>
+            </TestFlowDialog>
             <Button
               isLoading={isSaving}
               onClick={onSave}
