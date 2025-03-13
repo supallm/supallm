@@ -11,11 +11,12 @@ export interface INode {
     definition: BaseNodeDefinition,
     inputs: Record<string, any>,
     context: ExecutionContext,
-    callbacks?: {
-      onNodeStream?: (
+    callbacks: {
+      onNodeStream: (
         nodeId: string,
         outputField: string,
-        chunk: string
+        chunk: string,
+        type: "string" | "image"
       ) => Promise<void>;
     }
   ): Promise<any>;
@@ -32,7 +33,14 @@ export abstract class BaseNode implements INode {
     nodeId: string,
     definition: BaseNodeDefinition,
     inputs: Record<string, any>,
-    context: ExecutionContext
+    context: ExecutionContext,
+    callbacks: {
+      onNodeStream: (
+        nodeId: string,
+        outputField: string,
+        chunk: string
+      ) => Promise<void>;
+    }
   ): Promise<any>;
 
   protected validateInputs(

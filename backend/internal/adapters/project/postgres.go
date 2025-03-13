@@ -213,18 +213,13 @@ func (r Repository) updateWorkflows(ctx context.Context, q *Queries, project *mo
 			return fmt.Errorf("unable to marshal builder flow: %w", err)
 		}
 
-		// runnerFlow, err := json.Marshal(workflow.RunnerFlow)
-		// if err != nil {
-		// 	return r.errorDecoder(err)
-		// }
-
 		err = q.upsertWorkflow(ctx, upsertWorkflowParams{
 			ID:          workflow.ID,
 			ProjectID:   project.ID,
 			Name:        workflow.Name,
 			Status:      workflow.Status.String(),
 			BuilderFlow: builderFlow,
-			RunnerFlow:  nil,
+			RunnerFlow:  workflow.RunnerFlow,
 		})
 		if err != nil {
 			return r.errorDecoder(err)

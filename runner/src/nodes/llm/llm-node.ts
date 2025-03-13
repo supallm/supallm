@@ -22,11 +22,12 @@ export class LLMNode extends BaseNode {
     definition: LLMNodeDefinition,
     inputs: Record<string, any>,
     context: ExecutionContext,
-    callbacks?: {
-      onNodeStream?: (
+    callbacks: {
+      onNodeStream: (
         nodeId: string,
         outputField: string,
-        chunk: string
+        chunk: string,
+        type: "string" | "image"
       ) => Promise<void>;
     }
   ): Promise<any> {
@@ -56,7 +57,7 @@ export class LLMNode extends BaseNode {
       };
 
       const prompt = resolvedInputs.prompt;
-      if (options.streaming && callbacks?.onNodeStream) {
+      if (options.streaming) {
         const streamResult = await provider.stream(prompt, options);
 
         let fullResponse = "";
@@ -64,13 +65,25 @@ export class LLMNode extends BaseNode {
           const content = chunk.content || chunk.text || "";
           if (content) {
             fullResponse += content;
-            await callbacks.onNodeStream(nodeId, "responseStream", content);
+            await callbacks.onNodeStream(
+              nodeId,
+              "responseStream",
+              content,
+              "string"
+            );
           }
         }
 
         return { response: fullResponse };
       } else {
-        return await provider.generate(prompt, options);
+        const result = await provider.generate(prompt, options);
+        await callbacks.onNodeStream(
+          nodeId,
+          "response",
+          result.response,
+          "string"
+        );
+        return result;
       }
     } catch (error) {
       logger.error(`error executing LLM node ${nodeId}: ${error}`);

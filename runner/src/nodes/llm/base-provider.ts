@@ -6,11 +6,12 @@ export interface LLMOptions {
   systemPrompt?: string;
   streaming?: boolean;
   nodeId?: string;
-  callbacks?: {
-    onNodeStream?: (
+  callbacks: {
+    onNodeStream: (
       nodeId: string,
       outputField: string,
-      chunk: string
+      chunk: string,
+      type: "string" | "image"
     ) => Promise<void>;
   };
 }

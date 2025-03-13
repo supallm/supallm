@@ -31,10 +31,11 @@ export class NodeManager {
     inputs: Record<string, any>,
     context: ExecutionContext,
     callbacks: {
-      onNodeStream?: (
+      onNodeStream: (
         nodeId: string,
         outputField: string,
-        data: string
+        data: string,
+        type: "string" | "image"
       ) => Promise<void>;
     }
   ): Promise<any> {

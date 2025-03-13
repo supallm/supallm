@@ -239,7 +239,7 @@ export class WorkflowExecutor extends EventEmitter {
         context.inputs,
         context,
         {
-          onNodeStream: async (nodeId, outputField, data) => {
+          onNodeStream: async (nodeId, outputField, data, type) => {
             this.emit(WorkflowEvents.NODE_RESULT, {
               workflowId: this.currentWorkflowId,
               triggerId: this.currentTriggerId,
@@ -248,6 +248,7 @@ export class WorkflowExecutor extends EventEmitter {
               nodeType: node.type,
               outputField,
               data,
+              type,
             });
           },
         }
@@ -351,6 +352,7 @@ interface NodeFailedEvent extends BaseNodeEvent {
 
 interface NodeResultEvent extends BaseNodeEvent {
   outputField: string;
+  type: "string" | "image";
   data: string;
 }
 

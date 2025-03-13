@@ -27,18 +27,12 @@ func (s *Service) QueueWorkflow(
 	workflow *model.Workflow,
 	inputs map[string]any,
 ) error {
-	definitionJSON, err := getRunnerConfig()
-	if err != nil {
-		slog.Error("failed to get runner flow JSON", "error", err)
-		return err
-	}
-
 	queueMsg := workflowQueueMessage{
 		WorkflowID: workflow.ID,
 		TriggerID:  triggerID,
 		SessionID:  uuid.New(),
 		ProjectID:  workflow.ProjectID,
-		Definition: definitionJSON,
+		Definition: workflow.RunnerFlow,
 		Inputs:     inputs,
 	}
 

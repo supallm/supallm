@@ -2,6 +2,8 @@ package model
 
 import (
 	"encoding/json"
+	"fmt"
+	"os"
 
 	"github.com/google/uuid"
 	"github.com/supallm/core/internal/pkg/errs"
@@ -134,6 +136,9 @@ func (p *Project) AddWorkflow(id uuid.UUID, name string, builderFlow json.RawMes
 	if err := w.SetBuilderFlow(builderFlow); err != nil {
 		return err
 	}
+	if err := w.ComputeRunnerFlow(builderFlow); err != nil {
+		return err
+	}
 
 	p.Workflows[id] = w
 	return nil
@@ -157,6 +162,9 @@ func (p *Project) UpdateWorkflowBuilderFlow(id uuid.UUID, builderFlow json.RawMe
 	if err := w.SetBuilderFlow(builderFlow); err != nil {
 		return err
 	}
+	if err := w.ComputeRunnerFlow(builderFlow); err != nil {
+		return err
+	}
 	p.Workflows[id] = w
 	return nil
 }
@@ -178,23 +186,90 @@ func (w *Workflow) SetBuilderFlow(builderFlowJSON json.RawMessage) error {
 	return nil
 }
 
-func (w *Workflow) SetRunnerFlow(runnerFlowJSON json.RawMessage) error {
-	// var runnerFlow RunnerFlow
-	// if err := json.Unmarshal(runnerFlowJSON, &runnerFlow); err != nil {
-	// 	return err
-	// }
-	w.RunnerFlow = runnerFlowJSON
+func (w *Workflow) ComputeRunnerFlow(builderFlowJSON json.RawMessage) error {
+	apiKey := os.Getenv("OPENAI_API_KEY")
+	if apiKey == "" {
+		return errs.InvalidError{Reason: "OPENAI_API_KEY is not set"}
+	}
+
+	fakeRunnerFlowJSON := fmt.Sprintf(fakeRunnerFlowJSON, apiKey, apiKey)
+	w.RunnerFlow = json.RawMessage(fakeRunnerFlowJSON)
 	return nil
-}
-
-func (w *Workflow) GetBuilderFlowJSON() (json.RawMessage, error) {
-	return json.Marshal(w.BuilderFlow)
-}
-
-func (w *Workflow) GetRunnerFlowJSON() (json.RawMessage, error) {
-	return json.Marshal(w.RunnerFlow)
 }
 
 func (w *Workflow) UpdateStatus(status WorkflowStatus) {
 	w.Status = status
 }
+
+//nolint:lll
+const fakeRunnerFlowJSON = `{
+		"nodes": {
+			"entrypoint": {
+				"type": "entrypoint",
+				"outputs": {
+					"prompt": {
+						"type": "string"
+					}
+				}
+			},
+			"e4fd228c-08a5-4075-a134-9ea6772ef80a": {
+				"type": "llm",
+				"provider": "openai",
+				"model": "gpt-4o",
+				"temperature": 0.5,
+				"maxTokens": 4000,
+				"systemPrompt": "Lorsqu'on te demande des idées de contenu, utilise le {{format 4A}} et propose des idées originales adaptées et engageantes pour le sujet que tu reçois",
+				"streaming": true,
+				"apiKey": "%s",
+				"inputs": {
+					"prompt": {
+						"source": "entrypoint.prompt"
+					}
+				},
+				"outputs": {
+					"response": {
+						"type": "string"
+					},
+					"responseStream": {
+						"type": "stream",
+						"outputField": "idea"
+					}
+				}
+			},
+			"60c7bd2e-f5e6-4949-b648-591e262d54ea": {
+				"type": "llm",
+				"provider": "openai",
+				"model": "gpt-4o-mini",
+				"temperature": 0.5,
+				"maxTokens": 1000,
+				"systemPrompt": "Génère moi un hook dédié a linkedin pour le sujet que tu reçois",
+				"streaming": true,
+				"apiKey": "%s",
+				"inputs": {
+					"prompt": {
+						"source": "e4fd228c-08a5-4075-a134-9ea6772ef80a.response"
+					}
+				},
+				"outputs": {
+					"response": {
+						"type": "string"
+					},
+					"responseStream": {
+						"type": "stream",
+						"outputField": "hook"
+					}
+				}
+			},
+			"result": {
+				"type": "result",
+				"inputs": {
+					"hook": {
+						"type": "stream"
+					},
+					"idea": {
+						"type": "stream"
+					}
+				}
+			}
+		}
+	}`

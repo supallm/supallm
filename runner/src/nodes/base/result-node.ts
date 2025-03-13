@@ -12,8 +12,8 @@ export class ResultNode extends BaseNode {
     definition: BaseNodeDefinition,
     inputs: Record<string, any>,
     context: ExecutionContext,
-    callbacks?: {
-      onNodeStream?: (
+    callbacks: {
+      onNodeStream: (
         nodeId: string,
         outputField: string,
         chunk: string
