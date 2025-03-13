@@ -59,7 +59,7 @@ export const TestFlowDialog: FC<
 
     const subscription = supallm
       .runFlow({
-        flowId: "something",
+        flowId: "f641cf81-5f51-4da9-b08a-504f15834351",
         inputs: inputs,
       })
       .subscribe();
@@ -105,14 +105,14 @@ export const TestFlowDialog: FC<
             <>
               {data.handles?.map((handle) => {
                 return (
-                  <div key={handle.id}>
+                  <div key={handle.label}>
                     <Label className="mb-2">{handle.label}</Label>
                     <Input
-                      value={inputs[handle.id] ?? ""}
+                      value={inputs[handle.label] ?? ""}
                       onChange={(e) => {
                         setInputs({
                           ...inputs,
-                          [handle.id]: e.target.value,
+                          [handle.label]: e.target.value,
                         });
                       }}
                       placeholder="Enter value"
