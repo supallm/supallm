@@ -10,20 +10,21 @@ import { EntrypointNodeData } from "@/core/entities/flow/flow-entrypoint";
 import { getAuthToken } from "@/lib/auth";
 import { supallm } from "@/lib/supallm";
 import { Label } from "@radix-ui/react-dropdown-menu";
-import { PlayIcon } from "lucide-react";
+import { Pause, PlayIcon } from "lucide-react";
 import { FC, PropsWithChildren, useState } from "react";
-import { FlowEventData } from "supallm";
+import { FlowEventData, Unsubscribe } from "supallm";
 import { EmptyState } from "../../empty-state";
 import { Button } from "../../ui/button";
 import { Input } from "../../ui/input";
-import LogsPane from "./logs-pane";
+import { TestFlowBottomPanel } from "./text-flow-bottom-panel";
 
 export const TestFlowDialog: FC<
   PropsWithChildren<{
+    flowId: string;
     data: EntrypointNodeData | undefined;
     onChange: (values: string) => void;
   }>
-> = ({ children, data, onChange }) => {
+> = ({ children, data, onChange, flowId }) => {
   const [open, setOpen] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
 
@@ -31,9 +32,22 @@ export const TestFlowDialog: FC<
 
   const [inputs, setInputs] = useState<Record<string, string>>({});
 
+  const [unsubscribes, setUnsubscribes] = useState<Unsubscribe[]>([]);
+
   async function onOpenChange(open: boolean) {
     setOpen(open);
+    if (!open) {
+      reset();
+      unsubscribes.forEach((unsubscribe) => unsubscribe());
+    }
   }
+
+  const reset = () => {
+    setResults([]);
+    setInputs({});
+    setUnsubscribes([]);
+    setIsRunning(false);
+  };
 
   const handleRunFlow = async () => {
     const token = await getAuthToken();
@@ -43,7 +57,7 @@ export const TestFlowDialog: FC<
 
     supallm.setAccessToken(token);
 
-    const emitter = await supallm
+    const subscription = supallm
       .runFlow({
         flowId: "something",
         inputs: inputs,
@@ -52,14 +66,20 @@ export const TestFlowDialog: FC<
 
     setIsRunning(true);
 
-    emitter.on("data", (data) => {
-      console.log("data", data);
+    const unsubscribeData = subscription.on("data", (data) => {
       setResults((prev) => [...prev, data]);
     });
 
-    emitter.on("complete", () => {
+    const unsubscribeComplete = subscription.on("complete", () => {
       setIsRunning(false);
     });
+
+    setUnsubscribes([unsubscribeData, unsubscribeComplete]);
+  };
+
+  const handlePause = () => {
+    setIsRunning(false);
+    unsubscribes.forEach((unsubscribe) => unsubscribe());
   };
 
   return (
@@ -100,18 +120,33 @@ export const TestFlowDialog: FC<
                   </div>
                 );
               })}
-              <Button
-                isLoading={isRunning}
-                startContent={<PlayIcon className="w-4 h-4" />}
-                onClick={handleRunFlow}
-              >
-                Test flow
-              </Button>
+              {!isRunning && (
+                <Button
+                  startContent={<PlayIcon className="w-4 h-4" />}
+                  onClick={handleRunFlow}
+                >
+                  Test flow
+                </Button>
+              )}
+              {isRunning && (
+                <Button
+                  startContent={<Pause className="w-4 h-4" />}
+                  onClick={handlePause}
+                >
+                  Stop flow
+                </Button>
+              )}
             </>
           )}
         </div>
 
-        <LogsPane events={results} isRunning={isRunning} />
+        <TestFlowBottomPanel
+          events={results}
+          isRunning={isRunning}
+          entrypointNodeData={data}
+          resultNodeData={data}
+          flowId="something"
+        />
       </SheetContent>
     </Sheet>
   );

@@ -1,6 +1,6 @@
 import { initSupallm } from "supallm";
 
 export const supallm = initSupallm({
-  projectUrl: "https://supallm.com",
-  publicKey: "public_key",
+  projectUrl: "https://myproject.supallm.com",
+  publicKey: process.env.SUPALLM_PUBLIC_KEY!,
 });
