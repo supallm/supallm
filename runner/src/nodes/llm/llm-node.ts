@@ -57,6 +57,11 @@ export class LLMNode extends BaseNode {
       };
 
       const prompt = resolvedInputs.prompt;
+      const streamOutputField =
+        definition.outputs?.responseStream?.outputField || "responseStream";
+      const responseOutputField =
+        definition.outputs?.response?.outputField || "response";
+
       if (options.streaming) {
         const streamResult = await provider.stream(prompt, options);
 
@@ -67,7 +72,7 @@ export class LLMNode extends BaseNode {
             fullResponse += content;
             await callbacks.onNodeStream(
               nodeId,
-              "responseStream",
+              streamOutputField,
               content,
               "string"
             );
@@ -79,7 +84,7 @@ export class LLMNode extends BaseNode {
         const result = await provider.generate(prompt, options);
         await callbacks.onNodeStream(
           nodeId,
-          "response",
+          responseOutputField,
           result.response,
           "string"
         );

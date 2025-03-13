@@ -143,6 +143,7 @@ export class RunnerServer {
           nodeType: data.nodeType,
           outputField: data.outputField,
           data: data.data,
+          type: data.type,
         },
       });
     });
