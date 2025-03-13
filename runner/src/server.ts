@@ -134,7 +134,7 @@ export class RunnerServer {
 
     this.executor.on(WorkflowEvents.NODE_RESULT, async (data) => {
       await this.notifier.publishNodeResult({
-        type: NotifierEvent.NODE_STREAMING,
+        type: NotifierEvent.NODE_RESULT,
         workflowId: data.workflowId,
         triggerId: data.triggerId,
         sessionId: data.sessionId,

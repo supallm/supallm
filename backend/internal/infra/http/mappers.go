@@ -5,6 +5,10 @@ import (
 	"github.com/supallm/core/internal/infra/http/gen"
 )
 
+// type triggerInputs struct {
+// 	Inputs map[string]any `json:"inputs"`
+// }
+
 func queryCredentialToDTO(credential query.Credential) gen.Credential {
 	return gen.Credential{
 		Id:        credential.ID,

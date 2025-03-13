@@ -1,6 +1,6 @@
 package: gen
 generate:
-  fiber-server: true
+  chi-server: true
 output: ./gen/openapi-server.gen.go
 output-options:
   skip-prune: true

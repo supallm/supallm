@@ -9,12 +9,13 @@ import (
 type WorkflowEventType string
 
 const (
-	WorkflowStarted       WorkflowEventType = "workflow_started"
-	WorkflowCompleted     WorkflowEventType = "workflow_completed"
-	WorkflowFailed        WorkflowEventType = "workflow_failed"
-	WorkflowNodeStarted   WorkflowEventType = "workflow_node_started"
-	WorkflowNodeCompleted WorkflowEventType = "workflow_node_completed"
-	WorkflowNodeFailed    WorkflowEventType = "workflow_node_failed"
+	WorkflowStarted         WorkflowEventType = "WORKFLOW_STARTED"
+	WorkflowCompleted       WorkflowEventType = "WORKFLOW_COMPLETED"
+	WorkflowFailed          WorkflowEventType = "WORKFLOW_FAILED"
+	WorkflowNodeStarted     WorkflowEventType = "NODE_STARTED"
+	WorkflowNodeCompleted   WorkflowEventType = "NODE_COMPLETED"
+	WorkflowNodeFailed      WorkflowEventType = "NODE_FAILED"
+	WorkflowEventNodeResult WorkflowEventType = "NODE_RESULT"
 )
 
 type WorkflowEvent struct {

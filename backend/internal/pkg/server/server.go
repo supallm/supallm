@@ -2,98 +2,131 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"strconv"
+	"time"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/supallm/core/internal/pkg/config"
 	"github.com/supallm/core/internal/pkg/errs"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
+)
+
+const (
+	readHeaderTimeout = 10 * time.Second
 )
 
 type Server struct {
-	App  *fiber.App
-	conf config.Config
+	Router *chi.Mux
+	conf   config.Config
 }
 
 func New(conf config.Config) *Server {
-	app := fiber.New(fiber.Config{
-		DisableStartupMessage: true,
-		ErrorHandler: func(ctx *fiber.Ctx, err error) error {
-			pb := errs.Problem(err)
-			pb.Instance = ctx.Path()
-
-			slog.Error("Request error",
-				slog.String("error", err.Error()),
-				slog.String("status", strconv.Itoa(pb.Status)),
-				slog.String("method", ctx.Method()),
-				slog.String("uri", string(ctx.Request().RequestURI())),
-				slog.String("request_id", ctx.GetRespHeader("X-Request-ID")),
-			)
-
-			err = ctx.Status(pb.Status).JSON(pb)
-			if err != nil {
-				return ctx.Status(fiber.StatusInternalServerError).SendString("Internal Server Error")
-			}
-
-			return nil
-		},
-	})
+	r := chi.NewRouter()
+	r.Use(middleware.RequestID)
+	r.Use(middleware.Recoverer)
 
 	s := &Server{
-		App:  app,
-		conf: conf,
+		Router: r,
+		conf:   conf,
 	}
-
 	s.applyCommonMiddleware()
+
+	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
 
 	return s
 }
 
 func (s *Server) Start() error {
 	slog.Info("starting HTTP server", slog.String("address", s.Addr()))
-	return s.App.Listen(fmt.Sprintf(":%s", s.conf.Server.Port))
+	h2s := &http2.Server{}
+	server := &http.Server{
+		Addr:              s.Addr(),
+		Handler:           h2c.NewHandler(s.Router, h2s),
+		ReadHeaderTimeout: readHeaderTimeout,
+	}
+	return server.ListenAndServe()
 }
 
-func (s *Server) ParseBody(c *fiber.Ctx, v any) error {
-	if err := c.BodyParser(v); err != nil {
-		return errs.InvalidError{
-			Reason: "failed to parse body please refer to openapi schema",
+func (s *Server) ParseBody(r *http.Request, v any) error {
+	if r.ContentLength == 0 {
+		return nil
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(v); err != nil {
+		return fmt.Errorf("%w: %w", errs.InvalidError{
+			Field:  "body",
+			Reason: "error decoding request",
 			Err:    err,
-		}
+		}, err)
 	}
 
 	return nil
 }
 
-func (s *Server) Respond(c *fiber.Ctx, status int, data any) error {
+func (s *Server) Respond(w http.ResponseWriter, _ *http.Request, status int, data any) {
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(status)
+
 	if data == nil {
-		return c.Status(status).Send(nil)
+		return
 	}
-	return c.Status(status).JSON(data)
+
+	err := json.NewEncoder(w).Encode(data)
+	if err != nil {
+		slog.Error("error encoding response", "error", err)
+	}
 }
 
-func (s *Server) RespondWithContentLocation(c *fiber.Ctx, status int, uri string, params ...any) error {
-	c.Set("Content-Location", fmt.Sprintf(uri, params...))
-	return s.Respond(c, status, nil)
+func (s *Server) RespondErr(w http.ResponseWriter, r *http.Request, err error) {
+	if err == nil {
+		return
+	}
+
+	pb := errs.Problem(err)
+
+	slog.Error(err.Error(),
+		slog.String("status", strconv.Itoa(pb.Status)),
+		slog.String("uri", r.RequestURI),
+	)
+
+	errs.HTTP(w, r, err)
 }
 
-func (s *Server) Redirect(c *fiber.Ctx, redirectURL string) error {
-	return c.Redirect(redirectURL, fiber.StatusSeeOther)
+func (s *Server) RespondWithContentLocation(
+	w http.ResponseWriter,
+	r *http.Request,
+	status int,
+	uri string,
+	params ...any,
+) {
+	w.Header().Add("content-location", fmt.Sprintf(uri, params...))
+	s.Respond(w, r, status, nil)
 }
 
-func (s *Server) GetQueryParam(c *fiber.Ctx, key string) string {
-	return c.Query(key)
+func (s *Server) Redirect(w http.ResponseWriter, r *http.Request, redirectURL string) {
+	http.Redirect(w, r, redirectURL, http.StatusSeeOther)
 }
 
-func (s *Server) GetParam(c *fiber.Ctx, key string) string {
-	return c.Params(key)
+func (s *Server) GetQueryParam(r *http.Request, key string) string {
+	return r.URL.Query().Get(key)
+}
+
+func (s *Server) GetParam(r *http.Request, key string) string {
+	return chi.URLParam(r, key)
 }
 
 // Add a Stop method to gracefully shutdown the server
 func (s *Server) Stop(_ context.Context) error {
 	slog.Info("stopping HTTP server")
-	return s.App.Shutdown()
+	return nil
 }
 
 func (s *Server) Addr() string {

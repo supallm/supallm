@@ -1,24 +1,27 @@
 package server
 
 import (
+	"context"
+	"net/http"
+
 	"github.com/clerk/clerk-sdk-go/v2"
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/healthcheck"
-	"github.com/gofiber/fiber/v2/middleware/helmet"
-	"github.com/gofiber/fiber/v2/middleware/logger"
-	"github.com/gofiber/fiber/v2/middleware/recover"
-	"github.com/gofiber/fiber/v2/middleware/requestid"
+	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/cors"
 )
 
-const userIDKey = "userID"
+type userIDKeyType string
 
-func (s *Server) storeUserID(c *fiber.Ctx, userID string) {
-	c.Locals(userIDKey, userID)
+const (
+	userIDKey userIDKeyType = "userID"
+	maxAge    int           = 300
+)
+
+func (s *Server) storeUserID(ctx context.Context, userID string) context.Context {
+	return context.WithValue(ctx, userIDKey, userID)
 }
 
-func (s *Server) GetUserID(c *fiber.Ctx) string {
-	id, ok := c.Locals(userIDKey).(string)
+func (s *Server) GetUserID(ctx context.Context) string {
+	id, ok := ctx.Value(userIDKey).(string)
 	if !ok {
 		return ""
 	}
@@ -26,23 +29,24 @@ func (s *Server) GetUserID(c *fiber.Ctx) string {
 }
 
 func (s *Server) applyCommonMiddleware() {
-	s.App.Use(helmet.New())
-	s.App.Use(requestid.New())
-	s.App.Use(recover.New())
-	s.App.Use(logger.New())
-	s.App.Use(healthcheck.New())
-	s.App.Use(cors.New(cors.Config{
-		AllowOrigins:  "*",
-		AllowMethods:  "GET,POST,PUT,PATCH,DELETE,OPTIONS",
-		AllowHeaders:  "Origin, Content-Type, Accept, Authorization",
-		ExposeHeaders: "Content-Location",
+	s.Router.Use(middleware.RequestID)
+	s.Router.Use(middleware.Recoverer)
+	s.Router.Use(middleware.Logger)
+	s.Router.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: true,
+		MaxAge:           maxAge,
 	}))
 }
 
-func (s *Server) ClerkAuthMiddleware() fiber.Handler {
+func (s *Server) ClerkAuthMiddleware(next http.Handler) http.Handler {
 	clerk.SetKey(s.conf.Clerk.SecretKey)
-
-	return func(c *fiber.Ctx) error {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := s.storeUserID(r.Context(), "12345")
+		next.ServeHTTP(w, r.WithContext(ctx))
 		// authHeader := c.Get("Authorization")
 		// sessionToken := strings.TrimPrefix(authHeader, "Bearer ")
 
@@ -73,8 +77,5 @@ func (s *Server) ClerkAuthMiddleware() fiber.Handler {
 		// 		"error": "User is banned",
 		// 	})
 		// }
-
-		s.storeUserID(c, "12345")
-		return c.Next()
-	}
+	})
 }

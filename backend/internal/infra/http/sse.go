@@ -3,48 +3,76 @@ package http
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 	"net/http"
+	"os"
 
+	"github.com/ThreeDotsLabs/watermill"
 	watermillHTTP "github.com/ThreeDotsLabs/watermill-http/v2/pkg/http"
 	watermillMsg "github.com/ThreeDotsLabs/watermill/message"
+	"github.com/go-chi/chi/v5"
+	"github.com/supallm/core/internal/application/domain/model"
+	"github.com/supallm/core/internal/application/event"
 )
+
+func (s *Server) listenWorkflowRan() {
+	logger := watermill.NewSlogLogger(nil)
+	sseRouter, err := watermillHTTP.NewSSERouter(
+		watermillHTTP.SSERouterConfig{
+			UpstreamSubscriber: s.app.EventsSubscriber,
+			ErrorHandler:       watermillHTTP.DefaultErrorHandler,
+			Marshaler:          workflowSSEMarshaller{},
+		},
+		logger,
+	)
+	if err != nil {
+		slog.Error("error creating sse router", "error", err)
+		os.Exit(1)
+	}
+
+	sseHandler := sseRouter.AddHandler(event.InternalEventsTopic, workflowSSEAdapter{})
+	s.server.Router.Get("/projects/{projectId}/workflows/{workflowId}/listen/{triggerId}", sseHandler)
+
+	go func() {
+		err = sseRouter.Run(context.Background())
+		slog.Debug("running sse router")
+		if err != nil {
+			slog.Error("error running sse router", "error", err)
+			os.Exit(1)
+		}
+	}()
+
+	<-sseRouter.Running()
+	slog.Debug("sse router is ready")
+}
 
 type workflowSSEAdapter struct{}
 
 func (p workflowSSEAdapter) InitialStreamResponse(_ http.ResponseWriter, r *http.Request) (response any, ok bool) {
-	// publisherId := r.Context().Value("publisherId").(string)
-	// eventSlug := r.Context().Value("eventSlug").(string)
+	triggerID := chi.URLParam(r, "triggerId")
+	workflowID := chi.URLParam(r, "workflowId")
+	projectID := chi.URLParam(r, "projectId")
 
-	// return map[string]any{
-	// 	"sync_event": map[string]any{
-	// 		"event_slug":   eventSlug,
-	// 		"publisher_id": publisherId,
-	// 	},
-	// }, true
-
-	return "qsdqd", true
+	return map[string]any{
+		"trigger_id":  triggerID,
+		"workflow_id": workflowID,
+		"project_id":  projectID,
+	}, true
 }
 
 func (p workflowSSEAdapter) NextStreamResponse(r *http.Request, msg *watermillMsg.Message) (response any, ok bool) {
-	// var messageHandled message.EventMessage
-	// err := json.Unmarshal(msg.Payload, &messageHandled)
-	// if err != nil {
-	// 	return nil, false
-	// }
+	var messageHandled event.WorkflowEventMessage
+	err := json.Unmarshal(msg.Payload, &messageHandled)
+	if err != nil {
+		return nil, false
+	}
 
-	// userId := r.Context().Value("userId").(string)
-	// publisherId := r.Context().Value("publisherId").(string)
-	// publisherUuid, err := uuid.Parse(publisherId)
-	// if err != nil {
-	// 	slog.Error("failed to parse publisher id", "error", err)
-	// 	return nil, false
-	// }
+	triggerID := chi.URLParam(r, "triggerId")
+	if messageHandled.TriggerID.String() != triggerID {
+		return nil, false
+	}
 
-	// eventSlug := r.Context().Value("eventSlug").(string)
-
-	// return messageHandled.Payload, true
-
-	return "qsdqd", true
+	return messageHandled, true
 }
 
 type workflowSSEMarshaller struct{}
@@ -55,8 +83,15 @@ func (j workflowSSEMarshaller) Marshal(_ context.Context, payload any) (watermil
 		return watermillHTTP.ServerSentEvent{}, err
 	}
 
+	eventType := "data"
+	if msg, ok := payload.(event.WorkflowEventMessage); ok {
+		if msg.Type != model.WorkflowEventNodeResult {
+			eventType = "workflow"
+		}
+	}
+
 	return watermillHTTP.ServerSentEvent{
-		Event: "data",
+		Event: eventType,
 		Data:  data,
 	}, nil
 }

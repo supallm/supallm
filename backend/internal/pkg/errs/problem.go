@@ -1,6 +1,7 @@
 package errs
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 )
@@ -93,5 +94,24 @@ func (pb *ProblemJSON) HTTPStatus() int {
 func (pb *ProblemJSON) HTTPHeaders() http.Header {
 	return http.Header{
 		"Content-Type": {"application/problem+json"},
+	}
+}
+
+func HTTP(w http.ResponseWriter, r *http.Request, err error) {
+	pb := Problem(err)
+	if pb == nil {
+		return
+	}
+
+	// fill in the instance with the request path
+	pb.Instance = r.RequestURI
+	for k, vv := range pb.HTTPHeaders() {
+		for _, v := range vv {
+			w.Header().Add(k, v)
+		}
+	}
+	w.WriteHeader(pb.HTTPStatus())
+	if err = json.NewEncoder(w).Encode(pb); err != nil {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	}
 }

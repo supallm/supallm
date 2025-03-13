@@ -142,6 +142,10 @@ linters-settings:
       - "^github.com/ThreeDotsLabs/watermill/pubsub/gochannel.Config"
       - "^github.com/ThreeDotsLabs/watermill-redisstream/pkg/redisstream.PublisherConfig"
       - "^github.com/ThreeDotsLabs/watermill-redisstream/pkg/redisstream.SubscriberConfig"
+      - "^github.com/supallm/core/internal/infra/http/gen.ChiServerOptions"
+      - "^golang.org/x/net/http2.Server"
+      - "^github.com/go-chi/cors.Options"
+
   funlen:
     # Checks the number of lines in a function.
     # If lower than 0, disable the check.

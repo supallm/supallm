@@ -58,9 +58,6 @@ export class RedisNotifier implements INotifier {
         metadata
       );
 
-      logger.debug(
-        `published ${context} to ${stream}: ${JSON.stringify(event)}`
-      );
       return id || "";
     } catch (err) {
       logger.error(`failed to publish ${context}: ${err}`);
@@ -69,6 +66,11 @@ export class RedisNotifier implements INotifier {
   }
 
   async publishWorkflowEvent(event: WorkflowEvent): Promise<string[]> {
+    logger.debug(
+      `published workflow event to ${
+        this.WORKFLOW_STORE_STREAM
+      }: ${JSON.stringify(event)}`
+    );
     const [storeId, dispatchId] = await Promise.all([
       this.publish(
         this.WORKFLOW_STORE_STREAM,
@@ -87,6 +89,11 @@ export class RedisNotifier implements INotifier {
   }
 
   async publishNodeResult(event: WorkflowEvent): Promise<string> {
+    logger.debug(
+      `published node result to ${this.NODE_RESULTS_STREAM}: ${JSON.stringify(
+        event
+      )}`
+    );
     return this.publish(
       this.NODE_RESULTS_STREAM,
       this.MAX_STREAM_RESULTS_LENGTH,

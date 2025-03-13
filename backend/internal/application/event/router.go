@@ -85,7 +85,7 @@ func CreateRouter(config Config) *EventRouter {
 		consumerGroupSubscriber,
 		func(msg *message.Message) error {
 			// call handler to store events here
-			slog.Info("received workflow event", "event", msg.Payload)
+			// slog.Info("received workflow event", "event", msg.Payload)
 			return nil
 		},
 	)
@@ -145,7 +145,7 @@ func createSubscriber(config Config, consumerGroup string) (message.Subscriber, 
 	subscriber, err := redisstream.NewSubscriber(
 		redisstream.SubscriberConfig{
 			Client:        config.WorkflowsRedis,
-			Unmarshaller:  redisstream.DefaultMarshallerUnmarshaller{},
+			Unmarshaller:  WorkflowEventMarshaller{},
 			ConsumerGroup: consumerGroup,
 		},
 		config.Logger,
@@ -160,7 +160,7 @@ func createPublisher(config Config, defaultMaxlen int64) (message.Publisher, err
 	publisher, err := redisstream.NewPublisher(
 		redisstream.PublisherConfig{
 			Client:        config.WorkflowsRedis,
-			Marshaller:    redisstream.DefaultMarshallerUnmarshaller{},
+			Marshaller:    WorkflowEventMarshaller{},
 			DefaultMaxlen: defaultMaxlen,
 		},
 		config.Logger,

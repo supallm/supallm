@@ -34,7 +34,6 @@ func run() error {
 	defer stop()
 
 	conf := config.Load(ctx)
-
 	server := server.New(conf)
 
 	app, err := application.New(ctx, conf)
@@ -42,8 +41,7 @@ func run() error {
 		return fmt.Errorf("failed to create application: %w", err)
 	}
 
-	http.NewServer(server, app)
-
+	http.AddHandlers(server, app)
 	serverErrors := make(chan error, 1)
 	go func() {
 		serverErrors <- server.Start()

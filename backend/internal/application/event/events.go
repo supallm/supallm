@@ -5,14 +5,15 @@ import (
 
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/google/uuid"
+	"github.com/supallm/core/internal/application/domain/model"
 )
 
 type WorkflowEventMessage struct {
-	Type       string         `json:"type"`
-	WorkflowID uuid.UUID      `json:"workflowId"`
-	TriggerID  uuid.UUID      `json:"triggerId"`
-	SessionID  uuid.UUID      `json:"sessionId"`
-	Data       map[string]any `json:"data"`
+	Type       model.WorkflowEventType `json:"type"`
+	WorkflowID uuid.UUID               `json:"workflowId"`
+	TriggerID  uuid.UUID               `json:"triggerId"`
+	SessionID  uuid.UUID               `json:"sessionId"`
+	Data       map[string]any          `json:"data"`
 }
 
 func WorkflowEventFromMessage(msg *message.Message) (WorkflowEventMessage, error) {
