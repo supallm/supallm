@@ -1,15 +1,23 @@
-.PHONY: gen oapi sqlc api
+.PHONY: gen oapi sqlc api runner clean backend
 
 up:
 	@echo [ starting all services... ]
 	@docker compose up
 
+backend:
+	@echo [ starting backend... ]
+	@docker compose up api runner
+
 api:
 	@echo [ starting api... ]
 	@docker compose up api
 
-## Generate all code from specs | eq: sqlc + transport
-gen: transport sqlc
+runner:
+	@echo [ starting runner... ]
+	@docker compose up runner
+
+## Generate all code from specs | eq: sqlc + oapi
+gen: oapi sqlc
 
 oapi:
 	@rm -fr ./backend/internal/infra/http/**/*.gen.go
@@ -23,3 +31,9 @@ oapi-frontend:
 sqlc:
 	@echo [ generating sqlc code... ]
 	@docker run --rm -v $$(pwd)/backend:/src -w /src/sql/sqlc kjconroy/sqlc:latest generate
+
+clean:
+	@echo [ cleaning all services... ]
+	@docker compose down
+	@docker compose rm -f
+	@docker volume rm supallm_supallm_data supallm_supallm_redis_data

@@ -30,8 +30,8 @@
 <script>
     // SSE workflow test script
     document.addEventListener('DOMContentLoaded', function () {
-        const projectId = '2953be5d-fcbc-4c2d-ad4c-66abd99e91a6';
-        const workflowId = '9b293002-99fa-4430-8042-af4028aeac12';
+        const projectId = '5e098513-4fd8-4c82-9071-9357ee4e7e5c';
+        const workflowId = 'd1ba4032-1b3d-4e2e-949a-973e5a37655c';
         const triggerUrl = `http://localhost:3001/projects/${projectId}/workflows/${workflowId}/trigger`;
 
 
@@ -82,9 +82,9 @@
                     return response.json();
                 })
                 .then(data => {
-                    logEvent(`Workflow triggered successfully. Trigger ID: ${data.triggerId}`);
+                    logEvent(`Workflow triggered successfully. Trigger ID: ${data.id}`);
                     // Now that we have the trigger ID, we can listen for events
-                    const listenUrl = `http://localhost:3001/projects/${projectId}/workflows/${workflowId}/listen/${data.triggerId}`;
+                    const listenUrl = `http://localhost:3001/projects/${projectId}/workflows/${workflowId}/listen/${data.id}`;
                     listenForEvents(listenUrl);
                 })
                 .catch(error => {
