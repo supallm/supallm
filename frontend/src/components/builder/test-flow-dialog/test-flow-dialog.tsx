@@ -7,12 +7,12 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { EntrypointNodeData } from "@/core/entities/flow/flow-entrypoint";
+import { useCurrentProjectOrThrow } from "@/hooks/use-current-project-or-throw";
 import { getAuthToken } from "@/lib/auth";
-import { supallm } from "@/lib/supallm";
 import { Label } from "@radix-ui/react-dropdown-menu";
 import { Pause, PlayIcon } from "lucide-react";
 import { FC, PropsWithChildren, useState } from "react";
-import { FlowEventData, Unsubscribe } from "supallm";
+import { FlowEventData, initSupallm, Unsubscribe } from "supallm";
 import { EmptyState } from "../../empty-state";
 import { Button } from "../../ui/button";
 import { Input } from "../../ui/input";
@@ -25,6 +25,7 @@ export const TestFlowDialog: FC<
     onChange: (values: string) => void;
   }>
 > = ({ children, data, onChange, flowId }) => {
+  const { id: projectId } = useCurrentProjectOrThrow();
   const [open, setOpen] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
 
@@ -55,11 +56,22 @@ export const TestFlowDialog: FC<
       return;
     }
 
+    const supallm = initSupallm(
+      {
+        projectId,
+        publicKey: process.env.SUPALLM_PUBLIC_KEY!,
+      },
+      {
+        apiUrl: "http://localhost:3001",
+        mocked: false,
+      },
+    );
+
     supallm.setAccessToken(token);
 
     const subscription = supallm
       .runFlow({
-        flowId: "f641cf81-5f51-4da9-b08a-504f15834351",
+        flowId,
         inputs: inputs,
       })
       .subscribe();

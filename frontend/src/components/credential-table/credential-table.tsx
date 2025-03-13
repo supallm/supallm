@@ -76,7 +76,7 @@ export const CredentialTableColumns: ColumnDef<Credential>[] = [
         );
 
       const handleDelete = () => {
-        deleteCredential(row.original.id);
+        deleteCredential(row.original.projectId, row.original.id);
       };
 
       return (

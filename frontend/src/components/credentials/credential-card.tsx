@@ -6,6 +6,7 @@ import { Card, CardFooter, CardHeader } from "../ui/card";
 
 import { deleteCredentialUsecase } from "@/core/usecases";
 import { hookifyFunction } from "@/hooks/hookify-function";
+import { useCurrentProjectOrThrow } from "@/hooks/use-current-project-or-throw";
 import { Cog, Trash2 } from "lucide-react";
 import { ConfirmDangerDialog } from "../confirm-danger-dialog";
 import { EditCredentialDialog } from "../edit-credential-dialog";
@@ -19,13 +20,15 @@ export const CredentialCard: FC<CredentialCardProps> = ({ provider }) => {
   const type = provider.providerType;
   const name = provider.name;
 
+  const { id: projectId } = useCurrentProjectOrThrow();
+
   const { execute: deleteCredential, isLoading: deleteCredentialLoading } =
     hookifyFunction(
       deleteCredentialUsecase.execute.bind(deleteCredentialUsecase),
     );
 
   const handleDelete = async () => {
-    await deleteCredential(provider.id);
+    await deleteCredential(projectId, provider.id);
   };
 
   return (

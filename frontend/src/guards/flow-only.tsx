@@ -2,6 +2,7 @@
 
 import { GlobalLoading } from "@/components/global-loading";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCurrentProjectOrThrow } from "@/hooks/use-current-project-or-throw";
 import { useFlow } from "@/hooks/use-flow";
 import { useParams, useRouter } from "next/navigation";
 import { FC, PropsWithChildren, useEffect } from "react";
@@ -21,7 +22,9 @@ const PageSkeleton = () => {
 
 export const FlowOnly: FC<PropsWithChildren> = ({ children }) => {
   const { id: flowId } = useParams<{ id: string }>();
-  const { result, isLoading } = useFlow(flowId);
+  const { id: projectId } = useCurrentProjectOrThrow();
+
+  const { result, isLoading } = useFlow(projectId, flowId);
   const router = useRouter();
 
   useEffect(() => {

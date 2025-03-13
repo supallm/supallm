@@ -74,7 +74,7 @@ export const FlowTableColumns: ColumnDef<Flow>[] = [
       );
 
       const handleDelete = () => {
-        deleteFlow(row.original.id);
+        deleteFlow(row.original.projectId, row.original.id);
       };
 
       return (

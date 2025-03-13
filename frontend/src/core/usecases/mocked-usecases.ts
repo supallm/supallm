@@ -1,8 +1,8 @@
-import { ApiCredentialService } from "@/services/api-credential-service";
-import { ApiFlowService } from "@/services/api-flow-service";
-import { ApiProjectService } from "@/services/api-project-service";
 import { MockAuthProviderService } from "@/services/mock-auth-provider-service";
+import { MockCredentialService } from "@/services/mock-credential-service";
+import { MockFlowService } from "@/services/mock-flow-service";
 import { MockModelService } from "@/services/mock-model-service";
+import { MockProjectService } from "@/services/mock-project-service";
 import { CreateAuthProviderUsecase } from "./create-auth-provider";
 import { CreateCredentialUsecase } from "./create-credential";
 import { CreateFlowUsecase } from "./create-flow";
@@ -28,34 +28,34 @@ import { PatchModelUsecase } from "./patch-model";
  * Project
  */
 export const getCurrentProjectUsecase = new GetCurrentProjectUsecase(
-  new ApiProjectService(),
+  new MockProjectService(),
 );
 
 export const listProjectsUsecase = new ListProjectsUsecase(
-  new ApiProjectService(),
+  new MockProjectService(),
 );
 
 export const createProjectUsecase = new CreateProjectUsecase(
-  new ApiProjectService(),
+  new MockProjectService(),
 );
 
 /**
  * Credentials
  */
 export const listCredentialsUsecase = new ListCredentialsUsecase(
-  new ApiCredentialService(),
+  new MockCredentialService(),
 );
 
 export const createCredentialUsecase = new CreateCredentialUsecase(
-  new ApiCredentialService(),
+  new MockCredentialService(),
 );
 
 export const patchCredentialUsecase = new PatchCredentialUsecase(
-  new ApiCredentialService(),
+  new MockCredentialService(),
 );
 
 export const deleteCredentialUsecase = new DeleteCredentialUsecase(
-  new ApiCredentialService(),
+  new MockCredentialService(),
 );
 
 /**
@@ -77,15 +77,15 @@ export const patchModelUsecase = new PatchModelUsecase(new MockModelService());
  * Flows
  */
 
-export const createFlowUsecase = new CreateFlowUsecase(new ApiFlowService());
+export const createFlowUsecase = new CreateFlowUsecase(new MockFlowService());
 
-export const patchFlowUsecase = new PatchFlowUsecase(new ApiFlowService());
+export const patchFlowUsecase = new PatchFlowUsecase(new MockFlowService());
 
-export const getFlowUsecase = new GetFlowUsecase(new ApiFlowService());
+export const getFlowUsecase = new GetFlowUsecase(new MockFlowService());
 
-export const listFlowsUsecase = new ListFlowsUsecase(new ApiFlowService());
+export const listFlowsUsecase = new ListFlowsUsecase(new MockFlowService());
 
-export const deleteFlowUsecase = new DeleteFlowUsecase(new ApiFlowService());
+export const deleteFlowUsecase = new DeleteFlowUsecase(new MockFlowService());
 
 /**
  * Auth Providers

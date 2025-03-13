@@ -34,8 +34,16 @@ const OrganizationBreadcrumb = () => {
   );
 
   const handleNameChange = (newName: string) => {
+    if (!currentProject || newName.length === 0) {
+      return;
+    }
+
     if (currentFlow) {
-      patchFlow(currentFlow.id, { name: newName });
+      patchFlow(currentProject?.id!, currentFlow.id, {
+        name: newName,
+        nodes: currentFlow.nodes,
+        edges: currentFlow.edges,
+      });
     }
   };
 

@@ -57,7 +57,7 @@ export const AddCredentialDialog: FC<
 
   const formSchema = z.object({
     name: z.string().min(2).max(50),
-    apiKey: z.string().min(2),
+    apiKey: z.string().min(10),
     providerType: z.enum(ProviderTypes),
   });
 

@@ -3,6 +3,7 @@ import { getFlowUsecase } from "@/core/usecases";
 import { Hookify } from "./hookify";
 
 export const useFlow = Hookify(
-  (flowId: string) => getFlowUsecase.execute(flowId),
+  (projectId: string, flowId: string) =>
+    getFlowUsecase.execute(projectId, flowId),
   {} as Flow,
 );

@@ -5,10 +5,10 @@ import { clearCurrentFlow, setCurrentFlow } from "../store/flow";
 export class GetFlowUsecase {
   constructor(private readonly service: FlowService) {}
 
-  async execute(id: string): Promise<Flow | null> {
+  async execute(projectId: string, id: string): Promise<Flow | null> {
     clearCurrentFlow();
 
-    const flow = await this.service.getById(id);
+    const flow = await this.service.getById(projectId, id);
 
     if (flow) {
       setCurrentFlow(flow);

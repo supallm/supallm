@@ -15,6 +15,7 @@ import { ResultNodeData } from "@/core/entities/flow/flow-result";
 import { useCurrentFlowStore } from "@/core/store/flow";
 import { patchFlowUsecase } from "@/core/usecases";
 import { hookifyFunction } from "@/hooks/hookify-function";
+import { useCurrentProjectOrThrow } from "@/hooks/use-current-project-or-throw";
 import { parseHandleId } from "@/lib/handles";
 
 import {
@@ -45,6 +46,7 @@ const ChatFlowPage = () => {
    * At this point it MUST be set to the current flow
    */
   const { currentFlow } = useCurrentFlowStore();
+  const { id: projectId } = useCurrentProjectOrThrow();
 
   if (!currentFlow) {
     throw new Error(
@@ -137,9 +139,10 @@ const ChatFlowPage = () => {
   };
 
   const onSave = () => {
-    saveFlow(currentFlow.id, {
+    saveFlow(projectId, currentFlow.id, {
       nodes,
       edges,
+      name: currentFlow.name,
     });
   };
 
