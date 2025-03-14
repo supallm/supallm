@@ -35,7 +35,23 @@ Ship AI apps in minutes, scale to millions.
 .
 </p>
 
-## Quick Start (available soon)
+## Demo
+
+https://github.com/user-attachments/assets/d3b67c6c-4059-4f7e-b5ad-3e27c1c7c858
+
+## Main Concepts
+
+### 1. Build advanced AI-based flows
+
+![main-concept-1](https://github.com/user-attachments/assets/1cc425ff-cd0b-4428-9992-0124ee610e20)
+
+### 2. Test your flows in our editor
+
+![main-concept-2](https://github.com/user-attachments/assets/2059789e-9c28-4bda-88dd-f61410a02cb2)
+
+### 3. Use them in realtime in your code
+
+![main-concept-3](https://github.com/user-attachments/assets/d7a9b12d-2a67-4e7d-83e0-07df3a2694b2)
 
 ### Run the backoffice
 
