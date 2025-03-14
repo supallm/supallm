@@ -160,7 +160,7 @@ export const TestFlowDialog: FC<
           entrypointNodeData={data}
           resultNodeData={data}
           inputs={
-            data?.handles.map((h) => ({
+            data?.handles?.map((h) => ({
               label: h.label,
               value: inputs[h.label] ?? "<your-value>",
             })) ?? []
