@@ -1,15 +1,16 @@
 import { AlertMessage } from "@/components/alert-message";
+import { SdkCodeExample } from "@/components/sdk-code-example";
 import { Spacer } from "@/components/spacer";
 import { Spinner } from "@/components/spinner";
 import { EntrypointNodeData } from "@/core/entities/flow/flow-entrypoint";
 import { ResultNodeData } from "@/core/entities/flow/flow-result";
+import { useCurrentProjectOrThrow } from "@/hooks/use-current-project-or-throw";
 import { cn } from "@/lib/utils";
 import { BookCheck, BracesIcon, LogsIcon } from "lucide-react";
 import { FC, useMemo, useState } from "react";
 import { JsonView, allExpanded, defaultStyles } from "react-json-view-lite";
 import "react-json-view-lite/dist/index.css";
 import { FlowEventData } from "supallm";
-import { FlowCodeSnippet } from "../flow-code-dialog/flow-code-snippet";
 
 interface LogsPaneProps {
   events: FlowEventData[];
@@ -17,6 +18,7 @@ interface LogsPaneProps {
   entrypointNodeData: EntrypointNodeData | undefined;
   resultNodeData: ResultNodeData | undefined;
   flowId: string;
+  inputs: { label: string; value: string }[];
 }
 
 const PaneButton: FC<{
@@ -131,10 +133,13 @@ export const TestFlowBottomPanel: FC<LogsPaneProps> = ({
   entrypointNodeData,
   resultNodeData,
   flowId,
+  inputs,
 }) => {
   const [activePane, setActivePane] = useState<
     "full-result" | "source-code" | "logs"
   >("full-result");
+
+  const { id: projectId } = useCurrentProjectOrThrow();
 
   return (
     <div className="bg-muted grow border-t overflow-y-auto">
@@ -178,11 +183,13 @@ export const TestFlowBottomPanel: FC<LogsPaneProps> = ({
 
       {activePane === "source-code" && (
         <div className="p-4">
-          <FlowCodeSnippet
-            entrypointNodeData={entrypointNodeData}
-            resultNodeData={resultNodeData}
+          <SdkCodeExample
+            projectId={projectId}
+            secretKey={"<your-secret-key>"}
             flowId={flowId}
-          />
+            inputs={inputs}
+            showInitSdk={false}
+          ></SdkCodeExample>
         </div>
       )}
     </div>

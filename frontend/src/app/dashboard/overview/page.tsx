@@ -3,42 +3,20 @@
 import { CopiableKey } from "@/components/copiable-key";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
+import { SdkCodeExample } from "@/components/sdk-code-example";
 import { Spacer } from "@/components/spacer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { CodeBlock } from "@/components/ui/code-block";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAppConfigStore } from "@/core/store/app-config";
 import { createFlowUsecase } from "@/core/usecases";
 import { useCurrentProjectOrThrow } from "@/hooks/use-current-project-or-throw";
 import { useListFlows } from "@/hooks/use-list-flows";
 import { FlowBuilderRoute } from "@/routes";
-import { BrainCircuit, Users } from "lucide-react";
+import { BrainCircuit } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-
-const code = `import { Supallm } from 'supallm';
-
-const supallm = new Supallm({
-    apiKey: 'YOUR_API_KEY',
-});
-
-const stream = supallm.run({
-  flowId: 'YOUR_FLOW_ID',
-  input: {
-    prompt: 'What is the weather in Tokyo?',
-  },
-})
-
-stream.on('stream', (data) => {
-    console.log('stream', data);
-});
-
-stream.on('end', (fullResponse) => {
-    console.log('stream', fullResponse);
-});
-`;
 
 const SectionSkeleton = () => {
   return (
@@ -111,36 +89,6 @@ const OnboardingSection = () => {
             >
               Create an AI Flow
             </Button>
-          </div>
-        </CardContent>
-      </Card>
-      <Card className="bg-gradient-to-r from-slate-50 via-white to-green-50">
-        <CardContent className="space-y-4">
-          <div>
-            <h1 className="text-lg font-medium flex items-center">
-              <Badge variant={"outline"} className="mr-2">
-                Step 2
-              </Badge>
-              Install the Supallm sdk
-            </h1>
-            <p className="text-md text-muted-foreground">
-              Start by adding your first Credential. Then you can call it
-              directly by your frontend using the Supallm frontend sdk.
-            </p>
-          </div>
-          <div className="space-y-4">
-            <CodeBlock
-              filename=""
-              language="bash"
-              highlightLines={[]}
-              code={"npm install supallm"}
-            />
-            <CodeBlock
-              language="jsx"
-              filename="YourComponent.tsx"
-              highlightLines={[]}
-              code={code}
-            />
           </div>
         </CardContent>
       </Card>
@@ -221,6 +169,27 @@ const ProjectSection = () => {
               />
             </div>
           </div>
+          <div className="py-4 px-6 flex flex-col justify-between gap-4">
+            <div>
+              <h1 className="text-lg font-medium flex items-center">
+                Use our SDK to call your flows
+              </h1>
+            </div>
+            <div className="space-y-4">
+              <SdkCodeExample
+                projectId={currentProject.id}
+                secretKey={currentProject.secretKey}
+                flowId={"your-flow-id"}
+                inputs={[
+                  {
+                    label: "prompt",
+                    value: "What is the capital of France?",
+                  },
+                ]}
+                showInitSdk={true}
+              ></SdkCodeExample>
+            </div>
+          </div>
         </div>
       </Card>
       <Spacer direction="vertical" size="sm" />
@@ -244,43 +213,6 @@ const OverviewPage = () => {
         <div className="flex flex-col gap-4">
           <OnboardingSection />
           <ProjectSection />
-        </div>
-
-        <Spacer direction="vertical" size="md" />
-
-        <h1 className="text-lg pb-3 font-medium">Explore our other products</h1>
-
-        <div className="flex gap-4">
-          <Card className="bg-gradient-to-r from-slate-50 via-white to-slate-50">
-            <CardHeader>
-              <h1 className="text-md font-medium flex items-center">
-                <Users className="mr-2 w-4 h-4" /> Authentication
-              </h1>
-            </CardHeader>
-            <CardContent className="space-x-2">
-              <Button variant="outline" size={"sm"} className="cursor-pointer">
-                Explore Auth
-              </Button>
-              <Button variant="outline" size={"sm"} className="cursor-pointer">
-                View Docs
-              </Button>
-            </CardContent>
-          </Card>
-          <Card className="bg-gradient-to-r from-slate-50 via-white to-slate-50 grow-0">
-            <CardHeader>
-              <h1 className="text-md font-medium flex items-center">
-                <Users className="mr-2 w-4 h-4" /> Quotas
-              </h1>
-            </CardHeader>
-            <CardContent className="space-x-2">
-              <Button variant="outline" size={"sm"} className="cursor-pointer">
-                Explore Auth
-              </Button>
-              <Button variant="outline" size={"sm"} className="cursor-pointer">
-                View Docs
-              </Button>
-            </CardContent>
-          </Card>
         </div>
       </PageContainer>
     </div>

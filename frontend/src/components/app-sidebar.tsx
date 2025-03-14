@@ -5,9 +5,7 @@ import {
   ChevronUp,
   Home,
   KeyRoundIcon,
-  Settings,
   User2,
-  Users,
 } from "lucide-react";
 
 import {
@@ -21,12 +19,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import {
-  AuthenticationRoute,
-  ChatFlowsRoute,
-  CredentialsRoute,
-  OverviewRoute,
-} from "@/routes";
+import { ChatFlowsRoute, CredentialsRoute, OverviewRoute } from "@/routes";
 import { useAuth } from "@clerk/nextjs";
 import Link from "next/link";
 import {
@@ -53,16 +46,11 @@ const items = [
     url: CredentialsRoute.path(),
     icon: KeyRoundIcon,
   },
-  {
-    title: "Authentication",
-    url: AuthenticationRoute.path(),
-    icon: Users,
-  },
-  {
-    title: "Settings",
-    url: "#",
-    icon: Settings,
-  },
+  // {
+  //   title: "Authentication",
+  //   url: AuthenticationRoute.path(),
+  //   icon: Users,
+  // },
 ];
 
 export function AppSidebar() {
@@ -103,12 +91,6 @@ export function AppSidebar() {
                 side="top"
                 className="w-[--radix-popper-anchor-width]"
               >
-                <DropdownMenuItem>
-                  <span>Account</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <span>Billing</span>
-                </DropdownMenuItem>
                 <DropdownMenuItem>
                   <span onClick={() => signOut()}>Sign out</span>
                 </DropdownMenuItem>

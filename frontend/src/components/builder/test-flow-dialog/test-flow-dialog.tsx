@@ -56,6 +56,8 @@ export const TestFlowDialog: FC<
       return;
     }
 
+    setResults([]);
+
     const supallm = initSupallm(
       {
         projectId,
@@ -157,7 +159,13 @@ export const TestFlowDialog: FC<
           isRunning={isRunning}
           entrypointNodeData={data}
           resultNodeData={data}
-          flowId="something"
+          inputs={
+            data?.handles.map((h) => ({
+              label: h.label,
+              value: inputs[h.label] ?? "<your-value>",
+            })) ?? []
+          }
+          flowId={flowId}
         />
       </SheetContent>
     </Sheet>
