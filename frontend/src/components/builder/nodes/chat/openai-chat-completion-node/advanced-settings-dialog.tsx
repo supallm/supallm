@@ -208,7 +208,7 @@ export const OpenAIChatAdvancedSettingsDialog: FC<
                         onChange={(value) => {
                           field.onChange(value);
                         }}
-                        value={field.value}
+                        value={field.value ?? undefined}
                       />
                     </FormControl>
                     <FormMessage />
@@ -224,7 +224,7 @@ export const OpenAIChatAdvancedSettingsDialog: FC<
                     <FormControl>
                       <NumberInput
                         placeholder="Default"
-                        value={field.value}
+                        value={field.value ?? undefined}
                         onChange={(value) => field.onChange(value)}
                       />
                     </FormControl>

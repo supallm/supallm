@@ -1,5 +1,5 @@
 import { AuthProviderService } from "@/core/interfaces";
-import { patchCredential } from "../store/credentials";
+import { patchAuthProvider } from "../store/auth-provider";
 
 export class PatchAuthProviderUsecase {
   constructor(private readonly service: AuthProviderService) {}
@@ -10,10 +10,14 @@ export class PatchAuthProviderUsecase {
       secretKey: string | undefined;
     },
   ) {
-    await this.service.patch(id, data);
+    await this.service.patch(id, {
+      secretKey: data.secretKey ?? "",
+    });
 
-    patchCredential(id, {
-      name: data.name,
+    patchAuthProvider(id, {
+      config: {
+        secretKey: data.secretKey ?? "",
+      },
     });
   }
 }

@@ -204,8 +204,6 @@ const OverviewPage = () => {
     throw new Error("Project must be defined");
   }
 
-  const router = useRouter();
-
   return (
     <div className="pb-15">
       <PageHeader title={currentProject.name} noBorder />

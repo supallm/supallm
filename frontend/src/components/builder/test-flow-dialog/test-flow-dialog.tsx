@@ -24,7 +24,7 @@ export const TestFlowDialog: FC<
     data: EntrypointNodeData | undefined;
     onChange: (values: string) => void;
   }>
-> = ({ children, data, onChange, flowId }) => {
+> = ({ children, data, flowId }) => {
   const { id: projectId } = useCurrentProjectOrThrow();
   const [open, setOpen] = useState(false);
   const [isRunning, setIsRunning] = useState(false);

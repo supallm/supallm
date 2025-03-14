@@ -5,7 +5,7 @@ export class DeleteAuthProviderUsercase {
   constructor(private readonly service: AuthProviderService) {}
 
   async execute(id: string): Promise<void> {
-    const provider = await this.service.delete(id);
+    await this.service.delete(id);
 
     setAuthProviderList([]);
   }

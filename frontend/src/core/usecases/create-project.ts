@@ -6,7 +6,13 @@ export class CreateProjectUsecase {
   constructor(private readonly projectService: ProjectService) {}
 
   async execute(data: { name: string }): Promise<Project> {
-    const project = await this.projectService.create(data);
+    await this.projectService.create(data);
+
+    const [project] = await this.projectService.listAll();
+
+    if (!project) {
+      throw new Error("Failed to retrieve created project");
+    }
 
     setCurrentProject(project);
 

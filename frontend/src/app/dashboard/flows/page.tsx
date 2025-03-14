@@ -15,7 +15,6 @@ import { useListFlows } from "@/hooks/use-list-flows";
 import { FlowBuilderRoute } from "@/routes";
 import { PlusIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 
 const PageSkeleton = () => {
   return (
@@ -31,7 +30,6 @@ const PageSkeleton = () => {
 };
 
 const Page = () => {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const currentProject = useCurrentProjectOrThrow();
   const { list: flows } = useFlowStore();
   const router = useRouter();

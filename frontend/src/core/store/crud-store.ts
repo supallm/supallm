@@ -11,7 +11,7 @@ export interface CrudState<T extends Partial<{ id: string }>> {
   upsert: (data: T) => void;
 }
 
-export const createCrudStore = <T extends { id: string }>(name: string) => {
+export const createCrudStore = <T extends { id: string }>() => {
   const store = create<CrudState<T>>()(
     devtools((set) => ({
       list: [],

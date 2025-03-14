@@ -16,7 +16,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Credential, ProviderType } from "@/core/entities/credential";
+import { Credential } from "@/core/entities/credential";
 import { patchCredentialUsecase } from "@/core/usecases";
 import { hookifyFunction } from "@/hooks/hookify-function";
 import { useCurrentProjectOrThrow } from "@/hooks/use-current-project-or-throw";
@@ -29,7 +29,7 @@ import { ProviderLogo } from "./logos/provider-logo";
 import { Card, CardContent, CardHeader } from "./ui/card";
 import { Input } from "./ui/input";
 
-interface EditCredentialDialogProps extends PropsWithChildren<{}> {
+interface EditCredentialDialogProps extends PropsWithChildren {
   provider: Credential;
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -49,9 +49,6 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
     );
 
   const [internalOpen, setInternalOpen] = useState(false);
-  const [selectedProvider, setSelectedProvider] = useState<ProviderType | null>(
-    null,
-  );
 
   const formSchema = z.object({
     name: z.string().min(2).max(50),
@@ -84,7 +81,6 @@ export const EditCredentialDialog: FC<EditCredentialDialogProps> = ({
   }
 
   const reset = () => {
-    setSelectedProvider(null);
     form.reset();
   };
 

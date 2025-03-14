@@ -18,7 +18,7 @@ export type FlowCardProps = {
 };
 
 export const FlowCard: FC<FlowCardProps> = ({ flow }) => {
-  const router = useRouter(); // Initialize useRouter]
+  const router = useRouter();
 
   const { execute: deleteFlow, isLoading: deleteFlowLoading } = hookifyFunction(
     deleteFlowUsecase.execute.bind(deleteFlowUsecase),
@@ -28,8 +28,8 @@ export const FlowCard: FC<FlowCardProps> = ({ flow }) => {
     await deleteFlow(flow.projectId, flow.id);
   };
 
-  const handleEdit = (e: React.MouseEvent<HTMLDivElement>) => {
-    router.push(FlowBuilderRoute.path(flow.id)); // Navigate to the flow editing route
+  const handleEdit = () => {
+    router.push(FlowBuilderRoute.path(flow.id));
   };
 
   return (

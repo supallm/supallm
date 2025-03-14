@@ -12,11 +12,11 @@ export type SupabaseAuthProviderConfig = {
   jwtSecret: string;
 };
 
-export type FirebaseAuthProviderConfig = {};
+export type FirebaseAuthProviderConfig = unknown;
 
-export type Auth0AuthProviderConfig = {};
+export type Auth0AuthProviderConfig = unknown;
 
-export type JwtAuthProviderConfig = {};
+export type JwtAuthProviderConfig = unknown;
 
 export type AuthProviderConfig =
   | SupabaseAuthProviderConfig

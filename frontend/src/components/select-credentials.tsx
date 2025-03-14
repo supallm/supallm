@@ -5,7 +5,6 @@ import { useAppConfigStore } from "@/core/store/app-config";
 import { useCredentialStore } from "@/core/store/credentials";
 import { useListCredentials } from "@/hooks/use-list-credentials";
 import { PlusIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { FC } from "react";
 import { AddCredentialDialog } from "./add-credential-dialog";
 import { Button } from "./ui/button";
@@ -24,7 +23,6 @@ export const SelectCredentials: FC<{
   defaultValue: string;
   providerType: ProviderType;
 }> = ({ onValueChange, defaultValue, providerType }) => {
-  const router = useRouter();
   const { currentProject } = useAppConfigStore();
 
   if (!currentProject) {

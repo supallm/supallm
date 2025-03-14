@@ -14,7 +14,7 @@ export const ProjectOnly: FC<PropsWithChildren> = ({ children }) => {
     if (!currentProject) {
       router.push(NoProjectRoute.path());
     }
-  }, [currentProject]);
+  }, [currentProject, router]);
 
   if (!currentProject) {
     return <GlobalLoading />;

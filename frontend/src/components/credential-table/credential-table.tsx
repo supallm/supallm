@@ -44,7 +44,7 @@ export const CredentialTableColumns: ColumnDef<Credential>[] = [
     accessorKey: "id",
     header: "ID",
     cell: ({ row }) => {
-      return <Copiable value={row.original.id} width="sm" />;
+      return <Copiable value={row.original.id} width="sm" size="xs" />;
     },
   },
   {
@@ -67,7 +67,9 @@ export const CredentialTableColumns: ColumnDef<Credential>[] = [
     accessorKey: "actions",
     header: "Actions",
     cell: ({ row }) => {
+      // eslint-disable-next-line react-hooks/rules-of-hooks
       const [open, setOpen] = useState(false);
+      // eslint-disable-next-line react-hooks/rules-of-hooks
       const [openEdit, setOpenEdit] = useState(false);
 
       const { execute: deleteCredential, isLoading: isDeleting } =

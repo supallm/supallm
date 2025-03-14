@@ -130,8 +130,6 @@ const FinalResult: FC<{ events: FlowEventData[] }> = ({ events }) => {
 export const TestFlowBottomPanel: FC<LogsPaneProps> = ({
   events,
   isRunning,
-  entrypointNodeData,
-  resultNodeData,
   flowId,
   inputs,
 }) => {

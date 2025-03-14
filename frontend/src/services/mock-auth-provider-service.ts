@@ -63,7 +63,7 @@ export class MockAuthProviderService implements AuthProviderService {
       provider.id === id
         ? {
             ...provider,
-            config: { ...provider.config, secretKey: data.secretKey },
+            config: { ...(provider?.config ?? {}), secretKey: data.secretKey },
           }
         : provider,
     );

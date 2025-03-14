@@ -31,7 +31,7 @@ export const FlowOnly: FC<PropsWithChildren> = ({ children }) => {
     if (!result && !isLoading) {
       router.push("/builder/");
     }
-  }, [result, isLoading]);
+  }, [result, isLoading, router]);
 
   if (!result && !isLoading) {
     return <PageSkeleton />;

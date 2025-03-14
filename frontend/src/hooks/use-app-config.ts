@@ -18,7 +18,7 @@ export function useAppConfig() {
     }
 
     getCurrentProjectUsecase
-      .execute(user.id)
+      .execute()
       .then((project) => {
         setCurrentProject(project);
         setIsLoading(false);

@@ -5,8 +5,8 @@ import { setCurrentProject } from "@/core/store/app-config";
 export class GetCurrentProjectUsecase {
   constructor(private readonly projectService: ProjectService) {}
 
-  async execute(userId: string): Promise<Project | null> {
-    const projects = await this.projectService.listAll(userId);
+  async execute(): Promise<Project | null> {
+    const projects = await this.projectService.listAll();
 
     if (!projects?.length) {
       return null;

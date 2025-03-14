@@ -41,7 +41,7 @@ export const patchCurrentFlow = (data: Partial<Flow>) => {
  * Flow CRUD store
  */
 
-export const useFlowStore = createCrudStore<Flow>("flow");
+export const useFlowStore = createCrudStore<Flow>();
 
 export const getFlowState = () => {
   return useFlowStore.getState().list;

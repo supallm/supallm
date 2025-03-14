@@ -42,7 +42,7 @@ sub.on('error', (error) => {
     console.error(error);
 });
     `;
-  }, [flowInputObjectExample]);
+  }, [flowInputObjectExample, flowId]);
 
   const flowCodeSnippetPromise = useMemo(() => {
     const formattedInput = JSON.stringify(flowInputObjectExample, null, 4)
@@ -59,7 +59,7 @@ const result = await supallm.run({
 
 console.log('Full aggregated result', result);
     `;
-  }, [flowInputObjectExample]);
+  }, [flowInputObjectExample, flowId]);
 
   const tabs = [
     {
