@@ -1,7 +1,7 @@
 import { Project } from "../entities/project";
 import { createCrudStore } from "./crud-store";
 
-export const useProjectStore = createCrudStore<Project>("projects");
+export const useProjectStore = createCrudStore<Project>();
 
 export const getProjectList = () => {
   return useProjectStore.getState().list;

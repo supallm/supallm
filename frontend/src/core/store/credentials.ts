@@ -1,7 +1,7 @@
 import { Credential } from "../entities/credential";
 import { createCrudStore } from "./crud-store";
 
-export const useCredentialStore = createCrudStore<Credential>("credentials");
+export const useCredentialStore = createCrudStore<Credential>();
 
 export const getCredentials = () => {
   return useCredentialStore.getState().list;

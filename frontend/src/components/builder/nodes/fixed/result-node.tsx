@@ -72,7 +72,7 @@ const ResultNode: FC<ResultNodeProps> = ({ data, id: nodeId }) => {
     updateNodeData(nodeId, {
       handles: formHandles,
     });
-  }, [nodeId, formHandles, updateNodeInternals]);
+  }, [nodeId, formHandles, updateNodeInternals, updateNodeData]);
 
   return (
     <BaseNode

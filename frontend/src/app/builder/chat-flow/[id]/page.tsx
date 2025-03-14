@@ -9,9 +9,8 @@ import entrypointNode from "@/components/builder/nodes/fixed/entrypoint-node";
 import resultNode from "@/components/builder/nodes/fixed/result-node";
 import { TestFlowDialog } from "@/components/builder/test-flow-dialog/test-flow-dialog";
 import { Button } from "@/components/ui/button";
-import { FlowNode } from "@/core/entities/flow";
+import { FlowEdge, FlowNode } from "@/core/entities/flow";
 import { EntrypointNodeData } from "@/core/entities/flow/flow-entrypoint";
-import { ResultNodeData } from "@/core/entities/flow/flow-result";
 import { useCurrentFlowStore } from "@/core/store/flow";
 import { patchFlowUsecase } from "@/core/usecases";
 import { hookifyFunction } from "@/hooks/hookify-function";
@@ -58,7 +57,7 @@ const ChatFlowPage = () => {
     patchFlowUsecase.execute.bind(patchFlowUsecase),
   );
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(currentFlow.nodes);
+  const [nodes, , onNodesChange] = useNodesState(currentFlow.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(currentFlow.edges);
 
   const store = useStoreApi();
@@ -71,6 +70,7 @@ const ChatFlowPage = () => {
     [setEdges],
   );
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const isValidConnection: IsValidConnection<any> = (params: Connection) => {
     const { sourceHandle, targetHandle } = params;
 
@@ -84,6 +84,7 @@ const ChatFlowPage = () => {
     return sourceType === targetType;
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const nodeTypes: Record<NodeType, any> = useMemo(
     () => ({
       "chat-openai": openAIChatCompletionNode,
@@ -102,8 +103,7 @@ const ChatFlowPage = () => {
     onNodesChange(changes);
   };
 
-  const handleEdgeChange = (changes: EdgeChange[]) => {
-    console.log("handleEdgeChange", changes);
+  const handleEdgeChange = (changes: EdgeChange<FlowEdge>[]) => {
     onEdgesChange(changes);
   };
 
@@ -150,14 +150,6 @@ const ChatFlowPage = () => {
     () =>
       nodes.find((node) => node.type === "entrypoint")?.data as
         | EntrypointNodeData
-        | undefined,
-    [nodes],
-  );
-
-  const resultNodeData = useMemo(
-    () =>
-      nodes.find((node) => node.type === "result")?.data as
-        | ResultNodeData
         | undefined,
     [nodes],
   );

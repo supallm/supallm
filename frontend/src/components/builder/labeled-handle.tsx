@@ -67,7 +67,7 @@ export const LabeledHandle = forwardRef<
       if (!targetHandle) return true;
 
       return false;
-    }, [connections]);
+    }, [connections, props.id]);
 
     return (
       <div

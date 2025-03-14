@@ -38,8 +38,8 @@ const OrganizationBreadcrumb = () => {
       return;
     }
 
-    if (currentFlow) {
-      patchFlow(currentProject?.id!, currentFlow.id, {
+    if (!!currentFlow) {
+      patchFlow(currentProject?.id, currentFlow.id, {
         name: newName,
         nodes: currentFlow.nodes,
         edges: currentFlow.edges,

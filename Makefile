@@ -2,19 +2,19 @@
 
 up:
 	@echo [ starting all services... ]
-	@docker compose up
+	@docker compose -f docker-compose.dev.yml up
 
 backend:
 	@echo [ starting backend... ]
-	@docker compose up api runner
+	@docker compose -f docker-compose.dev.yml up api runner
 
 api:
 	@echo [ starting api... ]
-	@docker compose up api
+	@docker compose -f docker-compose.dev.yml up api
 
 runner:
 	@echo [ starting runner... ]
-	@docker compose up runner
+	@docker compose -f docker-compose.dev.yml up runner
 
 ## Generate all code from specs | eq: sqlc + oapi
 gen: oapi sqlc

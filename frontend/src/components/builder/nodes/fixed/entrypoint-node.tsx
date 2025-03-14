@@ -13,7 +13,7 @@ import BaseNode from "../common/base-node";
 
 import { generateHandleId } from "@/lib/handles";
 import { NodeProps, useReactFlow, useUpdateNodeInternals } from "@xyflow/react";
-import { NewHandleInput } from "./new-handle-input";
+import { NewHandleInputEntrypoint } from "./new-handle-input";
 
 const EntrypointNode: FC<NodeProps & { data: EntrypointNodeData }> = ({
   id: nodeId,
@@ -87,7 +87,7 @@ const EntrypointNode: FC<NodeProps & { data: EntrypointNodeData }> = ({
     >
       <div>
         <Form {...form}>
-          <NewHandleInput onChange={onHandleChange} />
+          <NewHandleInputEntrypoint onChange={onHandleChange} />
         </Form>
 
         <div className="flex flex-col gap-1 mt-2">

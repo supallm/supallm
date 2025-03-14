@@ -1,8 +1,7 @@
 import { AuthProvider } from "../entities/auth-provider";
 import { createCrudStore } from "./crud-store";
 
-export const useAuthProviderStore =
-  createCrudStore<AuthProvider>("auth-provider");
+export const useAuthProviderStore = createCrudStore<AuthProvider>();
 
 export const getCurrentAuthProvider = () => {
   return useAuthProviderStore.getState().list[0] || null;

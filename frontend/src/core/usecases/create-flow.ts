@@ -13,7 +13,9 @@ export class CreateFlowUsecase {
         id: "entrypoint-node",
         type: "entrypoint",
         position: { x: 100, y: 200 },
-        data: {},
+        data: {
+          handles: [],
+        },
         deletable: false,
         zIndex: 1,
       },
@@ -21,7 +23,9 @@ export class CreateFlowUsecase {
         id: "result-node",
         type: "result",
         position: { x: 900, y: 200 },
-        data: {},
+        data: {
+          handles: [],
+        },
         deletable: false,
         zIndex: 1,
       },
