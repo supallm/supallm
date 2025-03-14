@@ -13,7 +13,7 @@ export const toCamelCase = (str: string) => {
 };
 
 export const sanitizeString = (str: string) => {
-  return str.replace(/[^a-zA-Z]/g, "");
+  return str.replace(/[^a-zA-Z-0-9]/g, "");
 };
 
 export const toSanitizedCamelCase = (str: string) => {
