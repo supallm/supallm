@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS projects (
     user_id VARCHAR(255) NOT NULL,
     name VARCHAR(255) NOT NULL,
     auth_provider JSONB DEFAULT '{}',
+    version BIGINT NOT NULL DEFAULT 1,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     CONSTRAINT projects_name_user_unique UNIQUE (name, user_id)
@@ -20,20 +21,19 @@ CREATE TABLE IF NOT EXISTS credentials (
 );
 
 CREATE TABLE IF NOT EXISTS workflows (
-    id UUID PRIMARY KEY,
+    id CHAR(22) PRIMARY KEY,
     project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
     name VARCHAR(100) NOT NULL,
     status VARCHAR(50) NOT NULL,
     builder_flow JSONB DEFAULT '{}',
     runner_flow JSONB DEFAULT '{}',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    CONSTRAINT workflows_name_project_unique UNIQUE (name, project_id)
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS workflow_events (
     id UUID PRIMARY KEY,
-    workflow_id UUID NOT NULL REFERENCES workflows(id) ON DELETE CASCADE,
+    workflow_id CHAR(22) NOT NULL REFERENCES workflows(id) ON DELETE CASCADE,
     trigger_id VARCHAR(255) NOT NULL,
     event_type VARCHAR(50) NOT NULL,
     data JSONB DEFAULT '{}',

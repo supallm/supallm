@@ -18,7 +18,7 @@ VALUES ($1, $2, $3, $4, $5)
 
 type storeWorkflowEventParams struct {
 	ID         uuid.UUID `json:"id"`
-	WorkflowID uuid.UUID `json:"workflow_id"`
+	WorkflowID string    `json:"workflow_id"`
 	TriggerID  string    `json:"trigger_id"`
 	EventType  string    `json:"event_type"`
 	Data       []byte    `json:"data"`
@@ -75,7 +75,7 @@ FROM workflow_events
 WHERE workflow_id = $1
 `
 
-func (q *Queries) workflowEventsByWorkflowId(ctx context.Context, workflowID uuid.UUID) ([]WorkflowEvent, error) {
+func (q *Queries) workflowEventsByWorkflowId(ctx context.Context, workflowID string) ([]WorkflowEvent, error) {
 	rows, err := q.db.Query(ctx, workflowEventsByWorkflowId, workflowID)
 	if err != nil {
 		return nil, err

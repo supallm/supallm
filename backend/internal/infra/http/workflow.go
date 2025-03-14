@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/supallm/core/internal/application/command"
+	"github.com/supallm/core/internal/application/domain/model"
 	"github.com/supallm/core/internal/application/query"
 	"github.com/supallm/core/internal/infra/http/gen"
 	"github.com/supallm/core/internal/pkg/errs"
@@ -24,7 +25,7 @@ func (s *Server) CreateWorkflow(w http.ResponseWriter, r *http.Request, projectI
 		return
 	}
 
-	id := uuid.New()
+	id := model.NewWorkflowID()
 	err = s.app.Commands.AddWorkflow.Handle(r.Context(), command.AddWorkflowCommand{
 		ProjectID:   projectID,
 		WorkflowID:  id,
@@ -37,14 +38,14 @@ func (s *Server) CreateWorkflow(w http.ResponseWriter, r *http.Request, projectI
 	}
 
 	s.server.Respond(w, r, http.StatusCreated, idResponse{
-		ID: id,
+		ID: id.String(),
 	})
 }
 
 func (s *Server) GetWorkflow(w http.ResponseWriter, r *http.Request, projectID gen.UUID, workflowID string) {
 	workflow, err := s.app.Queries.GetWorkflow.Handle(r.Context(), query.GetWorkflowQuery{
 		ProjectID:  projectID,
-		WorkflowID: uuid.MustParse(workflowID),
+		WorkflowID: model.WorkflowID(workflowID),
 	})
 	if err != nil {
 		s.server.RespondErr(w, r, err)
@@ -69,7 +70,7 @@ func (s *Server) UpdateWorkflow(w http.ResponseWriter, r *http.Request, projectI
 
 	err = s.app.Commands.UpdateWorkflow.Handle(r.Context(), command.UpdateWorkflowCommand{
 		ProjectID:   projectID,
-		WorkflowID:  uuid.MustParse(workflowID),
+		WorkflowID:  model.WorkflowID(workflowID),
 		Name:        req.Name,
 		BuilderFlow: builderFlow,
 	})
@@ -81,10 +82,10 @@ func (s *Server) UpdateWorkflow(w http.ResponseWriter, r *http.Request, projectI
 	s.server.RespondWithContentLocation(w, r, http.StatusNoContent, "/projects/%s/workflows/%s", projectID, workflowID)
 }
 
-func (s *Server) DeleteWorkflow(w http.ResponseWriter, r *http.Request, projectID gen.UUID, workflowID gen.UUID) {
+func (s *Server) DeleteWorkflow(w http.ResponseWriter, r *http.Request, projectID gen.UUID, workflowID string) {
 	err := s.app.Commands.RemoveWorkflow.Handle(r.Context(), command.RemoveWorkflowCommand{
 		ProjectID:  projectID,
-		WorkflowID: workflowID,
+		WorkflowID: model.WorkflowID(workflowID),
 	})
 	if err != nil {
 		s.server.RespondErr(w, r, err)
@@ -106,7 +107,7 @@ func (s *Server) ListWorkflows(w http.ResponseWriter, r *http.Request, projectID
 	s.server.Respond(w, r, http.StatusOK, queryWorkflowsToDTOs(workflows))
 }
 
-func (s *Server) TriggerWorkflow(w http.ResponseWriter, r *http.Request, projectID gen.UUID, workflowID gen.UUID) {
+func (s *Server) TriggerWorkflow(w http.ResponseWriter, r *http.Request, projectID gen.UUID, workflowID string) {
 	var req gen.TriggerWorkflowRequest
 	if err := s.server.ParseBody(r, &req); err != nil {
 		s.server.RespondErr(w, r, err)
@@ -116,7 +117,7 @@ func (s *Server) TriggerWorkflow(w http.ResponseWriter, r *http.Request, project
 	triggerID := uuid.New()
 	err := s.app.Commands.TriggerWorkflow.Handle(r.Context(), command.TriggerWorkflowCommand{
 		ProjectID:  projectID,
-		WorkflowID: workflowID,
+		WorkflowID: model.WorkflowID(workflowID),
 		TriggerID:  triggerID,
 		Inputs:     req.Inputs,
 	})
@@ -126,6 +127,6 @@ func (s *Server) TriggerWorkflow(w http.ResponseWriter, r *http.Request, project
 	}
 
 	s.server.Respond(w, r, http.StatusAccepted, idResponse{
-		ID: triggerID,
+		ID: triggerID.String(),
 	})
 }

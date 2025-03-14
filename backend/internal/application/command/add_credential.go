@@ -42,19 +42,19 @@ func NewAddCredentialHandler(
 func (h AddCredentialHandler) Handle(ctx context.Context, cmd AddCredentialCommand) error {
 	project, err := h.projectRepo.Retrieve(ctx, cmd.ProjectID)
 	if err != nil {
-		return errs.NotFoundError{Resource: "project", ID: cmd.ProjectID}
-	}
-
-	err = project.AddCredential(cmd.ID, cmd.Name, cmd.ProviderType, cmd.APIKey)
-	if err != nil {
-		return errs.InvalidError{Reason: err.Error()}
-	}
-
-	err = h.projectRepo.Update(ctx, project)
-	if err != nil {
 		if errors.Is(err, repo.ErrNotFound) {
-			return errs.NotFoundError{Resource: "project", ID: cmd.ProjectID, Err: err}
+			return errs.NotFoundError{Resource: "project", ID: cmd.ProjectID}
 		}
+		return errs.InternalError{Err: err}
+	}
+
+	credential, err := project.CreateCredential(cmd.ID, cmd.Name, cmd.ProviderType, cmd.APIKey)
+	if err != nil {
+		return errs.InvalidError{Reason: "unable to add credential", Err: err}
+	}
+
+	err = h.projectRepo.AddCredential(ctx, project.ID, credential)
+	if err != nil {
 		if errors.Is(err, repo.ErrDuplicate) {
 			return errs.DuplicateError{Resource: "credential", ID: cmd.ID, Err: err}
 		}

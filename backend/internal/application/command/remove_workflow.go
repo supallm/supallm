@@ -6,12 +6,13 @@ import (
 	"os"
 
 	"github.com/google/uuid"
+	"github.com/supallm/core/internal/application/domain/model"
 	"github.com/supallm/core/internal/application/domain/repository"
 )
 
 type RemoveWorkflowCommand struct {
 	ProjectID  uuid.UUID
-	WorkflowID uuid.UUID
+	WorkflowID model.WorkflowID
 }
 
 type RemoveWorkflowHandler struct {

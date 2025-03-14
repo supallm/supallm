@@ -6,8 +6,10 @@ VALUES ($1, $2, $3);
 UPDATE projects
 SET name = $2,
     auth_provider = $3,
+    version = version + 1,
     updated_at = NOW()
-WHERE id = $1;
+WHERE id = $1 
+  AND version = $4;
 
 -- name: projectById :one
 SELECT *

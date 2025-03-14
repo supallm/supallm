@@ -55,7 +55,7 @@ type ServerInterface interface {
 	CreateWorkflow(w http.ResponseWriter, r *http.Request, projectId UUID)
 	// Delete a workflow
 	// (DELETE /projects/{projectId}/workflows/{workflowId})
-	DeleteWorkflow(w http.ResponseWriter, r *http.Request, projectId UUID, workflowId UUID)
+	DeleteWorkflow(w http.ResponseWriter, r *http.Request, projectId UUID, workflowId string)
 	// Get a workflow by ID
 	// (GET /projects/{projectId}/workflows/{workflowId})
 	GetWorkflow(w http.ResponseWriter, r *http.Request, projectId UUID, workflowId string)
@@ -64,7 +64,7 @@ type ServerInterface interface {
 	UpdateWorkflow(w http.ResponseWriter, r *http.Request, projectId UUID, workflowId string)
 	// Trigger a workflow
 	// (POST /projects/{projectId}/workflows/{workflowId}/trigger)
-	TriggerWorkflow(w http.ResponseWriter, r *http.Request, projectId UUID, workflowId UUID)
+	TriggerWorkflow(w http.ResponseWriter, r *http.Request, projectId UUID, workflowId string)
 }
 
 // Unimplemented server implementation that returns http.StatusNotImplemented for each endpoint.
@@ -151,7 +151,7 @@ func (_ Unimplemented) CreateWorkflow(w http.ResponseWriter, r *http.Request, pr
 
 // Delete a workflow
 // (DELETE /projects/{projectId}/workflows/{workflowId})
-func (_ Unimplemented) DeleteWorkflow(w http.ResponseWriter, r *http.Request, projectId UUID, workflowId UUID) {
+func (_ Unimplemented) DeleteWorkflow(w http.ResponseWriter, r *http.Request, projectId UUID, workflowId string) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -169,7 +169,7 @@ func (_ Unimplemented) UpdateWorkflow(w http.ResponseWriter, r *http.Request, pr
 
 // Trigger a workflow
 // (POST /projects/{projectId}/workflows/{workflowId}/trigger)
-func (_ Unimplemented) TriggerWorkflow(w http.ResponseWriter, r *http.Request, projectId UUID, workflowId UUID) {
+func (_ Unimplemented) TriggerWorkflow(w http.ResponseWriter, r *http.Request, projectId UUID, workflowId string) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -605,7 +605,7 @@ func (siw *ServerInterfaceWrapper) DeleteWorkflow(w http.ResponseWriter, r *http
 	}
 
 	// ------------- Path parameter "workflowId" -------------
-	var workflowId UUID
+	var workflowId string
 
 	err = runtime.BindStyledParameterWithOptions("simple", "workflowId", chi.URLParam(r, "workflowId"), &workflowId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
 	if err != nil {
@@ -725,7 +725,7 @@ func (siw *ServerInterfaceWrapper) TriggerWorkflow(w http.ResponseWriter, r *htt
 	}
 
 	// ------------- Path parameter "workflowId" -------------
-	var workflowId UUID
+	var workflowId string
 
 	err = runtime.BindStyledParameterWithOptions("simple", "workflowId", chi.URLParam(r, "workflowId"), &workflowId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
 	if err != nil {

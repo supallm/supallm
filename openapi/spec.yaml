@@ -366,7 +366,7 @@ paths:
           in: path
           required: true
           schema:
-            $ref: "#/components/schemas/UUID"
+            type: string
       responses:
         "204":
           description: "Workflow deleted"
@@ -389,7 +389,7 @@ paths:
           in: path
           required: true
           schema:
-            $ref: "#/components/schemas/UUID"
+            type: string
       requestBody:
         required: true
         content:
@@ -525,7 +525,7 @@ components:
       type: object
       properties:
         id:
-          $ref: "#/components/schemas/UUID"
+          type: string
         name:
           type: string
         builderFlow:

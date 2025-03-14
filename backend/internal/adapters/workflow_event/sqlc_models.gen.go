@@ -11,7 +11,7 @@ import (
 
 type WorkflowEvent struct {
 	ID         uuid.UUID          `json:"id"`
-	WorkflowID uuid.UUID          `json:"workflow_id"`
+	WorkflowID string             `json:"workflow_id"`
 	TriggerID  string             `json:"trigger_id"`
 	EventType  string             `json:"event_type"`
 	Data       []byte             `json:"data"`

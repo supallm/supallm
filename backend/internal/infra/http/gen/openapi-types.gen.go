@@ -122,7 +122,7 @@ type UpdateWorkflowRequest struct {
 type Workflow struct {
 	BuilderFlow map[string]interface{} `json:"builderFlow"`
 	CreatedAt   time.Time              `json:"createdAt"`
-	Id          UUID                   `json:"id"`
+	Id          string                 `json:"id"`
 	Name        string                 `json:"name"`
 	UpdatedAt   time.Time              `json:"updatedAt"`
 }

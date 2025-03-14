@@ -32,7 +32,7 @@ func (s *Server) CreateCredential(w http.ResponseWriter, r *http.Request, projec
 	}
 
 	s.server.Respond(w, r, http.StatusCreated, idResponse{
-		ID: id,
+		ID: id.String(),
 	})
 }
 

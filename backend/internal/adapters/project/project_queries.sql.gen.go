@@ -22,7 +22,7 @@ func (q *Queries) deleteProject(ctx context.Context, id uuid.UUID) error {
 }
 
 const projectById = `-- name: projectById :one
-SELECT id, user_id, name, auth_provider, created_at, updated_at
+SELECT id, user_id, name, auth_provider, version, created_at, updated_at
 FROM projects
 WHERE id = $1
 `
@@ -35,6 +35,7 @@ func (q *Queries) projectById(ctx context.Context, id uuid.UUID) (Project, error
 		&i.UserID,
 		&i.Name,
 		&i.AuthProvider,
+		&i.Version,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -42,7 +43,7 @@ func (q *Queries) projectById(ctx context.Context, id uuid.UUID) (Project, error
 }
 
 const projectsByUserId = `-- name: projectsByUserId :many
-SELECT id, user_id, name, auth_provider, created_at, updated_at
+SELECT id, user_id, name, auth_provider, version, created_at, updated_at
 FROM projects
 WHERE user_id = $1
 `
@@ -61,6 +62,7 @@ func (q *Queries) projectsByUserId(ctx context.Context, userID string) ([]Projec
 			&i.UserID,
 			&i.Name,
 			&i.AuthProvider,
+			&i.Version,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -94,17 +96,25 @@ const updateProject = `-- name: updateProject :exec
 UPDATE projects
 SET name = $2,
     auth_provider = $3,
+    version = version + 1,
     updated_at = NOW()
-WHERE id = $1
+WHERE id = $1 
+  AND version = $4
 `
 
 type updateProjectParams struct {
 	ID           uuid.UUID    `json:"id"`
 	Name         string       `json:"name"`
 	AuthProvider authProvider `json:"auth_provider"`
+	Version      int64        `json:"version"`
 }
 
 func (q *Queries) updateProject(ctx context.Context, arg updateProjectParams) error {
-	_, err := q.db.Exec(ctx, updateProject, arg.ID, arg.Name, arg.AuthProvider)
+	_, err := q.db.Exec(ctx, updateProject,
+		arg.ID,
+		arg.Name,
+		arg.AuthProvider,
+		arg.Version,
+	)
 	return err
 }

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/supallm/core/internal/application/domain/model"
 )
 
 type Project struct {
@@ -22,7 +23,7 @@ type AuthProvider struct {
 }
 
 type Workflow struct {
-	ID          uuid.UUID
+	ID          model.WorkflowID
 	Name        string
 	BuilderFlow map[string]any
 	CreatedAt   time.Time

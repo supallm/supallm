@@ -7,13 +7,14 @@ import (
 	"os"
 
 	"github.com/google/uuid"
+	"github.com/supallm/core/internal/application/domain/model"
 	"github.com/supallm/core/internal/application/domain/repository"
 	"github.com/supallm/core/internal/pkg/errs"
 )
 
 type UpdateWorkflowCommand struct {
 	ProjectID   uuid.UUID
-	WorkflowID  uuid.UUID
+	WorkflowID  model.WorkflowID
 	Name        string
 	BuilderFlow json.RawMessage
 }
@@ -36,20 +37,22 @@ func NewUpdateWorkflowHandler(
 }
 
 func (h UpdateWorkflowHandler) Handle(ctx context.Context, cmd UpdateWorkflowCommand) error {
-	project, err := h.projectRepo.Retrieve(ctx, cmd.ProjectID)
-	if err != nil {
-		return errs.NotFoundError{Resource: "project", ID: cmd.ProjectID}
-	}
+	return retryOnConflict(ctx, defaultRetryConfig, errs.InvalidError{}, func() error {
+		project, err := h.projectRepo.Retrieve(ctx, cmd.ProjectID)
+		if err != nil {
+			return errs.NotFoundError{Resource: "project", ID: cmd.ProjectID}
+		}
 
-	err = project.UpdateWorkflowName(cmd.WorkflowID, cmd.Name)
-	if err != nil {
-		return errs.InvalidError{Reason: err.Error()}
-	}
+		err = project.UpdateWorkflowName(cmd.WorkflowID, cmd.Name)
+		if err != nil {
+			return errs.InvalidError{Reason: err.Error()}
+		}
 
-	err = project.UpdateWorkflowBuilderFlow(cmd.WorkflowID, cmd.BuilderFlow)
-	if err != nil {
-		return errs.InvalidError{Reason: err.Error()}
-	}
+		err = project.UpdateWorkflowBuilderFlow(cmd.WorkflowID, cmd.BuilderFlow)
+		if err != nil {
+			return errs.InvalidError{Reason: err.Error()}
+		}
 
-	return h.projectRepo.Update(ctx, project)
+		return h.projectRepo.Update(ctx, project)
+	})
 }

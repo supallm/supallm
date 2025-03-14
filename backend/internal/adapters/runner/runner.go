@@ -58,12 +58,12 @@ func (s *Service) QueueWorkflow(
 }
 
 type workflowQueueMessage struct {
-	WorkflowID uuid.UUID       `json:"workflow_id"`
-	TriggerID  uuid.UUID       `json:"trigger_id"`
-	ProjectID  uuid.UUID       `json:"project_id"`
-	SessionID  uuid.UUID       `json:"session_id"`
-	Definition json.RawMessage `json:"definition"`
-	Inputs     map[string]any  `json:"inputs"`
+	WorkflowID model.WorkflowID `json:"workflow_id"`
+	TriggerID  uuid.UUID        `json:"trigger_id"`
+	ProjectID  uuid.UUID        `json:"project_id"`
+	SessionID  uuid.UUID        `json:"session_id"`
+	Definition json.RawMessage  `json:"definition"`
+	Inputs     map[string]any   `json:"inputs"`
 }
 
 func (q workflowQueueMessage) ToMessage() (*message.Message, error) {

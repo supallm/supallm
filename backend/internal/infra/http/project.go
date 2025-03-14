@@ -29,7 +29,7 @@ func (s *Server) CreateProject(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.server.Respond(w, r, http.StatusCreated, idResponse{
-		ID: projectID,
+		ID: projectID.String(),
 	})
 }
 

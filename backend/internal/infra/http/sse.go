@@ -67,6 +67,7 @@ func (p workflowSSEAdapter) NextStreamResponse(r *http.Request, msg *watermillMs
 		return nil, false
 	}
 
+	slog.Info("message handled", "message", messageHandled)
 	triggerID := chi.URLParam(r, "triggerId")
 	if messageHandled.TriggerID.String() != triggerID {
 		return nil, false

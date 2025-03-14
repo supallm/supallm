@@ -10,7 +10,7 @@ import (
 
 type WorkflowEventMessage struct {
 	Type       model.WorkflowEventType `json:"type"`
-	WorkflowID uuid.UUID               `json:"workflowId"`
+	WorkflowID model.WorkflowID        `json:"workflowId"`
 	TriggerID  uuid.UUID               `json:"triggerId"`
 	SessionID  uuid.UUID               `json:"sessionId"`
 	Data       map[string]any          `json:"data"`

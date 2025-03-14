@@ -6,13 +6,25 @@ import (
 	"os"
 
 	"github.com/google/uuid"
+	"github.com/lithammer/shortuuid"
 	"github.com/supallm/core/internal/pkg/errs"
 )
 
-type WorkflowStatus string
+type (
+	WorkflowID     string
+	WorkflowStatus string
+)
+
+func NewWorkflowID() WorkflowID {
+	return WorkflowID(shortuuid.New())
+}
 
 func (s WorkflowStatus) String() string {
 	return string(s)
+}
+
+func (id WorkflowID) String() string {
+	return string(id)
 }
 
 const (
@@ -22,7 +34,7 @@ const (
 )
 
 type Workflow struct {
-	ID          uuid.UUID
+	ID          WorkflowID
 	ProjectID   uuid.UUID
 	Name        string
 	Status      WorkflowStatus
@@ -120,7 +132,7 @@ type RunnerInput struct {
 	Description string `json:"description,omitempty"`
 }
 
-func (p *Project) AddWorkflow(id uuid.UUID, name string, builderFlow json.RawMessage) error {
+func (p *Project) CreateWorkflow(id WorkflowID, name string, builderFlow json.RawMessage) (*Workflow, error) {
 	w := &Workflow{
 		ID:        id,
 		ProjectID: p.ID,
@@ -134,17 +146,17 @@ func (p *Project) AddWorkflow(id uuid.UUID, name string, builderFlow json.RawMes
 	}
 
 	if err := w.SetBuilderFlow(builderFlow); err != nil {
-		return err
+		return nil, err
 	}
 	if err := w.ComputeRunnerFlow(builderFlow); err != nil {
-		return err
+		return nil, err
 	}
 
 	p.Workflows[id] = w
-	return nil
+	return w, nil
 }
 
-func (p *Project) UpdateWorkflowName(id uuid.UUID, name string) error {
+func (p *Project) UpdateWorkflowName(id WorkflowID, name string) error {
 	w, ok := p.Workflows[id]
 	if !ok {
 		return errs.NotFoundError{Resource: "workflow", ID: id}
@@ -154,7 +166,7 @@ func (p *Project) UpdateWorkflowName(id uuid.UUID, name string) error {
 	return nil
 }
 
-func (p *Project) UpdateWorkflowBuilderFlow(id uuid.UUID, builderFlow json.RawMessage) error {
+func (p *Project) UpdateWorkflowBuilderFlow(id WorkflowID, builderFlow json.RawMessage) error {
 	w, ok := p.Workflows[id]
 	if !ok {
 		return errs.NotFoundError{Resource: "workflow", ID: id}
@@ -169,7 +181,7 @@ func (p *Project) UpdateWorkflowBuilderFlow(id uuid.UUID, builderFlow json.RawMe
 	return nil
 }
 
-func (p *Project) GetWorkflow(id uuid.UUID) (*Workflow, error) {
+func (p *Project) GetWorkflow(id WorkflowID) (*Workflow, error) {
 	w, ok := p.Workflows[id]
 	if !ok {
 		return nil, errs.NotFoundError{Resource: "workflow", ID: id}

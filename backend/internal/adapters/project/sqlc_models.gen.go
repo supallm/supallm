@@ -27,12 +27,13 @@ type Project struct {
 	UserID       string             `json:"user_id"`
 	Name         string             `json:"name"`
 	AuthProvider authProvider       `json:"auth_provider"`
+	Version      int64              `json:"version"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
 }
 
 type Workflow struct {
-	ID          uuid.UUID          `json:"id"`
+	ID          string             `json:"id"`
 	ProjectID   uuid.UUID          `json:"project_id"`
 	Name        string             `json:"name"`
 	Status      string             `json:"status"`

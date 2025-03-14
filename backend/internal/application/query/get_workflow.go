@@ -6,11 +6,12 @@ import (
 	"os"
 
 	"github.com/google/uuid"
+	"github.com/supallm/core/internal/application/domain/model"
 )
 
 type GetWorkflowQuery struct {
 	ProjectID  uuid.UUID
-	WorkflowID uuid.UUID
+	WorkflowID model.WorkflowID
 }
 
 type GetWorkflowHandler struct {

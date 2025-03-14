@@ -11,7 +11,7 @@ type Project struct {
 	Name         string
 	AuthProvider AuthProvider
 	Credentials  map[uuid.UUID]*Credential
-	Workflows    map[uuid.UUID]*Workflow
+	Workflows    map[WorkflowID]*Workflow
 }
 
 func NewProject(id uuid.UUID, userID string, name string) (*Project, error) {
@@ -33,7 +33,7 @@ func NewProject(id uuid.UUID, userID string, name string) (*Project, error) {
 		Name:         name,
 		AuthProvider: nil,
 		Credentials:  map[uuid.UUID]*Credential{},
-		Workflows:    map[uuid.UUID]*Workflow{},
+		Workflows:    map[WorkflowID]*Workflow{},
 	}, nil
 }
 

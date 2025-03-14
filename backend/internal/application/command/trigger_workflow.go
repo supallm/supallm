@@ -6,12 +6,13 @@ import (
 	"os"
 
 	"github.com/google/uuid"
+	"github.com/supallm/core/internal/application/domain/model"
 	"github.com/supallm/core/internal/application/domain/repository"
 	"github.com/supallm/core/internal/pkg/errs"
 )
 
 type TriggerWorkflowCommand struct {
-	WorkflowID uuid.UUID
+	WorkflowID model.WorkflowID
 	ProjectID  uuid.UUID
 	TriggerID  uuid.UUID
 	Inputs     map[string]any
@@ -19,12 +20,12 @@ type TriggerWorkflowCommand struct {
 
 type TriggerWorkflowHandler struct {
 	projectRepo   repository.ProjectRepository
-	runnerService RunnerService
+	runnerService runnerService
 }
 
 func NewTriggerWorkflowHandler(
 	projectRepo repository.ProjectRepository,
-	runnerService RunnerService,
+	runnerService runnerService,
 ) TriggerWorkflowHandler {
 	if projectRepo == nil {
 		slog.Error("projectRepo is nil")

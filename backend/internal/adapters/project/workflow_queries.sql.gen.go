@@ -17,7 +17,7 @@ DELETE FROM workflows
 WHERE id = $1
 `
 
-func (q *Queries) deleteWorkflow(ctx context.Context, id uuid.UUID) error {
+func (q *Queries) deleteWorkflow(ctx context.Context, id string) error {
 	_, err := q.db.Exec(ctx, deleteWorkflow, id)
 	return err
 }
@@ -28,7 +28,7 @@ VALUES ($1, $2, $3, $4, $5, $6)
 `
 
 type storeWorkflowParams struct {
-	ID          uuid.UUID       `json:"id"`
+	ID          string          `json:"id"`
 	ProjectID   uuid.UUID       `json:"project_id"`
 	Name        string          `json:"name"`
 	Status      string          `json:"status"`
@@ -60,7 +60,7 @@ DO UPDATE SET
 `
 
 type upsertWorkflowParams struct {
-	ID          uuid.UUID       `json:"id"`
+	ID          string          `json:"id"`
 	ProjectID   uuid.UUID       `json:"project_id"`
 	Name        string          `json:"name"`
 	Status      string          `json:"status"`
@@ -86,7 +86,7 @@ FROM workflows
 WHERE id = $1
 `
 
-func (q *Queries) workflowById(ctx context.Context, id uuid.UUID) (Workflow, error) {
+func (q *Queries) workflowById(ctx context.Context, id string) (Workflow, error) {
 	row := q.db.QueryRow(ctx, workflowById, id)
 	var i Workflow
 	err := row.Scan(

@@ -1,13 +1,12 @@
 package http
 
 import (
-	"github.com/google/uuid"
 	"github.com/supallm/core/internal/application/query"
 	"github.com/supallm/core/internal/infra/http/gen"
 )
 
 type idResponse struct {
-	ID uuid.UUID `json:"id"`
+	ID string `json:"id"`
 }
 
 func queryCredentialToDTO(credential query.Credential) gen.Credential {
@@ -31,7 +30,7 @@ func queryCredentialsToDTOs(credentials []query.Credential) []gen.Credential {
 
 func queryWorkflowToDTO(workflow query.Workflow) gen.Workflow {
 	return gen.Workflow{
-		Id:          workflow.ID,
+		Id:          workflow.ID.String(),
 		Name:        workflow.Name,
 		CreatedAt:   workflow.CreatedAt,
 		UpdatedAt:   workflow.UpdatedAt,

@@ -1,7 +1,6 @@
 import Redis from "ioredis";
 import { INotifier, WorkflowEvent } from "./notifier.interface";
 import { logger } from "../../utils/logger";
-import { v4 as uuidv4 } from "uuid";
 import * as msgpack from "msgpack-lite";
 
 export class RedisNotifier implements INotifier {
@@ -51,7 +50,7 @@ export class RedisNotifier implements INotifier {
         maxStreamLength,
         "*",
         this.HEADER_MESSAGE_ID,
-        uuidv4(),
+        event.triggerId,
         "payload",
         JSON.stringify(event),
         "metadata",

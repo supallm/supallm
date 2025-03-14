@@ -78,7 +78,7 @@ func (w Workflow) domain() (*model.Workflow, error) {
 	// }
 
 	return &model.Workflow{
-		ID:          w.ID,
+		ID:          model.WorkflowID(w.ID),
 		ProjectID:   w.ProjectID,
 		Status:      model.WorkflowStatus(w.Status),
 		Name:        w.Name,
@@ -94,7 +94,7 @@ func (w Workflow) query() *query.Workflow {
 	}
 
 	return &query.Workflow{
-		ID:          w.ID,
+		ID:          model.WorkflowID(w.ID),
 		Name:        w.Name,
 		BuilderFlow: builderFlow,
 		CreatedAt:   w.CreatedAt.Time,
@@ -116,7 +116,7 @@ func (p Project) domain(cs []Credential, ws []Workflow) (*model.Project, error) 
 		}
 	}
 
-	workflows := make(map[uuid.UUID]*model.Workflow)
+	workflows := make(map[model.WorkflowID]*model.Workflow)
 	for _, w := range ws {
 		var workflow *model.Workflow
 		workflow, err = w.domain()
@@ -124,7 +124,7 @@ func (p Project) domain(cs []Credential, ws []Workflow) (*model.Project, error) 
 			return nil, err
 		}
 
-		workflows[w.ID] = workflow
+		workflows[model.WorkflowID(w.ID)] = workflow
 	}
 
 	return &model.Project{

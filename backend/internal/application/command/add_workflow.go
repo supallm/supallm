@@ -9,13 +9,14 @@ import (
 
 	"github.com/google/uuid"
 	repo "github.com/supallm/core/internal/adapters/errors"
+	"github.com/supallm/core/internal/application/domain/model"
 	"github.com/supallm/core/internal/application/domain/repository"
 	"github.com/supallm/core/internal/pkg/errs"
 )
 
 type AddWorkflowCommand struct {
 	ProjectID   uuid.UUID
-	WorkflowID  uuid.UUID
+	WorkflowID  model.WorkflowID
 	Name        string
 	BuilderFlow json.RawMessage
 }
@@ -43,7 +44,7 @@ func (h AddWorkflowHandler) Handle(ctx context.Context, cmd AddWorkflowCommand) 
 		return errs.NotFoundError{Resource: "project", ID: cmd.ProjectID}
 	}
 
-	err = p.AddWorkflow(
+	workflow, err := p.CreateWorkflow(
 		cmd.WorkflowID,
 		cmd.Name,
 		cmd.BuilderFlow,
@@ -51,11 +52,9 @@ func (h AddWorkflowHandler) Handle(ctx context.Context, cmd AddWorkflowCommand) 
 	if err != nil {
 		return errs.InvalidError{Reason: err.Error()}
 	}
-	err = h.projectRepo.Update(ctx, p)
+
+	err = h.projectRepo.AddWorkflow(ctx, p.ID, workflow)
 	if err != nil {
-		if errors.Is(err, repo.ErrNotFound) {
-			return errs.NotFoundError{Resource: "project", ID: cmd.ProjectID}
-		}
 		if errors.Is(err, repo.ErrDuplicate) {
 			return errs.DuplicateError{Resource: "workflow", ID: cmd.WorkflowID}
 		}

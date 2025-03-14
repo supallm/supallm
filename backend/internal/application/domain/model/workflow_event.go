@@ -21,7 +21,7 @@ const (
 type WorkflowEvent struct {
 	ID         uuid.UUID
 	ProjectID  uuid.UUID
-	WorkflowID uuid.UUID
+	WorkflowID WorkflowID
 	TriggerID  uuid.UUID
 	EventType  WorkflowEventType
 	Data       json.RawMessage
