@@ -102,6 +102,9 @@ curl https://raw.githubusercontent.com/supallm/supallm/main/.env.example -o .env
 
 | Environment Variable     | Description                                                                 | Default Value          | To Change |
 |--------------------------|-----------------------------------------------------------------------------|------------------------|--------------------|
+| CLERK_PUBLISHABLE_KEY    | The publishable key for Clerk authentication.                                | (empty)                | Required                |
+| CLERK_SECRET_KEY         | The secret key for Clerk authentication.                                     | (empty)                | Required                |
+| OPENAI_API_KEY           | The API key for accessing OpenAI services.                                   | (empty)                | Required                |
 | POSTGRES_USER            | The username for the PostgreSQL database.                                   | postgres               | Optional                |
 | POSTGRES_PASSWORD        | The password for the PostgreSQL database.                                   | postgres               | Optional                |
 | POSTGRES_DB              | The name of the PostgreSQL database.                                         | supallm                | Optional                |
@@ -109,10 +112,7 @@ curl https://raw.githubusercontent.com/supallm/supallm/main/.env.example -o .env
 | POSTGRES_PORT            | The port number on which the PostgreSQL database is running.                 | 5432                   | Optional                |
 | FRONTEND_PORT            | The port number on which the frontend server will run.                       | 3000                   | Optional                |
 | BACKEND_PORT             | The port number on which the backend server will run.                        | 3001                   | Optional                |
-| SECRET_KEY               | A secret key used for encryption.                                            | sm4thaXuNVcQgQOHgvxAmMr5LXMazXos007riliXuyY | Advised                |
-| CLERK_PUBLISHABLE_KEY    | The publishable key for Clerk authentication.                                | (empty)                | Required                |
-| CLERK_SECRET_KEY         | The secret key for Clerk authentication.                                     | (empty)                | Required                |
-| OPENAI_API_KEY           | The API key for accessing OpenAI services.                                   | (empty)                | Required                |
+| SECRET_KEY               | A secret key used for encryption.                                            | sm4t...uyY | Advised                |
 | REDIS_HOST               | The hostname of the Redis server.                                            | supallm-redis          | Optional                |
 | REDIS_PORT               | The port number on which the Redis server is running.                        | 6379                   | Optional                |
 | REDIS_PASSWORD           | The password for the Redis server.                                           | redis                  | Optional                |
