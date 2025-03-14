@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { devtools, persist } from "zustand/middleware";
+import { devtools } from "zustand/middleware";
 import { Flow } from "../entities/flow";
 import { createCrudStore } from "./crud-store";
 
@@ -14,20 +14,15 @@ interface CurrentFlowStoreState {
 }
 
 export const useCurrentFlowStore = create<CurrentFlowStoreState>()(
-  devtools(
-    persist(
-      (set) => ({
-        currentFlow: null,
-        setCurrentFlow: (flow) => set({ currentFlow: flow }),
-        clearCurrentFlow: () => set({ currentFlow: null }),
-        patch: (data: Partial<Flow>) =>
-          set((state: CurrentFlowStoreState) => ({
-            currentFlow: { ...state.currentFlow, ...data } as Flow,
-          })),
-      }),
-      { name: "current-flow" },
-    ),
-  ),
+  devtools((set) => ({
+    currentFlow: null,
+    setCurrentFlow: (flow) => set({ currentFlow: flow }),
+    clearCurrentFlow: () => set({ currentFlow: null }),
+    patch: (data: Partial<Flow>) =>
+      set((state: CurrentFlowStoreState) => ({
+        currentFlow: { ...state.currentFlow, ...data } as Flow,
+      })),
+  })),
 );
 
 export const setCurrentFlow = (flow: Flow) => {

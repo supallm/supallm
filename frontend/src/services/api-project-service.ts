@@ -10,6 +10,7 @@ export class ApiProjectService implements ProjectService {
     return projects.map((project) => ({
       id: project.id,
       name: project.name,
+      secretKey: "no-secret-key-please-add-it-backend-boy",
     }));
   }
 

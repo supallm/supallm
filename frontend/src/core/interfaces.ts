@@ -5,8 +5,8 @@ import { Model } from "./entities/model";
 import { Project } from "./entities/project";
 
 export interface ProjectService {
-  listAll: (userId: string) => Promise<Project[]>;
-  create: (data: { name: string }) => Promise<Project>;
+  listAll: () => Promise<Project[]>;
+  create: (data: { name: string }) => Promise<{ id: string; name: string }>;
 }
 
 export interface CredentialService {

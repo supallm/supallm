@@ -5,6 +5,7 @@ import { Cog, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation"; // Import useRouter
 import { FC } from "react";
 import { ConfirmDangerDialog } from "../confirm-danger-dialog";
+import { Copiable } from "../copiable";
 import { Button } from "../ui/button";
 import { Card, CardFooter, CardHeader } from "../ui/card";
 
@@ -34,12 +35,15 @@ export const FlowCard: FC<FlowCardProps> = ({ flow }) => {
   return (
     <Card className="bg-gradient-to-bl from-green-50 via-white to-gray-50 hover:scale-101 transition-all duration-300">
       <CardHeader>
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between flex-col items-start justify-center gap-1">
           <h2 className="text-lg font-medium">{flow.name}</h2>
+          <div>
+            <Copiable value={flow.id} size="xs" width="sm" />
+          </div>
         </div>
       </CardHeader>
       <CardFooter>
-        <div className="flex flex-row justify-between w-full">
+        <div className="flex flex-col  gap-2 justify-between w-full">
           <div className="flex flex-row gap-2 items-center">
             <Button size="xs" variant="outline" onClick={handleEdit}>
               <Cog className="text-muted-foreground w-4 h-4" /> Edit

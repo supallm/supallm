@@ -1,3 +1,4 @@
+import { randomName } from "@/lib/docker-name";
 import { Flow, FlowNode } from "../entities/flow";
 import { FlowService } from "../interfaces";
 import { addFlow } from "../store/flow";
@@ -5,7 +6,8 @@ import { addFlow } from "../store/flow";
 export class CreateFlowUsecase {
   constructor(private readonly service: FlowService) {}
 
-  async execute(req: { name: string; projectId: string }): Promise<Flow> {
+  async execute(req: { projectId: string }): Promise<Flow> {
+    const name = randomName();
     const defaultNodes: FlowNode[] = [
       {
         id: "entrypoint-node",
@@ -25,7 +27,7 @@ export class CreateFlowUsecase {
       },
     ];
     const flow = await this.service.create({
-      name: req.name,
+      name: name,
       projectId: req.projectId,
       nodes: defaultNodes,
       edges: [],

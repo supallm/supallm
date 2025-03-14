@@ -7,10 +7,10 @@ import { PageHeader } from "@/components/page-header";
 import { Spacer } from "@/components/spacer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAppConfigStore } from "@/core/store/app-config";
 import { useFlowStore } from "@/core/store/flow";
 import { createFlowUsecase } from "@/core/usecases";
 import { hookifyFunction } from "@/hooks/hookify-function";
+import { useCurrentProjectOrThrow } from "@/hooks/use-current-project-or-throw";
 import { useListFlows } from "@/hooks/use-list-flows";
 import { FlowBuilderRoute } from "@/routes";
 import { PlusIcon } from "lucide-react";
@@ -32,24 +32,19 @@ const PageSkeleton = () => {
 
 const Page = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { currentProject } = useAppConfigStore();
+  const currentProject = useCurrentProjectOrThrow();
   const { list: flows } = useFlowStore();
   const router = useRouter();
-
-  if (!currentProject) {
-    throw new Error("Unexpected error: no project id");
-  }
 
   const { isLoading: isCreating, execute: createFlow } = hookifyFunction(
     createFlowUsecase.execute.bind(createFlowUsecase),
   );
 
-  const { isLoading } = useListFlows();
+  const { isLoading } = useListFlows(currentProject.id);
 
   const handleAddFlow = async () => {
     try {
       const newFlow = await createFlow({
-        name: "Untitled Flow",
         projectId: currentProject.id,
       });
       router.push(FlowBuilderRoute.path(newFlow.id));
