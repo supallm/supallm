@@ -6,8 +6,8 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"io"
-	"log/slog"
 	"os"
 
 	"github.com/lithammer/shortuuid"
@@ -48,8 +48,6 @@ func (a APIKey) Encrypt(key ...[]byte) (Encrypted, error) {
 		k = key[0]
 	}
 
-	slog.Info("encryption key", "key", k)
-
 	block, err := aes.NewCipher(deriveKey(k))
 	if err != nil {
 		return "", err
@@ -76,7 +74,6 @@ func (e Encrypted) Decrypt(key ...[]byte) (APIKey, error) {
 		k = key[0]
 	}
 
-	slog.Info("encryption key", "key", k)
 	ciphertext, err := hex.DecodeString(e.String())
 	if err != nil {
 		return "", err
@@ -124,4 +121,17 @@ func GenerateAPIKey(secret ...[]byte) (APIKey, Encrypted, error) {
 	}
 
 	return apiKey, encrypted, nil
+}
+
+func (e Encrypted) Verify(apiKey APIKey) error {
+	decrypted, err := e.Decrypt()
+	if err != nil {
+		return err
+	}
+
+	if decrypted != apiKey {
+		return errors.New("invalid API key")
+	}
+
+	return nil
 }

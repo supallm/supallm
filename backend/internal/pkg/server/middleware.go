@@ -2,18 +2,26 @@ package server
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	"github.com/clerk/clerk-sdk-go/v2"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/supallm/core/internal/pkg/errs"
+	"github.com/supallm/core/internal/pkg/secret"
 )
 
-type userIDKeyType string
+type (
+	userIDKeyType string
+	contextKey    string
+)
 
 const (
 	userIDKey userIDKeyType = "userID"
 	maxAge    int           = 300
+
+	secretKeyContextKey contextKey = "secret-key"
 )
 
 func (s *Server) storeUserID(ctx context.Context, userID string) context.Context {
@@ -32,10 +40,11 @@ func (s *Server) applyCommonMiddleware() {
 	s.Router.Use(middleware.RequestID)
 	s.Router.Use(middleware.Recoverer)
 	s.Router.Use(middleware.Logger)
+	s.Router.Use(s.withSecretKey)
 	s.Router.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "X-Secret-Key"},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
 		MaxAge:           maxAge,
@@ -78,4 +87,24 @@ func (s *Server) ClerkAuthMiddleware(next http.Handler) http.Handler {
 		// 	})
 		// }
 	})
+}
+
+func (s *Server) withSecretKey(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		secretKey := r.Header.Get("X-Secret-Key")
+		if secretKey != "" {
+			ctx := context.WithValue(r.Context(), secretKeyContextKey, secretKey)
+			r = r.WithContext(ctx)
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (s *Server) GetSecretKeyFromContext(ctx context.Context) (secret.APIKey, error) {
+	if secretKey, ok := ctx.Value(secretKeyContextKey).(string); ok {
+		return secret.APIKey(secretKey), nil
+	}
+	return "", errs.UnauthorizedError{
+		Err: errors.New("secret key is required"),
+	}
 }

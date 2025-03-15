@@ -616,7 +616,10 @@ components:
     TriggerWorkflowRequest:
       type: object
       properties:
+        triggerId:
+          $ref: "#/components/schemas/UUID"
         inputs:
           type: object
       required:
         - inputs
+        - triggerId

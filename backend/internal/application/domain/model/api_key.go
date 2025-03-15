@@ -23,3 +23,15 @@ func (p *Project) addAPIKey() error {
 
 	return nil
 }
+
+func (p *Project) ValidateAPIKey(apiKey secret.APIKey) bool {
+	for _, key := range p.APIKeys {
+		err := key.KeyHash.Verify(apiKey)
+		if err != nil {
+			continue
+		}
+
+		return true
+	}
+	return false
+}

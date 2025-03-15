@@ -11,6 +11,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/google/uuid"
 	"github.com/supallm/core/internal/pkg/config"
 	"github.com/supallm/core/internal/pkg/errs"
 	"golang.org/x/net/http2"
@@ -122,6 +123,18 @@ func (s *Server) GetQueryParam(r *http.Request, key string) string {
 
 func (s *Server) GetParam(r *http.Request, key string) string {
 	return chi.URLParam(r, key)
+}
+
+func (s *Server) ParseUUID(r *http.Request, key string) (uuid.UUID, error) {
+	id, err := uuid.Parse(chi.URLParam(r, key))
+	if err != nil {
+		return uuid.UUID{}, errs.InvalidError{
+			Field:  key,
+			Reason: "invalid uuid",
+			Err:    err,
+		}
+	}
+	return id, nil
 }
 
 // Add a Stop method to gracefully shutdown the server

@@ -38,7 +38,8 @@ type Commands struct {
 	UpdateCredential command.UpdateCredentialHandler
 	RemoveCredential command.RemoveCredentialHandler
 
-	TriggerWorkflow command.TriggerWorkflowHandler
+	TriggerWorkflow            command.TriggerWorkflowHandler
+	AuthorizeEventSubscription command.AuthorizeEventSubscriptionHandler
 }
 
 type Queries struct {
@@ -89,7 +90,8 @@ func New(
 			UpdateCredential: command.NewUpdateCredentialHandler(projectRepo),
 			RemoveCredential: command.NewRemoveCredentialHandler(projectRepo),
 
-			TriggerWorkflow: command.NewTriggerWorkflowHandler(projectRepo, runnerService),
+			TriggerWorkflow:            command.NewTriggerWorkflowHandler(projectRepo, runnerService),
+			AuthorizeEventSubscription: command.NewAuthorizeEventSubscriptionHandler(projectRepo),
 		},
 		Queries: &Queries{
 			GetProject:   query.NewGetProjectHandler(projectRepo),

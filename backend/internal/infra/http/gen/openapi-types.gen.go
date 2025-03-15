@@ -94,7 +94,8 @@ type ProviderType string
 
 // TriggerWorkflowRequest defines model for TriggerWorkflowRequest.
 type TriggerWorkflowRequest struct {
-	Inputs map[string]interface{} `json:"inputs"`
+	Inputs    map[string]interface{} `json:"inputs"`
+	TriggerId UUID                   `json:"triggerId"`
 }
 
 // UUID defines model for UUID.
