@@ -45,7 +45,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          npx semantic-release && echo "NEW_RELEASE=true" >> $GITHUB_ENV || echo "NEW_RELEASE=false" >> $GITHUB_ENV
+          npx semantic-release
+          if [ -f .VERSION ]; then
+            echo "NEW_RELEASE=true" >> $GITHUB_ENV
+          else
+            echo "NEW_RELEASE=false" >> $GITHUB_ENV
+          fi
 
       - name: Extract Semantic Version
         if: env.NEW_RELEASE == 'true'
