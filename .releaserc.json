@@ -13,6 +13,7 @@
       "@semantic-release/changelog",
       ["@semantic-release/exec", {
         "verifyReleaseCmd": "echo ${nextRelease.version} > .VERSION"
-      }]
+      }],
+      "@semantic-release/github"
     ]
   }
