@@ -31,20 +31,32 @@ jobs:
       - name: Authenticate to GitHub Container Registry (GHCR)
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
+      - name: Generate OpenAPI Client for Frontend
+        run: |
+          DOCKER_BUILDKIT=1 docker build -f Dockerfile.generate --target oapi-frontend --output ./frontend/src/lib/services/gen-api .
+
+      - name: Test Docker Build (Fail Fast)
+        run: |
+          docker build -t ghcr.io/${{ github.repository }}:test .
+        # If this step fails, the workflow stops, and no release is published.
+
       - name: Run Semantic Release
         id: release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx semantic-release
+        run: |
+          npx semantic-release && echo "NEW_RELEASE=true" >> $GITHUB_ENV || echo "NEW_RELEASE=false" >> $GITHUB_ENV
 
       - name: Extract Semantic Version
+        if: env.NEW_RELEASE == 'true'
         run: echo "VERSION=$(cat .VERSION)" >> $GITHUB_ENV
 
-      - name: Build and Push Docker Image
+      - name: Tag and Push Docker Image
+        if: env.NEW_RELEASE == 'true'
         env:
           VERSION: ${{ env.VERSION }}
         run: |
-          docker build -t ghcr.io/${{ github.repository }}:$VERSION .
+          docker tag ghcr.io/${{ github.repository }}:test ghcr.io/${{ github.repository }}:$VERSION
           docker tag ghcr.io/${{ github.repository }}:$VERSION ghcr.io/${{ github.repository }}:latest
           docker push ghcr.io/${{ github.repository }}:$VERSION
           docker push ghcr.io/${{ github.repository }}:latest
