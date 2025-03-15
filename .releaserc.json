@@ -1,8 +1,7 @@
 {
     "branches": [
-      "main",
       {
-        "name": "alpha",
+        "name": "main",
         "prerelease": true
       }
     ],
@@ -10,9 +9,6 @@
       "@semantic-release/commit-analyzer",
       "@semantic-release/release-notes-generator",
       "@semantic-release/changelog",
-      ["@semantic-release/exec", {
-        "publishCmd": "docker build -t ghcr.io/${{ github.repository }}:${nextRelease.version} . && docker push ghcr.io/${{ github.repository }}:${nextRelease.version}"
-      }],
       "@semantic-release/github",
       ["@semantic-release/git", {
         "assets": ["CHANGELOG.md"],

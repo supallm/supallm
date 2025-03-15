@@ -1,0 +1,104 @@
+volumes:
+  supallm_data:
+  supallm_redis_data:
+
+networks:
+  supallm-network:
+    driver: bridge
+
+services:
+  frontend:
+    image: 'supallm'
+    container_name: supallm-frontend
+    hostname: supallm-frontend
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    volumes:
+      - ./frontend:/src
+    depends_on:
+      - api
+    networks:
+      - supallm-network
+    environment:
+      - MODE=frontend
+      - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${CLERK_PUBLISHABLE_KEY}
+      - CLERK_SECRET_KEY=${CLERK_SECRET_KEY}
+
+  postgres:
+    image: postgres:16
+    container_name: supallm-pg
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - supallm_data:/var/lib/postgresql/data
+      - ./backend/sql/schemas.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    networks:
+      - supallm-network
+    command:
+      - "postgres"
+      - "-c"
+      - "shared_buffers=1GB"
+      - "-c"
+      - "maintenance_work_mem=1GB"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7.4
+    container_name: supallm-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    networks:
+      - supallm-network
+    volumes:
+      - supallm_redis_data:/data
+    command: redis-server --requirepass ${REDIS_PASSWORD} --maxmemory 1GB --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "-h", "localhost", "-p", "6379", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    image: 'supallm'
+    container_name: supallm-api
+    env_file:
+      - .env
+    ports:
+      - "${BACKEND_PORT:-3001}:80"
+    volumes:
+      - ./backend:/src
+    environment:
+      - MODE=api
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - supallm-network
+
+  runner:
+    build:
+      context: ./runner
+      dockerfile: Dockerfile.dev
+    container_name: supallm-runner
+    volumes:
+      - ./runner:/app
+      - /app/node_modules
+    env_file:
+      - .env
+    environment:
+      - MODE=runner
+    networks:
+      - supallm-network
+    depends_on:
+      redis:
+        condition: service_healthy

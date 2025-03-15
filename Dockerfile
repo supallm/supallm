@@ -61,15 +61,20 @@ RUN npm run build
 # |  _|  | || |\  |/ ___ \| |___ 
 # |_|   |___|_| \_/_/   \_\_____|
 
-FROM alpine:latest AS final
+FROM node:lts-alpine AS final
 WORKDIR /app
 
+# Backend
 COPY --from=api-builder /app/server /app/server
 
-COPY --from=frontend-builder /app/frontend /app/frontend
+# Frontend
+COPY --from=frontend-builder /app/frontend/package.json /app/frontend/package.json
+COPY --from=frontend-builder /app/frontend/node_modules /app/frontend/node_modules
+COPY --from=frontend-builder /app/frontend/.next /app/frontend/.next
+COPY --from=frontend-builder /app/frontend/public /app/frontend/public
 
+# Runner
 COPY --from=runner-builder /app/runner /app/runner
-COPY --from=runner-builder /app/runner/node_modules /app/runner/node_modules
 
 # Expose necessary ports
 EXPOSE 80 3000 50051

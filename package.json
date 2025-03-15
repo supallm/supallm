@@ -1,0 +1,29 @@
+{
+  "name": "supallm",
+  "version": "1.0.0",
+  "description": "<p align=\"center\">   <a href=\"https://github.com/supallm/supallm\"><img src=\"https://github.com/user-attachments/assets/a848e92f-8f20-43d5-a1e1-e89e68772945\" alt=\"Supallm\"></a> </p>",
+  "homepage": "https://github.com/supallm/supallm#readme",
+  "bugs": {
+    "url": "https://github.com/supallm/supallm/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/supallm/supallm.git"
+  },
+  "license": "SEE LICENSE FILE",
+  "author": "Supallm",
+  "type": "commonjs",
+  "main": ".eslintrc.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/exec": "^7.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^11.0.1",
+    "@semantic-release/release-notes-generator": "^14.0.3",
+    "semantic-release": "^24.2.3"
+  }
+}
