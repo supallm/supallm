@@ -91,12 +91,19 @@ You only need two files to start supallm:
 - the docker-compose.yml file
 
 
-#### Get the files
+#### Run the installation script
 
 ```bash
-curl https://raw.githubusercontent.com/supallm/supallm/main/docker-compose.yml -o docker-compose.yml
-curl https://raw.githubusercontent.com/supallm/supallm/main/.env.example -o .env
+curl -fsSL https://raw.githubusercontent.com/supallm/supallm/main/install.sh | sh
 ```
+
+This script will download the docker-compose.yml and .env file in the current directory.
+
+Once done, update the downloaded .env file with the environment variables.
+
+Then, simply run `docker compose up -d`.
+
+Et voilà! Your Supallm dashboard is running at http://localhost:3001 (or the port of your choice if you updated it).
 
 #### Update the .env file
 
