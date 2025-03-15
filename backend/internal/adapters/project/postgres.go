@@ -77,34 +77,46 @@ func (r Repository) errorDecoder(err error) error {
 	return err
 }
 
-func (r Repository) retrieveDependencies(ctx context.Context, projectID uuid.UUID) ([]Credential, []Workflow, error) {
+func (r Repository) retrieveDependencies(
+	ctx context.Context,
+	projectID uuid.UUID,
+) ([]Credential, []Workflow, []ApiKey, error) {
 	llmCredentials, err := r.queries.credentialsByProjectId(ctx, projectID)
 	if err != nil {
 		slog.Error("error retrieving llm credentials", "error", err)
-		return nil, nil, r.errorDecoder(err)
+		return nil, nil, nil, r.errorDecoder(err)
 	}
 
 	workflows, err := r.queries.workflowsByProjectId(ctx, projectID)
 	if err != nil {
 		slog.Error("error retrieving workflows", "error", err)
-		return nil, nil, r.errorDecoder(err)
+		return nil, nil, nil, r.errorDecoder(err)
 	}
 
-	return llmCredentials, workflows, nil
+	apiKeys, err := r.queries.apiKeysByProjectId(ctx, projectID)
+	if err != nil {
+		slog.Error("error retrieving api keys", "error", err)
+		return nil, nil, nil, r.errorDecoder(err)
+	}
+
+	return llmCredentials, workflows, apiKeys, nil
 }
 
-func (r Repository) retrieve(ctx context.Context, projectID uuid.UUID) (Project, []Credential, []Workflow, error) {
+func (r Repository) retrieve(
+	ctx context.Context,
+	projectID uuid.UUID,
+) (Project, []Credential, []Workflow, []ApiKey, error) {
 	project, err := r.queries.projectById(ctx, projectID)
 	if err != nil {
 		slog.Error("error retrieving project", "error", err)
-		return Project{}, nil, nil, r.errorDecoder(err)
+		return Project{}, nil, nil, nil, r.errorDecoder(err)
 	}
 
-	llmCredentials, workflows, err := r.retrieveDependencies(ctx, projectID)
+	llmCredentials, workflows, apiKeys, err := r.retrieveDependencies(ctx, projectID)
 	if err != nil {
 		slog.Error("error retrieving dependencies", "error", err)
-		return Project{}, nil, nil, r.errorDecoder(err)
+		return Project{}, nil, nil, nil, r.errorDecoder(err)
 	}
 
-	return project, llmCredentials, workflows, nil
+	return project, llmCredentials, workflows, apiKeys, nil
 }

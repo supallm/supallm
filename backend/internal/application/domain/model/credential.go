@@ -10,7 +10,7 @@ type Credential struct {
 	ID           uuid.UUID
 	ProviderType ProviderType
 	Name         string
-	APIKey       secret.APIKey
+	APIKey       secret.Encrypted
 }
 
 func (p *Project) CreateCredential(
@@ -35,7 +35,12 @@ func (p *Project) CreateCredential(
 		return nil, errs.InvalidError{Field: "apiKey", Reason: "apiKey is required"}
 	}
 
-	credential := &Credential{ID: id, Name: name, ProviderType: providerType, APIKey: apiKey}
+	encrypted, err := apiKey.Encrypt()
+	if err != nil {
+		return nil, err
+	}
+
+	credential := &Credential{ID: id, Name: name, ProviderType: providerType, APIKey: encrypted}
 	p.Credentials[credential.ID] = credential
 	return credential, nil
 }
@@ -50,10 +55,13 @@ func (p *Project) UpdateCredential(id uuid.UUID, name string, apiKey secret.APIK
 		return ErrCredentialNotFound
 	}
 
-	credential.Name = name
-	if apiKey != "" {
-		credential.APIKey = apiKey
+	encrypted, err := apiKey.Encrypt()
+	if err != nil {
+		return err
 	}
+
+	credential.Name = name
+	credential.APIKey = encrypted
 
 	return nil
 }

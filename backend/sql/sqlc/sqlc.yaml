@@ -10,6 +10,7 @@ sql:
       - "./project_queries.sql"
       - "./workflow_queries.sql"
       - "./credential_queries.sql"
+      - "./apikey_queries.sql"
     engine: "postgresql"
     gen:
       go:
@@ -26,6 +27,18 @@ sql:
           - column: "projects.auth_provider"
             go_type:
               type: "authProvider"
+            nullable: true
+          - column: "api_keys.key_hash"
+            go_type:
+              import: "github.com/supallm/core/internal/pkg/secret"
+              package: "secret"
+              type: "Encrypted"
+            nullable: true
+          - column: "credentials.api_key_encrypted"
+            go_type:
+              import: "github.com/supallm/core/internal/pkg/secret"
+              package: "secret"
+              type: "Encrypted"
             nullable: true
           - column: "workflows.builder_flow"
             go_type:

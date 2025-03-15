@@ -33,6 +33,13 @@ const (
 	UpdateAuthRequestProviderSupabase UpdateAuthRequestProvider = "supabase"
 )
 
+// ApiKey defines model for ApiKey.
+type ApiKey struct {
+	CreatedAt time.Time `json:"createdAt"`
+	Id        UUID      `json:"id"`
+	Key       string    `json:"key"`
+}
+
 // AuthProvider defines model for AuthProvider.
 type AuthProvider struct {
 	Config   map[string]interface{} `json:"config"`
@@ -72,6 +79,7 @@ type Credential struct {
 
 // Project defines model for Project.
 type Project struct {
+	ApiKey       ApiKey       `json:"apiKey"`
 	AuthProvider AuthProvider `json:"authProvider"`
 	CreatedAt    time.Time    `json:"createdAt"`
 	Credentials  []Credential `json:"credentials"`

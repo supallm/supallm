@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/supallm/core/internal/application/domain/model"
+	"github.com/supallm/core/internal/pkg/secret"
 )
 
 type Project struct {
@@ -13,8 +14,16 @@ type Project struct {
 	AuthProvider AuthProvider
 	Credentials  []Credential
 	Workflows    []Workflow
+	APIKeys      []APIKey
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
+}
+
+type APIKey struct {
+	ID        uuid.UUID
+	Key       secret.APIKey
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 type AuthProvider struct {
