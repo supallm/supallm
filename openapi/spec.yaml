@@ -434,6 +434,8 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Workflow"
+        apiKey:
+          $ref: "#/components/schemas/ApiKey"
         createdAt:
           type: string
           format: date-time
@@ -447,6 +449,7 @@ components:
         - authProvider
         - credentials
         - workflows
+        - apiKey
         - createdAt
         - updatedAt
 
@@ -496,6 +499,21 @@ components:
         - apiKey
         - createdAt
         - updatedAt
+
+    ApiKey:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+        key:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - key
+        - createdAt
 
     CreateCredentialRequest:
       type: object
@@ -598,7 +616,10 @@ components:
     TriggerWorkflowRequest:
       type: object
       properties:
+        triggerId:
+          $ref: "#/components/schemas/UUID"
         inputs:
           type: object
       required:
         - inputs
+        - triggerId

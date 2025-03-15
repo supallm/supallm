@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/supallm/core/internal/application/command"
 	"github.com/supallm/core/internal/application/domain/model"
 	"github.com/supallm/core/internal/application/query"
@@ -114,11 +113,16 @@ func (s *Server) TriggerWorkflow(w http.ResponseWriter, r *http.Request, project
 		return
 	}
 
-	triggerID := uuid.New()
-	err := s.app.Commands.TriggerWorkflow.Handle(r.Context(), command.TriggerWorkflowCommand{
+	err := s.isAuthorize(r.Context(), projectID, s.app.Commands.AuthorizeEventSubscription.Handle)
+	if err != nil {
+		s.server.RespondErr(w, r, err)
+		return
+	}
+
+	err = s.app.Commands.TriggerWorkflow.Handle(r.Context(), command.TriggerWorkflowCommand{
 		ProjectID:  projectID,
 		WorkflowID: model.WorkflowID(workflowID),
-		TriggerID:  triggerID,
+		TriggerID:  req.TriggerId,
 		Inputs:     req.Inputs,
 	})
 	if err != nil {
@@ -127,6 +131,6 @@ func (s *Server) TriggerWorkflow(w http.ResponseWriter, r *http.Request, project
 	}
 
 	s.server.Respond(w, r, http.StatusAccepted, idResponse{
-		ID: triggerID.String(),
+		ID: req.TriggerId.String(),
 	})
 }

@@ -5,9 +5,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
-	"os"
 
-	"github.com/ThreeDotsLabs/watermill"
 	watermillHTTP "github.com/ThreeDotsLabs/watermill-http/v2/pkg/http"
 	watermillMsg "github.com/ThreeDotsLabs/watermill/message"
 	"github.com/go-chi/chi/v5"
@@ -15,40 +13,27 @@ import (
 	"github.com/supallm/core/internal/application/event"
 )
 
-func (s *Server) listenWorkflowRan() {
-	logger := watermill.NewSlogLogger(nil)
-	sseRouter, err := watermillHTTP.NewSSERouter(
-		watermillHTTP.SSERouterConfig{
-			UpstreamSubscriber: s.app.EventsSubscriber,
-			ErrorHandler:       watermillHTTP.DefaultErrorHandler,
-			Marshaler:          workflowSSEMarshaller{},
-		},
-		logger,
-	)
-	if err != nil {
-		slog.Error("error creating sse router", "error", err)
-		os.Exit(1)
+func (s *Server) listenWorkflowEvents(next http.Handler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// projectID, err := s.server.ParseUUID(r, "projectId")
+		// if err != nil {
+		// 	s.server.RespondErr(w, r, err)
+		// 	return
+		// }
+
+		// err = s.isAuthorize(r.Context(), projectID, s.app.Commands.AuthorizeEventSubscription.Handle)
+		// if err != nil {
+		// 	s.server.RespondErr(w, r, err)
+		// 	return
+		// }
+
+		next.ServeHTTP(w, r)
 	}
-
-	sseHandler := sseRouter.AddHandler(event.InternalEventsTopic, workflowSSEAdapter{})
-	s.server.Router.Get("/projects/{projectId}/workflows/{workflowId}/listen/{triggerId}", sseHandler)
-
-	go func() {
-		err = sseRouter.Run(context.Background())
-		slog.Debug("running sse router")
-		if err != nil {
-			slog.Error("error running sse router", "error", err)
-			os.Exit(1)
-		}
-	}()
-
-	<-sseRouter.Running()
-	slog.Debug("sse router is ready")
 }
 
 type workflowSSEAdapter struct{}
 
-func (p workflowSSEAdapter) InitialStreamResponse(_ http.ResponseWriter, r *http.Request) (response any, ok bool) {
+func (p workflowSSEAdapter) InitialStreamResponse(w http.ResponseWriter, r *http.Request) (response any, ok bool) {
 	triggerID := chi.URLParam(r, "triggerId")
 	workflowID := chi.URLParam(r, "workflowId")
 	projectID := chi.URLParam(r, "projectId")

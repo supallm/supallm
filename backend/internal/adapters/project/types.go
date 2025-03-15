@@ -2,11 +2,11 @@ package project
 
 import (
 	"encoding/json"
+	"log/slog"
 
 	"github.com/google/uuid"
 	"github.com/supallm/core/internal/application/domain/model"
 	"github.com/supallm/core/internal/application/query"
-	"github.com/supallm/core/internal/pkg/secret"
 )
 
 type authProvider struct {
@@ -41,18 +41,13 @@ func (a authProvider) query() query.AuthProvider {
 	}
 }
 
-func (l Credential) domain() (*model.Credential, error) {
-	apiKey, err := secret.Decrypt(l.ApiKeyEncrypted)
-	if err != nil {
-		return nil, err
-	}
-
+func (l Credential) domain() *model.Credential {
 	return &model.Credential{
 		ID:           l.ID,
 		Name:         l.Name,
 		ProviderType: model.ProviderType(l.ProviderType),
-		APIKey:       apiKey,
-	}, nil
+		APIKey:       l.ApiKeyEncrypted,
+	}
 }
 
 func (l Credential) query() query.Credential {
@@ -64,6 +59,28 @@ func (l Credential) query() query.Credential {
 		CreatedAt:        l.CreatedAt.Time,
 		UpdatedAt:        l.UpdatedAt.Time,
 	}
+}
+
+func (a ApiKey) domain() *model.APIKey {
+	return &model.APIKey{
+		ID:      a.ID,
+		KeyHash: a.KeyHash,
+	}
+}
+
+func (a ApiKey) query() (query.APIKey, error) {
+	decrypted, err := a.KeyHash.Decrypt()
+	if err != nil {
+		slog.Error("failed to decrypt api key", "error", err)
+		return query.APIKey{}, err
+	}
+
+	return query.APIKey{
+		ID:        a.ID,
+		Key:       decrypted,
+		CreatedAt: a.CreatedAt.Time,
+		UpdatedAt: a.UpdatedAt.Time,
+	}, nil
 }
 
 func (w Workflow) domain() (*model.Workflow, error) {
@@ -102,7 +119,7 @@ func (w Workflow) query() *query.Workflow {
 	}
 }
 
-func (p Project) domain(cs []Credential, ws []Workflow) (*model.Project, error) {
+func (p Project) domain(cs []Credential, ws []Workflow, as []ApiKey) (*model.Project, error) {
 	ap, err := p.AuthProvider.domain()
 	if err != nil {
 		return nil, err
@@ -110,10 +127,12 @@ func (p Project) domain(cs []Credential, ws []Workflow) (*model.Project, error) 
 
 	llmCredentials := make(map[uuid.UUID]*model.Credential)
 	for _, llmCredential := range cs {
-		llmCredentials[llmCredential.ID], err = llmCredential.domain()
-		if err != nil {
-			return nil, err
-		}
+		llmCredentials[llmCredential.ID] = llmCredential.domain()
+	}
+
+	apiKeys := make([]*model.APIKey, len(as))
+	for i, apiKey := range as {
+		apiKeys[i] = apiKey.domain()
 	}
 
 	workflows := make(map[model.WorkflowID]*model.Workflow)
@@ -134,10 +153,11 @@ func (p Project) domain(cs []Credential, ws []Workflow) (*model.Project, error) 
 		AuthProvider: ap,
 		Credentials:  llmCredentials,
 		Workflows:    workflows,
+		APIKeys:      apiKeys,
 	}, nil
 }
 
-func (p Project) query(cs []Credential, ws []Workflow) query.Project {
+func (p Project) query(cs []Credential, ws []Workflow, as []ApiKey) (query.Project, error) {
 	ap := p.AuthProvider.query()
 
 	llmCredentials := make([]query.Credential, len(cs))
@@ -150,13 +170,24 @@ func (p Project) query(cs []Credential, ws []Workflow) query.Project {
 		workflows[i] = *w.query()
 	}
 
+	apiKeys := make([]query.APIKey, len(as))
+	for i, a := range as {
+		apiKey, err := a.query()
+		if err != nil {
+			return query.Project{}, err
+		}
+
+		apiKeys[i] = apiKey
+	}
+
 	return query.Project{
 		ID:           p.ID,
 		Name:         p.Name,
 		AuthProvider: ap,
 		Credentials:  llmCredentials,
 		Workflows:    workflows,
+		APIKeys:      apiKeys,
 		CreatedAt:    p.CreatedAt.Time,
 		UpdatedAt:    p.UpdatedAt.Time,
-	}
+	}, nil
 }

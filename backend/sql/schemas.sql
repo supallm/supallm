@@ -31,6 +31,14 @@ CREATE TABLE IF NOT EXISTS workflows (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS api_keys (
+    id UUID PRIMARY KEY,
+    project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    key_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS workflow_events (
     id UUID PRIMARY KEY,
     workflow_id CHAR(22) NOT NULL REFERENCES workflows(id) ON DELETE CASCADE,
@@ -46,6 +54,7 @@ CREATE INDEX idx_credentials_project_id ON credentials(project_id);
 CREATE INDEX idx_workflows_project_id ON workflows(project_id);
 CREATE INDEX idx_workflow_events_workflow_id ON workflow_events(workflow_id);
 CREATE INDEX idx_workflow_events_trigger_id ON workflow_events(trigger_id);
+CREATE INDEX idx_api_keys_project_id ON api_keys(project_id);
 
 -- Trigger to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_timestamp()
@@ -66,4 +75,8 @@ FOR EACH ROW EXECUTE FUNCTION update_timestamp();
 
 CREATE TRIGGER update_workflows_timestamp
 BEFORE UPDATE ON workflows
+FOR EACH ROW EXECUTE FUNCTION update_timestamp();
+
+CREATE TRIGGER update_api_keys_timestamp
+BEFORE UPDATE ON api_keys
 FOR EACH ROW EXECUTE FUNCTION update_timestamp();

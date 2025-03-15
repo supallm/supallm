@@ -9,6 +9,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	secret "github.com/supallm/core/internal/pkg/secret"
 )
 
 const credentialById = `-- name: credentialById :one
@@ -84,12 +85,12 @@ VALUES ($1, $2, $3, $4, $5, $6)
 `
 
 type storeCredentialParams struct {
-	ID               uuid.UUID `json:"id"`
-	ProjectID        uuid.UUID `json:"project_id"`
-	Name             string    `json:"name"`
-	ProviderType     string    `json:"provider_type"`
-	ApiKeyEncrypted  string    `json:"api_key_encrypted"`
-	ApiKeyObfuscated string    `json:"api_key_obfuscated"`
+	ID               uuid.UUID        `json:"id"`
+	ProjectID        uuid.UUID        `json:"project_id"`
+	Name             string           `json:"name"`
+	ProviderType     string           `json:"provider_type"`
+	ApiKeyEncrypted  secret.Encrypted `json:"api_key_encrypted"`
+	ApiKeyObfuscated string           `json:"api_key_obfuscated"`
 }
 
 func (q *Queries) storeCredential(ctx context.Context, arg storeCredentialParams) error {
@@ -117,12 +118,12 @@ DO UPDATE SET
 `
 
 type upsertCredentialParams struct {
-	ID               uuid.UUID `json:"id"`
-	ProjectID        uuid.UUID `json:"project_id"`
-	Name             string    `json:"name"`
-	ProviderType     string    `json:"provider_type"`
-	ApiKeyEncrypted  string    `json:"api_key_encrypted"`
-	ApiKeyObfuscated string    `json:"api_key_obfuscated"`
+	ID               uuid.UUID        `json:"id"`
+	ProjectID        uuid.UUID        `json:"project_id"`
+	Name             string           `json:"name"`
+	ProviderType     string           `json:"provider_type"`
+	ApiKeyEncrypted  secret.Encrypted `json:"api_key_encrypted"`
+	ApiKeyObfuscated string           `json:"api_key_obfuscated"`
 }
 
 func (q *Queries) upsertCredential(ctx context.Context, arg upsertCredentialParams) error {

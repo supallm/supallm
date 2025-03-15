@@ -9,14 +9,23 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+	secret "github.com/supallm/core/internal/pkg/secret"
 )
+
+type ApiKey struct {
+	ID        uuid.UUID          `json:"id"`
+	ProjectID uuid.UUID          `json:"project_id"`
+	KeyHash   secret.Encrypted   `json:"key_hash"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
 
 type Credential struct {
 	ID               uuid.UUID          `json:"id"`
 	ProjectID        uuid.UUID          `json:"project_id"`
 	Name             string             `json:"name"`
 	ProviderType     string             `json:"provider_type"`
-	ApiKeyEncrypted  string             `json:"api_key_encrypted"`
+	ApiKeyEncrypted  secret.Encrypted   `json:"api_key_encrypted"`
 	ApiKeyObfuscated string             `json:"api_key_obfuscated"`
 	CreatedAt        pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt        pgtype.Timestamptz `json:"updated_at"`

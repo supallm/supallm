@@ -10,17 +10,17 @@ import (
 )
 
 func (r Repository) AddCredential(ctx context.Context, projectID uuid.UUID, credential *model.Credential) error {
-	encrypted, err := credential.APIKey.Encrypt()
+	decrypted, err := credential.APIKey.Decrypt()
 	if err != nil {
-		return fmt.Errorf("unable to encrypt api key: %w", err)
+		return fmt.Errorf("unable to decrypt api key: %w", err)
 	}
 	err = r.queries.storeCredential(ctx, storeCredentialParams{
 		ID:               credential.ID,
 		ProjectID:        projectID,
 		Name:             credential.Name,
 		ProviderType:     credential.ProviderType.String(),
-		ApiKeyEncrypted:  encrypted,
-		ApiKeyObfuscated: credential.APIKey.Obfuscate(),
+		ApiKeyEncrypted:  credential.APIKey,
+		ApiKeyObfuscated: decrypted.Obfuscate(),
 	})
 	if err != nil {
 		return r.errorDecoder(err)
@@ -34,9 +34,9 @@ func (r Repository) updateCredentials(ctx context.Context, q *Queries, project *
 			continue
 		}
 
-		encrypted, err := llmCredential.APIKey.Encrypt()
+		decrypted, err := llmCredential.APIKey.Decrypt()
 		if err != nil {
-			return fmt.Errorf("unable to encrypt api key: %w", err)
+			return fmt.Errorf("unable to decrypt api key: %w", err)
 		}
 
 		err = q.upsertCredential(ctx, upsertCredentialParams{
@@ -44,8 +44,8 @@ func (r Repository) updateCredentials(ctx context.Context, q *Queries, project *
 			ProjectID:        project.ID,
 			Name:             llmCredential.Name,
 			ProviderType:     llmCredential.ProviderType.String(),
-			ApiKeyEncrypted:  encrypted,
-			ApiKeyObfuscated: llmCredential.APIKey.Obfuscate(),
+			ApiKeyEncrypted:  llmCredential.APIKey,
+			ApiKeyObfuscated: decrypted.Obfuscate(),
 		})
 		if err != nil {
 			return r.errorDecoder(err)

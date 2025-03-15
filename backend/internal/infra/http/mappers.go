@@ -20,6 +20,14 @@ func queryCredentialToDTO(credential query.Credential) gen.Credential {
 	}
 }
 
+func queryAPIKeyToDTO(apiKey query.APIKey) gen.ApiKey {
+	return gen.ApiKey{
+		Id:        apiKey.ID,
+		Key:       apiKey.Key.String(),
+		CreatedAt: apiKey.CreatedAt,
+	}
+}
+
 func queryCredentialsToDTOs(credentials []query.Credential) []gen.Credential {
 	dtos := make([]gen.Credential, len(credentials))
 	for i, credential := range credentials {
@@ -57,6 +65,16 @@ func queryProjectToDTO(project query.Project) gen.Project {
 		credentials[i] = queryCredentialToDTO(credential)
 	}
 
+	apiKeys := make([]gen.ApiKey, len(project.APIKeys))
+	for i, apiKey := range project.APIKeys {
+		apiKeys[i] = queryAPIKeyToDTO(apiKey)
+	}
+
+	var apiKey gen.ApiKey
+	if len(apiKeys) > 0 {
+		apiKey = apiKeys[0]
+	}
+
 	return gen.Project{
 		Id:   project.ID,
 		Name: project.Name,
@@ -66,6 +84,7 @@ func queryProjectToDTO(project query.Project) gen.Project {
 		},
 		Credentials: credentials,
 		Workflows:   workflows,
+		ApiKey:      apiKey,
 		CreatedAt:   project.CreatedAt,
 		UpdatedAt:   project.UpdatedAt,
 	}

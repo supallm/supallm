@@ -19,17 +19,28 @@ func (r Repository) Create(ctx context.Context, project *model.Project) error {
 			return r.errorDecoder(err)
 		}
 
+		for _, apiKey := range project.APIKeys {
+			err = q.storeAPIKey(ctx, storeAPIKeyParams{
+				ID:        apiKey.ID,
+				ProjectID: project.ID,
+				KeyHash:   apiKey.KeyHash,
+			})
+			if err != nil {
+				return r.errorDecoder(err)
+			}
+		}
+
 		return nil
 	})
 }
 
 func (r Repository) Retrieve(ctx context.Context, projectID uuid.UUID) (*model.Project, error) {
-	project, llmProviders, workflows, err := r.retrieve(ctx, projectID)
+	project, llmProviders, workflows, apiKeys, err := r.retrieve(ctx, projectID)
 	if err != nil {
 		return nil, err
 	}
 
-	domainProject, err := project.domain(llmProviders, workflows)
+	domainProject, err := project.domain(llmProviders, workflows, apiKeys)
 	if err != nil {
 		return nil, err
 	}
@@ -56,6 +67,12 @@ func (r Repository) Update(ctx context.Context, project *model.Project) error {
 
 		if project.Workflows != nil {
 			if err = r.updateWorkflows(ctx, q, project); err != nil {
+				return err
+			}
+		}
+
+		if project.APIKeys != nil {
+			if err = r.updateAPIKeys(ctx, q, project); err != nil {
 				return err
 			}
 		}
@@ -100,12 +117,12 @@ func (r Repository) DeleteProject(ctx context.Context, id uuid.UUID) error {
 }
 
 func (r Repository) ReadProject(ctx context.Context, id uuid.UUID) (query.Project, error) {
-	project, llmProviders, models, err := r.retrieve(ctx, id)
+	project, llmProviders, models, apiKeys, err := r.retrieve(ctx, id)
 	if err != nil {
 		return query.Project{}, err
 	}
 
-	return project.query(llmProviders, models), nil
+	return project.query(llmProviders, models, apiKeys)
 }
 
 func (r Repository) ListProjects(ctx context.Context, userID string) ([]query.Project, error) {
@@ -118,12 +135,16 @@ func (r Repository) ListProjects(ctx context.Context, userID string) ([]query.Pr
 	for i, project := range projects {
 		var llmProviders []Credential
 		var workflows []Workflow
+		var apiKeys []ApiKey
 
-		llmProviders, workflows, err = r.retrieveDependencies(ctx, project.ID)
+		llmProviders, workflows, apiKeys, err = r.retrieveDependencies(ctx, project.ID)
 		if err != nil {
 			return nil, err
 		}
-		queryProjects[i] = project.query(llmProviders, workflows)
+		queryProjects[i], err = project.query(llmProviders, workflows, apiKeys)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return queryProjects, nil

@@ -6,14 +6,29 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"io"
+	"log/slog"
 	"os"
+
+	"github.com/lithammer/shortuuid"
 )
 
 //nolint:all
 var envKey = []byte(os.Getenv("SECRET_KEY"))
 
-type APIKey string
+const (
+	keyPrefix = "sk_"
+)
+
+type (
+	APIKey    string
+	Encrypted string
+)
+
+func (e Encrypted) String() string {
+	return string(e)
+}
 
 func (a APIKey) String() string {
 	return string(a)
@@ -24,7 +39,7 @@ func (a APIKey) Obfuscate() string {
 }
 
 // EncryptData encrypts data using AES-GCM
-func (a APIKey) Encrypt(key ...[]byte) (string, error) {
+func (a APIKey) Encrypt(key ...[]byte) (Encrypted, error) {
 	if len(a) == 0 {
 		return "", ErrKeyNotSet
 	}
@@ -33,6 +48,8 @@ func (a APIKey) Encrypt(key ...[]byte) (string, error) {
 	if len(key) >= 1 {
 		k = key[0]
 	}
+
+	slog.Info("encryption key", "key", k)
 
 	block, err := aes.NewCipher(deriveKey(k))
 	if err != nil {
@@ -50,17 +67,18 @@ func (a APIKey) Encrypt(key ...[]byte) (string, error) {
 	}
 
 	ciphertext := aesGCM.Seal(nonce, nonce, []byte(a), nil)
-	return hex.EncodeToString(ciphertext), nil
+	return Encrypted(hex.EncodeToString(ciphertext)), nil
 }
 
 // DecryptData decrypts data using AES-GCM
-func Decrypt(encrypted string, key ...[]byte) (APIKey, error) {
+func (e Encrypted) Decrypt(key ...[]byte) (APIKey, error) {
 	k := envKey
 	if len(key) >= 1 {
 		k = key[0]
 	}
 
-	ciphertext, err := hex.DecodeString(encrypted)
+	slog.Info("encryption key", "key", k)
+	ciphertext, err := hex.DecodeString(e.String())
 	if err != nil {
 		return "", err
 	}
@@ -94,4 +112,30 @@ func deriveKey(baseKey []byte) []byte {
 	h := sha256.New()
 	h.Write(baseKey)
 	return h.Sum(nil)
+}
+
+// GenerateAPIKey generates a new API key with her secret
+func GenerateAPIKey(secret ...[]byte) (APIKey, Encrypted, error) {
+	token := shortuuid.New()
+	apiKey := APIKey(keyPrefix + token)
+
+	encrypted, err := apiKey.Encrypt(secret...)
+	if err != nil {
+		return "", "", err
+	}
+
+	return apiKey, encrypted, nil
+}
+
+func (e Encrypted) Verify(apiKey APIKey) error {
+	decrypted, err := e.Decrypt()
+	if err != nil {
+		return err
+	}
+
+	if decrypted != apiKey {
+		return errors.New("invalid API key")
+	}
+
+	return nil
 }

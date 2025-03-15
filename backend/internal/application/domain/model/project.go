@@ -12,6 +12,7 @@ type Project struct {
 	AuthProvider AuthProvider
 	Credentials  map[uuid.UUID]*Credential
 	Workflows    map[WorkflowID]*Workflow
+	APIKeys      []*APIKey
 }
 
 func NewProject(id uuid.UUID, userID string, name string) (*Project, error) {
@@ -27,14 +28,22 @@ func NewProject(id uuid.UUID, userID string, name string) (*Project, error) {
 		return nil, errs.InvalidError{Field: "name", Reason: "name is required"}
 	}
 
-	return &Project{
+	p := &Project{
 		ID:           id,
 		UserID:       userID,
 		Name:         name,
 		AuthProvider: nil,
 		Credentials:  map[uuid.UUID]*Credential{},
 		Workflows:    map[WorkflowID]*Workflow{},
-	}, nil
+		APIKeys:      make([]*APIKey, 0),
+	}
+
+	err := p.addAPIKey()
+	if err != nil {
+		return nil, errs.InternalError{Err: err}
+	}
+
+	return p, nil
 }
 
 func (p *Project) UpdateName(name string) error {
