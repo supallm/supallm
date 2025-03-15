@@ -30,7 +30,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      // Since clerk require to get this key at build time
+      // we set a fake key, and then we will interpolate it
+      // at runtime.
+      publishableKey={"pk_test_cHJvbXB0LWNvcmFsLTcwLmNsZXJrLmFjY291bnRzLmRldiQ"}
+    >
       <html lang="en">
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
