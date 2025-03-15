@@ -2,8 +2,9 @@
     "branches": [
       "release",
       {
-        "name": "main",
-        "channel": "alpha"
+        "name": "alpha",
+        "channel": "alpha",
+        "prerelease": true
       }
     ],
     "plugins": [
