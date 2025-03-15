@@ -8,7 +8,7 @@ networks:
 
 services:
   frontend:
-    image: 'supallm'
+    image: 'ghcr.io/supallm/supallm:latest'
     container_name: supallm-frontend
     hostname: supallm-frontend
     ports:
@@ -67,7 +67,7 @@ services:
       retries: 5
 
   api:
-    image: 'supallm'
+    image: 'ghcr.io/supallm/supallm:latest'
     container_name: supallm-api
     env_file:
       - .env
@@ -86,9 +86,7 @@ services:
       - supallm-network
 
   runner:
-    build:
-      context: ./runner
-      dockerfile: Dockerfile.dev
+    image: 'ghcr.io/supallm/supallm:latest'
     container_name: supallm-runner
     volumes:
       - ./runner:/app
