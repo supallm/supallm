@@ -16,8 +16,6 @@ lerna-debug.log*
 # runner/logs
 *.log
 
-package-lock.json
-
 # OS
 .DS_Store
 
