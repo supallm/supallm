@@ -82,7 +82,7 @@ services:
       - supallm-network
 
   runner:
-    image: 'supallm'
+    image: 'ghcr.io/supallm/supallm:latest'
     container_name: supallm-runner
     env_file:
       - .env
