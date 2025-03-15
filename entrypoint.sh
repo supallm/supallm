@@ -14,6 +14,7 @@ case "$MODE" in
     ;;
   runner)
     echo "Running Runner..."
+    ls -la /app/runner
     exec npm start --prefix /app/runner
     ;;
   *)

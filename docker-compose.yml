@@ -13,8 +13,6 @@ services:
     hostname: supallm-frontend
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
-    volumes:
-      - ./frontend:/src
     depends_on:
       - api
     networks:
@@ -73,8 +71,6 @@ services:
       - .env
     ports:
       - "${BACKEND_PORT:-3001}:80"
-    volumes:
-      - ./backend:/src
     environment:
       - MODE=api
     depends_on:
@@ -86,11 +82,8 @@ services:
       - supallm-network
 
   runner:
-    image: 'ghcr.io/supallm/supallm:latest'
+    image: 'supallm'
     container_name: supallm-runner
-    volumes:
-      - ./runner:/app
-      - /app/node_modules
     env_file:
       - .env
     environment:

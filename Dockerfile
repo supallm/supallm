@@ -74,7 +74,9 @@ COPY --from=frontend-builder /app/frontend/.next /app/frontend/.next
 COPY --from=frontend-builder /app/frontend/public /app/frontend/public
 
 # Runner
-COPY --from=runner-builder /app/runner /app/runner
+COPY --from=runner-builder /app/runner/dist /app/runner/dist
+COPY --from=runner-builder /app/runner/package.json  /app/runner/package.json
+COPY --from=runner-builder /app/runner/node_modules /app/runner/node_modules
 
 # Expose necessary ports
 EXPOSE 80 3000 50051
