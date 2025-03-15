@@ -3,6 +3,7 @@
       "release",
       {
         "name": "main",
+        "channel": "alpha",
         "prerelease": true
       }
     ],
@@ -14,6 +15,9 @@
       ["@semantic-release/git", {
         "assets": ["CHANGELOG.md"],
         "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+      }],
+      ["@semantic-release/exec", {
+        "verifyReleaseCmd": "echo ${nextRelease.version} > .VERSION"
       }]
     ]
   }

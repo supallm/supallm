@@ -38,7 +38,7 @@ jobs:
         run: npx semantic-release
 
       - name: Extract Semantic Version
-        run: echo "VERSION=$(npx semantic-release -g get-last-release)" >> $GITHUB_ENV
+        run: echo "VERSION=$(cat .VERSION)" >> $GITHUB_ENV
 
       - name: Build and Push Docker Image
         env:
