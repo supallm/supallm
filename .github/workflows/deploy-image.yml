@@ -3,7 +3,7 @@ name: Build and Publish Docker Image with Semantic Release
 on:
   push:
     branches:
-      - alpha
+      - main
   release:
     types: [published]
 
