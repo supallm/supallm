@@ -29,6 +29,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_PORT: ${POSTGRES_PORT}
     volumes:
       - supallm_data:/var/lib/postgresql/data
       - ./backend/sql/schemas.sql:/docker-entrypoint-initdb.d/init.sql
@@ -67,12 +68,20 @@ services:
   api:
     image: 'ghcr.io/supallm/supallm:latest'
     container_name: supallm-api
-    env_file:
-      - .env
     ports:
       - "${BACKEND_PORT:-3001}:80"
     environment:
-      - MODE=api
+      MODE: api
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_PORT: ${REDIS_PORT}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      SECRET_KEY: ${SECRET_KEY}
+      CLERK_SECRET_KEY: ${CLERK_SECRET_KEY}
     depends_on:
       postgres:
         condition: service_healthy
