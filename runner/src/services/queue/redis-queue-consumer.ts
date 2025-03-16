@@ -90,6 +90,9 @@ export class RedisQueueConsumer implements IQueueConsumer {
     handler: (message: WorkflowMessage) => Promise<void>
   ): Promise<void> {
     try {
+      logger.info(
+        `consuming workflow queue with ${this.MAX_PARALLEL_JOBS} parallel jobs`
+      );
       while (this.isRunning) {
         await this.waitForAvailableSlot();
         const messages = await this.readMessages();
@@ -104,11 +107,13 @@ export class RedisQueueConsumer implements IQueueConsumer {
 
   private async waitForAvailableSlot(): Promise<void> {
     while (this.activeJobs >= this.MAX_PARALLEL_JOBS) {
+      logger.info(`waiting for available slot`);
       await new Promise((resolve) => setTimeout(resolve, POLLING_INTERVAL));
     }
   }
 
   private async readMessages(): Promise<RedisStreamResult[] | null> {
+    logger.info(`reading messages on topic ${this.QUEUE_TOPIC}`);
     const result = (await this.redis.xreadgroup(
       "GROUP",
       this.CONSUMER_GROUP,
@@ -134,6 +139,7 @@ export class RedisQueueConsumer implements IQueueConsumer {
     result: RedisStreamResult[],
     handler: (message: WorkflowMessage) => Promise<void>
   ): void {
+    logger.info(`processing messages`);
     const streamResults = result;
 
     for (const { messages } of streamResults) {

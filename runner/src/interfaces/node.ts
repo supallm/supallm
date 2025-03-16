@@ -31,6 +31,11 @@ export interface ExecutionContext {
   inputs: Record<string, any>;
   outputs: Record<string, Record<string, any>>;
   nodeResults: Record<string, NodeExecutionResult>;
+  completedNodes: Set<string>;
+  allNodes: Set<string>;
+  workflowId: string;
+  sessionId: string;
+  triggerId: string;
 }
 
 export type NodeResultCallback = (

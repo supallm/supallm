@@ -1,6 +1,7 @@
 import { WorkflowExecutor } from "./services/workflow/workflow.executor";
 import { RedisNotifier, INotifier, WorkflowEvents } from "./services/notifier";
-import { RedisQueueConsumer, IQueueConsumer } from "./services/queue";
+import { RedisQueueConsumer, IQueueConsumer, WorkflowMessage } from "./services/queue";
+import { NodeManager } from "./services/node/node-manager";
 import { logger } from "./utils/logger";
 
 interface RunnerConfig {
@@ -8,18 +9,10 @@ interface RunnerConfig {
   redisUrl: string;
 }
 
-interface WorkflowMessage {
-  workflow_id: string;
-  trigger_id: string;
-  session_id: string;
-  project_id: string;
-  definition: any; // TODO: type definition
-  inputs: Record<string, any>;
-}
-
 export class RunnerServer {
   private readonly queueConsumer: IQueueConsumer;
   private readonly notifier: INotifier;
+  private readonly nodeManager: NodeManager;
   private readonly executor: WorkflowExecutor;
 
   constructor(config: RunnerConfig) {
@@ -27,7 +20,8 @@ export class RunnerServer {
       maxParallelJobs: config.maxParallelJobs ?? 10,
     });
     this.notifier = new RedisNotifier(config.redisUrl);
-    this.executor = new WorkflowExecutor();
+    this.nodeManager = new NodeManager();
+    this.executor = new WorkflowExecutor(this.nodeManager);
 
     this.setupEventListeners();
   }
@@ -57,14 +51,17 @@ export class RunnerServer {
   private async handleWorkflowExecution(
     message: WorkflowMessage
   ): Promise<void> {
-    const { workflow_id, trigger_id, session_id, definition, inputs } = message;
+    const { workflow_id, trigger_id, session_id, project_id, definition, inputs } = message;
 
     try {
       await this.executor.execute(workflow_id, definition, {
         inputs,
+        projectId: project_id,
         sessionId: session_id,
         triggerId: trigger_id,
       });
+      
+      logger.info(`workflow ${workflow_id} execution completed`);
     } catch (error) {
       logger.error(`error executing workflow ${workflow_id}: ${error}`);
     }

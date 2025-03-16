@@ -19,6 +19,7 @@ export interface WorkflowExecutionResult {
 
 export interface WorkflowExecutionOptions {
   inputs: WorkflowInputs;
+  projectId: string;
   sessionId: string;
   triggerId: string;
 }

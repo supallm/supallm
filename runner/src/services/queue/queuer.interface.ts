@@ -1,4 +1,4 @@
-import { WorkflowDefinition } from "../../interfaces/workflow";
+import { WorkflowDefinition } from "../workflow/types";
 
 export interface WorkflowMessage {
   workflow_id: string;

@@ -5,13 +5,18 @@ meta {
 }
 
 post {
-  url: {{baseURL}}/projects/{{projectId}}/workflows/{{workflowId}}/trigger
+  url: {{baseURL}}/projects/{{projectId}}/workflows/BrpEH3cb8UYo5SkMCNZXkB/trigger
   body: json
   auth: none
 }
 
+headers {
+  X-Secret-Key: sk_QjuLHU2NcXpuXxtgd6umeD
+}
+
 body:json {
   {
+    "triggerId": "40e1dbde-80d8-41b8-8ed0-d16d66185c3e",
     "inputs": {
       "prompt": "dit moi ce que c'est un agent IA"
     }
