@@ -7,11 +7,11 @@
 </p>
 
 <p align=center>
-Supallm is an open-source ecosystem allowing to use AI models directly in your frontend.
+Supallm is an open-source platform allowing to build multi-AI-powered flows in no-code. Then you can trigger them and stream their output in realtime into your application.
 </p>
 
 <p align="center">
-Ship AI apps in minutes, scale to millions.
+Supallm is built in Golang for high performance and scalability making it ideal to prototype but also for real-world Enterprise usecases.
 </p>
 
 <p align="center">
@@ -19,7 +19,7 @@ Ship AI apps in minutes, scale to millions.
     <img src="https://img.shields.io/badge/License-Apache 2.0-blue.svg" alt="License version">
 </a>
 <a href="" target="_blank">
-    <img src="https://img.shields.io/badge/Status-Under Active Development-green.svg" alt="Docker Image CI">
+    <img src="https://img.shields.io/badge/Status-Alpha Released:stable coming soon-green.svg" alt="Docker Image CI">
 </a>
 </p>
 
@@ -60,58 +60,40 @@ We integrate with all the major authentication providers to securely run your fl
 ![main-concept-3](https://github.com/user-attachments/assets/d7a9b12d-2a67-4e7d-83e0-07df3a2694b2)
 
 
-## Our low-latency, high-performance and scalable stack
-
-Unlike other tools, we're crafting Supallm with performance in mind.
-
-- We use Postgres as the main database.
-- Backend in Golang is stateless, horizontally scalable and highly-available.
-- Our runners pull jobs from a Redis Queue and run code execution in a sandboxed environment.
-- Our frontend is built with Next.js and TypeScript.
-
-## Performance
-
-Once a flow started, there is no overhead compared to running the same flow from your code. The added latency from a job being pulled from the queue, started, and then having its result sent back to the database is ~50ms.
-
-Our backend API and runners are designed to be stateless and horizontally scalable.
-
-## How to self-host
-
-The easiest way to self-host Supallm is to use our Docker image. Later we'll provide a Helm chart and more options.
-
-### Docker compose (WIP)
+## ⚡ Quick Start
 
 Prerequisites:
-- Node.js 20+#
-- Docker
-- Docker Compose
-
-You only need two files to start supallm:
-- the .env file that contains your environment variables (see next section to customize it)
-- the docker-compose.yml file
-
-
-#### Run the installation script
+- Node.js 20+
+- Docker and Docker Compose
+- **A FREE Clerk account** that you can create [here](https://clerk.com/).
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/supallm/supallm/main/install.sh | sh
+npx install-supallm@latest
 ```
 
-This script will download the docker-compose.yml and .env file in the current directory.
+Et voilà! The CLI will walk you through the installation process.
 
-Once done, update the downloaded .env file with the environment variables.
+Once finished you will get a `docker-compose.yml` and a `.env` file that you will be able to customize but it's not required.
 
-Then, simply run `docker compose up -d`.
 
-Et voilà! Your Supallm dashboard is running at http://localhost:3001 (or the port of your choice if you updated it).
+> Important: you will be prompted for your Clerk keys. We currently use Clerk for managing organizations and users. Later we will remove this dependency. You can get your keys for FREE [here](https://clerk.com/).
 
-#### Update the .env file
+
+## 🐳 Customize your installation
+
+We recommend using the CLI (above) to install Supallm. The CLI will download the required files and help you to setup your first required variables.
+
+Once installed you will be able to customize your docker-compose.yml and your environment variables.
+
+**If you can't use the CLI for any reason simply open an issue.**
+
+**The CLI will guide you to configure the required variables.  In case you want to go further, here are the variable definitions you can customize in the .env file.**
 
 | Environment Variable     | Description                                                                 | Default Value          | To Change |
 |--------------------------|-----------------------------------------------------------------------------|------------------------|--------------------|
-| CLERK_PUBLISHABLE_KEY    | The publishable key for Clerk authentication.                                | (empty)                | Required                |
-| CLERK_SECRET_KEY         | The secret key for Clerk authentication.                                     | (empty)                | Required                |
-| OPENAI_API_KEY           | The API key for accessing OpenAI services.                                   | (empty)                | Required                |
+| CLERK_PUBLISHABLE_KEY    | The publishable key for Clerk authentication. Later we will remove this dependency.                  | (empty)   | Required   |
+| CLERK_SECRET_KEY         | The secret key for Clerk authentication.                                     | (empty)               | Required               |
+| SECRET_KEY               | A secret key used for encryption.                                            | change-me | Required                |
 | POSTGRES_USER            | The username for the PostgreSQL database.                                   | postgres               | Optional                |
 | POSTGRES_PASSWORD        | The password for the PostgreSQL database.                                   | postgres               | Optional                |
 | POSTGRES_DB              | The name of the PostgreSQL database.                                         | supallm                | Optional                |
@@ -119,32 +101,22 @@ Et voilà! Your Supallm dashboard is running at http://localhost:3001 (or the po
 | POSTGRES_PORT            | The port number on which the PostgreSQL database is running.                 | 5432                   | Optional                |
 | FRONTEND_PORT            | The port number on which the frontend server will run.                       | 3000                   | Optional                |
 | BACKEND_PORT             | The port number on which the backend server will run.                        | 3001                   | Optional                |
-| SECRET_KEY               | A secret key used for encryption.                                            | sm4t...uyY | Advised                |
 | REDIS_HOST               | The hostname of the Redis server.                                            | supallm-redis          | Optional                |
 | REDIS_PORT               | The port number on which the Redis server is running.                        | 6379                   | Optional                |
 | REDIS_PASSWORD           | The password for the Redis server.                                           | redis                  | Optional                |
 
 
-#### Run the docker compose file
+## 👨‍💻 Integrate in your application
 
-```bash
-docker compose up -d
-```
+Once you've built your flow, you can use our [isomorphic Javascript SDK](https://www.npmjs.com/package/supallm) to run it from your code.
 
-Et voilà, you're ready to start using Supallm on http://localhost:3000.
-
-
-## Use our isomorphic Javascript SDK
-
-Once you've built your flow, you can our SDK to run it from your code.
-
-Install the package using npm or yarn.
+**1. Install the package using npm or yarn.**
 
 ```bash
 npm i supallm
 ```
 
-Run your flow with realtime updates:
+**2. Run your flow with realtime updates:**
 
 ```typescript
 import { initSupallm } from 'supallm';
@@ -176,6 +148,22 @@ Or you can use wait for the flow to complete and get the full result:
 const result = await supallm.runFlow('your-flow-id').wait();
 ```
 
+
+
+## ⚙️ Our low-latency, high-performance and scalable stack
+
+Unlike other tools, we're crafting Supallm with performance in mind.
+
+- We use Postgres as the main database.
+- Backend in Golang is stateless, horizontally scalable and highly-available.
+- Our runners pull jobs from a Redis Queue and run code execution in a sandboxed environment.
+- Our frontend is built with Next.js and TypeScript.
+
+## 📈 Performance
+
+Once a flow started, there is no overhead compared to running the same flow from your code. The added latency from a job being pulled from the queue, started, and then having its result sent back to the database is ~50ms.
+
+Our backend API and runners are designed to be stateless and horizontally scalable.
 
 <p align="center">
 .
