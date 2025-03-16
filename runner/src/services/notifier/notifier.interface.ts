@@ -1,5 +1,19 @@
+import { NodeIOType } from "../../interfaces/node";
+
+export const WorkflowEvents = {
+  WORKFLOW_STARTED: "WORKFLOW_STARTED",
+  WORKFLOW_COMPLETED: "WORKFLOW_COMPLETED",
+  WORKFLOW_FAILED: "WORKFLOW_FAILED",
+
+  NODE_STARTED: "NODE_STARTED",
+  NODE_COMPLETED: "NODE_COMPLETED",
+  NODE_FAILED: "NODE_FAILED",
+
+  NODE_RESULT: "NODE_RESULT",
+} as const;
+
 export interface WorkflowEvent {
-  type: string;
+  type: (typeof WorkflowEvents)[keyof typeof WorkflowEvents];
   workflowId: string;
   triggerId: string;
   sessionId: string;
@@ -11,4 +25,56 @@ export interface INotifier {
   publishWorkflowEvent(event: WorkflowEvent): Promise<string[]>;
   publishNodeResult(event: WorkflowEvent): Promise<string>;
   close(): Promise<void>;
+}
+
+
+interface BaseEventData {
+  workflowId: string;
+  sessionId: string;
+  triggerId: string;
+}
+
+interface BaseNodeEvent extends BaseEventData {
+  nodeId: string;
+  nodeType: string;
+}
+
+interface WorkflowStartedEvent extends BaseEventData {
+  inputs: Record<string, any>;
+}
+
+interface WorkflowCompletedEvent extends BaseEventData {
+  result: any;
+}
+
+interface WorkflowFailedEvent extends BaseEventData {
+  error: string;
+}
+
+interface NodeStartedEvent extends BaseNodeEvent {
+  inputs: Record<string, any>;
+}
+
+interface NodeCompletedEvent extends BaseNodeEvent {
+  output: any;
+}
+
+interface NodeFailedEvent extends BaseNodeEvent {
+  error: string;
+}
+
+interface NodeResultEvent extends BaseNodeEvent {
+  outputField: string;
+  type: NodeIOType;
+  data: string;
+}
+
+export interface WorkflowExecutorEvents {
+  [WorkflowEvents.WORKFLOW_STARTED]: (event: WorkflowStartedEvent) => void;
+  [WorkflowEvents.WORKFLOW_COMPLETED]: (event: WorkflowCompletedEvent) => void;
+  [WorkflowEvents.WORKFLOW_FAILED]: (event: WorkflowFailedEvent) => void;
+  [WorkflowEvents.NODE_STARTED]: (event: NodeStartedEvent) => void;
+  [WorkflowEvents.NODE_RESULT]: (event: NodeResultEvent) => void;
+  [WorkflowEvents.NODE_COMPLETED]: (event: NodeCompletedEvent) => void;
+  [WorkflowEvents.NODE_FAILED]: (event: NodeFailedEvent) => void;
 }

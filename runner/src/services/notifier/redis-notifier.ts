@@ -106,12 +106,18 @@ export class RedisNotifier implements INotifier {
     this.logPublishEvent(this.WORKFLOW_STORE_STREAM, event);
 
     return await Promise.all([
+      // listenning by the backend with consumer group
+      // to store the event in the database
+      // and avoid duplicates events
       this.publish(
         this.WORKFLOW_STORE_STREAM,
         DEFAULT_MAX_EVENTS_LENGTH,
         event,
         "store workflow event"
       ),
+      // listenning by the backend without consumer group
+      // only the instance who has a client subscribed 
+      // will dispatch the event to the SDK
       this.publish(
         this.WORKFLOW_DISPATCH_STREAM,
         DEFAULT_MAX_EVENTS_LENGTH,
@@ -128,6 +134,9 @@ export class RedisNotifier implements INotifier {
   }
 
   async publishNodeResult(event: WorkflowEvent): Promise<RedisStreamId> {
+    // listenning by the backend with consumer group
+    // only the instance who has a client subscribed 
+    // will dispatch the result to the SDK
     this.logPublishEvent(this.NODE_RESULTS_STREAM, event);
     return this.publish(
       this.NODE_RESULTS_STREAM,

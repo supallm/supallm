@@ -1,5 +1,5 @@
-import { WorkflowExecutor, WorkflowEvents } from "./executor/workflow-executor";
-import { RedisNotifier, INotifier, NotifierEvent } from "./services/notifier";
+import { WorkflowExecutor } from "./services/workflow/workflow.executor";
+import { RedisNotifier, INotifier, WorkflowEvents } from "./services/notifier";
 import { RedisQueueConsumer, IQueueConsumer } from "./services/queue";
 import { logger } from "./utils/logger";
 
@@ -103,7 +103,7 @@ export class RunnerServer {
 
   private async handleWorkflowStarted(data: any): Promise<void> {
     await this.notifier.publishWorkflowEvent({
-      type: NotifierEvent.WORKFLOW_STARTED,
+      type: WorkflowEvents.WORKFLOW_STARTED,
       workflowId: data.workflowId,
       triggerId: data.triggerId,
       sessionId: data.sessionId,
@@ -113,7 +113,7 @@ export class RunnerServer {
 
   private async handleWorkflowCompleted(data: any): Promise<void> {
     await this.notifier.publishWorkflowEvent({
-      type: NotifierEvent.WORKFLOW_COMPLETED,
+      type: WorkflowEvents.WORKFLOW_COMPLETED,
       workflowId: data.workflowId,
       triggerId: data.triggerId,
       sessionId: data.sessionId,
@@ -123,7 +123,7 @@ export class RunnerServer {
 
   private async handleWorkflowFailed(data: any): Promise<void> {
     await this.notifier.publishWorkflowEvent({
-      type: NotifierEvent.WORKFLOW_FAILED,
+      type: WorkflowEvents.WORKFLOW_FAILED,
       workflowId: data.workflowId,
       triggerId: data.triggerId,
       sessionId: data.sessionId,
@@ -133,7 +133,7 @@ export class RunnerServer {
 
   private async handleNodeStarted(data: any): Promise<void> {
     await this.notifier.publishWorkflowEvent({
-      type: NotifierEvent.NODE_STARTED,
+      type: WorkflowEvents.NODE_STARTED,
       workflowId: data.workflowId,
       triggerId: data.triggerId,
       sessionId: data.sessionId,
@@ -147,7 +147,7 @@ export class RunnerServer {
 
   private async handleNodeCompleted(data: any): Promise<void> {
     await this.notifier.publishWorkflowEvent({
-      type: NotifierEvent.NODE_COMPLETED,
+      type: WorkflowEvents.NODE_COMPLETED,
       workflowId: data.workflowId,
       triggerId: data.triggerId,
       sessionId: data.sessionId,
@@ -161,7 +161,7 @@ export class RunnerServer {
 
   private async handleNodeFailed(data: any): Promise<void> {
     await this.notifier.publishWorkflowEvent({
-      type: NotifierEvent.NODE_FAILED,
+      type: WorkflowEvents.NODE_FAILED,
       workflowId: data.workflowId,
       triggerId: data.triggerId,
       sessionId: data.sessionId,
@@ -175,7 +175,7 @@ export class RunnerServer {
 
   private async handleNodeResult(data: any): Promise<void> {
     await this.notifier.publishNodeResult({
-      type: NotifierEvent.NODE_RESULT,
+      type: WorkflowEvents.NODE_RESULT,
       workflowId: data.workflowId,
       triggerId: data.triggerId,
       sessionId: data.sessionId,

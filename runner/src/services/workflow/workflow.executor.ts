@@ -7,10 +7,12 @@ import {
   NodeExecutionResult,
   ExecutionContext,
   NodeDefinition,
+  NodeIOType
 } from "../../interfaces/node";
 import { NodeManager } from "../node/node-manager";
 import { logger } from "../../utils/logger";
 import { EventEmitter } from "events";
+import { WorkflowEvents, WorkflowExecutorEvents } from "../notifier";
 
 export class WorkflowExecutor extends EventEmitter {
   private nodeManager: NodeManager;
@@ -235,10 +237,9 @@ export class WorkflowExecutor extends EventEmitter {
       const output = await this.nodeManager.executeNode(
         nodeId,
         node,
-        context.inputs,
         context,
         {
-          onNodeStream: async (nodeId, outputField, data, type) => {
+          onNodeResult: async (nodeId: string, outputField: string, data: string, type: NodeIOType) => {
             this.emit(WorkflowEvents.NODE_RESULT, {
               workflowId: this.currentWorkflowId,
               triggerId: this.currentTriggerId,
@@ -247,7 +248,7 @@ export class WorkflowExecutor extends EventEmitter {
               nodeType: node.type,
               outputField,
               data,
-              type: (type as "string" | "image") || "string",
+              type,
             });
           },
         }
@@ -301,66 +302,4 @@ export class WorkflowExecutor extends EventEmitter {
   ): this {
     return super.on(event, listener);
   }
-}
-
-export const WorkflowEvents = {
-  WORKFLOW_STARTED: "workflow:started",
-  WORKFLOW_COMPLETED: "workflow:completed",
-  WORKFLOW_FAILED: "workflow:failed",
-  NODE_STARTED: "node:started",
-  NODE_COMPLETED: "node:completed",
-  NODE_FAILED: "node:failed",
-
-  NODE_RESULT: "node:result",
-} as const;
-
-interface BaseEventData {
-  workflowId: string;
-  sessionId: string;
-  triggerId: string;
-}
-
-interface BaseNodeEvent extends BaseEventData {
-  nodeId: string;
-  nodeType: string;
-}
-
-interface WorkflowStartedEvent extends BaseEventData {
-  inputs: Record<string, any>;
-}
-
-interface WorkflowCompletedEvent extends BaseEventData {
-  result: any;
-}
-
-interface WorkflowFailedEvent extends BaseEventData {
-  error: string;
-}
-
-interface NodeStartedEvent extends BaseNodeEvent {
-  inputs: Record<string, any>;
-}
-
-interface NodeCompletedEvent extends BaseNodeEvent {
-  output: any;
-}
-
-interface NodeFailedEvent extends BaseNodeEvent {
-  error: string;
-}
-
-interface NodeResultEvent extends BaseNodeEvent {
-  outputField: string;
-  type: "string" | "image";
-  data: string;
-}
-
-interface WorkflowExecutorEvents {
-  [WorkflowEvents.WORKFLOW_STARTED]: (event: WorkflowStartedEvent) => void;
-  [WorkflowEvents.WORKFLOW_COMPLETED]: (event: WorkflowCompletedEvent) => void;
-  [WorkflowEvents.WORKFLOW_FAILED]: (event: WorkflowFailedEvent) => void;
-  [WorkflowEvents.NODE_STARTED]: (event: NodeStartedEvent) => void;
-  [WorkflowEvents.NODE_RESULT]: (event: NodeResultEvent) => void;
-  [WorkflowEvents.NODE_COMPLETED]: (event: NodeCompletedEvent) => void;
-  [WorkflowEvents.NODE_FAILED]: (event: NodeFailedEvent) => void;
 }
