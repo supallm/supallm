@@ -3,7 +3,6 @@ import {
   NodeDefinition,
   ExecutionContext,
   NodeResultCallback,
-  NodeIOType,
 } from "../../interfaces/node";
 import { logger } from "../../utils/logger";
 import { CryptoService } from "../../services/crypto-service";

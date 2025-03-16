@@ -19,8 +19,6 @@ export class EntrypointNode extends BaseNode {
       onNodeResult: NodeResultCallback;
     }
   ): Promise<Record<string, any>> {
-    logger.info(`Executing entrypoint node ${nodeId}`);
-
     // entrypoint node is the first node to be executed
     // it takes the global inputs and makes them available to the next nodes
     // these inputs are already available in context.inputs

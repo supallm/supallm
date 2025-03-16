@@ -131,7 +131,6 @@ export class WorkflowExecutor extends EventEmitter {
       }
 
       const results = await this.executeReadyNodes(readyNodes, definition, context);
-
       const errors = results.filter((r) => !r.success);
       if (errors.length > 0) {
         throw new Error(
@@ -213,6 +212,7 @@ export class WorkflowExecutor extends EventEmitter {
           executionTime,
         };
 
+        logger.error(`error executing node ${nodeId}: ${error}`);
         context.nodeResults[nodeId] = result;
         return { nodeId, success: false, error };
       }

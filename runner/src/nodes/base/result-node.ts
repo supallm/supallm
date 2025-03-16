@@ -4,7 +4,6 @@ import {
   ExecutionContext,
   NodeResultCallback,
 } from "../../interfaces/node";
-import { logger } from "../../utils/logger";
 
 export class ResultNode extends BaseNode {
   constructor() {
@@ -19,8 +18,6 @@ export class ResultNode extends BaseNode {
       onNodeResult: NodeResultCallback;
     }
   ): Promise<Record<string, any>> {
-    logger.info(`executing result node ${nodeId}`);
-
     const resolvedInputs = this.resolveInputs(nodeId, definition, context);
     this.validateInputs(nodeId, definition, resolvedInputs);
 

@@ -7,7 +7,6 @@ export class OpenAIProvider implements BaseLLMProvider {
   constructor() {}
 
   async generate(prompt: string, options: LLMOptions): Promise<AsyncIterable<{ content: string }>> {
-    logger.info(`generating with OpenAI: ${prompt.substring(0, 50)}...`);
     const model = this.createModel(options);
     try {
       if (model instanceof ChatOpenAI && options.streaming) {

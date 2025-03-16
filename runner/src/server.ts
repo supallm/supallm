@@ -54,14 +54,12 @@ export class RunnerServer {
     const { workflow_id, trigger_id, session_id, project_id, definition, inputs } = message;
 
     try {
-      await this.executor.execute(workflow_id, definition, {
+      this.executor.execute(workflow_id, definition, {
         inputs,
         projectId: project_id,
         sessionId: session_id,
         triggerId: trigger_id,
       });
-      
-      logger.info(`workflow ${workflow_id} execution completed`);
     } catch (error) {
       logger.error(`error executing workflow ${workflow_id}: ${error}`);
     }

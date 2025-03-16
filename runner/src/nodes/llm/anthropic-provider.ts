@@ -9,7 +9,6 @@ export class AnthropicProvider implements BaseLLMProvider {
     prompt: string,
     options: LLMOptions
   ): Promise<AsyncIterable<{ content: string }>> {
-    logger.info(`streaming with Anthropic: ${prompt.substring(0, 50)}...`);
     const model = this.createModel(options);
     try {
       const stream = await model.stream(prompt);

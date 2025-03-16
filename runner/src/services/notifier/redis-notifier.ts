@@ -103,7 +103,7 @@ export class RedisNotifier implements INotifier {
   async publishWorkflowEvent(
     event: WorkflowEvent
   ): Promise<[RedisStreamId, RedisStreamId]> {
-    this.logPublishEvent(this.WORKFLOW_STORE_STREAM, event);
+    this.logPublishEvent(this.WORKFLOW_STORE_STREAM, event, "info");
 
     return await Promise.all([
       // listenning by the backend with consumer group
@@ -127,17 +127,17 @@ export class RedisNotifier implements INotifier {
     ]);
   }
 
-  private logPublishEvent(stream: string, event: WorkflowEvent): void {
-    logger.debug(
-      `published workflow event to ${stream}: ${JSON.stringify(event)}`
-    );
+  private logPublishEvent(stream: string, event: WorkflowEvent, level: "debug" | "info" = "debug"): void {
+    // logger[level](
+    //   `published workflow ${event.workflowId} event ${event.type} to ${stream} - with triggerId: ${event.triggerId}`
+    // );
   }
 
   async publishNodeResult(event: WorkflowEvent): Promise<RedisStreamId> {
     // listenning by the backend with consumer group
     // only the instance who has a client subscribed 
     // will dispatch the result to the SDK
-    this.logPublishEvent(this.NODE_RESULTS_STREAM, event);
+    // this.logPublishEvent(this.NODE_RESULTS_STREAM, event, "debug");
     return this.publish(
       this.NODE_RESULTS_STREAM,
       DEFAULT_MAX_RESULTS_LENGTH,
