@@ -1,22 +1,21 @@
 export type NodeType = "llm" | "entrypoint" | "result";
 
-export type NodeResultType = "string" | "image";
+export type NodeIOType = "text" | "image";
 
 export interface NodeInput {
-  type: string;
-  source?: string; // format: "nodeId.outputField"
-  required?: boolean;
+  type: NodeIOType;
+  source: string; // format: "nodeId.outputField"
 }
 
 export interface NodeOutput {
-  type: string;
-  outputField?: string[];
+  type: NodeIOType;
+  notify: boolean;
 }
 
 export interface NodeDefinition {
   type: NodeType;
   inputs: Record<string, NodeInput>;
-  outputs?: Record<string, NodeOutput>;
+  outputs: Record<string, NodeOutput>;
   [key: string]: any; // for properties specific to each node type
 }
 
@@ -38,12 +37,11 @@ export type NodeResultCallback = (
   nodeId: string,
   outputField: string,
   data: string,
-  type: NodeResultType
+  type: NodeIOType
 ) => Promise<void>;
 
 export interface INode {
   type: NodeType;
-  
   execute(
     nodeId: string,
     definition: NodeDefinition,

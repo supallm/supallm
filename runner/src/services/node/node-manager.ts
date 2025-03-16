@@ -3,7 +3,6 @@ import { INode } from "../../interfaces/node";
 import { EntrypointNode } from "../../nodes/base/entrypoint-node";
 import { ResultNode } from "../../nodes/base/result-node";
 import { LLMNode } from "../../nodes/llm/llm-node";
-
 export class NodeManager {
   private nodes: Map<NodeType, INode> = new Map();
 

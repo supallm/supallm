@@ -15,7 +15,7 @@ export class ResultNode extends BaseNode {
     nodeId: string,
     definition: NodeDefinition,
     context: ExecutionContext,
-    _: {
+    callbacks: {
       onNodeResult: NodeResultCallback;
     }
   ): Promise<Record<string, any>> {

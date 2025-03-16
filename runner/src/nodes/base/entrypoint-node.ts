@@ -13,7 +13,7 @@ export class EntrypointNode extends BaseNode {
 
   async execute(
     nodeId: string,
-    _: NodeDefinition,
+    definition: NodeDefinition,
     context: ExecutionContext,
     callbacks: {
       onNodeResult: NodeResultCallback;

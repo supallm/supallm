@@ -170,47 +170,13 @@ This project is a TypeScript-based workflow execution engine that processes comp
 ```json
 {
   "nodes": {
-    "result": {
-      "type": "result",
-      "inputs": {
-        "hook": {
-          "type": "string"
-        },
-        "idea": {
-          "type": "string"
-        }
-      }
-    },
     "entrypoint": {
       "type": "entrypoint",
       "outputs": {
         "prompt": {
-          "type": "string"
+          "type": "text"
         }
       }
-    },
-    "60c7bd2e-f5e6-4949-b648-591e262d54ea": {
-      "type": "llm",
-      "model": "gpt-4o-mini",
-      "apiKey": "6256c62ee8c2241232e8c1e02a5a5dc9c02c535f8657a1e45237c4c5888325a9887fbcf01ddbf166f935f740008314ab80d4b11a44",
-      "inputs": {
-        "prompt": {
-          "source": "e4fd228c-08a5-4075-a134-9ea6772ef80a.response"
-        }
-      },
-      "outputs": {
-        "response": {
-          "type": "string",
-          "outputField": [
-            "hook"
-          ]
-        }
-      },
-      "provider": "openai",
-      "maxTokens": 1000,
-      "streaming": true,
-      "temperature": 0.5,
-      "systemPrompt": "lorem"
     },
     "e4fd228c-08a5-4075-a134-9ea6772ef80a": {
       "type": "llm",
@@ -223,21 +189,50 @@ This project is a TypeScript-based workflow execution engine that processes comp
       },
       "outputs": {
         "response": {
-          "type": "string",
-           "outputField": [
-            "idea"
-          ]
+          "type": "text",
+          "notify": true
         }
       },
       "provider": "openai",
       "maxTokens": 4000,
       "streaming": true,
       "temperature": 0.5,
-      "systemPrompt": "lorem"
+      "systemPrompt": "Lorsqu'on te demande des idées de contenu, utilise le {{format 4A}} et propose des idées originales adaptées et engageantes pour le sujet que tu reçois"
+    },
+    "60c7bd2e-f5e6-4949-b648-591e262d54ea": {
+      "type": "llm",
+      "model": "gpt-4o-mini",
+      "apiKey": "6256c62ee8c2241232e8c1e02a5a5dc9c02c535f8657a1e45237c4c5888325a9887fbcf01ddbf166f935f740008314ab80d4b11a44",
+      "inputs": {
+        "prompt": {
+          "source": "e4fd228c-08a5-4075-a134-9ea6772ef80a.response"
+        }
+      },
+      "outputs": {
+        "response": {
+          "type": "text",
+          "notify": true
+        }
+      },
+      "provider": "openai",
+      "maxTokens": 1000,
+      "streaming": true,
+      "temperature": 0.5,
+      "systemPrompt": "Génère moi un hook dédié a linkedin pour le sujet que tu reçois"
+    },
+    "result": {
+      "type": "result",
+      "inputs": {
+        "hook": {
+          "source": "60c7bd2e-f5e6-4949-b648-591e262d54ea.reponse"
+        },
+        "idea": {
+          "source": "e4fd228c-08a5-4075-a134-9ea6772ef80a.response"
+        }
+      }
     }
   }
 }
-
 ```
 
 ## Event Structure

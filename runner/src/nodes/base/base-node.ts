@@ -30,7 +30,7 @@ export abstract class BaseNode implements INode {
     if (!definition.inputs) return;
 
     for (const [inputName, inputDef] of Object.entries(definition.inputs)) {
-      if (inputDef.required && resolvedInputs[inputName] === undefined) {
+      if (resolvedInputs[inputName] === undefined) {
         throw new Error(
           `missing required input '${inputName}' for node ${nodeId}`
         );

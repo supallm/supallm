@@ -3,6 +3,7 @@ import {
   NodeDefinition,
   ExecutionContext,
   NodeResultCallback,
+  NodeIOType,
 } from "../../interfaces/node";
 import { logger } from "../../utils/logger";
 import { CryptoService } from "../../services/crypto-service";
@@ -14,6 +15,8 @@ const ProviderType = {
   OPENAI: "openai",
   ANTHROPIC: "anthropic",
 } as const;
+
+const outputField = "response";
 
 export class LLMNode extends BaseNode {
   constructor() {
@@ -44,8 +47,11 @@ export class LLMNode extends BaseNode {
       }
 
       const provider = this.selectProvider(definition.provider);
-      const outputField =
-        definition.outputs?.response?.outputField?.[0] || "response";
+
+      // for now, we only support one output field named "response" 
+      // of type text (json, text, markdown, image, etc) are still text
+      const notify = definition.outputs[outputField]?.notify || false;
+      const outputFieldType = definition.outputs[outputField]?.type || "text";
 
       const llmOptions = {
         model: definition.model || "",
@@ -58,22 +64,24 @@ export class LLMNode extends BaseNode {
       };
 
       const prompt = resolvedInputs.prompt;
-      const streamResult = await provider.generate(prompt, llmOptions);
-      let fullResponse = "";
+      const result = await provider.generate(prompt, llmOptions);
+      let response = "";
 
-      for await (const chunk of streamResult) {
-        if (chunk.content) {
-          fullResponse += chunk.content;
-          await callbacks.onNodeResult(
-            nodeId,
-            outputField,
-            chunk.content,
-            "string"
-          );
+      for await (const data of result) {
+        if (data.content) {
+          response += data.content;
+          if (notify) {
+            await callbacks.onNodeResult(
+              nodeId,
+              outputField,
+              data.content,
+              outputFieldType
+            );
+          }
         }
       }
 
-      return { [outputField]: fullResponse };
+      return { [outputField]: response };
     } catch (error) {
       logger.error(`error executing LLM node ${nodeId}: ${error}`);
       throw error;

@@ -5,21 +5,7 @@ export interface WorkflowInputs {
 }
 
 export interface WorkflowDefinition {
-  version: string;
   nodes: Record<string, NodeDefinition>;
-  edges?: Array<{
-    source: string;
-    sourceOutput: string;
-    target: string;
-    targetInput: string;
-  }>;
-  metadata?: {
-    name?: string;
-    description?: string;
-    tags?: string[];
-    createdAt?: string;
-    updatedAt?: string;
-  };
 }
 
 export interface WorkflowExecutionResult {
@@ -29,17 +15,6 @@ export interface WorkflowExecutionResult {
   nodeResults: Record<string, NodeExecutionResult>;
   error?: string;
   executionTime: number;
-}
-
-export interface WorkflowExecutionCallbacks {
-  onNodeStart?: (nodeId: string, nodeType: string) => Promise<void>;
-  onNodeStream?: (
-    nodeId: string,
-    outputField: string,
-    chunk: string
-  ) => Promise<void>;
-  onNodeComplete?: (nodeId: string, output: any) => Promise<void>;
-  onNodeError?: (nodeId: string, error: Error) => Promise<void>;
 }
 
 export interface WorkflowExecutionOptions {
