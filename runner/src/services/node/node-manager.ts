@@ -1,8 +1,8 @@
-import { NodeType, NodeDefinition, ExecutionContext } from "../interfaces/node";
-import { INode } from "../nodes/base/base-node";
-import { EntrypointNode } from "../nodes/base/entrypoint-node";
-import { ResultNode } from "../nodes/base/result-node";
-import { LLMNode } from "../nodes/llm/llm-node";
+import { NodeType, NodeDefinition, ExecutionContext, NodeResultCallback } from "../../interfaces/node";
+import { INode } from "../../interfaces/node";
+import { EntrypointNode } from "../../nodes/base/entrypoint-node";
+import { ResultNode } from "../../nodes/base/result-node";
+import { LLMNode } from "../../nodes/llm/llm-node";
 
 export class NodeManager {
   private nodes: Map<NodeType, INode> = new Map();
@@ -28,18 +28,12 @@ export class NodeManager {
   async executeNode(
     nodeId: string,
     definition: NodeDefinition,
-    inputs: Record<string, any>,
     context: ExecutionContext,
     callbacks: {
-      onNodeStream: (
-        nodeId: string,
-        outputField: string,
-        data: string,
-        type: "string" | "image"
-      ) => Promise<void>;
+      onNodeResult: NodeResultCallback;
     }
   ): Promise<any> {
     const node = this.getNode(definition.type);
-    return await node.execute(nodeId, definition, inputs, context, callbacks);
+    return await node.execute(nodeId, definition, context, callbacks);
   }
 }

@@ -2,14 +2,14 @@ import {
   WorkflowDefinition,
   WorkflowExecutionResult,
   WorkflowExecutionOptions,
-} from "../interfaces/workflow";
+} from "./types";
 import {
   NodeExecutionResult,
   ExecutionContext,
   NodeDefinition,
-} from "../interfaces/node";
-import { NodeManager } from "./node-manager";
-import { logger } from "../utils/logger";
+} from "../../interfaces/node";
+import { NodeManager } from "../node/node-manager";
+import { logger } from "../../utils/logger";
 import { EventEmitter } from "events";
 
 export class WorkflowExecutor extends EventEmitter {
@@ -47,7 +47,6 @@ export class WorkflowExecutor extends EventEmitter {
         inputs: options.inputs || {},
         outputs: {},
         nodeResults: {},
-        streamOutputs: {},
       };
 
       const { dependencies } = this.buildDependencyGraph(definition);
@@ -176,9 +175,9 @@ export class WorkflowExecutor extends EventEmitter {
       const node = definition.nodes[nodeId];
 
       if (node.inputs) {
-        for (const input of Object.values(node.inputs)) {
-          if (typeof input === "object" && input.source) {
-            const sourceNodeId = input.source.split(".")[0];
+        for (const [inputName, inputDef] of Object.entries(node.inputs)) {
+          if (inputDef && inputDef.source) {
+            const sourceNodeId = inputDef.source.split(".")[0];
 
             if (!dependencies[nodeId].includes(sourceNodeId)) {
               dependencies[nodeId].push(sourceNodeId);
@@ -248,7 +247,7 @@ export class WorkflowExecutor extends EventEmitter {
               nodeType: node.type,
               outputField,
               data,
-              type,
+              type: (type as "string" | "image") || "string",
             });
           },
         }

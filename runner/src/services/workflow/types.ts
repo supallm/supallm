@@ -1,6 +1,8 @@
-import { NodeDefinition, NodeExecutionResult, InputValue } from "./node";
+import { NodeDefinition, NodeExecutionResult } from "../../interfaces/node";
 
-export type WorkflowInputs = Record<string, InputValue>;
+export interface WorkflowInputs {
+  [key: string]: any;
+}
 
 export interface WorkflowDefinition {
   version: string;

@@ -1,5 +1,9 @@
 import { BaseNode } from "./base-node";
-import { BaseNodeDefinition, ExecutionContext } from "../../interfaces/node";
+import {
+  NodeDefinition,
+  ExecutionContext,
+  NodeResultCallback,
+} from "../../interfaces/node";
 import { logger } from "../../utils/logger";
 
 export class EntrypointNode extends BaseNode {
@@ -9,21 +13,19 @@ export class EntrypointNode extends BaseNode {
 
   async execute(
     nodeId: string,
-    definition: BaseNodeDefinition,
-    inputs: Record<string, any>,
+    _: NodeDefinition,
     context: ExecutionContext,
     callbacks: {
-      onNodeStream: (
-        nodeId: string,
-        outputField: string,
-        chunk: string
-      ) => Promise<void>;
+      onNodeResult: NodeResultCallback;
     }
-  ): Promise<any> {
+  ): Promise<Record<string, any>> {
     logger.info(`Executing entrypoint node ${nodeId}`);
 
-    // The entrypoint node simply passes the workflow inputs to the next nodes
-    // without transformation
+    // entrypoint node is the first node to be executed
+    // it takes the global inputs and makes them available to the next nodes
+    // these inputs are already available in context.inputs
+    // we just return them as is
+    // the result will be stored in context.outputs[nodeId] by the workflow executor
     return { ...context.inputs };
   }
 }

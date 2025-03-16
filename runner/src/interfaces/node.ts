@@ -1,51 +1,55 @@
 export type NodeType = "llm" | "entrypoint" | "result";
 
-export type InputValue =
-  | { type: "string"; value: string }
-  | { type: "file"; value: string; mimeType: string };
+export type NodeResultType = "string" | "image";
 
 export interface NodeInput {
   type: string;
   source?: string; // format: "nodeId.outputField"
   required?: boolean;
-  default?: InputValue;
 }
 
 export interface NodeOutput {
   type: string;
-  outputField?: string;
+  outputField?: string[];
 }
 
-export interface BaseNodeDefinition {
+export interface NodeDefinition {
   type: NodeType;
-  inputs?: Record<string, NodeInput>;
+  inputs: Record<string, NodeInput>;
   outputs?: Record<string, NodeOutput>;
+  [key: string]: any; // for properties specific to each node type
 }
-
-export interface LLMNodeDefinition extends BaseNodeDefinition {
-  type: "llm";
-  provider: string;
-  model: string;
-  apiKey: string;
-  temperature?: number;
-  maxTokens?: number;
-  systemPrompt?: string;
-  streaming?: boolean;
-}
-
-export type NodeDefinition = BaseNodeDefinition | LLMNodeDefinition;
 
 export interface NodeExecutionResult {
   nodeId: string;
   success: boolean;
-  output: any;
+  output: Record<string, any> | null;
   error?: string;
   executionTime: number;
 }
 
 export interface ExecutionContext {
   inputs: Record<string, any>;
-  outputs: Record<string, any>;
+  outputs: Record<string, Record<string, any>>;
   nodeResults: Record<string, NodeExecutionResult>;
-  streamOutputs: Record<string, any>;
 }
+
+export type NodeResultCallback = (
+  nodeId: string,
+  outputField: string,
+  data: string,
+  type: NodeResultType
+) => Promise<void>;
+
+export interface INode {
+  type: NodeType;
+  
+  execute(
+    nodeId: string,
+    definition: NodeDefinition,
+    context: ExecutionContext,
+    callbacks: {
+      onNodeResult: NodeResultCallback;
+    }
+  ): Promise<Record<string, any>>;
+} 

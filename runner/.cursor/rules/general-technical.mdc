@@ -1,0 +1,287 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Cursor Rules for Workflow Execution Engine
+
+## Project Overview
+
+This project is a TypeScript-based workflow execution engine that processes complex workflows composed of various node types, with a focus on real-time event streaming and parallel execution capabilities. The system listens to Redis streams for workflow requests, executes them in a stateless manner, and emits events throughout the execution lifecycle.
+
+## Core Architecture
+
+### Event-Driven Workflow Engine
+
+- The engine must remain stateless to support horizontal scaling
+- Each workflow maintains its own execution context (initially in memory, with potential for Redis offloading)
+- Workflows are processed using Redis consumer groups for reliable message consumption
+- The execution follows a dependency-based approach where nodes are executed in parallel when dependencies are satisfied
+- All workflow events must be published through Redis streams for real-time notifications
+
+### Redis Integration
+
+- Use Redis streams with consumer groups for reliable workflow processing
+- Implement proper message acknowledgment to ensure exactly-once processing
+- Use Redis streams for publishing events to support real-time monitoring
+- Implement proper stream length management (MAXLEN) to prevent unbounded growth
+- Use efficient message formats (consider msgpack for metadata)
+
+### Workflow Structure
+
+- A workflow consists of multiple nodes with defined relationships in a JSON structure
+- Nodes have explicit types (entrypoint, llm, result, etc.)
+- Node inputs can reference outputs from other nodes using a source notation (e.g., `nodeId.outputField`)
+- Streaming outputs are supported for real-time updates during node execution
+- Each node has typed inputs and outputs with proper validation
+
+### Real-Time Event System
+
+- The engine must emit events for all significant state changes
+- Events include workflow lifecycle events and node execution events
+- Real-time streaming is supported at both workflow and node level
+- Node results can be streamed as they become available
+- Events use a consistent format with appropriate correlation IDs
+
+## Technical Components
+
+### Workflow Executor
+
+- Builds and analyzes the dependency graph from workflow definition
+- Executes nodes in parallel when dependencies are satisfied
+- Maintains workflow context with intermediate results
+- Emits events throughout the execution lifecycle
+- Handles errors gracefully with proper error propagation
+
+### Node Manager
+
+- Manages node type registry and implementations
+- Provides a plugin architecture for easy extension with new node types
+- Executes individual nodes with proper context
+- Supports streaming node outputs for real-time updates
+- Abstracts away node implementation details from the workflow executor
+
+### Queue Consumer
+
+- Implements Redis consumer groups for reliable message consumption
+- Manages parallel processing with controlled concurrency
+- Properly acknowledges messages after successful processing
+- Handles reconnection and error scenarios
+- Implements graceful shutdown
+
+### Event Notifier
+
+- Publishes events to multiple Redis streams for different consumers
+- Supports workflow events and node result events
+- Uses message metadata for correlation and tracking
+- Implements proper stream length management
+- Handles error scenarios gracefully
+
+## Node Types and Integration
+
+### Base Node Interface
+
+- All nodes must implement a common interface with standard methods:
+  - `execute`: Main execution method with support for streaming
+  - `validate`: Input validation method
+  - Properties for node type, inputs, outputs definitions
+
+### LLM Nodes
+
+- Support for various LLM providers (OpenAI, Anthropic, etc.)
+- Stream responses as they are generated
+- Support for system prompts and context windows
+- Mapping between LLM responses and node outputs
+- Integration with LangChain/LangGraph without tight coupling
+
+### Other Node Types
+
+- Support for data transformation nodes
+- Support for conditional logic and branching
+- Support for external API integration
+- Support for data storage and retrieval
+- Support for custom business logic
+
+## Best Practices
+
+### TypeScript Practices
+
+- Use strong typing throughout the codebase
+- Use interfaces to define contracts between components
+- Use type guards for safe type assertions
+- Prefer readonly properties for immutable data
+- Use const assertions (`as const`) instead of enums
+- Use discriminated unions for event types
+- Leverage TypeScript utility types where appropriate
+
+### Asynchronous Patterns
+
+- Use async/await consistently
+- Implement proper error handling for all async operations
+- Use Promise.all for parallel operations
+- Implement cancellation mechanisms for long-running operations
+- Handle backpressure appropriately in streaming scenarios
+
+### Error Handling
+
+- Implement proper error boundaries around node execution
+- Use structured error types with appropriate context
+- Ensure errors are properly published as events
+- Implement retry mechanisms where appropriate
+- Properly log errors with context for debugging
+
+### Testing Strategy
+
+- Unit test individual components
+- Mock dependencies for isolated testing
+- Test complex workflow scenarios
+- Test error handling and recovery
+- Test concurrent workflow execution
+- Test memory usage patterns
+
+## Performance Considerations
+
+### Concurrency Control
+
+- Manage the number of parallel workflows
+- Control parallel node execution within workflows
+- Balance resource usage across multiple workflows
+- Implement backpressure mechanisms when needed
+- Consider resource limits per workflow/node
+
+### Memory Management
+
+- Clean up completed workflow contexts
+- Implement streaming for large node outputs
+- Consider offloading context to Redis for long-running workflows
+- Implement proper cleanup of event listeners
+- Monitor memory usage in high-throughput scenarios
+
+### Scaling Considerations
+
+- Design for horizontal scaling across multiple instances
+- Avoid instance-specific state
+- Use Redis for distributed coordination
+- Consider sharding strategies for high volume
+- Implement proper health checks and monitoring
+
+## Example Workflow Structure
+
+```json
+{
+  "nodes": {
+    "result": {
+      "type": "result",
+      "inputs": {
+        "hook": {
+          "type": "string"
+        },
+        "idea": {
+          "type": "string"
+        }
+      }
+    },
+    "entrypoint": {
+      "type": "entrypoint",
+      "outputs": {
+        "prompt": {
+          "type": "string"
+        }
+      }
+    },
+    "60c7bd2e-f5e6-4949-b648-591e262d54ea": {
+      "type": "llm",
+      "model": "gpt-4o-mini",
+      "apiKey": "6256c62ee8c2241232e8c1e02a5a5dc9c02c535f8657a1e45237c4c5888325a9887fbcf01ddbf166f935f740008314ab80d4b11a44",
+      "inputs": {
+        "prompt": {
+          "source": "e4fd228c-08a5-4075-a134-9ea6772ef80a.response"
+        }
+      },
+      "outputs": {
+        "response": {
+          "type": "string",
+          "outputField": [
+            "hook"
+          ]
+        }
+      },
+      "provider": "openai",
+      "maxTokens": 1000,
+      "streaming": true,
+      "temperature": 0.5,
+      "systemPrompt": "lorem"
+    },
+    "e4fd228c-08a5-4075-a134-9ea6772ef80a": {
+      "type": "llm",
+      "model": "gpt-4o",
+      "apiKey": "6256c62ee8c2241232e8c1e02a5a5dc9c02c535f8657a1e45237c4c5888325a9887fbcf01ddbf166f935f740008314ab80d4b11a44",
+      "inputs": {
+        "prompt": {
+          "source": "entrypoint.prompt"
+        }
+      },
+      "outputs": {
+        "response": {
+          "type": "string",
+           "outputField": [
+            "idea"
+          ]
+        }
+      },
+      "provider": "openai",
+      "maxTokens": 4000,
+      "streaming": true,
+      "temperature": 0.5,
+      "systemPrompt": "lorem"
+    }
+  }
+}
+
+```
+
+## Event Structure
+
+```typescript
+// Core event types
+const WorkflowEvents = {
+  WORKFLOW_STARTED: "workflow:started",
+  WORKFLOW_COMPLETED: "workflow:completed",
+  WORKFLOW_FAILED: "workflow:failed",
+  NODE_STARTED: "node:started",
+  NODE_COMPLETED: "node:completed",
+  NODE_FAILED: "node:failed",
+
+  NODE_RESULT: "node:result",  // For node results
+} as const;
+```
+
+## Code Organization
+
+### Module Structure
+
+- Organize by domain rather than technical type:
+  - `/workflow` - Core workflow execution logic
+  - `/node` - Node definitions and implementations
+  - `/queue` - Queue consumer implementation
+  - `/notifier` - Event notification system
+  - `/utils` - Shared utilities
+- Use clear interfaces between modules
+- Limit what's exported from each module
+- Use index files to expose public API surface
+
+### Class Responsibilities
+
+- `WorkflowExecutor`: Manages workflow execution, dependency resolution, and event emission
+- `NodeManager`: Handles node registration and execution
+- `QueueConsumer`: Consumes workflow requests from Redis
+- `Notifier`: Publishes events to Redis streams
+- Node implementations: Separate classes for each node type
+
+## Extension and Customization
+
+- Implement new node types by extending base node interfaces
+- Register new node types with the node manager
+- Use dependency injection for component customization
+- Support custom event types for specialized workflows
+- Allow configuration of Redis streams and consumer groups

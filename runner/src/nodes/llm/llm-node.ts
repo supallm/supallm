@@ -1,38 +1,38 @@
 import { BaseNode } from "../base/base-node";
-import { LLMNodeDefinition, ExecutionContext } from "../../interfaces/node";
+import {
+  NodeDefinition,
+  ExecutionContext,
+  NodeResultCallback,
+} from "../../interfaces/node";
 import { logger } from "../../utils/logger";
 import { CryptoService } from "../../services/crypto-service";
 import { BaseLLMProvider } from "./base-provider";
 import { OpenAIProvider } from "./openai-provider";
+import { AnthropicProvider } from "./anthropic-provider";
 
 const ProviderType = {
   OPENAI: "openai",
-};
+  ANTHROPIC: "anthropic",
+} as const;
 
 export class LLMNode extends BaseNode {
-  private cryptoService: CryptoService;
-
   constructor() {
     super("llm");
     this.cryptoService = new CryptoService();
   }
 
+  private cryptoService: CryptoService;
+
   async execute(
     nodeId: string,
-    definition: LLMNodeDefinition,
-    inputs: Record<string, any>,
+    definition: NodeDefinition,
     context: ExecutionContext,
     callbacks: {
-      onNodeStream: (
-        nodeId: string,
-        outputField: string,
-        chunk: string,
-        type: "string" | "image"
-      ) => Promise<void>;
+      onNodeResult: NodeResultCallback;
     }
-  ): Promise<any> {
+  ): Promise<Record<string, any>> {
     try {
-      const resolvedInputs = await this.resolveInputs(definition, context);
+      const resolvedInputs = this.resolveInputs(nodeId, definition, context);
       this.validateInputs(nodeId, definition, resolvedInputs);
 
       if (!definition.provider) {
@@ -43,9 +43,11 @@ export class LLMNode extends BaseNode {
         throw new Error(`API key is required for LLM node ${nodeId}`);
       }
 
-      const provider = this.selectProvider(definition);
+      const provider = this.selectProvider(definition.provider);
+      const outputField =
+        definition.outputs?.response?.outputField?.[0] || "response";
 
-      const options = {
+      const llmOptions = {
         model: definition.model || "",
         apiKey: this.cryptoService.decrypt(definition.apiKey),
         temperature: definition.temperature || 0.5,
@@ -53,58 +55,41 @@ export class LLMNode extends BaseNode {
         systemPrompt: definition.systemPrompt || "",
         streaming: definition.streaming === true,
         nodeId,
-        callbacks,
       };
 
       const prompt = resolvedInputs.prompt;
-      const streamOutputField =
-        definition.outputs?.responseStream?.outputField || "responseStream";
-      const responseOutputField =
-        definition.outputs?.response?.outputField || "response";
+      const streamResult = await provider.generate(prompt, llmOptions);
+      let fullResponse = "";
 
-      if (options.streaming) {
-        const streamResult = await provider.stream(prompt, options);
-
-        let fullResponse = "";
-        for await (const chunk of streamResult) {
-          const content = chunk.content || chunk.text || "";
-          if (content) {
-            fullResponse += content;
-            await callbacks.onNodeStream(
-              nodeId,
-              streamOutputField,
-              content,
-              "string"
-            );
-          }
+      for await (const chunk of streamResult) {
+        if (chunk.content) {
+          fullResponse += chunk.content;
+          await callbacks.onNodeResult(
+            nodeId,
+            outputField,
+            chunk.content,
+            "string"
+          );
         }
-
-        return { response: fullResponse };
-      } else {
-        const result = await provider.generate(prompt, options);
-        await callbacks.onNodeStream(
-          nodeId,
-          responseOutputField,
-          result.response,
-          "string"
-        );
-        return result;
       }
+
+      return { [outputField]: fullResponse };
     } catch (error) {
       logger.error(`error executing LLM node ${nodeId}: ${error}`);
       throw error;
     }
   }
 
-  private selectProvider(definition: LLMNodeDefinition): BaseLLMProvider {
-    const providerType = definition.provider.toLowerCase();
+  private selectProvider(providerType: string): BaseLLMProvider {
+    const type = providerType.toLowerCase();
 
-    switch (providerType) {
+    switch (type) {
       case ProviderType.OPENAI:
         return new OpenAIProvider();
-
+      case ProviderType.ANTHROPIC:
+        return new AnthropicProvider();
       default:
-        throw new Error(`Unsupported LLM provider: ${providerType}`);
+        throw new Error(`Unsupported LLM provider: ${type}`);
     }
   }
 }

@@ -1,26 +1,10 @@
 import {
   NodeType,
-  BaseNodeDefinition,
+  NodeDefinition,
   ExecutionContext,
+  INode,
+  NodeResultCallback,
 } from "../../interfaces/node";
-
-export interface INode {
-  type: NodeType;
-  execute(
-    nodeId: string,
-    definition: BaseNodeDefinition,
-    inputs: Record<string, any>,
-    context: ExecutionContext,
-    callbacks: {
-      onNodeStream: (
-        nodeId: string,
-        outputField: string,
-        chunk: string,
-        type: "string" | "image"
-      ) => Promise<void>;
-    }
-  ): Promise<any>;
-}
 
 export abstract class BaseNode implements INode {
   type: NodeType;
@@ -31,27 +15,22 @@ export abstract class BaseNode implements INode {
 
   abstract execute(
     nodeId: string,
-    definition: BaseNodeDefinition,
-    inputs: Record<string, any>,
+    definition: NodeDefinition,
     context: ExecutionContext,
     callbacks: {
-      onNodeStream: (
-        nodeId: string,
-        outputField: string,
-        chunk: string
-      ) => Promise<void>;
+      onNodeResult: NodeResultCallback;
     }
-  ): Promise<any>;
+  ): Promise<Record<string, any>>;
 
   protected validateInputs(
     nodeId: string,
-    definition: BaseNodeDefinition,
-    inputs: Record<string, any>
+    definition: NodeDefinition,
+    resolvedInputs: Record<string, any>
   ): void {
     if (!definition.inputs) return;
 
     for (const [inputName, inputDef] of Object.entries(definition.inputs)) {
-      if (inputDef.required && inputs[inputName] === undefined) {
+      if (inputDef.required && resolvedInputs[inputName] === undefined) {
         throw new Error(
           `missing required input '${inputName}' for node ${nodeId}`
         );
@@ -59,10 +38,11 @@ export abstract class BaseNode implements INode {
     }
   }
 
-  protected async resolveInputs(
-    definition: BaseNodeDefinition,
+  protected resolveInputs(
+    nodeId: string,
+    definition: NodeDefinition,
     context: ExecutionContext
-  ): Promise<Record<string, any>> {
+  ): Record<string, any> {
     const resolvedInputs: Record<string, any> = {};
 
     if (!definition.inputs) return resolvedInputs;

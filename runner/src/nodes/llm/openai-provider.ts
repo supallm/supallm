@@ -6,46 +6,29 @@ import { logger } from "../../utils/logger";
 export class OpenAIProvider implements BaseLLMProvider {
   constructor() {}
 
-  async generate(prompt: string, options: LLMOptions): Promise<any> {
+  async generate(prompt: string, options: LLMOptions): Promise<AsyncIterable<{ content: string }>> {
     logger.info(`generating with OpenAI: ${prompt.substring(0, 50)}...`);
     const model = this.createModel(options);
     try {
-      if (model instanceof ChatOpenAI) {
-        const response = await model.invoke(prompt);
-        return { text: response.content };
-      } else {
-        const response = await model.invoke(prompt);
-        return { text: response };
-      }
-    } catch (error) {
-      logger.error(`error generating with OpenAI: ${error}`);
-      throw error;
-    }
-  }
-
-  async stream(prompt: string, options: LLMOptions): Promise<any> {
-    logger.info(`streaming with OpenAI: ${prompt.substring(0, 50)}...`);
-    const model = this.createModel(options);
-    try {
-      if (model instanceof ChatOpenAI) {
+      if (model instanceof ChatOpenAI && options.streaming) {
         const stream = await model.stream(prompt);
 
-        // Transform the stream for easier handling
         return {
           [Symbol.asyncIterator]: async function* () {
             for await (const chunk of stream) {
               if (chunk.content) {
-                yield { content: chunk.content };
+                const contentStr = String(chunk.content);
+                yield { content: contentStr };
               }
             }
           },
         };
       } else {
-        // For non-chat models, simulate a stream with a single response
         const response = await model.invoke(prompt);
+        const responseStr = String(response);
         return {
           [Symbol.asyncIterator]: async function* () {
-            yield { text: response };
+            yield { content: responseStr };
           },
         };
       }
