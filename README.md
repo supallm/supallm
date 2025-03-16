@@ -79,6 +79,9 @@ Once finished you will get a `docker-compose.yml` and a `.env` file that you wil
 > Important: you will be prompted for your Clerk keys. We currently use Clerk for managing organizations and users. Later we will remove this dependency. You can get your keys for FREE [here](https://clerk.com/).
 
 
+<img width="585" alt="CleanShot 2025-03-16 at 11 31 45@2x" src="https://github.com/user-attachments/assets/e838982f-a62e-4350-add3-3081d0ff7b1e" />
+
+
 ## 🐳 Customize your installation
 
 We recommend using the CLI (above) to install Supallm. The CLI will download the required files and help you to setup your first required variables.
