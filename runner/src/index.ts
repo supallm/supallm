@@ -6,7 +6,7 @@ dotenv.config();
 async function main() {
   try {
     const redisUrl = `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`;
-    const server = new RunnerServer({ redisUrl });
+    const server = new RunnerServer({ redisUrl, instanceId: process.env.RUNNER_INSTANCE_ID ?? "runner-0" });
 
     process.on("SIGINT", async () => {
       logger.info("received SIGINT. Shutting down...");

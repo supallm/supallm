@@ -1,6 +1,7 @@
 import Redis from "ioredis";
 import { IQueueConsumer, WorkflowMessage } from "./queuer.interface";
 import { logger } from "../../utils/logger";
+import { PendingMessageInfo } from "./types";
 
 interface RedisStreamMessage {
   id: string;
@@ -34,7 +35,7 @@ export class RedisQueueConsumer implements IQueueConsumer {
   private activeJobs = 0;
   private isRunning = true;
 
-  constructor(redisUrl: string, options?: RedisQueueOptions) {
+  constructor(redisUrl: string, options: RedisQueueOptions) {
     this.redis = this.initializeRedisClient(redisUrl);
     this.CONSUMER_NAME = this.generateConsumerName();
     this.MAX_PARALLEL_JOBS =
@@ -60,6 +61,10 @@ export class RedisQueueConsumer implements IQueueConsumer {
     try {
       await this.redis.ping();
       await this.createConsumerGroup();
+      
+      // Nettoyer les consommateurs inactifs
+      await this.cleanupInactiveConsumers();
+      
       logger.info("redis queue consumer initialized successfully");
     } catch (err) {
       logger.error(`failed to initialize redis queue consumer: ${err}`);
@@ -195,7 +200,14 @@ export class RedisQueueConsumer implements IQueueConsumer {
   }
 
   private async acknowledgeMessage(messageId: string): Promise<void> {
-    // await this.redis.xack(this.QUEUE_TOPIC, this.CONSUMER_GROUP, messageId);
+    try {
+      const pipeline = this.redis.pipeline();
+      pipeline.xack(this.QUEUE_TOPIC, this.CONSUMER_GROUP, messageId);
+      const results = await pipeline.exec();
+      logger.info(`pipeline xack result: ${JSON.stringify(results)}`);
+    } catch (error) {
+      logger.error(`pipeline xack failed: ${error}`);
+    }
   }
 
   async stop(): Promise<void> {
@@ -206,4 +218,68 @@ export class RedisQueueConsumer implements IQueueConsumer {
   async close(): Promise<void> {
     await this.redis.quit();
   }
+
+  // cleanup inactive consumers
+  // idleThresholdMs: the time in ms after which a consumer is considered inactive
+  // default: 3000000ms = 5min
+  async cleanupInactiveConsumers(idleThresholdMs: number = 3000000): Promise<void> {
+    try {
+      const consumersInfo = await this.redis.xinfo('CONSUMERS', this.QUEUE_TOPIC, this.CONSUMER_GROUP);
+      
+      if (!consumersInfo || !Array.isArray(consumersInfo)) {
+        logger.warn('failed to get consumers info or no consumers found');
+        return;
+      }
+      
+      logger.info(`joining ${consumersInfo.length} consumers in group ${this.CONSUMER_GROUP}`);
+      
+      // Format: ["name","runner-xyz","pending",0,"idle",12345,"inactive",-1]
+      for (const consumerInfo of consumersInfo) {
+        const consumerName = consumerInfo[1];
+        const pendingMessages = parseInt(consumerInfo[3], 10);
+        const idleTimeMs = parseInt(consumerInfo[5], 10);
+        
+        if (consumerName === this.CONSUMER_NAME) {
+          continue;
+        }
+        
+        if (idleTimeMs > idleThresholdMs) {
+          logger.info(`found inactive consumer ${consumerName} (idle for ${idleTimeMs}ms)`);
+          
+          if (pendingMessages > 0) {
+            
+            // get the ids of the pending messages for this consumer
+            const pendingMessagesInfo = await this.redis.xpending(
+              this.QUEUE_TOPIC,
+              this.CONSUMER_GROUP,
+              '-', // minimum id
+              '+', // maximum id
+              pendingMessages, 
+              consumerName 
+            ) as PendingMessageInfo[];
+            
+            if (pendingMessagesInfo && pendingMessagesInfo.length > 0) {
+              const messageIds = pendingMessagesInfo.map(msg => msg[0]);
+              
+              await this.redis.xclaim(
+                this.QUEUE_TOPIC,
+                this.CONSUMER_GROUP,
+                this.CONSUMER_NAME,
+                0, // no idle time
+                ...messageIds
+              );
+              
+              logger.info(`successfully claimed ${messageIds.length} messages from ${consumerName}`);
+            }
+          }
+          
+          await this.redis.xgroup('DELCONSUMER', this.QUEUE_TOPIC, this.CONSUMER_GROUP, consumerName);
+          logger.info(`successfully removed inactive consumer ${consumerName}`);
+        }
+      }
+    } catch (error) {
+      logger.error(`failed to cleanup inactive consumers: ${error}`);
+    }
+  }
 }
+

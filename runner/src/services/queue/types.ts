@@ -7,6 +7,9 @@ export interface WorkflowMessage {
   inputs: Record<string, any>;
 }
 
+// format: [messageId, consumerName, idleTime, deliveryCount]
+export type PendingMessageInfo = [string, string, number, number];
+
 export interface IQueueConsumer {
   initialize(): Promise<void>;
   consumeWorkflowQueue(
