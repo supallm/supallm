@@ -104,14 +104,9 @@ const OpenAIChatCompletionNode: FC<OpenAIChatCompletionNodeProps> = ({
       case "text-stream":
         return [
           {
-            label: "Response",
+            label: "Response stream",
             id: generateHandleId("text", "response"),
             type: "text",
-          } as const,
-          {
-            label: "Response stream",
-            id: generateHandleId("text-stream", "response-stream"),
-            type: "text-stream",
           } as const,
         ];
       default:

@@ -1,4 +1,5 @@
 import { randomName } from "@/lib/docker-name";
+import { generateHandleId } from "@/lib/handles";
 import { Flow, FlowNode } from "../entities/flow";
 import { FlowService } from "../interfaces";
 import { addFlow } from "../store/flow";
@@ -14,7 +15,13 @@ export class CreateFlowUsecase {
         type: "entrypoint",
         position: { x: 100, y: 200 },
         data: {
-          handles: [],
+          handles: [
+            {
+              type: "text",
+              id: generateHandleId("text", "prompt"),
+              label: "prompt",
+            },
+          ],
         },
         deletable: false,
         zIndex: 1,
@@ -24,7 +31,13 @@ export class CreateFlowUsecase {
         type: "result",
         position: { x: 900, y: 200 },
         data: {
-          handles: [],
+          handles: [
+            {
+              type: "text",
+              id: generateHandleId("text", "result"),
+              label: "result",
+            },
+          ],
         },
         deletable: false,
         zIndex: 1,

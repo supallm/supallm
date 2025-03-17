@@ -109,7 +109,7 @@ func (s *Server) RespondWithContentLocation(
 	uri string,
 	params ...any,
 ) {
-	w.Header().Add("content-location", fmt.Sprintf(uri, params...))
+	w.Header().Add("Content-Location", fmt.Sprintf(uri, params...))
 	s.Respond(w, r, status, nil)
 }
 

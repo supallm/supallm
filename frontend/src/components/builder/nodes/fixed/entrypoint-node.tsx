@@ -11,9 +11,8 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import BaseNode from "../common/base-node";
 
-import { generateHandleId } from "@/lib/handles";
 import { NodeProps, useReactFlow, useUpdateNodeInternals } from "@xyflow/react";
-import { NewHandleInputEntrypoint } from "./new-handle-input";
+import { NewHandleInput } from "./new-handle-input";
 
 const EntrypointNode: FC<NodeProps & { data: EntrypointNodeData }> = ({
   id: nodeId,
@@ -35,13 +34,7 @@ const EntrypointNode: FC<NodeProps & { data: EntrypointNodeData }> = ({
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      handles: data.handles ?? [
-        {
-          type: "text",
-          id: generateHandleId("text", "prompt"),
-          label: "prompt",
-        },
-      ],
+      handles: data.handles,
     },
   });
 
@@ -87,7 +80,7 @@ const EntrypointNode: FC<NodeProps & { data: EntrypointNodeData }> = ({
     >
       <div>
         <Form {...form}>
-          <NewHandleInputEntrypoint onChange={onHandleChange} />
+          <NewHandleInput onChange={onHandleChange} />
         </Form>
 
         <div className="flex flex-col gap-1 mt-2">

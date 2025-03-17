@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { ResultHandle, ResultNodeData } from "@/core/entities/flow/flow-result";
-import { generateHandleId } from "@/lib/handles";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { NodeProps, useReactFlow, useUpdateNodeInternals } from "@xyflow/react";
 import { FolderSymlink, XIcon } from "lucide-react";
@@ -20,7 +19,7 @@ const ResultNode: FC<ResultNodeProps> = ({ data, id: nodeId }) => {
   const formSchema = z.object({
     handles: z.array(
       z.object({
-        type: z.enum(["text", "image", "text-stream"]),
+        type: z.enum(["text", "image"]),
         id: z.string(),
         label: z.string(),
       }),
@@ -30,18 +29,7 @@ const ResultNode: FC<ResultNodeProps> = ({ data, id: nodeId }) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      handles: data.handles ?? [
-        {
-          type: "text",
-          id: generateHandleId("text", "result"),
-          label: "result",
-        },
-        {
-          type: "text-stream",
-          id: generateHandleId("text-stream", "resultStream"),
-          label: "resultStream",
-        },
-      ],
+      handles: data.handles,
     },
   });
 
@@ -87,7 +75,7 @@ const ResultNode: FC<ResultNodeProps> = ({ data, id: nodeId }) => {
     >
       <div>
         <Form {...form}>
-          <NewHandleInput allowTextStream onChange={onHandleChange} />
+          <NewHandleInput onChange={onHandleChange} />
         </Form>
 
         <div className="flex flex-col gap-1 mt-2">

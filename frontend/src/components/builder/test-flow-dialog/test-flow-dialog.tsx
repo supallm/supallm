@@ -12,7 +12,7 @@ import { getAuthToken } from "@/lib/auth";
 import { Label } from "@radix-ui/react-dropdown-menu";
 import { Pause, PlayIcon } from "lucide-react";
 import { FC, PropsWithChildren, useState } from "react";
-import { FlowEventData, initSupallm, Unsubscribe } from "supallm";
+import { FlowEventData, initSupallm, Unsubscribe } from "supallm/browser";
 import { EmptyState } from "../../empty-state";
 import { Button } from "../../ui/button";
 import { Input } from "../../ui/input";
@@ -61,15 +61,13 @@ export const TestFlowDialog: FC<
     const supallm = initSupallm(
       {
         projectId,
-        publicKey: process.env.SUPALLM_PUBLIC_KEY!,
       },
       {
         apiUrl: "http://localhost:3001",
-        mocked: false,
       },
     );
 
-    supallm.setAccessToken(token);
+    supallm.setUserToken(token);
 
     const subscription = supallm
       .runFlow({
