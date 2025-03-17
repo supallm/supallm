@@ -66,106 +66,70 @@ export class RunnerServer {
   }
 
   private setupEventListeners(): void {
-    this.executor.on(
+    const workflowEvents = [
       WorkflowEvents.WORKFLOW_STARTED,
-      this.handleWorkflowStarted.bind(this)
-    );
-    this.executor.on(
       WorkflowEvents.WORKFLOW_COMPLETED,
-      this.handleWorkflowCompleted.bind(this)
-    );
-    this.executor.on(
       WorkflowEvents.WORKFLOW_FAILED,
-      this.handleWorkflowFailed.bind(this)
-    );
-    this.executor.on(
       WorkflowEvents.NODE_STARTED,
-      this.handleNodeStarted.bind(this)
-    );
-    this.executor.on(
       WorkflowEvents.NODE_COMPLETED,
-      this.handleNodeCompleted.bind(this)
-    );
-    this.executor.on(
       WorkflowEvents.NODE_FAILED,
-      this.handleNodeFailed.bind(this)
-    );
+    ] as const;
+    
+    for (const eventType of workflowEvents) {
+      this.executor.on(eventType, (data: any) => this.handleWorkflowEvent(eventType, data));
+    }
+    
     this.executor.on(
       WorkflowEvents.NODE_RESULT,
       this.handleNodeResult.bind(this)
     );
   }
 
-  private async handleWorkflowStarted(data: any): Promise<void> {
+  private async handleWorkflowEvent(
+    eventType: typeof WorkflowEvents[keyof typeof WorkflowEvents], 
+    data: any
+  ): Promise<void> {
     await this.notifier.publishWorkflowEvent({
-      type: WorkflowEvents.WORKFLOW_STARTED,
+      type: eventType,
       workflowId: data.workflowId,
       triggerId: data.triggerId,
       sessionId: data.sessionId,
-      data: { inputs: data.inputs },
+      data: this.extractEventData(eventType, data),
     });
   }
-
-  private async handleWorkflowCompleted(data: any): Promise<void> {
-    await this.notifier.publishWorkflowEvent({
-      type: WorkflowEvents.WORKFLOW_COMPLETED,
-      workflowId: data.workflowId,
-      triggerId: data.triggerId,
-      sessionId: data.sessionId,
-      data: { result: data.result },
-    });
-  }
-
-  private async handleWorkflowFailed(data: any): Promise<void> {
-    await this.notifier.publishWorkflowEvent({
-      type: WorkflowEvents.WORKFLOW_FAILED,
-      workflowId: data.workflowId,
-      triggerId: data.triggerId,
-      sessionId: data.sessionId,
-      data: { error: data.error },
-    });
-  }
-
-  private async handleNodeStarted(data: any): Promise<void> {
-    await this.notifier.publishWorkflowEvent({
-      type: WorkflowEvents.NODE_STARTED,
-      workflowId: data.workflowId,
-      triggerId: data.triggerId,
-      sessionId: data.sessionId,
-      data: {
-        nodeId: data.nodeId,
-        type: data.nodeType,
-        inputs: data.inputs,
-      },
-    });
-  }
-
-  private async handleNodeCompleted(data: any): Promise<void> {
-    await this.notifier.publishWorkflowEvent({
-      type: WorkflowEvents.NODE_COMPLETED,
-      workflowId: data.workflowId,
-      triggerId: data.triggerId,
-      sessionId: data.sessionId,
-      data: {
-        nodeId: data.nodeId,
-        nodeType: data.nodeType,
-        output: data.output,
-      },
-    });
-  }
-
-  private async handleNodeFailed(data: any): Promise<void> {
-    await this.notifier.publishWorkflowEvent({
-      type: WorkflowEvents.NODE_FAILED,
-      workflowId: data.workflowId,
-      triggerId: data.triggerId,
-      sessionId: data.sessionId,
-      data: {
-        nodeId: data.nodeId,
-        nodeType: data.nodeType,
-        error: data.error,
-      },
-    });
+  
+  private extractEventData(
+    eventType: typeof WorkflowEvents[keyof typeof WorkflowEvents], 
+    data: any
+  ): any {
+    switch (eventType) {
+      case WorkflowEvents.WORKFLOW_STARTED:
+        return { inputs: data.inputs };
+      case WorkflowEvents.WORKFLOW_COMPLETED:
+        return { result: data.result };
+      case WorkflowEvents.WORKFLOW_FAILED:
+        return { error: data.error };
+      case WorkflowEvents.NODE_STARTED:
+        return {
+          nodeId: data.nodeId,
+          type: data.nodeType,
+          inputs: data.inputs,
+        };
+      case WorkflowEvents.NODE_COMPLETED:
+        return {
+          nodeId: data.nodeId,
+          nodeType: data.nodeType,
+          output: data.output,
+        };
+      case WorkflowEvents.NODE_FAILED:
+        return {
+          nodeId: data.nodeId,
+          nodeType: data.nodeType,
+          error: data.error,
+        };
+      default:
+        return data;
+    }
   }
 
   private async handleNodeResult(data: any): Promise<void> {

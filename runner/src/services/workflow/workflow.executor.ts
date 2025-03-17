@@ -82,29 +82,32 @@ export class WorkflowExecutor extends EventEmitter {
     };
   }
 
-  private emitWorkflowStarted(context: ExecutionContext): void {
-    this.emit(WorkflowEvents.WORKFLOW_STARTED, {
+  // Helper method to create base event data
+  private createBaseEventData(context: ExecutionContext) {
+    return {
       workflowId: context.workflowId,
       triggerId: context.triggerId,
       sessionId: context.sessionId,
+    };
+  }
+
+  private emitWorkflowStarted(context: ExecutionContext): void {
+    this.emit(WorkflowEvents.WORKFLOW_STARTED, {
+      ...this.createBaseEventData(context),
       inputs: context.inputs,
     });
   }
 
   private emitWorkflowCompleted(context: ExecutionContext, result: any): void {
     this.emit(WorkflowEvents.WORKFLOW_COMPLETED, {
-      workflowId: context.workflowId,
-      triggerId: context.triggerId,
-      sessionId: context.sessionId,
+      ...this.createBaseEventData(context),
       result,
     });
   }
 
   private emitWorkflowFailed(context: ExecutionContext, error: any): void {
     this.emit(WorkflowEvents.WORKFLOW_FAILED, {
-      workflowId: context.workflowId,
-      triggerId: context.triggerId,
-      sessionId: context.sessionId,
+      ...this.createBaseEventData(context),
       error: error instanceof Error ? error.message : String(error),
     });
   }
@@ -307,9 +310,7 @@ export class WorkflowExecutor extends EventEmitter {
     context: ExecutionContext
   ): void {
     this.emit(WorkflowEvents.NODE_STARTED, {
-      workflowId: context.workflowId,
-      triggerId: context.triggerId,
-      sessionId: context.sessionId,
+      ...this.createBaseEventData(context),
       nodeId,
       nodeType: node.type,
       inputs: context.inputs,
@@ -323,9 +324,7 @@ export class WorkflowExecutor extends EventEmitter {
     context: ExecutionContext
   ): void {
     this.emit(WorkflowEvents.NODE_COMPLETED, {
-      workflowId: context.workflowId,
-      triggerId: context.triggerId,
-      sessionId: context.sessionId,
+      ...this.createBaseEventData(context),
       nodeId,
       nodeType: node.type,
       output,
@@ -339,9 +338,7 @@ export class WorkflowExecutor extends EventEmitter {
     context: ExecutionContext
   ): void {
     this.emit(WorkflowEvents.NODE_FAILED, {
-      workflowId: context.workflowId,
-      triggerId: context.triggerId,
-      sessionId: context.sessionId,
+      ...this.createBaseEventData(context),
       nodeId,
       nodeType: node.type,
       error: error instanceof Error ? error.message : String(error),
@@ -357,9 +354,7 @@ export class WorkflowExecutor extends EventEmitter {
     context: ExecutionContext
   ): void {
     this.emit(WorkflowEvents.NODE_RESULT, {
-      workflowId: context.workflowId,
-      triggerId: context.triggerId,
-      sessionId: context.sessionId,
+      ...this.createBaseEventData(context),
       nodeId,
       nodeType: node.type,
       outputField,
