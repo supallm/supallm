@@ -28,8 +28,6 @@ export class WorkflowExecutor extends EventEmitter {
     options: WorkflowExecutionOptions
   ): Promise<WorkflowExecutionResult> {
     const startTime = Date.now();
-    logger.info(`starting execution of workflow ${workflowId}`);
-
     const context = this.initializeContext(workflowId, definition, options);
 
     // Emit workflow started event

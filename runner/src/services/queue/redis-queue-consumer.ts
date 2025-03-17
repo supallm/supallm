@@ -67,6 +67,10 @@ export class RedisQueueConsumer implements IQueueConsumer {
     }
   }
 
+  private getRemainingSlots(): string {
+    return `${this.MAX_PARALLEL_JOBS - this.activeJobs}/${this.MAX_PARALLEL_JOBS}`;
+  }
+
   private async createConsumerGroup(): Promise<void> {
     try {
       await this.redis.xgroup(
@@ -91,7 +95,7 @@ export class RedisQueueConsumer implements IQueueConsumer {
   ): Promise<void> {
     try {
       logger.info(
-        `consuming workflow queue with ${this.MAX_PARALLEL_JOBS} parallel jobs`
+        `consuming topic ${this.QUEUE_TOPIC} - remaining slots: ${this.getRemainingSlots()}`
       );
       while (this.isRunning) {
         await this.waitForAvailableSlot();
@@ -106,14 +110,17 @@ export class RedisQueueConsumer implements IQueueConsumer {
   }
 
   private async waitForAvailableSlot(): Promise<void> {
+    if (this.activeJobs >= this.MAX_PARALLEL_JOBS) {
+      logger.info(
+        `waiting for available slot, all the ${this.MAX_PARALLEL_JOBS} slots are taken`
+      );
+    }
     while (this.activeJobs >= this.MAX_PARALLEL_JOBS) {
-      logger.info(`waiting for available slot ${this.activeJobs}/${this.MAX_PARALLEL_JOBS}`);
       await new Promise((resolve) => setTimeout(resolve, POLLING_INTERVAL));
     }
   }
 
   private async readMessages(): Promise<RedisStreamResult[] | null> {
-    logger.info(`reading messages on topic ${this.QUEUE_TOPIC}`);
     const result = (await this.redis.xreadgroup(
       "GROUP",
       this.CONSUMER_GROUP,
@@ -145,12 +152,12 @@ export class RedisQueueConsumer implements IQueueConsumer {
       for (const { id: messageId, fields } of messages) {
         this.activeJobs++;
         logger.info(
-          `processing message ${messageId} - ${this.activeJobs}/${this.MAX_PARALLEL_JOBS}`
+          `processing new job ${messageId} - remaining slots: ${this.getRemainingSlots()}`
         );
-        this.processMessage(messageId, fields, handler).finally(() => {
+        this.processMessage(messageId, fields, handler).then(() => {
           this.activeJobs--;
           logger.info(
-            `processed message ${messageId} - ${this.activeJobs}/${this.MAX_PARALLEL_JOBS}`
+            `completed job ${messageId} - remaining slots: ${this.getRemainingSlots()}`
           );
         });
       }
@@ -168,7 +175,9 @@ export class RedisQueueConsumer implements IQueueConsumer {
         await this.acknowledgeMessage(messageId);
         return;
       }
-
+      logger.info(
+        `processing workflow ${message.workflow_id} - triggerId: ${message.trigger_id}`
+      );
       await handler(message);
       await this.acknowledgeMessage(messageId);
     } catch (err) {
@@ -186,7 +195,7 @@ export class RedisQueueConsumer implements IQueueConsumer {
   }
 
   private async acknowledgeMessage(messageId: string): Promise<void> {
-    await this.redis.xack(this.QUEUE_TOPIC, this.CONSUMER_GROUP, messageId);
+    // await this.redis.xack(this.QUEUE_TOPIC, this.CONSUMER_GROUP, messageId);
   }
 
   async stop(): Promise<void> {

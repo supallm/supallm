@@ -17,7 +17,7 @@ export class RunnerServer {
 
   constructor(config: RunnerConfig) {
     this.queueConsumer = new RedisQueueConsumer(config.redisUrl, {
-      maxParallelJobs: config.maxParallelJobs ?? 10,
+      maxParallelJobs: config.maxParallelJobs ?? 3,
     });
     this.notifier = new RedisNotifier(config.redisUrl);
     this.nodeManager = new NodeManager();
@@ -30,8 +30,7 @@ export class RunnerServer {
     try {
       await this.queueConsumer.initialize();
       await this.notifier.initialize();
-
-      logger.info("runner server started, consuming from workflow queue");
+      logger.info("runner server started");
 
       this.queueConsumer.consumeWorkflowQueue(
         this.handleWorkflowExecution.bind(this)
@@ -53,15 +52,16 @@ export class RunnerServer {
   ): Promise<void> {
     const { workflow_id, trigger_id, session_id, project_id, definition, inputs } = message;
 
+    
     try {
-      this.executor.execute(workflow_id, definition, {
+      await this.executor.execute(workflow_id, definition, {
         inputs,
         projectId: project_id,
         sessionId: session_id,
         triggerId: trigger_id,
       });
     } catch (error) {
-      logger.error(`error executing workflow ${workflow_id}: ${error}`);
+      logger.error(`Error executing workflow ${workflow_id}: ${error}`);
     }
   }
 
