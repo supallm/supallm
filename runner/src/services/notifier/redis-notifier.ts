@@ -128,9 +128,9 @@ export class RedisNotifier implements INotifier {
   }
 
   private logPublishEvent(stream: string, event: WorkflowEvent, level: "debug" | "info" = "debug"): void {
-    // logger[level](
-    //   `published workflow ${event.workflowId} event ${event.type} to ${stream} - with triggerId: ${event.triggerId}`
-    // );
+    logger[level](
+      `published workflow ${event.workflowId} event ${event.type} to ${stream} - with triggerId: ${event.triggerId}`
+    );
   }
 
   async publishNodeResult(event: WorkflowEvent): Promise<RedisStreamId> {
