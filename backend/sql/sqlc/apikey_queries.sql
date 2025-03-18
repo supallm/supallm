@@ -1,6 +1,7 @@
 -- name: storeAPIKey :exec
 INSERT INTO api_keys (id, project_id, key_hash)
-VALUES ($1, $2, $3);
+VALUES ($1, $2, $3)
+ON CONFLICT (id) DO NOTHING;
 
 -- name: deleteAPIKey :exec
 DELETE FROM api_keys

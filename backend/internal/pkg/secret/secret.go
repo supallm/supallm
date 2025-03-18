@@ -17,7 +17,10 @@ import (
 var envKey = []byte(os.Getenv("SECRET_KEY"))
 
 const (
-	keyPrefix = "sk_"
+	keyPrefix       = "sk_"
+	minLengthPrefix = 4
+	minLengthSuffix = 4
+	minLength       = minLengthPrefix + minLengthSuffix
 )
 
 type (
@@ -34,7 +37,17 @@ func (a APIKey) String() string {
 }
 
 func (a APIKey) Obfuscate() string {
-	return a.String()[:4] + "..." + a.String()[len(a.String())-4:]
+	key := a.String()
+
+	if len(key) < minLength {
+		//nolint
+		if len(key) <= 2 {
+			return "**"
+		}
+		return key[:1] + "..." + key[len(key)-1:]
+	}
+
+	return key[:minLengthPrefix] + "..." + key[len(key)-minLengthSuffix:]
 }
 
 // EncryptData encrypts data using AES-GCM
