@@ -1,4 +1,4 @@
-import { CodeIcon } from "lucide-react";
+import { E2B } from "@/components/logos/e2b";
 import { ReactNode } from "react";
 import { ProviderLogo } from "../../logos/provider-logo";
 import { NodeType } from "../node-types";
@@ -22,9 +22,9 @@ export const availableNodes: AvailableNode[] = [
   },
   {
     type: "custom-code",
-    name: "Custom Code",
+    name: "Code interpreter by E2B",
     description: "Use this node to run custom code",
-    logo: <CodeIcon className="w-4 h-4" />,
+    logo: <E2B width={10} height={10} />,
     commingSoon: false,
   },
   {

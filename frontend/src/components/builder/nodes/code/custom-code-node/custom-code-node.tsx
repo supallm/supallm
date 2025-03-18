@@ -1,3 +1,4 @@
+import { E2B } from "@/components/logos/e2b";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -77,7 +78,7 @@ const CustomCodeNode: FC<CustomCodeNodeProps> = ({ data, id: nodeId }) => {
     <BaseNode
       outputHandles={[
         {
-          label: "Function Output",
+          label: "Function output",
           id: generateHandleId("text", "function-output"),
           type: "text",
         },
@@ -90,7 +91,8 @@ const CustomCodeNode: FC<CustomCodeNodeProps> = ({ data, id: nodeId }) => {
       }))}
       header={
         <>
-          <span className="font-medium text-sm">Custom Code Node</span>
+          <E2B width={10} height={10} />
+          <span className="font-medium text-sm">Code interpreter by E2B</span>
         </>
       }
     >
