@@ -15,6 +15,7 @@ import { executeCodeSandboxUsecase } from "@/core/usecases";
 import {
   parseCodeForInputs,
   parseCodeForRequiredModules,
+  TypeScriptType,
 } from "@/lib/typescript-utils";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -56,7 +57,10 @@ export const CodeEditorDialog: FC<
     };
     onChange: (values: {
       code: string;
-      inputs: Array<{ name: string; type: "number" | "string" | "object" }>;
+      inputs: Array<{
+        name: string;
+        type: TypeScriptType;
+      }>;
       requiredModules: string[];
     }) => void;
   }>
@@ -96,9 +100,7 @@ export const CodeEditorDialog: FC<
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     const inputs = parseCodeForInputs(values.code);
 
-    console.log("inputs", inputs);
     const requiredModules = parseCodeForRequiredModules(values.code);
-    console.log("requiredModules", requiredModules);
 
     onChange({
       ...values,
@@ -160,7 +162,12 @@ export const CodeEditorDialog: FC<
                     {inputs.map((input) => {
                       return (
                         <div key={input.name}>
-                          <Label className="mb-2">{input.name}</Label>
+                          <Label className="mb-2">
+                            {input.name}{" "}
+                            <span className="text-xs text-gray-500">
+                              ({input.type})
+                            </span>
+                          </Label>
                           <Input
                             value={testFormInputValues[input.name] ?? ""}
                             onChange={(e) =>

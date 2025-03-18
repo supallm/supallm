@@ -21,7 +21,7 @@ export type BaseNodeHandle = {
    */
   id: string;
   tooltip?: string | ReactNode;
-  type: "text" | "image";
+  type: "text" | "image" | "any";
 };
 
 export type BaseNodeProps = {

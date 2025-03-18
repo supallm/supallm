@@ -4,7 +4,7 @@ import { FC, forwardRef, HTMLAttributes, ReactNode, useMemo } from "react";
 
 import { BaseHandle } from "@/components/base-handle";
 import { TooltipWraper } from "@/components/icon-tooltip";
-import { AlignJustify, ImageIcon } from "lucide-react";
+import { AlignJustify, Braces, ImageIcon } from "lucide-react";
 
 const flexDirections = {
   top: "flex-col",
@@ -13,7 +13,7 @@ const flexDirections = {
   left: "flex-row",
 };
 
-export type LabeledHandleType = "image" | "text";
+export type LabeledHandleType = "image" | "text" | "any";
 
 const HandleTypeIcon: FC<{ type: LabeledHandleType }> = ({
   type,
@@ -23,6 +23,8 @@ const HandleTypeIcon: FC<{ type: LabeledHandleType }> = ({
       return <ImageIcon className="w-4 h-4" />;
     case "text":
       return <AlignJustify className="w-4 h-4" />;
+    case "any":
+      return <Braces className="w-4 h-4" />;
     default:
       assertUnreachable(type);
   }

@@ -86,7 +86,7 @@ const CustomCodeNode: FC<CustomCodeNodeProps> = ({ data, id: nodeId }) => {
       inputHandles={inputHandles.map((input) => ({
         label: input.label,
         id: input.id,
-        type: "text",
+        type: "any",
       }))}
       header={
         <>
@@ -121,13 +121,14 @@ const CustomCodeNode: FC<CustomCodeNodeProps> = ({ data, id: nodeId }) => {
                         }}
                         onChange={(values) => {
                           field.onChange(values.code);
+                          console.log("values.inputs", values.inputs);
                           if (!!values.inputs?.length) {
                             setInputHandles(
                               values.inputs.map((input) => ({
                                 label: sanitizeHandleLabel(input.name),
-                                id: generateHandleId("text", input.name),
-                                // TODO: Check if we need other types.
-                                type: "text",
+                                id: generateHandleId("any", input.name),
+                                // We set all handle to "any" so it's user's responsibility to set the correct type.
+                                type: "any",
                               })),
                             );
                           }

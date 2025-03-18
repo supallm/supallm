@@ -42,7 +42,21 @@ export const parseCodeForRequiredModules = (code: string) => {
   return modules;
 };
 
-export const parseCodeForInputs = (code: string) => {
+export const TypeScriptTypes = [
+  "number",
+  "string",
+  "object",
+  "boolean",
+  "any",
+  "void",
+  "unknown",
+  "undefined",
+] as const;
+export type TypeScriptType = (typeof TypeScriptTypes)[number];
+
+export const parseCodeForInputs = (
+  code: string,
+): { type: string; name: string }[] => {
   const sourceFile = ts.createSourceFile(
     "temp.ts",
     code,
@@ -52,7 +66,7 @@ export const parseCodeForInputs = (code: string) => {
 
   const inputs: Array<{
     name: string;
-    type: "number" | "string" | "object";
+    type: string;
   }> = [];
 
   const visit = (node: ts.Node) => {
@@ -60,17 +74,49 @@ export const parseCodeForInputs = (code: string) => {
       node.parameters.forEach((param) => {
         const name = param.name.getText();
         const typeNode = param.type;
-        let type: "number" | "string" | "object" = "string"; // default type
 
-        if (typeNode) {
-          const typeText = typeNode.getText();
-          if (
-            typeText === "number" ||
-            typeText === "string" ||
-            typeText === "object"
-          ) {
-            type = typeText as "number" | "string" | "object";
-          }
+        let type: TypeScriptType = "any";
+
+        const typeText = typeNode?.getText() ?? "any";
+
+        if (!typeNode) {
+          inputs.push({ name, type: "any" });
+          return;
+        }
+
+        console.log(
+          "typeText",
+          typeNode.getText(),
+          ts.isArrayTypeNode(typeNode),
+        );
+
+        if (TypeScriptTypes.includes(typeText as TypeScriptType)) {
+          inputs.push({ name, type: typeText as TypeScriptType });
+          return;
+        }
+
+        if (ts.isTupleTypeNode(typeNode)) {
+          const elementTypes = typeNode.elements
+            .map((el) => el.getText())
+            .join(", ");
+          inputs.push({ name, type: `[${elementTypes}]` });
+          return;
+        }
+
+        if (ts.isArrayTypeNode(typeNode)) {
+          inputs.push({ name, type: "array" });
+          return;
+        }
+
+        if (ts.isTypeLiteralNode(typeNode)) {
+          inputs.push({ name, type: "object" });
+          return;
+        }
+
+        if (ts.isUnionTypeNode(typeNode)) {
+          const unionTypes = typeNode.types.map((t) => t.getText()).join(" | ");
+          inputs.push({ name, type: unionTypes });
+          return;
         }
 
         inputs.push({ name, type });

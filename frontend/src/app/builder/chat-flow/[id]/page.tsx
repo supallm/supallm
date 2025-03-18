@@ -80,6 +80,21 @@ const ChatFlowPage = () => {
     }
 
     const { type: sourceType } = parseHandleId(sourceHandle);
+
+    /**
+     * Same node handles cannot be connected together
+     */
+    if (params.source === params.target) {
+      return false;
+    }
+
+    /**
+     * We can connect outputHandle to any inputHandle with an "any" type
+     */
+    if (sourceType === "any") {
+      return true;
+    }
+
     const { type: targetType } = parseHandleId(targetHandle);
 
     return sourceType === targetType;
