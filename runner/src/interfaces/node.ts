@@ -3,8 +3,10 @@ export type NodeType = "llm" | "entrypoint" | "result";
 export type NodeIOType = "text" | "image";
 
 export interface NodeInput {
-  type: NodeIOType;
-  source: string; // format: "nodeId.outputField"
+  source?: string; // Format: "nodeId.outputField" or "nodeId"
+  type?: NodeIOType;
+  required?: boolean;
+  value?: any; // Valeur statique directe pour l'input
 }
 
 export interface NodeOutput {
@@ -51,8 +53,8 @@ export interface INode {
     nodeId: string,
     definition: NodeDefinition,
     context: ExecutionContext,
-    callbacks: {
+    options: {
       onNodeResult: NodeResultCallback;
     }
-  ): Promise<Record<string, any>>;
+  ): Promise<any>;
 } 

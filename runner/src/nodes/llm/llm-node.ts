@@ -3,100 +3,163 @@ import {
   NodeDefinition,
   ExecutionContext,
   NodeResultCallback,
+  NodeIOType,
 } from "../../interfaces/node";
 import { logger } from "../../utils/logger";
 import { CryptoService } from "../../services/crypto-service";
-import { BaseLLMProvider } from "./base-provider";
+import { BaseLLMProvider, LLMOptions } from "./base-provider";
 import { OpenAIProvider } from "./openai-provider";
 import { AnthropicProvider } from "./anthropic-provider";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
 const ProviderType = {
   OPENAI: "openai",
   ANTHROPIC: "anthropic",
 } as const;
 
-const outputField = "response";
+type SupportedProviders = (typeof ProviderType)[keyof typeof ProviderType];
+
+interface LLMNodeInputs {
+  prompt: string;
+  images?: string[];
+}
 
 export class LLMNode extends BaseNode {
+  private providers: Map<SupportedProviders, BaseLLMProvider>;
+  private cryptoService: CryptoService;
+
   constructor() {
     super("llm");
     this.cryptoService = new CryptoService();
+    this.providers = new Map<SupportedProviders, BaseLLMProvider>([
+      [ProviderType.OPENAI, new OpenAIProvider()],
+      [ProviderType.ANTHROPIC, new AnthropicProvider()],
+    ]);
   }
-
-  private cryptoService: CryptoService;
 
   async execute(
     nodeId: string,
     definition: NodeDefinition,
     context: ExecutionContext,
-    callbacks: {
+    options: {
       onNodeResult: NodeResultCallback;
     }
-  ): Promise<Record<string, any>> {
+  ): Promise<any> {
     try {
-      const resolvedInputs = this.resolveInputs(nodeId, definition, context);
+      const resolvedInputs = this.resolveInputs(
+        nodeId,
+        definition,
+        context
+      ) as LLMNodeInputs;
       this.validateInputs(nodeId, definition, resolvedInputs);
 
-      if (!definition.provider) {
-        throw new Error(`provider is required for LLM node ${nodeId}`);
+      const {
+        model,
+        provider = ProviderType.OPENAI,
+        apiKey,
+        temperature = 0.5,
+        maxTokens,
+        streaming = false,
+        systemPrompt,
+      } = definition;
+
+      if (!model) {
+        throw new Error(`model is required for LLM node ${nodeId}`);
       }
 
-      if (!definition.apiKey) {
-        throw new Error(`API key is required for LLM node ${nodeId}`);
-      }
-
-      const provider = this.selectProvider(definition.provider);
-
-      // for now, we only support one output field named "response" 
-      // of type text (json, text, markdown, image, etc) are still text
-      const notify = definition.outputs[outputField]?.notify || false;
-      const outputFieldType = definition.outputs[outputField]?.type || "text";
-
-      const llmOptions = {
-        model: definition.model || "",
-        apiKey: this.cryptoService.decrypt(definition.apiKey),
-        temperature: definition.temperature || 0.5,
-        maxTokens: definition.maxTokens || 1000,
-        systemPrompt: definition.systemPrompt || "",
-        streaming: definition.streaming === true,
-        nodeId,
+      const llmProvider = this.getProvider(provider as SupportedProviders);
+      const decryptedApiKey = this.cryptoService.decrypt(apiKey);
+      const messages = this.createMessagesFromInputs(
+        systemPrompt,
+        resolvedInputs
+      );
+      const llmOptions: LLMOptions = {
+        model,
+        apiKey: decryptedApiKey,
+        temperature: parseFloat(temperature.toString()),
+        maxTokens: maxTokens ? parseInt(maxTokens.toString()) : undefined,
+        streaming: streaming,
       };
 
-      const prompt = resolvedInputs.prompt;
-      const result = await provider.generate(prompt, llmOptions);
-      let response = "";
+      // define the output field (default: "response")
+      // define the output field type (default: "text")
+      const outputField =
+        Object.keys(definition.outputs || {})[0] || "response";
+      const outputFieldType = definition.outputs?.[outputField]?.type || "text";
 
-      for await (const data of result) {
-        if (data.content) {
-          response += data.content;
-          if (notify) {
-            await callbacks.onNodeResult(
-              nodeId,
-              outputField,
-              data.content,
-              outputFieldType
-            );
-          }
-        }
-      }
-
-      return { [outputField]: response };
+      return this.executeLLM(
+        nodeId,
+        llmProvider,
+        messages,
+        llmOptions,
+        options.onNodeResult,
+        outputField,
+        outputFieldType as NodeIOType
+      );
     } catch (error) {
-      logger.error(`error executing LLM node ${nodeId}: ${error}`);
+      logger.error(`Error executing LLM node ${nodeId}: ${error}`);
       throw error;
     }
   }
 
-  private selectProvider(providerType: string): BaseLLMProvider {
-    const type = providerType.toLowerCase();
+  private createMessagesFromInputs(
+    systemPrompt: string | undefined,
+    inputs: LLMNodeInputs
+  ): (SystemMessage | HumanMessage)[] {
+    const messages: (SystemMessage | HumanMessage)[] = [];
 
-    switch (type) {
-      case ProviderType.OPENAI:
-        return new OpenAIProvider();
-      case ProviderType.ANTHROPIC:
-        return new AnthropicProvider();
-      default:
-        throw new Error(`Unsupported LLM provider: ${type}`);
+    if (systemPrompt) {
+      messages.push(new SystemMessage(systemPrompt));
+    }
+
+    let promptText = inputs.prompt;
+    messages.push(new HumanMessage(promptText));
+
+    return messages;
+  }
+
+  private getProvider(providerType: SupportedProviders): BaseLLMProvider {
+    const provider = this.providers.get(providerType);
+
+    if (!provider) {
+      throw new Error(`Unsupported LLM provider: ${providerType}`);
+    }
+
+    return provider;
+  }
+
+  private async executeLLM(
+    nodeId: string,
+    provider: BaseLLMProvider,
+    messages: (SystemMessage | HumanMessage)[],
+    options: LLMOptions,
+    onNodeResult: NodeResultCallback,
+    outputField: string = "response",
+    outputType: NodeIOType = "text"
+  ): Promise<any> {
+    let fullResponse = "";
+
+    try {
+      const response = await provider.generate(messages, options);
+
+      for await (const data of response) {
+        const chunkContent =
+          typeof data.content === "string"
+            ? data.content
+            : JSON.stringify(data.content);
+
+        if (chunkContent) {
+          await onNodeResult(nodeId, outputField, chunkContent, outputType);
+          fullResponse += chunkContent;
+        }
+      }
+
+      return {
+        [outputField]: fullResponse,
+      };
+    } catch (error) {
+      logger.error(`error in LLM execution for node ${nodeId}: ${error}`);
+      throw error;
     }
   }
 }

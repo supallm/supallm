@@ -4,7 +4,6 @@ import {
   ExecutionContext,
   NodeResultCallback,
 } from "../../interfaces/node";
-import { logger } from "../../utils/logger";
 
 export class EntrypointNode extends BaseNode {
   constructor() {

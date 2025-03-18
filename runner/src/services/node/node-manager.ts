@@ -32,7 +32,21 @@ export class NodeManager {
       onNodeResult: NodeResultCallback;
     }
   ): Promise<any> {
-    const node = this.getNode(definition.type);
-    return await node.execute(nodeId, definition, context, callbacks);
+    const nodeType = definition.type;
+    const nodeImplementation = this.getNode(nodeType);
+
+    if (!nodeImplementation) {
+      throw new Error(`unsupported node type: ${nodeType}`);
+    }
+    
+    // Exécuter le nœud avec les options appropriées
+    return await nodeImplementation.execute(
+      nodeId,
+      definition,
+      context,
+      {
+        onNodeResult: callbacks.onNodeResult
+      }
+    );
   }
 }

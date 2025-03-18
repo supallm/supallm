@@ -1,16 +1,16 @@
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+
 export interface LLMOptions {
   model: string;
   apiKey: string;
   temperature?: number;
   maxTokens?: number;
-  systemPrompt?: string;
   streaming?: boolean;
-  nodeId?: string;
 }
 
 export interface BaseLLMProvider {
   generate(
-    prompt: string,
+    messages: (SystemMessage | HumanMessage)[],
     options: LLMOptions
   ): Promise<AsyncIterable<{ content: string }>>;
 }

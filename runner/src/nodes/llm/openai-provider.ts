@@ -2,20 +2,21 @@ import { OpenAI } from "@langchain/openai";
 import { ChatOpenAI } from "@langchain/openai";
 import { BaseLLMProvider, LLMOptions } from "./base-provider";
 import { logger } from "../../utils/logger";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
 export class OpenAIProvider implements BaseLLMProvider {
   constructor() {}
 
-  async generate(prompt: string, options: LLMOptions): Promise<AsyncIterable<{ content: string }>> {
+  async generate(messages: (SystemMessage | HumanMessage)[], options: LLMOptions): Promise<AsyncIterable<{ content: string }>> {
     const model = this.createModel(options);
     try {
       if (model instanceof ChatOpenAI && options.streaming) {
-        const stream = await model.stream(prompt);
+        const stream = await model.stream(messages);
 
         return {
           [Symbol.asyncIterator]: async function* () {
             for await (const chunk of stream) {
-              if (chunk.content) {
+              if (typeof chunk === 'object' && chunk !== null && 'content' in chunk) {
                 const contentStr = String(chunk.content);
                 yield { content: contentStr };
               }
@@ -23,16 +24,26 @@ export class OpenAIProvider implements BaseLLMProvider {
           },
         };
       } else {
-        const response = await model.invoke(prompt);
-        const responseStr = String(response);
+        const response = await model.invoke(messages);
+        let responseContent = '';
+        if (typeof response === 'object' && response !== null && 'content' in response) {
+          responseContent = typeof response.content === 'string' 
+            ? response.content 
+            : JSON.stringify(response.content);
+        } else if (typeof response === 'string') {
+          responseContent = response;
+        } else {
+          responseContent = JSON.stringify(response);
+        }
+          
         return {
           [Symbol.asyncIterator]: async function* () {
-            yield { content: responseStr };
+            yield { content: responseContent };
           },
         };
       }
     } catch (error) {
-      logger.error(`error streaming with OpenAI: ${error}`);
+      logger.error(`Error streaming with OpenAI: ${error}`);
       throw error;
     }
   }
