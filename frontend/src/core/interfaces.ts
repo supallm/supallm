@@ -77,3 +77,15 @@ export interface AuthProviderService {
   delete: (id: string) => Promise<void>;
   patch: (id: string, data: { secretKey: string }) => Promise<void>;
 }
+
+export interface SandboxService {
+  runCode: (data: {
+    projectId: string;
+    code: string;
+    language: "typescript";
+    args: unknown[];
+    onLog: (log: string) => void;
+    onResult: (result: string) => void;
+    onError: (error: string) => void;
+  }) => Promise<void>;
+}

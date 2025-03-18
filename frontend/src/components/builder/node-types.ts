@@ -4,4 +4,5 @@ export type NodeType =
   | "result"
   | "chat-anthropic"
   | "chat-google"
-  | "chat-azure";
+  | "chat-azure"
+  | "custom-code";

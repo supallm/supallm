@@ -2,6 +2,7 @@ import { ApiCredentialService } from "@/services/api-credential-service";
 import { ApiFlowService } from "@/services/api-flow-service";
 import { ApiProjectService } from "@/services/api-project-service";
 import { MockAuthProviderService } from "@/services/mock-auth-provider-service";
+import { MockSandboxService } from "@/services/mock-sandbox-service";
 import { CreateAuthProviderUsecase } from "./create-auth-provider";
 import { CreateCredentialUsecase } from "./create-credential";
 import { CreateFlowUsecase } from "./create-flow";
@@ -9,6 +10,7 @@ import { CreateProjectUsecase } from "./create-project";
 import { DeleteAuthProviderUsercase } from "./delete-auth-provider";
 import { DeleteCredentialUsecase } from "./delete-credential";
 import { DeleteFlowUsecase } from "./delete-flow";
+import { ExecuteCodeSandboxUsecase } from "./execute-code-sandbox";
 import { GetCurrentProjectUsecase } from "./get-current-project";
 import { GetFlowUsecase } from "./get-flow";
 import { ListAuthProvidersUsecase } from "./list-auth-providers";
@@ -84,4 +86,12 @@ export const createAuthProviderUsecase = new CreateAuthProviderUsecase(
 
 export const patchAuthProviderUsecase = new PatchAuthProviderUsecase(
   new MockAuthProviderService(),
+);
+
+/**
+ * Sandbox
+ */
+
+export const executeCodeSandboxUsecase = new ExecuteCodeSandboxUsecase(
+  new MockSandboxService(),
 );

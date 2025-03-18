@@ -1,3 +1,4 @@
+import { CodeIcon } from "lucide-react";
 import { ReactNode } from "react";
 import { ProviderLogo } from "../../logos/provider-logo";
 import { NodeType } from "../node-types";
@@ -17,6 +18,13 @@ export const availableNodes: AvailableNode[] = [
     description:
       "Use this node to send a message to an OpenAI Chat Completion model",
     logo: <ProviderLogo name="openai" width={30} height={30} />,
+    commingSoon: false,
+  },
+  {
+    type: "custom-code",
+    name: "Custom Code",
+    description: "Use this node to run custom code",
+    logo: <CodeIcon className="w-4 h-4" />,
     commingSoon: false,
   },
   {
