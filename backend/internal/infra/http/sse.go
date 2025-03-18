@@ -15,17 +15,17 @@ import (
 
 func (s *Server) listenWorkflowEvents(next http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		projectID, err := s.server.ParseUUID(r, "projectId")
-		if err != nil {
-			s.server.RespondErr(w, r, err)
-			return
-		}
+		// projectID, err := s.server.ParseUUID(r, "projectId")
+		// if err != nil {
+		// 	s.server.RespondErr(w, r, err)
+		// 	return
+		// }
 
-		err = s.isAuthorize(r.Context(), projectID, s.app.Commands.AuthorizeEventSubscription.Handle)
-		if err != nil {
-			s.server.RespondErr(w, r, err)
-			return
-		}
+		// err = s.isAuthorize(r.Context(), projectID, s.app.Commands.AuthorizeEventSubscription.Handle)
+		// if err != nil {
+		// 	s.server.RespondErr(w, r, err)
+		// 	return
+		// }
 
 		next.ServeHTTP(w, r)
 	}
