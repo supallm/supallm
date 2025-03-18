@@ -1,4 +1,5 @@
 import { E2B } from "@/components/logos/e2b";
+import { Network } from "lucide-react";
 import { ReactNode } from "react";
 import { ProviderLogo } from "../../logos/provider-logo";
 import { NodeType } from "../node-types";
@@ -25,6 +26,13 @@ export const availableNodes: AvailableNode[] = [
     name: "Code interpreter by E2B",
     description: "Use this node to run custom code",
     logo: <E2B width={10} height={10} />,
+    commingSoon: false,
+  },
+  {
+    type: "http-request",
+    name: "HTTP Request",
+    description: "Trigger an HTTP endpoint in your AI flow",
+    logo: <Network width={20} height={20} />,
     commingSoon: false,
   },
   {

@@ -8,6 +8,7 @@ import { default as openAIChatCompletionNode } from "@/components/builder/nodes/
 import customCodeNode from "@/components/builder/nodes/code/custom-code-node/custom-code-node";
 import entrypointNode from "@/components/builder/nodes/fixed/entrypoint-node";
 import resultNode from "@/components/builder/nodes/fixed/result-node";
+import httpRequestNode from "@/components/builder/nodes/utilities/http-request-node/http-request-node";
 import { TestFlowDialog } from "@/components/builder/test-flow-dialog/test-flow-dialog";
 import { Button } from "@/components/ui/button";
 import { FlowEdge, FlowNode } from "@/core/entities/flow";
@@ -107,6 +108,8 @@ const ChatFlowPage = () => {
       result: resultNode,
       entrypoint: entrypointNode,
       "custom-code": customCodeNode,
+
+      "http-request": httpRequestNode,
       "chat-anthropic": () => null,
       "chat-google": () => null,
       "chat-azure": () => null,
