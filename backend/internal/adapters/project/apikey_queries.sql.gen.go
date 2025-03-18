@@ -57,6 +57,7 @@ func (q *Queries) deleteAPIKey(ctx context.Context, id uuid.UUID) error {
 const storeAPIKey = `-- name: storeAPIKey :exec
 INSERT INTO api_keys (id, project_id, key_hash)
 VALUES ($1, $2, $3)
+ON CONFLICT (id) DO NOTHING
 `
 
 type storeAPIKeyParams struct {

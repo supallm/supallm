@@ -14,8 +14,8 @@ CREATE TABLE IF NOT EXISTS credentials (
     project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
     provider_type VARCHAR(50) NOT NULL,
-    api_key_encrypted VARCHAR(255) NOT NULL,
-    api_key_obfuscated VARCHAR(255) NOT NULL,
+    api_key_encrypted TEXT NOT NULL,
+    api_key_obfuscated VARCHAR(11) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

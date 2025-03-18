@@ -1,10 +1,10 @@
 import {
   NodeType,
   NodeDefinition,
-  ExecutionContext,
   INode,
   NodeResultCallback,
 } from "../../interfaces/node";
+import { ExecutionContext } from "../../services/context";
 import { logger } from "../../utils/logger";
 
 export abstract class BaseNode implements INode {
@@ -40,7 +40,7 @@ export abstract class BaseNode implements INode {
           `missing required input '${inputName}' for node ${nodeId}`
         );
       }
-      
+
       // type validation if necessary (to implement if needed)
     }
   }
@@ -65,25 +65,30 @@ export abstract class BaseNode implements INode {
         const [sourceNodeId, sourceOutputField] = inputDef.source.split(".");
 
         if (!sourceNodeId) {
-          logger.warn(`invalid source format for input ${inputName} in node ${nodeId}`);
+          logger.warn(
+            `invalid source format for input ${inputName} in node ${nodeId}`
+          );
           continue;
         }
 
         // check if source node exists in context
         if (!context.outputs[sourceNodeId]) {
-          logger.warn(`source node ${sourceNodeId} not found for input ${inputName} in node ${nodeId}`);
+          logger.warn(
+            `source node ${sourceNodeId} not found for input ${inputName} in node ${nodeId}`
+          );
           continue;
         }
 
         // case 1: source specifies an output field (nodeId.outputField)
         if (sourceOutputField) {
-          resolvedInputs[inputName] = context.outputs[sourceNodeId]?.[sourceOutputField];
-        } 
+          resolvedInputs[inputName] =
+            context.outputs[sourceNodeId]?.[sourceOutputField];
+        }
         // case 2: source specifies only a node (nodeId)
         else {
           resolvedInputs[inputName] = context.outputs[sourceNodeId];
         }
-      } 
+      }
       // case 3: input direct from workflow (entrypoint)
       else if (context.inputs[inputName] !== undefined) {
         resolvedInputs[inputName] = context.inputs[inputName];
@@ -97,7 +102,9 @@ export abstract class BaseNode implements INode {
     // log if required inputs are missing
     for (const inputName of Object.keys(definition.inputs)) {
       if (resolvedInputs[inputName] === undefined) {
-        logger.warn(`input ${inputName} for node ${nodeId} could not be resolved`);
+        logger.warn(
+          `input ${inputName} for node ${nodeId} could not be resolved`
+        );
       }
     }
 

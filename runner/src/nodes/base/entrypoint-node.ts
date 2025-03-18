@@ -1,9 +1,6 @@
 import { BaseNode } from "./base-node";
-import {
-  NodeDefinition,
-  ExecutionContext,
-  NodeResultCallback,
-} from "../../interfaces/node";
+import { NodeDefinition, NodeResultCallback } from "../../interfaces/node";
+import { ExecutionContext } from "../../services/context";
 
 export class EntrypointNode extends BaseNode {
   constructor() {
