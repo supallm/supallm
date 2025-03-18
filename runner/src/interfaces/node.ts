@@ -1,3 +1,5 @@
+import { ExecutionContext } from "../services/context";
+
 export type NodeType = "llm" | "entrypoint" | "result";
 
 export type NodeIOType = "text" | "image";
@@ -6,7 +8,7 @@ export interface NodeInput {
   source?: string; // Format: "nodeId.outputField" or "nodeId"
   type?: NodeIOType;
   required?: boolean;
-  value?: any; // Valeur statique directe pour l'input
+  value?: any;
 }
 
 export interface NodeOutput {
@@ -19,25 +21,6 @@ export interface NodeDefinition {
   inputs: Record<string, NodeInput>;
   outputs: Record<string, NodeOutput>;
   [key: string]: any; // for properties specific to each node type
-}
-
-export interface NodeExecutionResult {
-  nodeId: string;
-  success: boolean;
-  output: Record<string, any> | null;
-  error?: string;
-  executionTime: number;
-}
-
-export interface ExecutionContext {
-  inputs: Record<string, any>;
-  outputs: Record<string, Record<string, any>>;
-  nodeResults: Record<string, NodeExecutionResult>;
-  completedNodes: Set<string>;
-  allNodes: Set<string>;
-  workflowId: string;
-  sessionId: string;
-  triggerId: string;
 }
 
 export type NodeResultCallback = (

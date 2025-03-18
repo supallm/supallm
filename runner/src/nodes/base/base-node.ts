@@ -59,8 +59,6 @@ export abstract class BaseNode implements INode {
 
     if (!definition.inputs) return resolvedInputs;
 
-    logger.debug(`Resolving inputs for node ${nodeId}`);
-
     for (const [inputName, inputDef] of Object.entries(definition.inputs)) {
       if (inputDef.source) {
         // format source: "nodeId.outputField"
@@ -80,23 +78,19 @@ export abstract class BaseNode implements INode {
         // case 1: source specifies an output field (nodeId.outputField)
         if (sourceOutputField) {
           resolvedInputs[inputName] = context.outputs[sourceNodeId]?.[sourceOutputField];
-          logger.debug(`resolved input ${inputName} from ${sourceNodeId}.${sourceOutputField}: ${JSON.stringify(resolvedInputs[inputName]).substring(0, 50)}...`);
         } 
         // case 2: source specifies only a node (nodeId)
         else {
           resolvedInputs[inputName] = context.outputs[sourceNodeId];
-          logger.debug(`resolved input ${inputName} from node ${sourceNodeId}: ${JSON.stringify(resolvedInputs[inputName]).substring(0, 50)}...`);
         }
       } 
       // case 3: input direct from workflow (entrypoint)
       else if (context.inputs[inputName] !== undefined) {
         resolvedInputs[inputName] = context.inputs[inputName];
-        logger.debug(`resolved input ${inputName} from workflow inputs: ${JSON.stringify(resolvedInputs[inputName]).substring(0, 50)}...`);
       }
       // case 4: direct value in definition
       else if (inputDef.value !== undefined) {
         resolvedInputs[inputName] = inputDef.value;
-        logger.debug(`resolved input ${inputName} from static value: ${JSON.stringify(resolvedInputs[inputName]).substring(0, 50)}...`);
       }
     }
 

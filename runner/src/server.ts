@@ -3,6 +3,7 @@ import { RedisNotifier, INotifier, WorkflowEvents } from "./services/notifier";
 import { RedisQueueConsumer, IQueueConsumer, WorkflowMessage } from "./services/queue";
 import { NodeManager } from "./services/node/node-manager";
 import { logger } from "./utils/logger";
+import { IContextService, MemoryContextService } from "./services/context";
 
 interface RunnerConfig {
   maxParallelJobs?: number;
@@ -13,15 +14,17 @@ export class RunnerServer {
   private readonly queueConsumer: IQueueConsumer;
   private readonly notifier: INotifier;
   private readonly nodeManager: NodeManager;
+  private readonly contextService: IContextService;
   private readonly executor: WorkflowExecutor;
 
   constructor(config: RunnerConfig) {
     this.queueConsumer = new RedisQueueConsumer(config.redisUrl, {
-      maxParallelJobs: config.maxParallelJobs ?? 3,
+      maxParallelJobs: config.maxParallelJobs ?? 5,
     });
     this.notifier = new RedisNotifier(config.redisUrl);
     this.nodeManager = new NodeManager();
-    this.executor = new WorkflowExecutor(this.nodeManager);
+    this.contextService = new MemoryContextService();
+    this.executor = new WorkflowExecutor(this.nodeManager, this.contextService);
 
     this.setupEventListeners();
   }
