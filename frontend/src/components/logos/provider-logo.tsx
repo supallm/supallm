@@ -2,6 +2,7 @@ import { ProviderType } from "@/core/entities/credential";
 import { FC } from "react";
 import { Anthropic } from "./anthropic";
 import { Azure } from "./azure";
+import { E2B } from "./e2b";
 import { Google } from "./google";
 import { Mistral } from "./mistral";
 import { OpenAI } from "./openai";
@@ -25,6 +26,8 @@ export const ProviderLogo: FC<{
       return <Google width={w} height={h} />;
     case "mistral":
       return <Mistral width={w} height={h} />;
+    case "e2b":
+      return <E2B width={w} height={h} />;
     default:
       return <div>No logo available</div>;
   }

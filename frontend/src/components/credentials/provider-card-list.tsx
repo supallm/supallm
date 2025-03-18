@@ -19,6 +19,12 @@ export const ProviderCardList: FC<{
       logo: <ProviderLogo name="openai" width={30} height={30} />,
       commingSoon: false,
     },
+    e2b: {
+      name: "E2B",
+      description: "E2B is a powerful AI provider",
+      logo: <ProviderLogo name="e2b" width={30} height={30} />,
+      commingSoon: false,
+    },
     anthropic: {
       name: "Anthropic",
       description: "Anthropic is a powerful AI provider",

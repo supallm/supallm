@@ -1,10 +1,12 @@
 import { E2B } from "@/components/logos/e2b";
+import { SelectCredentials } from "@/components/select-credentials";
 import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
+  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { generateHandleId, sanitizeHandleLabel } from "@/lib/handles";
@@ -24,6 +26,7 @@ type CustomCodeNodeProps = NodeProps & {
     code: string;
     inputs: Array<{ type: string; label: string; id: string }>;
     requiredModules: string[];
+    credentialId: string;
   };
 };
 
@@ -39,7 +42,7 @@ export async function main(myString: string, myNumber: number) {
     }
 }`;
 
-const CustomCodeNode: FC<CustomCodeNodeProps> = ({ data, id: nodeId }) => {
+const E2BInterpreterNode: FC<CustomCodeNodeProps> = ({ data, id: nodeId }) => {
   const { updateNodeData } = useReactFlow();
   const updateNodeInternals = useUpdateNodeInternals();
 
@@ -52,6 +55,7 @@ const CustomCodeNode: FC<CustomCodeNodeProps> = ({ data, id: nodeId }) => {
         id: z.string(),
       }),
     ),
+    credentialId: z.string().min(2),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -60,6 +64,7 @@ const CustomCodeNode: FC<CustomCodeNodeProps> = ({ data, id: nodeId }) => {
     defaultValues: {
       code: data.code ?? defaultCode,
       inputs: data.inputs ?? [],
+      credentialId: data.credentialId ?? "",
     },
   });
 
@@ -98,19 +103,34 @@ const CustomCodeNode: FC<CustomCodeNodeProps> = ({ data, id: nodeId }) => {
     >
       <BaseNodeContent>
         <div className="flex flex-col gap-2">
-          <div>
-            <div className="border rounded p-2 bg-gray-100 max-h-[100px] overflow-hidden">
-              <pre className="text-xs">
-                <CodePreview
-                  language="typescript"
-                  filename="function.ts"
-                  code={form.getValues("code")}
-                ></CodePreview>
-              </pre>
-            </div>
-          </div>
           <Form {...form}>
             <form className="space-y-4">
+              <FormField
+                control={form.control}
+                name="credentialId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Credentials</FormLabel>
+                    <SelectCredentials
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      providerType={"e2b"}
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div>
+                <div className="border rounded p-2 bg-gray-100 max-h-[100px] overflow-hidden">
+                  <pre className="text-xs">
+                    <CodePreview
+                      language="typescript"
+                      filename="function.ts"
+                      code={form.getValues("code")}
+                    ></CodePreview>
+                  </pre>
+                </div>
+              </div>
               <FormField
                 control={form.control}
                 name="code"
@@ -163,4 +183,4 @@ const CustomCodeNode: FC<CustomCodeNodeProps> = ({ data, id: nodeId }) => {
   );
 };
 
-export default memo(CustomCodeNode);
+export default memo(E2BInterpreterNode);

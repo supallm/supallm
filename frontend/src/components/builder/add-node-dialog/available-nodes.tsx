@@ -22,7 +22,7 @@ export const availableNodes: AvailableNode[] = [
     commingSoon: false,
   },
   {
-    type: "custom-code",
+    type: "e2b-interpreter",
     name: "Code interpreter by E2B",
     description: "Use this node to run custom code",
     logo: <E2B width={10} height={10} />,

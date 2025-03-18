@@ -5,7 +5,7 @@ import { AvailableNode } from "@/components/builder/add-node-dialog/available-no
 import { NODE_WIDTH } from "@/components/builder/constants";
 import { NodeType } from "@/components/builder/node-types";
 import { default as openAIChatCompletionNode } from "@/components/builder/nodes/chat/openai-chat-completion-node";
-import customCodeNode from "@/components/builder/nodes/code/custom-code-node/custom-code-node";
+import e2bInterpreterNode from "@/components/builder/nodes/code/e2b-interpreter/e2b-interpreter-node";
 import entrypointNode from "@/components/builder/nodes/fixed/entrypoint-node";
 import resultNode from "@/components/builder/nodes/fixed/result-node";
 import httpRequestNode from "@/components/builder/nodes/utilities/http-request-node/http-request-node";
@@ -107,8 +107,7 @@ const ChatFlowPage = () => {
       "chat-openai": openAIChatCompletionNode,
       result: resultNode,
       entrypoint: entrypointNode,
-      "custom-code": customCodeNode,
-
+      "e2b-interpreter": e2bInterpreterNode,
       "http-request": httpRequestNode,
       "chat-anthropic": () => null,
       "chat-google": () => null,
