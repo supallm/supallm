@@ -3,13 +3,11 @@ package http
 import (
 	"context"
 	"encoding/json"
-	"log/slog"
 	"net/http"
 
 	watermillHTTP "github.com/ThreeDotsLabs/watermill-http/v2/pkg/http"
 	watermillMsg "github.com/ThreeDotsLabs/watermill/message"
 	"github.com/go-chi/chi/v5"
-	"github.com/supallm/core/internal/application/domain/model"
 	"github.com/supallm/core/internal/application/event"
 )
 
@@ -52,7 +50,6 @@ func (p workflowSSEAdapter) NextStreamResponse(r *http.Request, msg *watermillMs
 		return nil, false
 	}
 
-	slog.Info("message handled", "message", messageHandled)
 	triggerID := chi.URLParam(r, "triggerId")
 	if messageHandled.TriggerID.String() != triggerID {
 		return nil, false
@@ -71,11 +68,13 @@ func (j workflowSSEMarshaller) Marshal(_ context.Context, payload any) (watermil
 
 	eventType := "data"
 	if msg, ok := payload.(event.WorkflowEventMessage); ok {
-		if msg.Type != model.WorkflowEventNodeResult {
-			eventType = "workflow"
-		}
-		if msg.Type == model.WorkflowCompleted {
+		switch {
+		case msg.Type.IsWorkflowCompleted():
 			eventType = "complete"
+		case msg.Type.IsWorkflowEvent():
+			eventType = "workflow"
+		case msg.Type.IsWorkflowError():
+			eventType = "error"
 		}
 	}
 

@@ -1,4 +1,4 @@
-import { NodeIOType } from "../../interfaces/node";
+import { NodeInput, NodeIOType, NodeOutput } from "../../nodes/types";
 
 export const WorkflowEvents = {
   WORKFLOW_STARTED: "WORKFLOW_STARTED",
@@ -22,11 +22,10 @@ export interface WorkflowEvent {
 
 export interface INotifier {
   initialize(): Promise<void>;
-  publishWorkflowEvent(event: WorkflowEvent): Promise<string[]>;
+  publishWorkflowEvent(event: WorkflowEvent): Promise<string>;
   publishNodeResult(event: WorkflowEvent): Promise<string>;
   close(): Promise<void>;
 }
-
 
 interface BaseEventData {
   workflowId: string;
@@ -40,11 +39,11 @@ interface BaseNodeEvent extends BaseEventData {
 }
 
 interface WorkflowStartedEvent extends BaseEventData {
-  inputs: Record<string, any>;
+  inputs: NodeInput;
 }
 
 interface WorkflowCompletedEvent extends BaseEventData {
-  result: any;
+  result: Record<string, any> | null;
 }
 
 interface WorkflowFailedEvent extends BaseEventData {
@@ -52,11 +51,11 @@ interface WorkflowFailedEvent extends BaseEventData {
 }
 
 interface NodeStartedEvent extends BaseNodeEvent {
-  inputs: Record<string, any>;
+  inputs: NodeInput;
 }
 
 interface NodeCompletedEvent extends BaseNodeEvent {
-  output: any;
+  output: NodeOutput;
 }
 
 interface NodeFailedEvent extends BaseNodeEvent {

@@ -44,6 +44,9 @@ dependencies:
   langchain:
     specifier: ^0.0.92
     version: 0.0.92
+  lodash:
+    specifier: ^4.17.21
+    version: 4.17.21
   msgpack-lite:
     specifier: ^0.1.26
     version: 0.1.26
@@ -61,6 +64,9 @@ devDependencies:
   '@types/jest':
     specifier: ^29.5.0
     version: 29.5.14
+  '@types/lodash':
+    specifier: ^4.17.16
+    version: 4.17.16
   '@types/msgpack-lite':
     specifier: ^0.1.11
     version: 0.1.11
@@ -1064,6 +1070,10 @@ packages:
     dependencies:
       expect: 29.7.0
       pretty-format: 29.7.0
+    dev: true
+
+  /@types/lodash@4.17.16:
+    resolution: {integrity: sha512-HX7Em5NYQAXKW+1T+FiuG27NGwzJfCX3s1GjOa7ujxZa52kjJLOr4FUxT+giF6Tgxv1e+/czV/iTtBw27WTU9g==}
     dev: true
 
   /@types/msgpack-lite@0.1.11:
@@ -2818,6 +2828,10 @@ packages:
   /lodash.memoize@4.1.2:
     resolution: {integrity: sha512-t7j+NzmgnQzTAYXcsHYLgimltOV1MXHtlOWf6GjL9Kj8GK5FInw5JotxvbOs+IvV1/Dzo04/fCGfLVs7aXb4Ag==}
     dev: true
+
+  /lodash@4.17.21:
+    resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
+    dev: false
 
   /logform@2.7.0:
     resolution: {integrity: sha512-TFYA4jnP7PVbmlBIfhlSe+WKxs9dklXMTEGcBCIvLhE/Tn3H6Gk1norupVW7m5Cnd4bLcr08AytbyV/xj7f/kQ==}

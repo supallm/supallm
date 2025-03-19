@@ -2,12 +2,12 @@ import {
   NodeType,
   NodeDefinition,
   NodeResultCallback,
-} from "../../interfaces/node";
-import { INode } from "../../interfaces/node";
+  NodeInput,
+} from "../../nodes/types";
+import { INode } from "../../nodes/types";
 import { EntrypointNode } from "../../nodes/base/entrypoint-node";
 import { ResultNode } from "../../nodes/base/result-node";
 import { LLMNode } from "../../nodes/llm/llm-node";
-import { ExecutionContext } from "../context";
 export class NodeManager {
   private nodes: Map<NodeType, INode> = new Map();
 
@@ -32,7 +32,7 @@ export class NodeManager {
   async executeNode(
     nodeId: string,
     definition: NodeDefinition,
-    context: ExecutionContext,
+    inputs: NodeInput,
     callbacks: {
       onNodeResult: NodeResultCallback;
     }
@@ -44,8 +44,7 @@ export class NodeManager {
       throw new Error(`unsupported node type: ${nodeType}`);
     }
 
-    // Exécuter le nœud avec les options appropriées
-    return await nodeImplementation.execute(nodeId, definition, context, {
+    return await nodeImplementation.execute(nodeId, definition, inputs, {
       onNodeResult: callbacks.onNodeResult,
     });
   }

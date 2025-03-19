@@ -1,2 +1,8 @@
-export { IContextService, ExecutionContext, NodeExecutionResult } from './context.interface';
-export { MemoryContextService } from './memory-context-service';
+export {
+  IContextService,
+  ExecutionContext,
+  NodeExecution as NodeExecutionResult,
+  ManagedExecutionContext,
+  WorkflowInputs,
+} from "./context.interface";
+export { RedisContextService } from "./redis-context-service";

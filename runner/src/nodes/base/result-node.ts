@@ -1,27 +1,31 @@
-import { BaseNode } from "./base-node";
-import { NodeDefinition, NodeResultCallback } from "../../interfaces/node";
-import { ExecutionContext } from "../../services/context";
+import {
+  NodeDefinition,
+  NodeResultCallback,
+  NodeInput,
+  NodeOutput,
+  NodeType,
+  INode,
+} from "../types";
 
-export class ResultNode extends BaseNode {
+export class ResultNode implements INode {
+  type: NodeType;
+
   constructor() {
-    super("result");
+    this.type = "result";
   }
 
   async execute(
     nodeId: string,
     definition: NodeDefinition,
-    context: ExecutionContext,
-    callbacks: {
+    inputs: NodeInput,
+    options: {
       onNodeResult: NodeResultCallback;
     }
-  ): Promise<Record<string, any>> {
-    const resolvedInputs = this.resolveInputs(nodeId, definition, context);
-    this.validateInputs(nodeId, definition, resolvedInputs);
-
+  ): Promise<NodeOutput> {
     // result node is the last node to be executed
     // it collects the results of the previous nodes and formats them as the final result
     // these results will be stored in context.outputs[nodeId] by the workflow executor
     // we just return the resolved inputs as is
-    return resolvedInputs;
+    return inputs;
   }
 }

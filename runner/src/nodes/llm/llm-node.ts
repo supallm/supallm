@@ -1,10 +1,12 @@
-import { BaseNode } from "../base/base-node";
 import {
+  INode,
   NodeDefinition,
-  ExecutionContext,
   NodeResultCallback,
-  NodeIOType,
-} from "../../interfaces/node";
+  NodeOutputDef,
+  NodeInput,
+  NodeOutput,
+  NodeType,
+} from "../types";
 import { logger } from "../../utils/logger";
 import { CryptoService } from "../../services/crypto-service";
 import { BaseLLMProvider, LLMOptions } from "./base-provider";
@@ -24,12 +26,13 @@ interface LLMNodeInputs {
   images?: string[];
 }
 
-export class LLMNode extends BaseNode {
+export class LLMNode implements INode {
+  type: NodeType;
   private providers: Map<SupportedProviders, BaseLLMProvider>;
   private cryptoService: CryptoService;
 
   constructor() {
-    super("llm");
+    this.type = "llm";
     this.cryptoService = new CryptoService();
     this.providers = new Map<SupportedProviders, BaseLLMProvider>([
       [ProviderType.OPENAI, new OpenAIProvider()],
@@ -40,19 +43,13 @@ export class LLMNode extends BaseNode {
   async execute(
     nodeId: string,
     definition: NodeDefinition,
-    context: ExecutionContext,
+    inputs: NodeInput,
     options: {
       onNodeResult: NodeResultCallback;
     }
-  ): Promise<any> {
+  ): Promise<NodeOutput> {
     try {
-      const resolvedInputs = this.resolveInputs(
-        nodeId,
-        definition,
-        context
-      ) as LLMNodeInputs;
-      this.validateInputs(nodeId, definition, resolvedInputs);
-
+      const resolvedInputs = inputs as LLMNodeInputs;
       const {
         model,
         provider = ProviderType.OPENAI,
@@ -73,6 +70,7 @@ export class LLMNode extends BaseNode {
         systemPrompt,
         resolvedInputs
       );
+
       const llmOptions: LLMOptions = {
         model,
         apiKey: decryptedApiKey,
@@ -81,11 +79,7 @@ export class LLMNode extends BaseNode {
         streaming: streaming,
       };
 
-      // define the output field (default: "response")
-      // define the output field type (default: "text")
-      const outputField =
-        Object.keys(definition.outputs || {})[0] || "response";
-      const outputFieldType = definition.outputs?.[outputField]?.type || "text";
+      const output = definition.outputs?.response;
 
       return this.executeLLM(
         nodeId,
@@ -93,8 +87,7 @@ export class LLMNode extends BaseNode {
         messages,
         llmOptions,
         options.onNodeResult,
-        outputField,
-        outputFieldType as NodeIOType
+        output
       );
     } catch (error) {
       logger.error(`Error executing LLM node ${nodeId}: ${error}`);
@@ -134,10 +127,10 @@ export class LLMNode extends BaseNode {
     messages: (SystemMessage | HumanMessage)[],
     options: LLMOptions,
     onNodeResult: NodeResultCallback,
-    outputField: string = "response",
-    outputType: NodeIOType = "text"
-  ): Promise<any> {
+    output: NodeOutputDef
+  ): Promise<NodeOutput> {
     let fullResponse = "";
+    const outputField = output.result_key || "response";
 
     try {
       const response = await provider.generate(messages, options);
@@ -149,13 +142,13 @@ export class LLMNode extends BaseNode {
             : JSON.stringify(data.content);
 
         if (chunkContent) {
-          await onNodeResult(nodeId, outputField, chunkContent, outputType);
+          await onNodeResult(nodeId, outputField, chunkContent, output.type);
           fullResponse += chunkContent;
         }
       }
 
       return {
-        [outputField]: fullResponse,
+        response: fullResponse,
       };
     } catch (error) {
       logger.error(`error in LLM execution for node ${nodeId}: ${error}`);
