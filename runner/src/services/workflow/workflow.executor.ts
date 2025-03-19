@@ -153,21 +153,7 @@ export class WorkflowExecutor extends EventEmitter {
           error: undefined,
         };
 
-        logger.info(`--------------- result: ${JSON.stringify(result)}`);
-        logger.info(
-          `--------------- before updateNode: ${JSON.stringify(
-            managedContext.get
-          )}`
-        );
-
         await managedContext.updateNode(nodeId, result);
-
-        logger.info(
-          `--------------- after updateNode: ${JSON.stringify(
-            managedContext.get
-          )}`
-        );
-
         return { nodeId, success: true };
       } catch (error) {
         const result: NodeExecutionResult = {

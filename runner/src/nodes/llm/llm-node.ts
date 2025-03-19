@@ -50,8 +50,6 @@ export class LLMNode implements INode {
   ): Promise<NodeOutput> {
     try {
       const resolvedInputs = inputs as LLMNodeInputs;
-      this.validateInputs(nodeId, definition, resolvedInputs);
-
       const {
         model,
         provider = ProviderType.OPENAI,
@@ -72,6 +70,7 @@ export class LLMNode implements INode {
         systemPrompt,
         resolvedInputs
       );
+
       const llmOptions: LLMOptions = {
         model,
         apiKey: decryptedApiKey,
@@ -154,24 +153,6 @@ export class LLMNode implements INode {
     } catch (error) {
       logger.error(`error in LLM execution for node ${nodeId}: ${error}`);
       throw error;
-    }
-  }
-
-  private validateInputs(
-    nodeId: string,
-    definition: NodeDefinition,
-    resolvedInputs: Record<string, any>
-  ): void {
-    if (!definition.inputs) return;
-
-    for (const [inputName, inputDef] of Object.entries(definition.inputs)) {
-      if (resolvedInputs[inputName] === undefined) {
-        throw new Error(
-          `missing required input '${inputName}' for node ${nodeId}`
-        );
-      }
-
-      // type validation if necessary (to implement if needed)
     }
   }
 }
