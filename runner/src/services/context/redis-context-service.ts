@@ -67,15 +67,23 @@ export class RedisContextService implements IContextService {
       workflowId,
       sessionId: options.sessionId,
       triggerId: options.triggerId,
-      inputs: options.inputs || {},
-      outputs: {},
-      nodeResults: {},
+      nodeExecutions: {
+        entrypoint: {
+          id: "entrypoint",
+          success: false,
+          inputs: options.inputs || {},
+          output: null,
+          executionTime: 0,
+        },
+      },
       completedNodes: new Set<string>(),
       allNodes: new Set(Object.keys(definition.nodes)),
     };
   }
 
-  async getContext(workflowId: string): Promise<ExecutionContext | null> {
+  private async getContext(
+    workflowId: string
+  ): Promise<ExecutionContext | null> {
     const key = this.getKey(workflowId);
     const data = await this.redis.get(key);
 
@@ -132,20 +140,6 @@ export class RedisContextService implements IContextService {
 
     context.completedNodes.add(nodeId);
     await this.saveContext(workflowId, context);
-  }
-
-  async deleteContext(workflowId: string): Promise<void> {
-    const key = this.getKey(workflowId);
-    const exists = await this.redis.exists(key);
-
-    if (!exists) {
-      logger.warn(
-        `cannot delete context for workflow ${workflowId}: context not found in Redis`
-      );
-      return;
-    }
-
-    await this.redis.del(key);
   }
 
   private getKey(workflowId: string): string {

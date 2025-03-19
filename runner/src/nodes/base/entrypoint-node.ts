@@ -1,25 +1,32 @@
-import { BaseNode } from "./base-node";
-import { NodeDefinition, NodeResultCallback } from "../../interfaces/node";
-import { ManagedExecutionContext } from "../../services/context";
+import {
+  NodeDefinition,
+  NodeResultCallback,
+  NodeInput,
+  NodeOutput,
+  NodeType,
+  INode,
+} from "../../interfaces/node";
 
-export class EntrypointNode extends BaseNode {
+export class EntrypointNode implements INode {
+  type: NodeType;
+
   constructor() {
-    super("entrypoint");
+    this.type = "entrypoint";
   }
 
   async execute(
     nodeId: string,
     definition: NodeDefinition,
-    managedContext: ManagedExecutionContext,
-    callbacks: {
+    inputs: NodeInput,
+    options: {
       onNodeResult: NodeResultCallback;
     }
-  ): Promise<Record<string, any>> {
+  ): Promise<NodeOutput> {
     // entrypoint node is the first node to be executed
     // it takes the global inputs and makes them available to the next nodes
     // these inputs are already available in context.inputs
     // we just return them as is
     // the result will be stored in context.outputs[nodeId] by the workflow executor
-    return { ...managedContext.internal().inputs };
+    return { ...inputs };
   }
 }

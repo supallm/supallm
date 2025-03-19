@@ -1,8 +1,11 @@
-import { BaseNode } from "../base/base-node";
 import {
+  INode,
   NodeDefinition,
   NodeResultCallback,
+  NodeOutputDef,
+  NodeInput,
   NodeOutput,
+  NodeType,
 } from "../../interfaces/node";
 import { logger } from "../../utils/logger";
 import { CryptoService } from "../../services/crypto-service";
@@ -10,7 +13,6 @@ import { BaseLLMProvider, LLMOptions } from "./base-provider";
 import { OpenAIProvider } from "./openai-provider";
 import { AnthropicProvider } from "./anthropic-provider";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { ManagedExecutionContext } from "../../services/context";
 
 const ProviderType = {
   OPENAI: "openai",
@@ -24,12 +26,13 @@ interface LLMNodeInputs {
   images?: string[];
 }
 
-export class LLMNode extends BaseNode {
+export class LLMNode implements INode {
+  type: NodeType;
   private providers: Map<SupportedProviders, BaseLLMProvider>;
   private cryptoService: CryptoService;
 
   constructor() {
-    super("llm");
+    this.type = "llm";
     this.cryptoService = new CryptoService();
     this.providers = new Map<SupportedProviders, BaseLLMProvider>([
       [ProviderType.OPENAI, new OpenAIProvider()],
@@ -40,21 +43,14 @@ export class LLMNode extends BaseNode {
   async execute(
     nodeId: string,
     definition: NodeDefinition,
-    managedContext: ManagedExecutionContext,
+    inputs: NodeInput,
     options: {
       onNodeResult: NodeResultCallback;
     }
-  ): Promise<any> {
+  ): Promise<NodeOutput> {
     try {
-      const resolvedInputs = this.resolveInputs(
-        nodeId,
-        definition,
-        managedContext.internal()
-      ) as LLMNodeInputs;
+      const resolvedInputs = inputs as LLMNodeInputs;
       this.validateInputs(nodeId, definition, resolvedInputs);
-      logger.info("--------------------------------");
-      logger.info("Resolved inputs:", resolvedInputs);
-      logger.info("--------------------------------");
 
       const {
         model,
@@ -132,8 +128,8 @@ export class LLMNode extends BaseNode {
     messages: (SystemMessage | HumanMessage)[],
     options: LLMOptions,
     onNodeResult: NodeResultCallback,
-    output: NodeOutput
-  ): Promise<any> {
+    output: NodeOutputDef
+  ): Promise<NodeOutput> {
     let fullResponse = "";
     const outputField = output.result_key || "response";
 
@@ -158,6 +154,24 @@ export class LLMNode extends BaseNode {
     } catch (error) {
       logger.error(`error in LLM execution for node ${nodeId}: ${error}`);
       throw error;
+    }
+  }
+
+  private validateInputs(
+    nodeId: string,
+    definition: NodeDefinition,
+    resolvedInputs: Record<string, any>
+  ): void {
+    if (!definition.inputs) return;
+
+    for (const [inputName, inputDef] of Object.entries(definition.inputs)) {
+      if (resolvedInputs[inputName] === undefined) {
+        throw new Error(
+          `missing required input '${inputName}' for node ${nodeId}`
+        );
+      }
+
+      // type validation if necessary (to implement if needed)
     }
   }
 }

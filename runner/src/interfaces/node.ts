@@ -1,25 +1,24 @@
-import { ManagedExecutionContext } from "../services/context";
-
 export type NodeType = "llm" | "entrypoint" | "result";
-
 export type NodeIOType = "text" | "image";
 
-export interface NodeInput {
+export type NodeInput = Record<string, any>;
+export type NodeOutput = Record<string, any>;
+
+export interface NodeInputDef {
   source?: string; // Format: "nodeId.outputField" or "nodeId"
   type?: NodeIOType;
-  required?: boolean;
   value?: any;
 }
 
-export interface NodeOutput {
+export interface NodeOutputDef {
   type: NodeIOType;
   result_key?: string;
 }
 
 export interface NodeDefinition {
   type: NodeType;
-  inputs: Record<string, NodeInput>;
-  outputs: Record<string, NodeOutput>;
+  inputs: Record<string, NodeInputDef>;
+  outputs: Record<string, NodeOutputDef>;
   [key: string]: any; // for properties specific to each node type
 }
 
@@ -35,9 +34,9 @@ export interface INode {
   execute(
     nodeId: string,
     definition: NodeDefinition,
-    managedContext: ManagedExecutionContext,
+    inputs: NodeInput,
     options: {
       onNodeResult: NodeResultCallback;
     }
-  ): Promise<any>;
+  ): Promise<NodeOutput>;
 }

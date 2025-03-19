@@ -1,9 +1,10 @@
+import { WorkflowDefinition, WorkflowExecutionOptions } from "./types";
 import {
-  WorkflowDefinition,
-  WorkflowExecutionResult,
-  WorkflowExecutionOptions,
-} from "./types";
-import { NodeDefinition, NodeIOType } from "../../interfaces/node";
+  NodeDefinition,
+  NodeInput,
+  NodeIOType,
+  NodeOutput,
+} from "../../interfaces/node";
 import { NodeManager } from "../node/node-manager";
 import { logger } from "../../utils/logger";
 import { EventEmitter } from "events";
@@ -29,70 +30,20 @@ export class WorkflowExecutor extends EventEmitter {
     workflowId: string,
     definition: WorkflowDefinition,
     options: WorkflowExecutionOptions
-  ): Promise<WorkflowExecutionResult> {
-    const startTime = Date.now();
+  ): Promise<void> {
     let context = await this.contextService.initialize(
       workflowId,
       definition,
       options
     );
     try {
-      this.emitWorkflowStarted(context.internal());
-
+      this.emitWorkflowStarted(context);
       await this.executeWorkflow(workflowId, context, definition);
-
-      const output = this.extractFinalOutput(definition, context.internal());
-      const executionTime = Date.now() - startTime;
-
-      this.emitWorkflowCompleted(context.internal(), output);
-      return {
-        workflowId,
-        success: true,
-        output,
-        nodeResults: context.internal().nodeResults,
-        executionTime,
-      };
+      const output = this.extractFinalOutput(definition, context);
+      this.emitWorkflowCompleted(context, output);
     } catch (error) {
-      this.emitWorkflowFailed(context.internal(), error);
-      const executionTime = Date.now() - startTime;
-      return {
-        workflowId,
-        success: false,
-        output: null,
-        nodeResults: context.internal().nodeResults,
-        error: error instanceof Error ? error.message : String(error),
-        executionTime,
-      };
+      this.emitWorkflowFailed(context, error);
     }
-  }
-
-  private createBaseEventData(context: ExecutionContext) {
-    return {
-      workflowId: context.workflowId,
-      triggerId: context.triggerId,
-      sessionId: context.sessionId,
-    };
-  }
-
-  private emitWorkflowStarted(context: ExecutionContext): void {
-    this.emit(WorkflowEvents.WORKFLOW_STARTED, {
-      ...this.createBaseEventData(context),
-      inputs: context.inputs,
-    });
-  }
-
-  private emitWorkflowCompleted(context: ExecutionContext, result: any): void {
-    this.emit(WorkflowEvents.WORKFLOW_COMPLETED, {
-      ...this.createBaseEventData(context),
-      result,
-    });
-  }
-
-  private emitWorkflowFailed(context: ExecutionContext, error: any): void {
-    this.emit(WorkflowEvents.WORKFLOW_FAILED, {
-      ...this.createBaseEventData(context),
-      error: error instanceof Error ? error.message : String(error),
-    });
   }
 
   private async executeWorkflow(
@@ -107,10 +58,7 @@ export class WorkflowExecutor extends EventEmitter {
       managedContext.internal().allNodes.size
     ) {
       // find nodes ready to execute (all dependencies completed)
-      const readyNodes = this.findReadyNodes(
-        managedContext.internal(),
-        dependencies
-      );
+      const readyNodes = managedContext.findReadyNodes(dependencies);
 
       if (readyNodes.length === 0) {
         // if no nodes are ready but there are still nodes to complete,
@@ -128,7 +76,6 @@ export class WorkflowExecutor extends EventEmitter {
       }
 
       const results = await this.executeReadyNodes(
-        workflowId,
         managedContext,
         readyNodes,
         definition
@@ -174,66 +121,53 @@ export class WorkflowExecutor extends EventEmitter {
     );
   }
 
-  private findReadyNodes(
-    context: ExecutionContext,
-    dependencies: Record<string, string[]>
-  ): string[] {
-    return Array.from(context.allNodes)
-      .filter((nodeId) => !context.completedNodes.has(nodeId))
-      .filter((nodeId) => {
-        const nodeDeps = dependencies[nodeId] || [];
-        return nodeDeps.every((depId) => context.completedNodes.has(depId));
-      });
-  }
-
   private async executeReadyNodes(
-    workflowId: string,
     managedContext: ManagedExecutionContext,
     readyNodes: string[],
     definition: WorkflowDefinition
   ): Promise<Array<{ nodeId: string; success: boolean; error?: any }>> {
     const nodePromises = readyNodes.map(async (nodeId) => {
-      const node = definition.nodes[nodeId];
-      if (!node) {
-        logger.error(`node definition not found for nodeId: ${nodeId}`);
-        return {
-          nodeId,
-          success: false,
-          error: `node definition not found for nodeId: ${nodeId}`,
-        };
-      }
-
       try {
+        const node = definition.nodes[nodeId];
+        if (!node) {
+          logger.error(`node definition not found for nodeId: ${nodeId}`);
+          return {
+            nodeId,
+            success: false,
+            error: `node definition not found for nodeId: ${nodeId}`,
+          };
+        }
+
+        const inputs = managedContext.resolveInputs(nodeId, node);
         const output = await this.executeNode(
-          workflowId,
           nodeId,
           node,
+          inputs,
           managedContext
         );
 
         const result: NodeExecutionResult = {
-          nodeId,
+          id: nodeId,
           success: true,
+          inputs,
           output,
           executionTime: 0,
           error: undefined,
         };
 
-        await managedContext.updateNodeResults(nodeId, result);
-        await managedContext.updateOutputs(nodeId, output);
-
+        await managedContext.updateNode(nodeId, result);
         return { nodeId, success: true };
       } catch (error) {
         const result: NodeExecutionResult = {
-          nodeId,
+          id: nodeId,
           success: false,
+          inputs: null,
           output: null,
           executionTime: 0,
           error: error instanceof Error ? error.message : String(error),
         };
 
-        // update the context with the error results
-        await managedContext.updateNodeResults(nodeId, result);
+        await managedContext.updateNode(nodeId, result);
         logger.error(`error executing node ${nodeId}: ${error}`);
         return { nodeId, success: false, error };
       }
@@ -243,41 +177,36 @@ export class WorkflowExecutor extends EventEmitter {
   }
 
   private async executeNode(
-    workflowId: string,
     nodeId: string,
     node: NodeDefinition,
+    inputs: Record<string, any>,
     managedContext: ManagedExecutionContext
   ): Promise<any> {
-    this.emitNodeStarted(nodeId, node, managedContext.internal());
+    this.emitNodeStarted(nodeId, node, inputs, managedContext);
 
     try {
-      const output = await this.nodeManager.executeNode(
-        nodeId,
-        node,
-        managedContext,
-        {
-          onNodeResult: async (
-            nodeId: string,
-            outputField: string,
-            data: string,
-            type: NodeIOType
-          ) => {
-            this.emitNodeResult(
-              nodeId,
-              node,
-              outputField,
-              data,
-              type,
-              managedContext.internal()
-            );
-          },
-        }
-      );
+      const output = await this.nodeManager.executeNode(nodeId, node, inputs, {
+        onNodeResult: async (
+          nodeId: string,
+          outputField: string,
+          data: string,
+          type: NodeIOType
+        ) => {
+          this.emitNodeResult(
+            nodeId,
+            node,
+            outputField,
+            data,
+            type,
+            managedContext
+          );
+        },
+      });
 
-      this.emitNodeCompleted(nodeId, node, output, managedContext.internal());
+      this.emitNodeCompleted(nodeId, node, output, managedContext);
       return output;
     } catch (error) {
-      this.emitNodeFailed(nodeId, node, error, managedContext.internal());
+      this.emitNodeFailed(nodeId, node, error, managedContext);
       throw error;
     }
   }
@@ -312,50 +241,80 @@ export class WorkflowExecutor extends EventEmitter {
 
   private extractFinalOutput(
     definition: WorkflowDefinition,
-    context: ExecutionContext
-  ): any {
-    const resultNodes = Object.entries(definition.nodes)
-      .filter(([_, node]) => node.type === "result")
-      .map(([id, _]) => id);
-
-    if (resultNodes.length === 0) {
-      return context.outputs;
-    }
+    context: ManagedExecutionContext
+  ): Record<string, any> | null {
+    const resultNodes = context.resultNodes(definition);
 
     if (resultNodes.length === 1) {
-      return context.outputs[resultNodes[0]];
+      return context.result().output;
     }
 
     // if multiple result nodes, return object with all outputs
     const result: Record<string, any> = {};
-    for (const nodeId of resultNodes) {
-      result[nodeId] = context.outputs[nodeId];
+    for (const node of resultNodes) {
+      result[node.id] = node.output;
     }
 
     return result;
   }
 
+  private createBaseEventData(context: ExecutionContext) {
+    return {
+      workflowId: context.workflowId,
+      triggerId: context.triggerId,
+      sessionId: context.sessionId,
+    };
+  }
+
+  private emitWorkflowStarted(context: ManagedExecutionContext): void {
+    this.emit(WorkflowEvents.WORKFLOW_STARTED, {
+      ...this.createBaseEventData(context.internal()),
+      inputs: context.entrypoint().inputs || {},
+    });
+  }
+
+  private emitWorkflowCompleted(
+    context: ManagedExecutionContext,
+    result: Record<string, any> | null
+  ): void {
+    this.emit(WorkflowEvents.WORKFLOW_COMPLETED, {
+      ...this.createBaseEventData(context.internal()),
+      result,
+    });
+  }
+
+  private emitWorkflowFailed(
+    context: ManagedExecutionContext,
+    error: any
+  ): void {
+    this.emit(WorkflowEvents.WORKFLOW_FAILED, {
+      ...this.createBaseEventData(context.internal()),
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+
   private emitNodeStarted(
     nodeId: string,
     node: NodeDefinition,
-    context: ExecutionContext
+    inputs: NodeInput,
+    context: ManagedExecutionContext
   ): void {
     this.emit(WorkflowEvents.NODE_STARTED, {
-      ...this.createBaseEventData(context),
+      ...this.createBaseEventData(context.internal()),
       nodeId,
       nodeType: node.type,
-      inputs: context.inputs,
+      inputs,
     });
   }
 
   private emitNodeCompleted(
     nodeId: string,
     node: NodeDefinition,
-    output: any,
-    context: ExecutionContext
+    output: NodeOutput,
+    context: ManagedExecutionContext
   ): void {
     this.emit(WorkflowEvents.NODE_COMPLETED, {
-      ...this.createBaseEventData(context),
+      ...this.createBaseEventData(context.internal()),
       nodeId,
       nodeType: node.type,
       output,
@@ -366,10 +325,10 @@ export class WorkflowExecutor extends EventEmitter {
     nodeId: string,
     node: NodeDefinition,
     error: any,
-    context: ExecutionContext
+    context: ManagedExecutionContext
   ): void {
     this.emit(WorkflowEvents.NODE_FAILED, {
-      ...this.createBaseEventData(context),
+      ...this.createBaseEventData(context.internal()),
       nodeId,
       nodeType: node.type,
       error: error instanceof Error ? error.message : String(error),
@@ -382,10 +341,10 @@ export class WorkflowExecutor extends EventEmitter {
     outputField: string,
     data: string,
     type: NodeIOType,
-    context: ExecutionContext
+    context: ManagedExecutionContext
   ): void {
     this.emit(WorkflowEvents.NODE_RESULT, {
-      ...this.createBaseEventData(context),
+      ...this.createBaseEventData(context.internal()),
       nodeId,
       nodeType: node.type,
       outputField,

@@ -1,7 +1,7 @@
 export {
   IContextService,
   ExecutionContext,
-  NodeExecutionResult,
+  NodeExecution as NodeExecutionResult,
   ManagedExecutionContext,
 } from "./context.interface";
 export { RedisContextService } from "./redis-context-service";
