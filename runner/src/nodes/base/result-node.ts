@@ -1,6 +1,6 @@
 import { BaseNode } from "./base-node";
 import { NodeDefinition, NodeResultCallback } from "../../interfaces/node";
-import { ExecutionContext } from "../../services/context";
+import { ManagedExecutionContext } from "../../services/context";
 
 export class ResultNode extends BaseNode {
   constructor() {
@@ -10,12 +10,16 @@ export class ResultNode extends BaseNode {
   async execute(
     nodeId: string,
     definition: NodeDefinition,
-    context: ExecutionContext,
+    managedContext: ManagedExecutionContext,
     callbacks: {
       onNodeResult: NodeResultCallback;
     }
   ): Promise<Record<string, any>> {
-    const resolvedInputs = this.resolveInputs(nodeId, definition, context);
+    const resolvedInputs = this.resolveInputs(
+      nodeId,
+      definition,
+      managedContext.internal()
+    );
     this.validateInputs(nodeId, definition, resolvedInputs);
 
     // result node is the last node to be executed

@@ -1,6 +1,6 @@
 import { BaseNode } from "./base-node";
 import { NodeDefinition, NodeResultCallback } from "../../interfaces/node";
-import { ExecutionContext } from "../../services/context";
+import { ManagedExecutionContext } from "../../services/context";
 
 export class EntrypointNode extends BaseNode {
   constructor() {
@@ -10,7 +10,7 @@ export class EntrypointNode extends BaseNode {
   async execute(
     nodeId: string,
     definition: NodeDefinition,
-    context: ExecutionContext,
+    managedContext: ManagedExecutionContext,
     callbacks: {
       onNodeResult: NodeResultCallback;
     }
@@ -20,6 +20,6 @@ export class EntrypointNode extends BaseNode {
     // these inputs are already available in context.inputs
     // we just return them as is
     // the result will be stored in context.outputs[nodeId] by the workflow executor
-    return { ...context.inputs };
+    return { ...managedContext.internal().inputs };
   }
 }

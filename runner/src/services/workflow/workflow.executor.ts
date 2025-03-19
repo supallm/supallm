@@ -3,24 +3,26 @@ import {
   WorkflowExecutionResult,
   WorkflowExecutionOptions,
 } from "./types";
-import {
-  NodeDefinition,
-  NodeIOType
-} from "../../interfaces/node";
+import { NodeDefinition, NodeIOType } from "../../interfaces/node";
 import { NodeManager } from "../node/node-manager";
 import { logger } from "../../utils/logger";
 import { EventEmitter } from "events";
 import { WorkflowEvents, WorkflowExecutorEvents } from "../notifier";
-import { IContextService, MemoryContextService, ExecutionContext, NodeExecutionResult } from "../context";
+import {
+  IContextService,
+  ExecutionContext,
+  NodeExecutionResult,
+  ManagedExecutionContext,
+} from "../context";
 
 export class WorkflowExecutor extends EventEmitter {
   private readonly nodeManager: NodeManager;
   private readonly contextService: IContextService;
 
-  constructor(nodeManager?: NodeManager, contextService?: IContextService) {
+  constructor(nodeManager: NodeManager, contextService: IContextService) {
     super();
-    this.nodeManager = nodeManager || new NodeManager();
-    this.contextService = contextService || new MemoryContextService();
+    this.nodeManager = nodeManager;
+    this.contextService = contextService;
   }
 
   async execute(
@@ -29,75 +31,39 @@ export class WorkflowExecutor extends EventEmitter {
     options: WorkflowExecutionOptions
   ): Promise<WorkflowExecutionResult> {
     const startTime = Date.now();
-    
-    const context = this.initializeContext(workflowId, definition, options);
-    await this.contextService.initialize(workflowId, context);
-
-    let currentContext = await this.contextService.getContext(workflowId);
-    if (!currentContext) {
-      throw new Error(`failed to initialize context for workflow ${workflowId}`);
-    }
-
-    this.emitWorkflowStarted(currentContext);
-
+    let context = await this.contextService.initialize(
+      workflowId,
+      definition,
+      options
+    );
     try {
-      await this.executeWorkflow(workflowId, definition);
+      this.emitWorkflowStarted(context.internal());
 
-      currentContext = await this.contextService.getContext(workflowId);
-      if (!currentContext) {
-        throw new Error(`context for workflow ${workflowId} not found after execution`);
-      }
-      
-      const output = this.extractFinalOutput(definition, currentContext);
+      await this.executeWorkflow(workflowId, context, definition);
+
+      const output = this.extractFinalOutput(definition, context.internal());
       const executionTime = Date.now() - startTime;
 
-      this.emitWorkflowCompleted(currentContext, output);
-      
-      await this.contextService.deleteContext(workflowId);
+      this.emitWorkflowCompleted(context.internal(), output);
       return {
         workflowId,
         success: true,
         output,
-        nodeResults: currentContext.nodeResults,
+        nodeResults: context.internal().nodeResults,
         executionTime,
       };
     } catch (error) {
-      const failedContext = await this.contextService.getContext(workflowId);
-      
-      if (failedContext) {
-        this.emitWorkflowFailed(failedContext, error);
-      } else {
-        this.emitWorkflowFailed(context, error);
-      }
-      
-      await this.contextService.deleteContext(workflowId);
+      this.emitWorkflowFailed(context.internal(), error);
       const executionTime = Date.now() - startTime;
       return {
         workflowId,
         success: false,
         output: null,
-        nodeResults: failedContext?.nodeResults || {},
+        nodeResults: context.internal().nodeResults,
         error: error instanceof Error ? error.message : String(error),
         executionTime,
       };
     }
-  }
-
-  private initializeContext(
-    workflowId: string,
-    definition: WorkflowDefinition,
-    options: WorkflowExecutionOptions
-  ): ExecutionContext {
-    return {
-      workflowId,
-      sessionId: options.sessionId,
-      triggerId: options.triggerId,
-      inputs: options.inputs || {},
-      outputs: {},
-      nodeResults: {},
-      completedNodes: new Set<string>(),
-      allNodes: new Set(Object.keys(definition.nodes)),
-    };
   }
 
   private createBaseEventData(context: ExecutionContext) {
@@ -131,29 +97,42 @@ export class WorkflowExecutor extends EventEmitter {
 
   private async executeWorkflow(
     workflowId: string,
+    managedContext: ManagedExecutionContext,
     definition: WorkflowDefinition
   ): Promise<void> {
     const { dependencies } = this.buildDependencyGraph(definition);
 
-    let context = await this.contextService.getContext(workflowId);
-    if (!context) {
-      throw new Error(`context for workflow ${workflowId} not found during execution`);
-    }
-
-    while (context.completedNodes.size < context.allNodes.size) {
+    while (
+      managedContext.internal().completedNodes.size <
+      managedContext.internal().allNodes.size
+    ) {
       // find nodes ready to execute (all dependencies completed)
-      const readyNodes = this.findReadyNodes(context, dependencies);
+      const readyNodes = this.findReadyNodes(
+        managedContext.internal(),
+        dependencies
+      );
 
       if (readyNodes.length === 0) {
         // if no nodes are ready but there are still nodes to complete,
         // we have a circular dependency or unreachable nodes
-        if (context.completedNodes.size < context.allNodes.size) {
-          this.handleCircularDependency(context, dependencies);
+        if (
+          managedContext.internal().completedNodes.size <
+          managedContext.internal().allNodes.size
+        ) {
+          this.handleCircularDependency(
+            managedContext.internal(),
+            dependencies
+          );
         }
         break;
       }
 
-      const results = await this.executeReadyNodes(workflowId, readyNodes, definition);
+      const results = await this.executeReadyNodes(
+        workflowId,
+        managedContext,
+        readyNodes,
+        definition
+      );
       const errors = results.filter((r) => !r.success);
       if (errors.length > 0) {
         throw new Error(
@@ -163,20 +142,8 @@ export class WorkflowExecutor extends EventEmitter {
         );
       }
 
-      // mark nodes as completed and update the context
-      context = await this.contextService.getContext(workflowId);
-      if (!context) {
-        throw new Error(`context for workflow ${workflowId} not found during node completion`);
-      }
-      
       for (const result of results) {
-        await this.contextService.markNodeCompleted(workflowId, result.nodeId);
-      }
-      
-      // get the updated context for the next iteration
-      context = await this.contextService.getContext(workflowId);
-      if (!context) {
-        throw new Error(`context for workflow ${workflowId} not found after marking nodes completed`);
+        await managedContext.markNodeCompleted(result.nodeId);
       }
     }
   }
@@ -185,15 +152,18 @@ export class WorkflowExecutor extends EventEmitter {
     context: ExecutionContext,
     dependencies: Record<string, string[]>
   ): never {
-    const remainingNodes = Array.from(context.allNodes)
-      .filter(nodeId => !context.completedNodes.has(nodeId));
-    
-    const blockedNodesInfo = remainingNodes.map(nodeId => {
+    const remainingNodes = Array.from(context.allNodes).filter(
+      (nodeId) => !context.completedNodes.has(nodeId)
+    );
+
+    const blockedNodesInfo = remainingNodes.map((nodeId) => {
       const nodeDeps = dependencies[nodeId] || [];
-      const missingDeps = nodeDeps.filter(depId => !context.completedNodes.has(depId));
+      const missingDeps = nodeDeps.filter(
+        (depId) => !context.completedNodes.has(depId)
+      );
       return {
         nodeId,
-        missingDeps
+        missingDeps,
       };
     });
 
@@ -218,6 +188,7 @@ export class WorkflowExecutor extends EventEmitter {
 
   private async executeReadyNodes(
     workflowId: string,
+    managedContext: ManagedExecutionContext,
     readyNodes: string[],
     definition: WorkflowDefinition
   ): Promise<Array<{ nodeId: string; success: boolean; error?: any }>> {
@@ -231,45 +202,28 @@ export class WorkflowExecutor extends EventEmitter {
           error: `node definition not found for nodeId: ${nodeId}`,
         };
       }
-      
+
       try {
-        // get the current context for node execution
-        const context = await this.contextService.getContext(workflowId);
-        if (!context) {
-          throw new Error(`context for workflow ${workflowId} not found during node execution`);
-        }
-        
-        const output = await this.executeNode(workflowId, nodeId, node, context);
-        
-        // get the updated context for storing the results
-        const updatedContext = await this.contextService.getContext(workflowId);
-        if (!updatedContext) {
-          throw new Error(`context for workflow ${workflowId} not found after node execution`);
-        }
-        
+        const output = await this.executeNode(
+          workflowId,
+          nodeId,
+          node,
+          managedContext
+        );
+
         const result: NodeExecutionResult = {
           nodeId,
           success: true,
           output,
-          executionTime: 0, // TODO: add execution time tracking
-          error: undefined, // undefined instead of null for the type
+          executionTime: 0,
+          error: undefined,
         };
 
-        // update the context with the node results
-        await this.contextService.updateContext(workflowId, {
-          nodeResults: { ...updatedContext.nodeResults, [nodeId]: result },
-          outputs: { ...updatedContext.outputs, [nodeId]: output }
-        });
+        await managedContext.updateNodeResults(nodeId, result);
+        await managedContext.updateOutputs(nodeId, output);
 
         return { nodeId, success: true };
       } catch (error) {
-        // get the context for updating the results in case of error
-        const context = await this.contextService.getContext(workflowId);
-        if (!context) {
-          logger.error(`context for workflow ${workflowId} not found during error handling`);
-          return { nodeId, success: false, error };
-        }
-        
         const result: NodeExecutionResult = {
           nodeId,
           success: false,
@@ -279,10 +233,7 @@ export class WorkflowExecutor extends EventEmitter {
         };
 
         // update the context with the error results
-        await this.contextService.updateContext(workflowId, {
-          nodeResults: { ...context.nodeResults, [nodeId]: result }
-        });
-
+        await managedContext.updateNodeResults(nodeId, result);
         logger.error(`error executing node ${nodeId}: ${error}`);
         return { nodeId, success: false, error };
       }
@@ -295,42 +246,38 @@ export class WorkflowExecutor extends EventEmitter {
     workflowId: string,
     nodeId: string,
     node: NodeDefinition,
-    context: ExecutionContext
+    managedContext: ManagedExecutionContext
   ): Promise<any> {
-    this.emitNodeStarted(nodeId, node, context);
+    this.emitNodeStarted(nodeId, node, managedContext.internal());
 
     try {
       const output = await this.nodeManager.executeNode(
         nodeId,
         node,
-        context,
+        managedContext,
         {
-          onNodeResult: async (nodeId: string, outputField: string, data: string, type: NodeIOType) => {
-            // get the current context for the result event
-            const currentContext = await this.contextService.getContext(workflowId);
-            if (currentContext) {
-              this.emitNodeResult(nodeId, node, outputField, data, type, currentContext);
-            } else {
-              logger.error(`context for workflow ${workflowId} not found during node result emission`);
-            }
+          onNodeResult: async (
+            nodeId: string,
+            outputField: string,
+            data: string,
+            type: NodeIOType
+          ) => {
+            this.emitNodeResult(
+              nodeId,
+              node,
+              outputField,
+              data,
+              type,
+              managedContext.internal()
+            );
           },
         }
       );
 
-      // get the current context for the completion event
-      const updatedContext = await this.contextService.getContext(workflowId);
-      if (updatedContext) {
-        this.emitNodeCompleted(nodeId, node, output, updatedContext);
-      }
-
+      this.emitNodeCompleted(nodeId, node, output, managedContext.internal());
       return output;
     } catch (error) {
-      // get the current context for the failure event
-      const updatedContext = await this.contextService.getContext(workflowId);
-      if (updatedContext) {
-        this.emitNodeFailed(nodeId, node, error, updatedContext);
-      }
-      
+      this.emitNodeFailed(nodeId, node, error, managedContext.internal());
       throw error;
     }
   }

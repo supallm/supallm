@@ -4,7 +4,10 @@ import {
   INode,
   NodeResultCallback,
 } from "../../interfaces/node";
-import { ExecutionContext } from "../../services/context";
+import {
+  ExecutionContext,
+  ManagedExecutionContext,
+} from "../../services/context";
 import { logger } from "../../utils/logger";
 
 export abstract class BaseNode implements INode {
@@ -17,7 +20,7 @@ export abstract class BaseNode implements INode {
   abstract execute(
     nodeId: string,
     definition: NodeDefinition,
-    context: ExecutionContext,
+    managedContext: ManagedExecutionContext,
     options: {
       onNodeResult: NodeResultCallback;
     }

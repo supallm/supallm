@@ -7,7 +7,7 @@ import { INode } from "../../interfaces/node";
 import { EntrypointNode } from "../../nodes/base/entrypoint-node";
 import { ResultNode } from "../../nodes/base/result-node";
 import { LLMNode } from "../../nodes/llm/llm-node";
-import { ExecutionContext } from "../context";
+import { ManagedExecutionContext } from "../context";
 export class NodeManager {
   private nodes: Map<NodeType, INode> = new Map();
 
@@ -32,7 +32,7 @@ export class NodeManager {
   async executeNode(
     nodeId: string,
     definition: NodeDefinition,
-    context: ExecutionContext,
+    managedContext: ManagedExecutionContext,
     callbacks: {
       onNodeResult: NodeResultCallback;
     }
@@ -45,8 +45,13 @@ export class NodeManager {
     }
 
     // Exécuter le nœud avec les options appropriées
-    return await nodeImplementation.execute(nodeId, definition, context, {
-      onNodeResult: callbacks.onNodeResult,
-    });
+    return await nodeImplementation.execute(
+      nodeId,
+      definition,
+      managedContext,
+      {
+        onNodeResult: callbacks.onNodeResult,
+      }
+    );
   }
 }

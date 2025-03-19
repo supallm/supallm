@@ -1,9 +1,13 @@
 import { WorkflowExecutor } from "./services/workflow/workflow.executor";
 import { RedisNotifier, INotifier, WorkflowEvents } from "./services/notifier";
-import { RedisQueueConsumer, IQueueConsumer, WorkflowMessage } from "./services/queue";
+import {
+  RedisQueueConsumer,
+  IQueueConsumer,
+  WorkflowMessage,
+} from "./services/queue";
 import { NodeManager } from "./services/node/node-manager";
 import { logger } from "./utils/logger";
-import { IContextService, MemoryContextService } from "./services/context";
+import { IContextService, RedisContextService } from "./services/context";
 
 interface RunnerConfig {
   maxParallelJobs?: number;
@@ -23,7 +27,7 @@ export class RunnerServer {
     });
     this.notifier = new RedisNotifier(config.redisUrl);
     this.nodeManager = new NodeManager();
-    this.contextService = new MemoryContextService();
+    this.contextService = new RedisContextService(config.redisUrl);
     this.executor = new WorkflowExecutor(this.nodeManager, this.contextService);
 
     this.setupEventListeners();
@@ -53,9 +57,15 @@ export class RunnerServer {
   private async handleWorkflowExecution(
     message: WorkflowMessage
   ): Promise<void> {
-    const { workflow_id, trigger_id, session_id, project_id, definition, inputs } = message;
+    const {
+      workflow_id,
+      trigger_id,
+      session_id,
+      project_id,
+      definition,
+      inputs,
+    } = message;
 
-    
     try {
       await this.executor.execute(workflow_id, definition, {
         inputs,
@@ -77,11 +87,13 @@ export class RunnerServer {
       WorkflowEvents.NODE_COMPLETED,
       WorkflowEvents.NODE_FAILED,
     ] as const;
-    
+
     for (const eventType of workflowEvents) {
-      this.executor.on(eventType, (data: any) => this.handleWorkflowEvent(eventType, data));
+      this.executor.on(eventType, (data: any) =>
+        this.handleWorkflowEvent(eventType, data)
+      );
     }
-    
+
     this.executor.on(
       WorkflowEvents.NODE_RESULT,
       this.handleNodeResult.bind(this)
@@ -89,7 +101,7 @@ export class RunnerServer {
   }
 
   private async handleWorkflowEvent(
-    eventType: typeof WorkflowEvents[keyof typeof WorkflowEvents], 
+    eventType: (typeof WorkflowEvents)[keyof typeof WorkflowEvents],
     data: any
   ): Promise<void> {
     await this.notifier.publishWorkflowEvent({
@@ -100,9 +112,9 @@ export class RunnerServer {
       data: this.extractEventData(eventType, data),
     });
   }
-  
+
   private extractEventData(
-    eventType: typeof WorkflowEvents[keyof typeof WorkflowEvents], 
+    eventType: (typeof WorkflowEvents)[keyof typeof WorkflowEvents],
     data: any
   ): any {
     switch (eventType) {

@@ -1,4 +1,4 @@
-import { ExecutionContext } from "../services/context";
+import { ManagedExecutionContext } from "../services/context";
 
 export type NodeType = "llm" | "entrypoint" | "result";
 
@@ -13,7 +13,7 @@ export interface NodeInput {
 
 export interface NodeOutput {
   type: NodeIOType;
-  notify: boolean;
+  result_key?: string;
 }
 
 export interface NodeDefinition {
@@ -35,9 +35,9 @@ export interface INode {
   execute(
     nodeId: string,
     definition: NodeDefinition,
-    context: ExecutionContext,
+    managedContext: ManagedExecutionContext,
     options: {
       onNodeResult: NodeResultCallback;
     }
   ): Promise<any>;
-} 
+}
