@@ -135,7 +135,7 @@ export class WorkflowExecutor extends EventEmitter {
             error: `node definition not found for nodeId: ${nodeId}`,
           };
         }
-        logger.info(`executing node ${nodeId}`);
+
         const inputs = managedContext.resolveInputs(nodeId, node);
         const output = await this.executeNode(
           nodeId,
