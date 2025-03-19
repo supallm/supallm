@@ -1,6 +1,6 @@
 import { ExecutionContext } from "../services/context";
 
-export type NodeType = "llm" | "entrypoint" | "result";
+export type NodeType = "llm" | "entrypoint" | "result" | "code-executor";
 
 export type NodeIOType = "text" | "image";
 
@@ -27,7 +27,7 @@ export type NodeResultCallback = (
   nodeId: string,
   outputField: string,
   data: string,
-  type: NodeIOType
+  type: NodeIOType,
 ) => Promise<void>;
 
 export interface INode {
@@ -38,6 +38,6 @@ export interface INode {
     context: ExecutionContext,
     options: {
       onNodeResult: NodeResultCallback;
-    }
+    },
   ): Promise<any>;
-} 
+}

@@ -1,0 +1,38 @@
+name: "Node.js Sandbox"
+
+mode: ONCE
+hostname: "nodejs-sandbox"
+
+max_cpus: 1
+
+rlimit_nofile: 10000
+rlimit_fsize: 10485760
+rlimit_cpu: 1000          # 10000 seconds max CPU time
+rlimit_as: 4096         # Max memory usage
+
+disable_no_new_privs: true
+
+mount: {
+    src: "/tmp/nsjail/{SANDBOX_ID}"
+    dst: "/sandbox"
+    is_bind: true
+    rw: true
+}
+
+mount {
+    src: "/bin"
+    dst: "/bin"
+	is_bind: true
+}
+
+mount {
+    src: "/lib"
+    dst: "/lib"
+	is_bind: true
+}
+
+mount {
+    src: "/usr"
+    dst: "/usr"
+	is_bind: true
+}

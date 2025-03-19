@@ -15,6 +15,7 @@ import { executeCodeSandboxUsecase } from "@/core/usecases";
 import {
   parseCodeForInputs,
   parseCodeForRequiredModules,
+  parseFunctionOutput,
   TypeScriptType,
 } from "@/lib/typescript-utils";
 import { cn } from "@/lib/utils";
@@ -62,6 +63,7 @@ export const CodeEditorDialog: FC<
         type: TypeScriptType;
       }>;
       requiredModules: string[];
+      functionOutput: { keys: string[] };
     }) => void;
   }>
 > = ({ children, data, onChange }) => {
@@ -101,11 +103,15 @@ export const CodeEditorDialog: FC<
     const inputs = parseCodeForInputs(values.code);
 
     const requiredModules = parseCodeForRequiredModules(values.code);
+    const outputs = parseFunctionOutput(values.code, "main");
+
+    console.log("outputs", outputs);
 
     onChange({
       ...values,
       inputs,
       requiredModules,
+      outputs,
     });
 
     setOpen(false);

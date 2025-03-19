@@ -16,7 +16,7 @@ import { Code } from "lucide-react";
 import { FC, memo, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import BaseNode from "../../common/base-node";
+import BaseNode, { BaseNodeHandle } from "../../common/base-node";
 import { BaseNodeContent } from "../../common/base-node-content";
 import { CodeEditorDialog } from "./code-editor-dialog";
 import { CodePreview } from "./code-preview";
@@ -25,6 +25,7 @@ type CustomCodeNodeProps = NodeProps & {
   data: {
     code: string;
     inputs: Array<{ type: string; label: string; id: string }>;
+    outputs: Array<{ type: string; label: string; id: string }>;
     requiredModules: string[];
     credentialId: string;
   };
@@ -55,6 +56,13 @@ const E2BInterpreterNode: FC<CustomCodeNodeProps> = ({ data, id: nodeId }) => {
         id: z.string(),
       }),
     ),
+    outputs: z.array(
+      z.object({
+        type: z.string(),
+        label: z.string(),
+        id: z.string(),
+      }),
+    ),
     credentialId: z.string().min(2),
   });
 
@@ -65,10 +73,14 @@ const E2BInterpreterNode: FC<CustomCodeNodeProps> = ({ data, id: nodeId }) => {
       code: data.code ?? defaultCode,
       inputs: data.inputs ?? [],
       credentialId: data.credentialId ?? "",
+      outputs: data.outputs ?? [],
     },
   });
 
   const [inputHandles, setInputHandles] = useState(data.inputs ?? []);
+  const [outputHandles, setOutputHandles] = useState<BaseNodeHandle[]>(
+    data.outputs ?? [],
+  );
 
   form.watch(() => {
     const formValues = form.getValues();
@@ -81,14 +93,13 @@ const E2BInterpreterNode: FC<CustomCodeNodeProps> = ({ data, id: nodeId }) => {
 
   return (
     <BaseNode
-      outputHandles={[
-        {
-          label: "Function output",
-          id: generateHandleId("text", "function-output"),
-          type: "text",
-        },
-      ]}
-      // TODO: make the type match the BaseNodeHandle type
+      outputHandles={outputHandles.map((output) => {
+        return {
+          label: output.label,
+          id: output.id,
+          type: "any",
+        };
+      })}
       inputHandles={inputHandles.map((input) => ({
         label: input.label,
         id: input.id,
@@ -143,7 +154,15 @@ const E2BInterpreterNode: FC<CustomCodeNodeProps> = ({ data, id: nodeId }) => {
                         }}
                         onChange={(values) => {
                           field.onChange(values.code);
-                          console.log("values.inputs", values.inputs);
+                          if (!!values.outputs?.keys?.length) {
+                            setOutputHandles(
+                              values.outputs.keys.map((key) => ({
+                                label: sanitizeHandleLabel(key),
+                                id: generateHandleId("any", key),
+                                type: "any",
+                              })),
+                            );
+                          }
                           if (!!values.inputs?.length) {
                             setInputHandles(
                               values.inputs.map((input) => ({

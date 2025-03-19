@@ -24,7 +24,7 @@ export const parseCodeForRequiredModules = (code: string) => {
     ) {
       node.declarationList.declarations.forEach((declaration) => {
         if (
-          ts.isCallExpression(declaration.initializer) &&
+          ts.isCallExpression(declaration.initializer!) &&
           ts.isIdentifier(declaration.initializer.expression) &&
           declaration.initializer.expression.text === "require" &&
           declaration.initializer.arguments.length === 1 &&
