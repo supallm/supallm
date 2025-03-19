@@ -22,7 +22,6 @@ type EventContext =
 
 export class RedisNotifier implements INotifier {
   private redis: Redis;
-  private readonly WORKFLOW_STORE_STREAM = STREAMS.STORE;
   private readonly WORKFLOW_DISPATCH_STREAM = STREAMS.DISPATCH;
   private readonly NODE_RESULTS_STREAM = STREAMS.NODE_RESULTS;
 
