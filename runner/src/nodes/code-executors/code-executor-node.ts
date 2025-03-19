@@ -1,4 +1,4 @@
-import { execSync } from "child_process";
+import { execSync, spawn } from "child_process";
 import * as crypto from "crypto";
 import * as fs from "fs";
 import * as path from "path";
@@ -7,6 +7,7 @@ import {
   parseCodeForRequiredModules,
   validateMainFunctionExists,
 } from "../../utils/typescript-utils";
+import { spawnProcessAsync } from "./spawn-async";
 
 type Arguments = Record<string, any>;
 
@@ -36,7 +37,19 @@ export class CodeExecutorNode {
     try {
       switch (language) {
         case "typescript":
-          return this.runTypeScript(code, arguments);
+          const res = await this.runTypeScript(
+            code,
+            arguments,
+            (data) => {
+              console.log("STDOUT", data);
+            },
+            (data) => {
+              console.log("STDERR", data);
+            },
+          );
+
+          console.log("FINAL RESULT=>", res);
+          return res;
         default:
           assertUnreachable(language);
       }
@@ -51,7 +64,8 @@ export class CodeExecutorNode {
     ${code}
 
     (async () => {
-        main();
+        const result = await Promise.resolve(main())
+        console.log('__FUNCTION_RESULT__', JSON.stringify(result))
   })()
   `;
   }
@@ -60,14 +74,12 @@ export class CodeExecutorNode {
     return validateMainFunctionExists(code);
   }
 
-  runTypeScript(
+  async runTypeScript(
     code: string,
     args: Arguments,
-  ): {
-    stdout: string;
-    stderr: string;
-    exitCode: number;
-  } {
+    onStdout: (data: string) => void,
+    onStderr: (data: string) => void,
+  ) {
     const validateScript = this.isScriptValid(code);
 
     if (!validateScript) {
@@ -91,47 +103,55 @@ export class CodeExecutorNode {
     const sandboxId = crypto.randomBytes(4).toString("hex");
     const sandboxPath = path.join(SANDBOX_ROOT, sandboxId);
     fs.mkdirSync(sandboxPath, { recursive: true });
+    console.log("Created directory:", sandboxPath);
 
     // 2. Write the TypeScript file inside the unique sandbox
     const tsFilePath = path.join(sandboxPath, "script.ts");
     fs.writeFileSync(tsFilePath, callableScript);
+    console.log("Wrote script to:", tsFilePath);
 
     const tsConfigFilePath = path.join(sandboxPath, "tsconfig.json");
     const tsConfig = fs.readFileSync(TS_CONFIG, "utf8");
-    console.log("**** TS CONFIG ***", tsConfig);
-    console.log("**** TS CONFIG FILE PATH ***", tsConfigFilePath);
     fs.writeFileSync(tsConfigFilePath, tsConfig);
-
+    console.log("Wrote tsconfig to:", tsConfigFilePath);
     // 3. Generate a temporary `.proto` file with the sandbox ID
     const protoFilePath = path.join(sandboxPath, "sandbox.proto");
     const protoTemplate = fs.readFileSync(NSJAIL_TEMPLATE, "utf8");
     const protoContent = protoTemplate.replace(/{SANDBOX_ID}/g, sandboxId);
     fs.writeFileSync(protoFilePath, protoContent);
+    console.log("Wrote njail proto to:", protoFilePath);
 
     try {
-      // 4. Compile TypeScript inside `nsjail`
       const compileResult = execSync(
         `${NSJAIL_PATH} --config ${protoFilePath} -- /bin/sh -c "cd sandbox && ls -la && tsc --project tsconfig.json && tsc --showConfig script.ts"`,
-        { cwd: sandboxPath, stdio: "inherit" },
-      );
-
-      console.log("**** COMPILED ***");
-
-      // 5. Execute the compiled JavaScript file inside `nsjail`
-      const result = execSync(
-        `${NSJAIL_PATH} --config ${protoFilePath} -- /bin/node sandbox/dist/script.js`,
         { cwd: sandboxPath, encoding: "utf8" },
       );
 
-      console.log("**** EXECUTED ***");
-      console.log(result);
+      const spawnFunc = () =>
+        spawn(
+          NSJAIL_PATH,
+          [
+            "--config",
+            protoFilePath,
+            "--",
+            "/bin/node",
+            "sandbox/dist/script.js",
+          ],
+          {
+            shell: true,
+            cwd: sandboxPath,
+          },
+        );
 
-      return { stdout: result, stderr: "", exitCode: 0 };
+      const result = await spawnProcessAsync(spawnFunc, onStdout, onStderr);
+
+      // TODO: handle the case where the result is not parseable. How to do it?
+      return JSON.parse(result);
     } catch (error: any) {
       return { stdout: "", stderr: error.message, exitCode: error.status ?? 1 };
     } finally {
-      // 6. Cleanup: Remove the sandbox folder and temporary `.proto` file
-      fs.rmSync(sandboxPath, { recursive: true, force: true });
+      //   // 6. Cleanup: Remove the sandbox folder and temporary `.proto` file
+      //   fs.rmSync(sandboxPath, { recursive: true, force: true });
     }
   }
 }
@@ -139,7 +159,15 @@ export class CodeExecutorNode {
 const codeExecutorNode = new CodeExecutorNode();
 
 codeExecutorNode.execute(
-  "function main() { console.log('Hello, world!'); }",
+  `function main() {
+    let i = 0;
+    while (i < 5) {
+        console.log("Hello, world!", i);
+        i++;
+    }
+
+    return { coucou: true }
+  }`,
   "typescript",
   {},
 );
