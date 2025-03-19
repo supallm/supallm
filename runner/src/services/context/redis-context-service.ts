@@ -46,16 +46,22 @@ export class RedisContextService implements IContextService {
     definition: WorkflowDefinition,
     options: WorkflowExecutionOptions
   ): Promise<ManagedExecutionContext> {
-    const existingContext = await this.getContext(workflowId);
+    const triggerId = options.triggerId;
+    const existingContext = await this.getContext(workflowId, triggerId);
 
     if (existingContext) {
-      return new ManagedExecutionContext(this, workflowId, existingContext);
+      return new ManagedExecutionContext(
+        this,
+        workflowId,
+        triggerId,
+        existingContext
+      );
     }
 
     const newContext = this.initializeContext(workflowId, definition, options);
-    await this.saveContext(workflowId, newContext);
+    await this.saveContext(workflowId, triggerId, newContext);
 
-    return new ManagedExecutionContext(this, workflowId, newContext);
+    return new ManagedExecutionContext(this, workflowId, triggerId, newContext);
   }
 
   private initializeContext(
@@ -67,24 +73,18 @@ export class RedisContextService implements IContextService {
       workflowId,
       sessionId: options.sessionId,
       triggerId: options.triggerId,
-      nodeExecutions: {
-        entrypoint: {
-          id: "entrypoint",
-          success: false,
-          inputs: options.inputs || {},
-          output: null,
-          executionTime: 0,
-        },
-      },
+      workflowInputs: options.inputs,
+      nodeExecutions: {},
       completedNodes: new Set<string>(),
       allNodes: new Set(Object.keys(definition.nodes)),
     };
   }
 
   private async getContext(
-    workflowId: string
+    workflowId: string,
+    triggerId: string
   ): Promise<ExecutionContext | null> {
-    const key = this.getKey(workflowId);
+    const key = this.getKey(workflowId, triggerId);
     const data = await this.redis.get(key);
 
     if (!data) {
@@ -96,26 +96,28 @@ export class RedisContextService implements IContextService {
       const parsedData = JSON.parse(data);
       return this.deserializeContext(parsedData);
     } catch (error) {
-      logger.error(`Failed to parse context for workflow ${workflowId}`, error);
+      logger.error(`failed to parse context for workflow ${workflowId}`, error);
       return null;
     }
   }
 
   async getManagedContext(
-    workflowId: string
+    workflowId: string,
+    triggerId: string
   ): Promise<ManagedExecutionContext | null> {
-    const context = await this.getContext(workflowId);
+    const context = await this.getContext(workflowId, triggerId);
     if (!context) {
       return null;
     }
-    return new ManagedExecutionContext(this, workflowId, context);
+    return new ManagedExecutionContext(this, workflowId, triggerId, context);
   }
 
   async updateContext(
     workflowId: string,
+    triggerId: string,
     update: Partial<ExecutionContext>
   ): Promise<void> {
-    const context = await this.getContext(workflowId);
+    const context = await this.getContext(workflowId, triggerId);
 
     if (!context) {
       logger.error(
@@ -125,11 +127,15 @@ export class RedisContextService implements IContextService {
     }
 
     const updatedContext = { ...context, ...update };
-    await this.saveContext(workflowId, updatedContext);
+    await this.saveContext(workflowId, triggerId, updatedContext);
   }
 
-  async markNodeCompleted(workflowId: string, nodeId: string): Promise<void> {
-    const context = await this.getContext(workflowId);
+  async markNodeCompleted(
+    workflowId: string,
+    triggerId: string,
+    nodeId: string
+  ): Promise<void> {
+    const context = await this.getContext(workflowId, triggerId);
 
     if (!context) {
       logger.error(
@@ -139,18 +145,19 @@ export class RedisContextService implements IContextService {
     }
 
     context.completedNodes.add(nodeId);
-    await this.saveContext(workflowId, context);
+    await this.saveContext(workflowId, triggerId, context);
   }
 
-  private getKey(workflowId: string): string {
-    return `${this.keyPrefix}${workflowId}`;
+  private getKey(workflowId: string, triggerId: string): string {
+    return `${this.keyPrefix}${workflowId}:${triggerId}`;
   }
 
   private async saveContext(
     workflowId: string,
+    triggerId: string,
     context: ExecutionContext
   ): Promise<void> {
-    const key = this.getKey(workflowId);
+    const key = this.getKey(workflowId, triggerId);
     const serialized = this.serializeContext(context);
     await this.redis.set(key, JSON.stringify(serialized), "EX", this.ttl);
   }

@@ -1,9 +1,6 @@
-import { NodeDefinition } from "../../interfaces/node";
+import { NodeDefinition } from "../../nodes/types";
 import { NodeExecutionResult } from "../context";
-
-export interface WorkflowInputs {
-  [key: string]: any;
-}
+import { WorkflowInputs } from "../context/context.interface";
 
 export interface WorkflowDefinition {
   nodes: Record<string, NodeDefinition>;

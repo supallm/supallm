@@ -1,4 +1,4 @@
-import { NodeInput, NodeIOType, NodeOutput } from "../../interfaces/node";
+import { NodeInput, NodeIOType, NodeOutput } from "../../nodes/types";
 
 export const WorkflowEvents = {
   WORKFLOW_STARTED: "WORKFLOW_STARTED",
@@ -22,7 +22,7 @@ export interface WorkflowEvent {
 
 export interface INotifier {
   initialize(): Promise<void>;
-  publishWorkflowEvent(event: WorkflowEvent): Promise<string[]>;
+  publishWorkflowEvent(event: WorkflowEvent): Promise<string>;
   publishNodeResult(event: WorkflowEvent): Promise<string>;
   close(): Promise<void>;
 }

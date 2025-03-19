@@ -3,8 +3,12 @@ import {
   WorkflowDefinition,
   WorkflowExecutionOptions,
 } from "../workflow/types";
-import { NodeDefinition } from "../../interfaces/node";
+import { NodeDefinition } from "../../nodes/types";
 import { logger } from "../../utils/logger";
+
+export interface WorkflowInputs {
+  [key: string]: any;
+}
 
 export interface NodeExecution {
   id: string;
@@ -19,6 +23,7 @@ export interface ExecutionContext {
   workflowId: string;
   sessionId: string;
   triggerId: string;
+  workflowInputs: WorkflowInputs;
   nodeExecutions: Record<string, NodeExecution>;
   completedNodes: Set<string>;
   allNodes: Set<string>;
@@ -31,10 +36,12 @@ export interface IContextService {
     options: WorkflowExecutionOptions
   ): Promise<ManagedExecutionContext>;
   getManagedContext(
-    workflowId: string
+    workflowId: string,
+    triggerId: string
   ): Promise<ManagedExecutionContext | null>;
   updateContext(
     workflowId: string,
+    triggerId: string,
     update: Partial<ExecutionContext>
   ): Promise<void>;
 }
@@ -45,17 +52,22 @@ export class ManagedExecutionContext {
   constructor(
     private readonly contextService: IContextService,
     readonly workflowId: string,
+    readonly triggerId: string,
     context: ExecutionContext
   ) {
     this.context = context;
   }
 
-  internal(): ExecutionContext {
+  get get(): ExecutionContext {
     return _.cloneDeep(this.context);
   }
 
   private async sync(): Promise<void> {
-    await this.contextService.updateContext(this.workflowId, this.context);
+    await this.contextService.updateContext(
+      this.workflowId,
+      this.triggerId,
+      this.context
+    );
   }
 
   async addNode(nodeId: string, execution: NodeExecution): Promise<void> {
@@ -135,6 +147,10 @@ export class ManagedExecutionContext {
     definition: NodeDefinition
   ): Record<string, any> {
     const resolvedInputs: Record<string, any> = {};
+
+    if (nodeId === "entrypoint") {
+      return this.context.workflowInputs;
+    }
 
     if (!definition.inputs) return resolvedInputs;
 

@@ -5,7 +5,7 @@ import {
   NodeOutput,
   NodeType,
   INode,
-} from "../../interfaces/node";
+} from "../types";
 
 export class EntrypointNode implements INode {
   type: NodeType;

@@ -6,7 +6,7 @@ import {
   NodeInput,
   NodeOutput,
   NodeType,
-} from "../../interfaces/node";
+} from "../types";
 import { logger } from "../../utils/logger";
 import { CryptoService } from "../../services/crypto-service";
 import { BaseLLMProvider, LLMOptions } from "./base-provider";

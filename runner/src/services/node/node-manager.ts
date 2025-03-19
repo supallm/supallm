@@ -3,8 +3,8 @@ import {
   NodeDefinition,
   NodeResultCallback,
   NodeInput,
-} from "../../interfaces/node";
-import { INode } from "../../interfaces/node";
+} from "../../nodes/types";
+import { INode } from "../../nodes/types";
 import { EntrypointNode } from "../../nodes/base/entrypoint-node";
 import { ResultNode } from "../../nodes/base/result-node";
 import { LLMNode } from "../../nodes/llm/llm-node";
