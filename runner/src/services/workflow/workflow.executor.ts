@@ -71,8 +71,6 @@ export class WorkflowExecutor extends EventEmitter {
         break;
       }
 
-      logger.info(`executing nodes: ${JSON.stringify(readyNodes)}`);
-
       const results = await this.executeReadyNodes(
         managedContext,
         readyNodes,

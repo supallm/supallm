@@ -20,16 +20,14 @@ const (
 	DownstreamWorkflowRunTopic = "workflows:downstream:run" // queue of workflows to run by runners
 
 	// Upstream topics (runner → API)
-	UpstreamWorkflowEventStoreTopic    = "workflows:upstream:events:store"    // store workflow events
 	UpstreamWorkflowEventDispatchTopic = "workflows:upstream:events:dispatch" // dispatch workflow events
 	UpstreamNodeResultTopic            = "workflows:upstream:nodes:results"   // nodes results
 
 	// Internal topics
 	InternalEventsTopic = "workflows:internal:events" // merged workflow events for clients stream
 
-	ConsumerGroup = "store-workflows-events-consumer-group"
-	CloseTimeout  = 10 * time.Second
-	MaxQueueLen   = 400
+	CloseTimeout = 10 * time.Second
+	MaxQueueLen  = 400
 )
 
 type EventRouter struct {
@@ -61,12 +59,6 @@ func CreateRouter(config Config) *EventRouter {
 		config.Logger,
 	)
 
-	consumerGroupSubscriber, err := createSubscriber(config, ConsumerGroup)
-	if err != nil {
-		slog.Error("error creating redis stream consumer group subscriber", "error", err)
-		os.Exit(1)
-	}
-
 	subscriber, err := createSubscriber(config, "")
 	if err != nil {
 		slog.Error("error creating redis stream subscriber", "error", err)
@@ -78,18 +70,6 @@ func CreateRouter(config Config) *EventRouter {
 		slog.Error("error creating redis stream runner publisher", "error", err)
 		os.Exit(1)
 	}
-
-	router.AddNoPublisherHandler(
-		"workflows-store-events-router",
-		UpstreamWorkflowEventStoreTopic,
-		consumerGroupSubscriber,
-		func(msg *message.Message) error {
-			// call handler to store events here
-			// slog.Info("received workflow event", "event", msg.Payload)
-			return nil
-		},
-	)
-
 	// FanIn is used to merge events from different sources into a single topic
 	// in our case we merge events from workflows and nodes to our internal subscriber
 	fi, err := fanin.NewFanIn(

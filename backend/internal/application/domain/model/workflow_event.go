@@ -18,6 +18,25 @@ const (
 	WorkflowEventNodeResult WorkflowEventType = "NODE_RESULT"
 )
 
+func (e WorkflowEventType) IsWorkflowEvent() bool {
+	return e == WorkflowStarted ||
+		e == WorkflowCompleted ||
+		e == WorkflowNodeStarted
+}
+
+func (e WorkflowEventType) IsWorkflowCompleted() bool {
+	return e == WorkflowCompleted
+}
+
+func (e WorkflowEventType) IsNodeEvent() bool {
+	return e == WorkflowEventNodeResult
+}
+
+func (e WorkflowEventType) IsWorkflowError() bool {
+	return e == WorkflowFailed ||
+		e == WorkflowNodeFailed
+}
+
 type WorkflowEvent struct {
 	ID         uuid.UUID
 	ProjectID  uuid.UUID
