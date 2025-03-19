@@ -98,6 +98,8 @@ export class RunnerServer {
       WorkflowEvents.NODE_RESULT,
       this.handleNodeResult.bind(this)
     );
+
+    this.executor.on(WorkflowEvents.NODE_LOG, this.handleNodeLog.bind(this));
   }
 
   private async handleWorkflowEvent(
@@ -159,6 +161,20 @@ export class RunnerServer {
         outputField: data.outputField,
         data: data.data,
         type: data.type,
+      },
+    });
+  }
+
+  private async handleNodeLog(data: any): Promise<void> {
+    await this.notifier.publishNodeLog({
+      type: WorkflowEvents.NODE_LOG,
+      workflowId: data.workflowId,
+      triggerId: data.triggerId,
+      sessionId: data.sessionId,
+      data: {
+        nodeId: data.nodeId,
+        nodeType: data.nodeType,
+        message: data.message,
       },
     });
   }

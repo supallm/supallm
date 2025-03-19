@@ -15,16 +15,12 @@ const STREAMS = {
 
 type RedisStreamId = string;
 type StreamName = (typeof STREAMS)[keyof typeof STREAMS];
-type EventContext =
-  | "store workflow event"
-  | "dispatch workflow event"
-  | "node result";
+type EventContext = "dispatch workflow event" | "node result" | "node log";
 
 export class RedisNotifier implements INotifier {
   private redis: Redis;
   private readonly WORKFLOW_DISPATCH_STREAM = STREAMS.DISPATCH;
   private readonly NODE_RESULTS_STREAM = STREAMS.NODE_RESULTS;
-
   constructor(redisUrl: string) {
     this.redis = this.initializeRedisClient(redisUrl);
   }
@@ -127,6 +123,14 @@ export class RedisNotifier implements INotifier {
     );
   }
 
+  async publishNodeLog(event: WorkflowEvent): Promise<RedisStreamId> {
+    return this.publish(
+      this.NODE_RESULTS_STREAM,
+      DEFAULT_MAX_RESULTS_LENGTH,
+      event,
+      "node log"
+    );
+  }
   async close(): Promise<void> {
     await this.redis.quit();
   }

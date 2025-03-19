@@ -197,6 +197,9 @@ export class WorkflowExecutor extends EventEmitter {
             managedContext
           );
         },
+        onNodeLog: async (nodeId: string, message: string) => {
+          this.emitNodeLog(nodeId, node.type, message, managedContext);
+        },
       });
 
       this.emitNodeCompleted(nodeId, node, output, managedContext);
@@ -350,6 +353,19 @@ export class WorkflowExecutor extends EventEmitter {
     });
   }
 
+  private emitNodeLog(
+    nodeId: string,
+    nodeType: string,
+    message: string,
+    context: ManagedExecutionContext
+  ): void {
+    this.emit(WorkflowEvents.NODE_LOG, {
+      ...this.createBaseEventData(context.get),
+      nodeId,
+      nodeType,
+      message,
+    });
+  }
   emit<K extends keyof WorkflowExecutorEvents>(
     event: K,
     data: Parameters<WorkflowExecutorEvents[K]>[0]
