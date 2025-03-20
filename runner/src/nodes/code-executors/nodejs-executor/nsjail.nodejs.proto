@@ -12,6 +12,11 @@ rlimit_as: 4096         # Max memory usage
 
 disable_no_new_privs: true
 
+clone_newnet: false # Disable network isolation to enable internet for npm install
+
+envar: "HOME=/home"
+envar: "TMP=/tmp"
+
 mount: {
     src: "/tmp/nsjail/{SANDBOX_ID}"
     dst: "/sandbox"
@@ -35,4 +40,30 @@ mount {
     src: "/usr"
     dst: "/usr"
 	is_bind: true
+}
+
+mount {
+  dst: "/tmp"
+  fstype: "tmpfs"
+  rw: true
+  is_bind: false
+}
+
+mount {
+  dst: "/home"
+  fstype: "tmpfs"
+  rw: true
+  is_bind: false
+}
+
+mount {
+  src: "/dev/null"
+  dst: "/dev/null"
+  rw: true
+  is_bind: true
+}
+
+mount  {
+   src_content: "nameserver 8.8.8.8"
+   dst: "/etc/resolv.conf"
 }
