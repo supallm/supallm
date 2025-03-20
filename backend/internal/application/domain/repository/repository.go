@@ -26,3 +26,9 @@ type WorkflowEventRepository interface {
 	Create(ctx context.Context, workflowEvent *model.WorkflowEvent) error
 	Retrieve(ctx context.Context, id uuid.UUID) (*model.WorkflowEvent, error)
 }
+
+type UserRepository interface {
+	CreateUser(ctx context.Context, user *model.User) error
+	GetUserByEmail(ctx context.Context, email string) (*model.User, error)
+	GetUserByID(ctx context.Context, id uuid.UUID) (*model.User, error)
+}

@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 
-	"github.com/clerk/clerk-sdk-go/v2"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/supallm/core/internal/pkg/auth"
 	"github.com/supallm/core/internal/pkg/errs"
 	"github.com/supallm/core/internal/pkg/secret"
 )
@@ -24,16 +25,16 @@ const (
 	secretKeyContextKey contextKey = "secret-key"
 )
 
-func (s *Server) storeUserID(ctx context.Context, userID string) context.Context {
-	return context.WithValue(ctx, userIDKey, userID)
+func (s *Server) storeUser(ctx context.Context, user auth.User) context.Context {
+	return context.WithValue(ctx, userIDKey, user)
 }
 
-func (s *Server) GetUserID(ctx context.Context) string {
-	id, ok := ctx.Value(userIDKey).(string)
+func (s *Server) GetUser(ctx context.Context) *auth.User {
+	user, ok := ctx.Value(userIDKey).(auth.User)
 	if !ok {
-		return ""
+		return nil
 	}
-	return id
+	return &user
 }
 
 func (s *Server) applyCommonMiddleware() {
@@ -58,41 +59,37 @@ func (s *Server) applyCommonMiddleware() {
 	}))
 }
 
-func (s *Server) ClerkAuthMiddleware(next http.Handler) http.Handler {
-	clerk.SetKey(s.conf.Clerk.SecretKey)
+func (s *Server) JWTAuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := s.storeUserID(r.Context(), "12345")
+		if r.URL.Path == "/login" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		authHeader := r.Header.Get("Authorization")
+		sessionToken := strings.TrimPrefix(authHeader, "Bearer ")
+
+		if sessionToken == "" || sessionToken == authHeader {
+			s.RespondErr(w, r, errs.UnauthorizedError{
+				Err: errors.New("invalid or missing authorization token"),
+			})
+			return
+		}
+
+		claims, err := auth.VerifyToken(sessionToken, s.conf.Auth.SecretKey)
+		if err != nil {
+			s.RespondErr(w, r, errs.UnauthorizedError{
+				Err: err,
+			})
+			return
+		}
+
+		ctx := s.storeUser(r.Context(), auth.User{
+			ID:    claims.UserID.String(),
+			Email: claims.Email,
+			Name:  claims.Name,
+		})
 		next.ServeHTTP(w, r.WithContext(ctx))
-		// authHeader := c.Get("Authorization")
-		// sessionToken := strings.TrimPrefix(authHeader, "Bearer ")
-
-		// if sessionToken == "" || sessionToken == authHeader {
-		// 	return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-		// 		"error": "Invalid or missing authorization token",
-		// 	})
-		// }
-
-		// claims, err := jwt.Verify(c.Context(), &jwt.VerifyParams{
-		// 	Token: sessionToken,
-		// })
-		// if err != nil {
-		// 	return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-		// 		"error": "Unauthorized: invalid token",
-		// 	})
-		// }
-
-		// usr, err := user.Get(c.Context(), claims.Subject)
-		// if err != nil {
-		// 	return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-		// 		"error": "Failed to retrieve user information",
-		// 	})
-		// }
-
-		// if usr.Banned {
-		// 	return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
-		// 		"error": "User is banned",
-		// 	})
-		// }
 	})
 }
 

@@ -21,7 +21,7 @@ func (s *Server) CreateProject(w http.ResponseWriter, r *http.Request) {
 	err := s.app.Commands.CreateProject.Handle(r.Context(), command.CreateProjectCommand{
 		ID:     projectID,
 		Name:   req.Name,
-		UserID: s.server.GetUserID(r.Context()),
+		UserID: s.server.GetUser(r.Context()).ID,
 	})
 	if err != nil {
 		s.server.RespondErr(w, r, err)
@@ -90,7 +90,7 @@ func (s *Server) DeleteProject(w http.ResponseWriter, r *http.Request, _ gen.UUI
 
 func (s *Server) ListProjects(w http.ResponseWriter, r *http.Request) {
 	projects, err := s.app.Queries.ListProjects.Handle(r.Context(), query.ListProjectsQuery{
-		UserID: s.server.GetUserID(r.Context()),
+		UserID: s.server.GetUser(r.Context()).ID,
 	})
 	if err != nil {
 		s.server.RespondErr(w, r, err)
