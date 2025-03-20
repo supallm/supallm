@@ -25,16 +25,16 @@ const (
 	secretKeyContextKey contextKey = "secret-key"
 )
 
-func (s *Server) storeUserID(ctx context.Context, userID string) context.Context {
-	return context.WithValue(ctx, userIDKey, userID)
+func (s *Server) storeUser(ctx context.Context, user auth.User) context.Context {
+	return context.WithValue(ctx, userIDKey, user)
 }
 
-func (s *Server) GetUserID(ctx context.Context) string {
-	id, ok := ctx.Value(userIDKey).(string)
+func (s *Server) GetUser(ctx context.Context) *auth.User {
+	user, ok := ctx.Value(userIDKey).(auth.User)
 	if !ok {
-		return ""
+		return nil
 	}
-	return id
+	return &user
 }
 
 func (s *Server) applyCommonMiddleware() {
@@ -61,6 +61,11 @@ func (s *Server) applyCommonMiddleware() {
 
 func (s *Server) JWTAuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/login" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
 		authHeader := r.Header.Get("Authorization")
 		sessionToken := strings.TrimPrefix(authHeader, "Bearer ")
 
@@ -79,7 +84,11 @@ func (s *Server) JWTAuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := s.storeUserID(r.Context(), claims.UserID.String())
+		ctx := s.storeUser(r.Context(), auth.User{
+			ID:    claims.UserID.String(),
+			Email: claims.Email,
+			Name:  claims.Name,
+		})
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

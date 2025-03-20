@@ -32,6 +32,22 @@ paths:
         "401":
           description: Authentication failed
 
+  /me:
+    get:
+      summary: Get the current user
+      operationId: getMe
+      tags:
+        - User
+      responses:
+        "200":
+          description: Current user details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthorized
+
   /projects:
     get:
       summary: List all projects

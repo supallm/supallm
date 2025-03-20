@@ -1,11 +1,13 @@
 package http
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/supallm/core/internal/application/command"
 	"github.com/supallm/core/internal/application/query"
 	"github.com/supallm/core/internal/infra/http/gen"
+	"github.com/supallm/core/internal/pkg/errs"
 )
 
 func (s *Server) Login(w http.ResponseWriter, r *http.Request) {
@@ -31,14 +33,21 @@ func (s *Server) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := gen.LoginResponse{
+	s.server.Respond(w, r, http.StatusOK, gen.LoginResponse{
 		Token: result.String(),
 		User: gen.User{
 			Id:    user.ID,
 			Email: user.Email,
 			Name:  user.Name,
 		},
-	}
+	})
+}
 
-	s.server.Respond(w, r, http.StatusOK, resp)
+func (s *Server) GetMe(w http.ResponseWriter, r *http.Request) {
+	user := s.server.GetUser(r.Context())
+	if user == nil {
+		s.server.RespondErr(w, r, errs.UnauthorizedError{Err: errors.New("user not found")})
+		return
+	}
+	s.server.Respond(w, r, http.StatusOK, user)
 }

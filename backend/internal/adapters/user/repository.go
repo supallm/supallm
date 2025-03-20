@@ -2,60 +2,53 @@ package user
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
+	adapterrors "github.com/supallm/core/internal/adapters/errors"
 	"github.com/supallm/core/internal/application/domain/model"
 	"github.com/supallm/core/internal/application/query"
 	"github.com/supallm/core/internal/pkg/auth"
-	"github.com/supallm/core/internal/pkg/config"
-	"github.com/supallm/core/internal/pkg/errs"
 )
 
 type repository struct {
 	pool *pgxpool.Pool
 	q    *Queries
-	conf config.Auth
 }
 
-func NewRepository(_ context.Context, pool *pgxpool.Pool, conf config.Auth) repository {
+func NewRepository(_ context.Context, pool *pgxpool.Pool) repository {
 	return repository{
 		pool: pool,
 		q:    New(pool),
-		conf: conf,
 	}
 }
 
-func (r repository) LoadFixtures(ctx context.Context) error {
-	hasUser, err := r.q.hasUser(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to get user: %w", err)
-	}
-	if hasUser {
+func (r repository) errorDecoder(err error) error {
+	if err == nil {
 		return nil
 	}
 
-	hash, err := auth.HashPassword(r.conf.InitialUser.Password)
-	if err != nil {
-		return fmt.Errorf("failed to hash password: %w", err)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return fmt.Errorf("%w: %v", adapterrors.ErrNotFound, err.Error())
 	}
 
-	user := &model.User{
-		ID:           uuid.New(),
-		Email:        r.conf.InitialUser.Email,
-		Name:         r.conf.InitialUser.Name,
-		PasswordHash: hash,
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		switch pgErr.Code {
+		case "23505", "23514":
+			return fmt.Errorf("%w: %v", adapterrors.ErrDuplicate, err.Error())
+		case "23503", "23502", "22P02", "42P01", "42703":
+			return fmt.Errorf("%w: %v", adapterrors.ErrInvalid, err.Error())
+		case "P0002":
+			return fmt.Errorf("%w: %v", adapterrors.ErrConflict, err.Error())
+		}
 	}
 
-	err = r.CreateUser(ctx, user)
-	if err != nil {
-		return fmt.Errorf("failed to create user: %w", err)
-	}
-
-	return nil
+	return err
 }
 
 func (r repository) CreateUser(ctx context.Context, u *model.User) error {
@@ -75,13 +68,7 @@ func (r repository) CreateUser(ctx context.Context, u *model.User) error {
 func (r repository) GetUserByEmail(ctx context.Context, email string) (*model.User, error) {
 	u, err := r.q.getUserByEmail(ctx, email)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errs.NotFoundError{
-				Resource: "user",
-				Err:      fmt.Errorf("user with email %s not found", email),
-			}
-		}
-		return nil, fmt.Errorf("failed to get user by email: %w", err)
+		return nil, r.errorDecoder(err)
 	}
 
 	return mapDBUserToDomain(u), nil
@@ -90,13 +77,7 @@ func (r repository) GetUserByEmail(ctx context.Context, email string) (*model.Us
 func (r repository) GetUserByID(ctx context.Context, id uuid.UUID) (*model.User, error) {
 	u, err := r.q.getUserByID(ctx, id)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errs.NotFoundError{
-				Resource: "user",
-				Err:      fmt.Errorf("user with id %s not found", id),
-			}
-		}
-		return nil, fmt.Errorf("failed to get user by ID: %w", err)
+		return nil, r.errorDecoder(err)
 	}
 
 	return mapDBUserToDomain(u), nil
