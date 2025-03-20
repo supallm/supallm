@@ -6,6 +6,7 @@ import {
   NodeInput,
   NodeOutput,
   NodeType,
+  NodeLogCallback,
 } from "../types";
 import { logger } from "../../utils/logger";
 import { CryptoService } from "../../services/crypto-service";
@@ -46,6 +47,7 @@ export class LLMNode implements INode {
     inputs: NodeInput,
     options: {
       onNodeResult: NodeResultCallback;
+      onNodeLog: NodeLogCallback;
     }
   ): Promise<NodeOutput> {
     try {

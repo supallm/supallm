@@ -73,6 +73,8 @@ func (j workflowSSEMarshaller) Marshal(_ context.Context, payload any) (watermil
 			eventType = "complete"
 		case msg.Type.IsWorkflowEvent():
 			eventType = "workflow"
+		case msg.Type.IsNodeLog():
+			eventType = "log"
 		case msg.Type.IsWorkflowError():
 			eventType = "error"
 		}

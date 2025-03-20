@@ -5,6 +5,7 @@ import {
   NodeOutput,
   NodeType,
   INode,
+  NodeLogCallback,
 } from "../types";
 
 export class EntrypointNode implements INode {
@@ -20,6 +21,7 @@ export class EntrypointNode implements INode {
     inputs: NodeInput,
     options: {
       onNodeResult: NodeResultCallback;
+      onNodeLog: NodeLogCallback;
     }
   ): Promise<NodeOutput> {
     // entrypoint node is the first node to be executed

@@ -5,6 +5,7 @@ import {
   NodeOutput,
   NodeType,
   INode,
+  NodeLogCallback,
 } from "../types";
 
 export class ResultNode implements INode {
@@ -20,6 +21,7 @@ export class ResultNode implements INode {
     inputs: NodeInput,
     options: {
       onNodeResult: NodeResultCallback;
+      onNodeLog: NodeLogCallback;
     }
   ): Promise<NodeOutput> {
     // result node is the last node to be executed

@@ -32,11 +32,14 @@ const (
 	WorkflowStatusPublished WorkflowStatus = "published"
 	WorkflowStatusArchived  WorkflowStatus = "archived"
 
-	ResultNodeID  = "result-node"
-	EntrypointID  = "entrypoint"
-	TextHandleID  = "text"
-	ImageHandleID = "image"
-	AnyHandleID   = "any"
+	ResultNodeID = "result-node"
+	EntrypointID = "entrypoint-node"
+
+	TextType  = "text"
+	ImageType = "image"
+	AnyType   = "any"
+
+	LLMNodeType = "llm"
 )
 
 type Workflow struct {
@@ -120,8 +123,8 @@ type RunnerInput struct {
 }
 
 type RunnerOutput struct {
-	Type   string `json:"type,omitempty"`
-	Notify bool   `json:"notify,omitempty"`
+	Type      string `json:"type,omitempty"`
+	ResultKey string `json:"result_key,omitempty"`
 }
 
 func (p *Project) CreateWorkflow(id WorkflowID, name string, builderFlow json.RawMessage) (*Workflow, error) {
@@ -212,352 +215,245 @@ func (p *Project) ComputeRunnerFlow(builderFlowJSON json.RawMessage) (json.RawMe
 	return runnerFlowJSON, nil
 }
 
-// convertBuilderToRunnerFlow convertit le flow builder en flow runner
-
 func (p *Project) convertBuilderToRunnerFlow(builderFlow BuilderFlow) (map[string]any, error) {
-	result := make(map[string]any)
-	nodes := make(map[string]any)
-	result["nodes"] = nodes
+	result := map[string]any{
+		"nodes": map[string]any{},
+	}
+	nodes := result["nodes"].(map[string]any)
 
-	// Créer une carte pour stocker les connexions entrantes
-	incomingConnections := make(map[string][]struct {
-		SourceID     string
-		SourceHandle string
-		TargetHandle string
-	})
-
-	// Créer une carte pour stocker les connexions sortantes
-	outgoingConnections := make(map[string][]struct {
-		TargetID     string
-		SourceHandle string
-		TargetHandle string
-	})
-
-	// Analyser toutes les connexions
-	for _, edge := range builderFlow.Edges {
-		// Connexions entrantes
-		incomingConnections[edge.Target] = append(incomingConnections[edge.Target], struct {
-			SourceID     string
-			SourceHandle string
-			TargetHandle string
-		}{
-			SourceID:     edge.Source,
-			SourceHandle: edge.SourceHandle,
-			TargetHandle: edge.TargetHandle,
-		})
-
-		// Connexions sortantes
-		outgoingConnections[edge.Source] = append(outgoingConnections[edge.Source], struct {
-			TargetID     string
-			SourceHandle string
-			TargetHandle string
-		}{
-			TargetID:     edge.Target,
-			SourceHandle: edge.SourceHandle,
-			TargetHandle: edge.TargetHandle,
-		})
+	// Create a map of nodeID -> builderNode for easier lookup
+	nodeMap := make(map[string]BuilderNode)
+	for _, node := range builderFlow.Nodes {
+		nodeMap[node.ID] = node
 	}
 
-	// Construire une carte des nœuds par ID pour un accès facile
-	nodesMap := make(map[string]BuilderNode)
+	// First pass: Add all nodes to the result map with their basic info
 	for _, node := range builderFlow.Nodes {
-		nodesMap[node.ID] = node
-	}
+		var err error
 
-	// Traiter d'abord le nœud entrypoint et result pour établir les inputs/outputs
-	for _, node := range builderFlow.Nodes {
-		//nolint
-		if node.Type == "entrypoint" || node.Type == "result" {
-			nodeConfig := make(map[string]any)
-			nodeID := standardizeNodeID(node.ID, node.Type)
-			nodeConfig["type"] = nodeID
-
-			var err error
-			if node.Type == "entrypoint" {
-				err = processEntrypointNode(node, nodeConfig)
-			} else if node.Type == "result" {
-				err = processResultNode(node, nodeConfig, incomingConnections)
-			}
-
-			if err != nil {
-				return nil, err
-			}
-
-			nodes[nodeID] = nodeConfig
+		// The ID for entrypoint and result nodes in the runner are simplified
+		var runnerNodeID string
+		if node.ID == EntrypointID {
+			runnerNodeID = "entrypoint"
+		} else if node.ID == ResultNodeID {
+			runnerNodeID = "result"
+		} else {
+			runnerNodeID = node.ID
 		}
-	}
 
-	// Traiter ensuite les autres nœuds
-	for _, node := range builderFlow.Nodes {
-		if node.Type != "entrypoint" && node.Type != "result" {
-			nodeConfig := make(map[string]any)
-			nodeID := node.ID
+		switch node.Type {
+		case "entrypoint":
+			err = p.processEntrypointNode(nodes, runnerNodeID, node)
+		case "result":
+			err = p.processResultNode(nodes, runnerNodeID, node, builderFlow.Edges)
+		case "chat-openai", "llm":
+			err = p.processLLMNode(nodes, runnerNodeID, node, builderFlow.Edges, nodeMap)
+		// Add additional node types as needed
+		// case "code":
+		//     err = p.processCodeNode(nodes, runnerNodeID, node, builderFlow.Edges, nodeMap)
+		default:
+			// Skip unknown node types
+			continue
+		}
 
-			// Déterminer le type de nœud
-			//nolint
-			nodeType := "llm"
-			if node.Type == "chat-openai" {
-				nodeType = "llm"
-			} else {
-				nodeType = node.Type
-			}
-
-			nodeConfig["type"] = nodeType
-
-			var err error
-			switch node.Type {
-			case "chat-openai":
-				err = p.processLLMChatNode(node, nodeConfig, incomingConnections, outgoingConnections)
-			// Ajouter d'autres types de nœuds si nécessaire
-			default:
-				err = p.processGenericNode(node, nodeConfig, incomingConnections, outgoingConnections)
-			}
-
-			if err != nil {
-				return nil, err
-			}
-
-			nodes[nodeID] = nodeConfig
+		if err != nil {
+			return nil, err
 		}
 	}
 
 	return result, nil
 }
 
-// standardizeNodeID normalise les IDs des nœuds entrypoint et result
-func standardizeNodeID(nodeID string, nodeType string) string {
-	if nodeType == "entrypoint" || nodeID == "entrypoint-node" {
-		return "entrypoint"
-	} else if nodeType == "result" || nodeID == "result-node" {
-		return "result"
-	}
-	return nodeID
-}
-
-// processEntrypointNode traite un nœud de type entrypoint
-func processEntrypointNode(node BuilderNode, nodeConfig map[string]any) error {
+// processEntrypointNode processes the entrypoint node
+func (p *Project) processEntrypointNode(nodes map[string]any, nodeID string, node BuilderNode) error {
 	var data EntrypointNodeData
 	if err := json.Unmarshal(node.Data, &data); err != nil {
 		return errs.InvalidError{Reason: "unable to unmarshal entrypoint node data", Err: err}
 	}
 
-	outputs := make(map[string]map[string]any)
+	// Create the outputs map based on handles
+	outputs := make(map[string]any)
 	for _, handle := range data.Handles {
-		//nolint
-		outputType := "text"
-		if handle.Type == "text" {
-			outputType = "text"
-		} else {
-			outputType = handle.Type
-		}
-
-		outputs[handle.Label] = map[string]any{
-			"type": outputType,
+		outputs[handle.Label] = map[string]string{
+			"type": handle.Type,
 		}
 	}
-	nodeConfig["outputs"] = outputs
+
+	nodes[nodeID] = map[string]any{
+		"type":    "entrypoint",
+		"outputs": outputs,
+	}
 
 	return nil
 }
 
-// processResultNode traite un nœud de type result
-func processResultNode(node BuilderNode, nodeConfig map[string]any, incomingConnections map[string][]struct {
-	SourceID     string
-	SourceHandle string
-	TargetHandle string
-}) error {
+// processResultNode processes the result node
+func (p *Project) processResultNode(nodes map[string]any, nodeID string, node BuilderNode, edges []BuilderEdge) error {
 	var data ResultNodeData
 	if err := json.Unmarshal(node.Data, &data); err != nil {
 		return errs.InvalidError{Reason: "unable to unmarshal result node data", Err: err}
 	}
 
-	inputs := make(map[string]map[string]any)
+	// Create the inputs map based on incoming edges
+	inputs := make(map[string]any)
 
-	// Créer une map des handles par ID pour les retrouver facilement
-	handleMap := make(map[string]string)
 	for _, handle := range data.Handles {
-		handleMap[handle.ID] = handle.Label
-	}
+		// Find edges that connect to this handle of the result node
+		for _, edge := range edges {
+			if edge.Target == ResultNodeID && edge.TargetHandle == handle.ID {
+				// This edge connects to this handle
+				// The source is the node that provides input to the result node
+				sourceNode := edge.Source
+				sourceHandle := edge.SourceHandle
 
-	// Chercher les connexions pour chaque input du result-node
-	for _, conn := range incomingConnections["result-node"] {
-		targetHandleID := conn.TargetHandle
-		sourceNodeID := standardizeNodeID(conn.SourceID, "")
-		sourceOutputName := getOutputName(conn.SourceHandle)
+				// Parse the handle format (assuming format like "type__name")
+				handleParts := p.parseHandle(sourceHandle)
+				if len(handleParts) != 2 {
+					continue
+				}
 
-		// Si le handle du result-node est de type text__X, extraire X
-		inputName := getOutputName(targetHandleID)
+				inputs[handle.Label] = map[string]string{
+					"type":   handle.Type,
+					"source": sourceNode + "." + handleParts[1],
+				}
 
-		// S'assurer que nous avons bien le label correspondant
-		if label, exists := handleMap[targetHandleID]; exists {
-			inputName = label
-		}
-
-		// Pour les connexions depuis les nœuds LLM, utiliser "response" comme sourceOutputName
-		//nolint
-		if sourceOutputName == "prompt" {
-			//nolint
-			sourceOutputName = "response"
-		}
-
-		// Créer l'entrée pour ce input
-		inputs[inputName] = map[string]any{
-			"type":   "text",
-			"source": sourceNodeID + "." + sourceOutputName,
+				break
+			}
 		}
 	}
 
-	if len(inputs) > 0 {
-		nodeConfig["inputs"] = inputs
+	nodes[nodeID] = map[string]any{
+		"type":   "result",
+		"inputs": inputs,
 	}
 
 	return nil
 }
 
-// processLLMChatNode traite un nœud de type chat-openai (LLM)
-func (p *Project) processLLMChatNode(
-	node BuilderNode,
-	nodeConfig map[string]any,
-	incomingConnections map[string][]struct {
-		SourceID     string
-		SourceHandle string
-		TargetHandle string
-	},
-	outgoingConnections map[string][]struct {
-		TargetID     string
-		SourceHandle string
-		TargetHandle string
-	},
-) error {
+// processLLMNode processes an LLM node
+func (p *Project) processLLMNode(nodes map[string]any, nodeID string, node BuilderNode, edges []BuilderEdge, nodeMap map[string]BuilderNode) error {
 	var data LLMNodeData
 	if err := json.Unmarshal(node.Data, &data); err != nil {
 		return errs.InvalidError{Reason: "unable to unmarshal LLM node data", Err: err}
 	}
 
-	// Définir les propriétés du nœud
-	nodeConfig["model"] = data.Model
-	nodeConfig["provider"] = data.ProviderType
-	nodeConfig["temperature"] = data.Temperature
-	nodeConfig["streaming"] = data.OutputMode == "text-stream"
-
-	// Max tokens
-	if data.MaxCompletionTokens > 0 {
-		nodeConfig["maxTokens"] = data.MaxCompletionTokens
-	} else {
-		// Valeur par défaut selon le modèle
-		if data.Model == "gpt-4o" {
-			nodeConfig["maxTokens"] = 4000
-		} else {
-			nodeConfig["maxTokens"] = 1000
-		}
+	credentialID, err := uuid.Parse(data.CredentialID)
+	if err != nil {
+		return errs.InvalidError{Reason: "invalid credential ID", Err: err}
 	}
 
-	// System prompt
-	if data.DeveloperMessage != "" {
-		nodeConfig["systemPrompt"] = data.DeveloperMessage
+	apiKey, err := p.getCredentialAPIKey(credentialID)
+	if err != nil {
+		return err
 	}
 
-	// Obtenir la clé API
-	if data.CredentialID != "" {
-		credentialID, err := uuid.Parse(data.CredentialID)
-		if err != nil {
-			return errs.InvalidError{Reason: "invalid credential ID", Err: err}
-		}
-
-		apiKey, err := p.getCredentialAPIKey(credentialID)
-		if err != nil {
-			return err
-		}
-		nodeConfig["apiKey"] = apiKey
+	nodeConfig := map[string]any{
+		"type":         "llm",
+		"model":        data.Model,
+		"apiKey":       apiKey,
+		"provider":     data.ProviderType,
+		"maxTokens":    data.MaxCompletionTokens,
+		"streaming":    data.OutputMode == "text-stream",
+		"temperature":  data.Temperature,
+		"systemPrompt": data.DeveloperMessage,
 	}
 
-	// Traiter les inputs
-	inputs := make(map[string]map[string]any)
+	// Process inputs
+	inputs := make(map[string]any)
 
-	// Par défaut pour un modèle LLM, ajouter l'input prompt
-	inputName := "prompt"
+	// Find all edges that target this node
+	for _, edge := range edges {
+		if edge.Target == node.ID {
+			// This is an input edge
+			sourceNode := edge.Source
+			targetHandle := edge.TargetHandle
 
-	// Si des connexions entrantes existent, les utiliser
-	//nolint
-	if conns, ok := incomingConnections[node.ID]; ok && len(conns) > 0 {
-		for _, conn := range conns {
-			sourceID := standardizeNodeID(conn.SourceID, "")
-			sourceOutput := getOutputName(conn.SourceHandle)
-
-			// Pour les connexions depuis entrypoint, utiliser "prompt" comme outputName
-			if sourceID == "entrypoint" {
-				sourceOutput = "prompt"
+			// Parse handle format
+			handleParts := p.parseHandle(targetHandle)
+			if len(handleParts) != 2 {
+				continue
 			}
 
-			// Pour les connexions depuis d'autres nœuds LLM, utiliser "response" comme sourceOutput
-			if sourceID != "entrypoint" && sourceID != "result" {
-				sourceOutput = "response"
+			handleType := handleParts[0]
+			handleName := handleParts[1]
+
+			// Create the input entry
+			sourceNodeID := sourceNode
+			if sourceNode == EntrypointID {
+				sourceNodeID = "entrypoint"
 			}
 
-			targetHandle := getInputName(conn.TargetHandle)
-			if targetHandle == "response" || targetHandle == "prompt" {
-				inputName = "prompt" // Normaliser à "prompt" pour les inputs
-			} else {
-				inputName = targetHandle
+			// Get source handle parts
+			sourceHandleParts := p.parseHandle(edge.SourceHandle)
+			if len(sourceHandleParts) != 2 {
+				continue
 			}
+			sourceHandleName := sourceHandleParts[1]
 
-			inputs[inputName] = map[string]any{
-				"source": sourceID + "." + sourceOutput,
+			inputs[handleName] = map[string]string{
+				"type":   handleType,
+				"source": sourceNodeID + "." + sourceHandleName,
 			}
 		}
-	} else {
-		// Si pas de connexion, ajouter un input prompt vide comme fallback
-		inputs[inputName] = map[string]any{}
 	}
 
 	nodeConfig["inputs"] = inputs
 
-	// Traiter les outputs
-	outputs := make(map[string]map[string]any)
+	// Process outputs
+	outputs := make(map[string]any)
 
-	// Par défaut, ajouter l'output "response"
-	outputName := "response"
-	outputs[outputName] = map[string]any{
-		"type":   "text",
-		"notify": true,
+	// Add a default response output
+	responseOutput := map[string]string{
+		"type": "text",
 	}
 
-	// Vérifier si ce nœud est connecté au nœud result
-	isConnectedToResult := false
-	for _, conn := range outgoingConnections[node.ID] {
-		if standardizeNodeID(conn.TargetID, "") == "result" {
-			isConnectedToResult = true
+	// Check if this node has an edge to the result node
+	for _, edge := range edges {
+		if edge.Source == node.ID && edge.Target == ResultNodeID {
+			// This node has a connection to the result node
+			sourceHandle := edge.SourceHandle
+			targetHandle := edge.TargetHandle
+
+			// Parse handles
+			sourceHandleParts := p.parseHandle(sourceHandle)
+			targetHandleParts := p.parseHandle(targetHandle)
+
+			if len(sourceHandleParts) == 2 && len(targetHandleParts) == 2 {
+				// Find the result node to get the handle label
+				for _, resultNode := range nodeMap {
+					if resultNode.ID == ResultNodeID {
+						var resultData ResultNodeData
+						if err := json.Unmarshal(resultNode.Data, &resultData); err != nil {
+							return err
+						}
+
+						// Find the matching handle in the result node
+						for _, handle := range resultData.Handles {
+							if handle.ID == targetHandle {
+								// Add the result_key to the output
+								responseOutput["result_key"] = handle.Label
+								break
+							}
+						}
+						break
+					}
+				}
+			}
 			break
 		}
 	}
 
-	// Si le nœud est connecté au nœud de résultat, désactiver la notification
-	if isConnectedToResult {
-		outputs[outputName]["notify"] = false
-	}
-
+	outputs["response"] = responseOutput
 	nodeConfig["outputs"] = outputs
+
+	nodes[nodeID] = nodeConfig
 
 	return nil
 }
 
-// processGenericNode traite un type de nœud générique
-func (p *Project) processGenericNode(
-	node BuilderNode,
-	nodeConfig map[string]any,
-	incomingConnections map[string][]struct {
-		SourceID     string
-		SourceHandle string
-		TargetHandle string
-	},
-	outgoingConnections map[string][]struct {
-		TargetID     string
-		SourceHandle string
-		TargetHandle string
-	},
-) error {
-	// Ajouter votre logique pour traiter d'autres types de nœuds ici
-	return nil
+// Helper function to parse handle format "type__name"
+func (p *Project) parseHandle(handle string) []string {
+	return strings.Split(handle, "__")
 }
 
 func (p *Project) getCredentialAPIKey(credentialID uuid.UUID) (string, error) {
@@ -572,22 +468,6 @@ func (p *Project) getCredentialAPIKey(credentialID uuid.UUID) (string, error) {
 	}
 
 	return apiKey.String(), nil
-}
-
-func getInputName(handle string) string {
-	parts := strings.Split(handle, "__")
-	if len(parts) > 1 {
-		return parts[1]
-	}
-	return handle
-}
-
-func getOutputName(handle string) string {
-	parts := strings.Split(handle, "__")
-	if len(parts) > 1 {
-		return parts[1]
-	}
-	return handle
 }
 
 func (w *Workflow) UpdateStatus(status WorkflowStatus) {

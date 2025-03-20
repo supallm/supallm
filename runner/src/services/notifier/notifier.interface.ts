@@ -10,6 +10,7 @@ export const WorkflowEvents = {
   NODE_FAILED: "NODE_FAILED",
 
   NODE_RESULT: "NODE_RESULT",
+  NODE_LOG: "NODE_LOG",
 } as const;
 
 export interface WorkflowEvent {
@@ -24,6 +25,7 @@ export interface INotifier {
   initialize(): Promise<void>;
   publishWorkflowEvent(event: WorkflowEvent): Promise<string>;
   publishNodeResult(event: WorkflowEvent): Promise<string>;
+  publishNodeLog(event: WorkflowEvent): Promise<string>;
   close(): Promise<void>;
 }
 
@@ -68,6 +70,10 @@ interface NodeResultEvent extends BaseNodeEvent {
   data: string;
 }
 
+interface NodeLogEvent extends BaseNodeEvent {
+  message: string;
+}
+
 export interface WorkflowExecutorEvents {
   [WorkflowEvents.WORKFLOW_STARTED]: (event: WorkflowStartedEvent) => void;
   [WorkflowEvents.WORKFLOW_COMPLETED]: (event: WorkflowCompletedEvent) => void;
@@ -76,4 +82,5 @@ export interface WorkflowExecutorEvents {
   [WorkflowEvents.NODE_RESULT]: (event: NodeResultEvent) => void;
   [WorkflowEvents.NODE_COMPLETED]: (event: NodeCompletedEvent) => void;
   [WorkflowEvents.NODE_FAILED]: (event: NodeFailedEvent) => void;
+  [WorkflowEvents.NODE_LOG]: (event: NodeLogEvent) => void;
 }

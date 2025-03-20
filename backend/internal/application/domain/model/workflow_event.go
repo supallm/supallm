@@ -16,6 +16,7 @@ const (
 	WorkflowNodeCompleted   WorkflowEventType = "NODE_COMPLETED"
 	WorkflowNodeFailed      WorkflowEventType = "NODE_FAILED"
 	WorkflowEventNodeResult WorkflowEventType = "NODE_RESULT"
+	WorkflowEventNodeLog    WorkflowEventType = "NODE_LOG"
 )
 
 func (e WorkflowEventType) IsWorkflowEvent() bool {
@@ -30,6 +31,10 @@ func (e WorkflowEventType) IsWorkflowCompleted() bool {
 
 func (e WorkflowEventType) IsNodeEvent() bool {
 	return e == WorkflowEventNodeResult
+}
+
+func (e WorkflowEventType) IsNodeLog() bool {
+	return e == WorkflowEventNodeLog
 }
 
 func (e WorkflowEventType) IsWorkflowError() bool {

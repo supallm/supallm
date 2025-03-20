@@ -3,6 +3,7 @@ import {
   NodeDefinition,
   NodeResultCallback,
   NodeInput,
+  NodeLogCallback,
 } from "../../nodes/types";
 import { INode } from "../../nodes/types";
 import { EntrypointNode } from "../../nodes/base/entrypoint-node";
@@ -35,6 +36,7 @@ export class NodeManager {
     inputs: NodeInput,
     callbacks: {
       onNodeResult: NodeResultCallback;
+      onNodeLog: NodeLogCallback;
     }
   ): Promise<any> {
     const nodeType = definition.type;
@@ -46,6 +48,7 @@ export class NodeManager {
 
     return await nodeImplementation.execute(nodeId, definition, inputs, {
       onNodeResult: callbacks.onNodeResult,
+      onNodeLog: callbacks.onNodeLog,
     });
   }
 }

@@ -29,6 +29,11 @@ export type NodeResultCallback = (
   type: NodeIOType,
 ) => Promise<void>;
 
+export type NodeLogCallback = (
+  nodeId: string,
+  message: string
+) => Promise<void>;
+
 export interface INode {
   type: NodeType;
   execute(
@@ -37,6 +42,7 @@ export interface INode {
     inputs: NodeInput,
     options: {
       onNodeResult: NodeResultCallback;
-    },
+      onNodeLog: NodeLogCallback;
+    }
   ): Promise<NodeOutput>;
 }
