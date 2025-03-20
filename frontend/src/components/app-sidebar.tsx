@@ -20,7 +20,8 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { ChatFlowsRoute, CredentialsRoute, OverviewRoute } from "@/routes";
-import { useAuth } from "@clerk/nextjs";
+
+import { clearAuthState } from "@/core/store/auth";
 import Link from "next/link";
 import {
   DropdownMenu,
@@ -54,7 +55,9 @@ const items = [
 ];
 
 export function AppSidebar() {
-  const { signOut } = useAuth();
+  const signOut = () => {
+    clearAuthState();
+  };
 
   return (
     <Sidebar>

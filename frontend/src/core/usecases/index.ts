@@ -2,6 +2,7 @@ import { ApiCredentialService } from "@/services/api-credential-service";
 import { ApiFlowService } from "@/services/api-flow-service";
 import { ApiProjectService } from "@/services/api-project-service";
 import { MockAuthProviderService } from "@/services/mock-auth-provider-service";
+import { MockAuthService } from "@/services/mock-auth-service";
 import { CreateAuthProviderUsecase } from "./create-auth-provider";
 import { CreateCredentialUsecase } from "./create-credential";
 import { CreateFlowUsecase } from "./create-flow";
@@ -15,6 +16,8 @@ import { ListAuthProvidersUsecase } from "./list-auth-providers";
 import { ListCredentialsUsecase } from "./list-credentials";
 import { ListFlowsUsecase } from "./list-flows";
 import { ListProjectsUsecase } from "./list-projects";
+import { LoginWithEmailAndPasswordUsecase } from "./login-with-email-and-password";
+import { MeUsecase } from "./me";
 import { PatchAuthProviderUsecase } from "./patch-auth-provider";
 import { PatchCredentialUsecase } from "./patch-credential";
 import { PatchFlowUsecase } from "./patch-flow";
@@ -85,3 +88,11 @@ export const createAuthProviderUsecase = new CreateAuthProviderUsecase(
 export const patchAuthProviderUsecase = new PatchAuthProviderUsecase(
   new MockAuthProviderService(),
 );
+
+/**
+ * Auth
+ */
+export const loginWithEmailAndPasswordUsecase =
+  new LoginWithEmailAndPasswordUsecase(new MockAuthService());
+
+export const meUsecase = new MeUsecase(new MockAuthService());

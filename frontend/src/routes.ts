@@ -25,3 +25,11 @@ export const FlowBuilderRoute = {
 export const AuthenticationRoute = {
   path: () => `/dashboard/auth`,
 };
+
+export const LogoutRoute = {
+  path: () => `/logout`,
+};
+
+export const LoginRoute = {
+  path: () => `/login`,
+};
