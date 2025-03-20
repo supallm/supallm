@@ -132,9 +132,9 @@ export class LLMNode implements INode {
     output: NodeOutputDef
   ): Promise<NodeOutput> {
     let fullResponse = "";
-    const outputField = output.result_key || "response";
 
     try {
+      const outputField = output.result_key;
       const response = await provider.generate(messages, options);
 
       for await (const data of response) {
@@ -144,7 +144,9 @@ export class LLMNode implements INode {
             : JSON.stringify(data.content);
 
         if (chunkContent) {
-          await onNodeResult(nodeId, outputField, chunkContent, output.type);
+          if (outputField) {
+            await onNodeResult(nodeId, outputField, chunkContent, output.type);
+          }
           fullResponse += chunkContent;
         }
       }
