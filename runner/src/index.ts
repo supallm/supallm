@@ -5,7 +5,7 @@ dotenv.config();
 
 async function main() {
   try {
-    const redisUrl = `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`;
+    const redisUrl = `redis://${process.env["REDIS_HOST"]}:${process.env["REDIS_PORT"]}`;
     const server = new RunnerServer({ redisUrl });
 
     process.on("SIGINT", async () => {

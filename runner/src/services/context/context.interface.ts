@@ -89,6 +89,9 @@ export class ManagedExecutionContext {
     nodeId: string,
     inputs: Record<string, any>
   ): Promise<void> {
+    if (!this.context.nodeExecutions[nodeId]) {
+      throw new Error(`node ${nodeId} not found`);
+    }
     this.context.nodeExecutions[nodeId].inputs = inputs;
     await this.sync();
   }
@@ -97,24 +100,39 @@ export class ManagedExecutionContext {
     nodeId: string,
     output: Record<string, any>
   ): Promise<void> {
+    if (!this.context.nodeExecutions[nodeId]) {
+      throw new Error(`node ${nodeId} not found`);
+    }
     this.context.nodeExecutions[nodeId].output = output;
     await this.sync();
   }
 
   async updateNodeError(nodeId: string, error: string): Promise<void> {
+    if (!this.context.nodeExecutions[nodeId]) {
+      throw new Error(`node ${nodeId} not found`);
+    }
     this.context.nodeExecutions[nodeId].error = error;
     await this.sync();
   }
 
   entrypoint(): NodeExecution {
-    return this.context.nodeExecutions.entrypoint;
+    if (!this.context.nodeExecutions["entrypoint"]) {
+      throw new Error(`entrypoint node not found`);
+    }
+    return this.context.nodeExecutions["entrypoint"];
   }
 
   result(): NodeExecution {
-    return this.context.nodeExecutions.result;
+    if (!this.context.nodeExecutions["result"]) {
+      throw new Error(`result node not found`);
+    }
+    return this.context.nodeExecutions["result"];
   }
 
   node(nodeId: string): NodeExecution | undefined {
+    if (!this.context.nodeExecutions[nodeId]) {
+      throw new Error(`node ${nodeId} not found`);
+    }
     return this.context.nodeExecutions[nodeId];
   }
 
@@ -123,7 +141,9 @@ export class ManagedExecutionContext {
       .filter(([_, node]) => node.type === "result")
       .map(([id, _]) => id);
 
-    return resultNodes.map((id) => this.context.nodeExecutions[id]);
+    return resultNodes
+      .map((id) => this.node(id))
+      .filter((node): node is NodeExecution => node !== undefined);
   }
 
   findReadyNodes(dependencies: Record<string, string[]>): string[] {

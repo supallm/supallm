@@ -81,7 +81,7 @@ export class LLMNode implements INode {
         streaming: streaming,
       };
 
-      const output = definition.outputs?.response;
+      const output = definition.outputs["response"] as NodeOutputDef;
 
       return this.executeLLM(
         nodeId,
