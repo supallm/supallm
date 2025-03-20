@@ -56,7 +56,7 @@ export class LLMNode implements INode {
         model,
         provider = ProviderType.OPENAI,
         apiKey,
-        temperature = 0.5,
+        temperature,
         maxTokens,
         streaming = false,
         systemPrompt,
