@@ -14,6 +14,7 @@ export class PatchFlowUsecase {
       edges: FlowEdge[];
     },
   ) {
+    await new Promise((resolve) => setTimeout(resolve, 800));
     await this.service.patch(projectId, id, data);
     patchFlow(id, data);
     patchCurrentFlow(data);

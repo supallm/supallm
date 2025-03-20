@@ -6,12 +6,7 @@ import { hookifyFunction } from "@/hooks/hookify-function";
 import { useAppConfig } from "@/hooks/use-app-config";
 import { ChatFlowsRoute } from "@/routes";
 import { useOrganization } from "@clerk/nextjs";
-import {
-  ArrowLeft,
-  BookIcon,
-  MessageCircleQuestion,
-  Slash,
-} from "lucide-react";
+import { ArrowLeft, Github, Slash } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { EditableName } from "./editable-name";
 import Logo from "./logo";
@@ -103,11 +98,15 @@ export const BuilderTopNav = () => {
       </div>
 
       <div className="px-3 space-x-2 flex items-center">
-        <Button variant={"outline"} size="xs" startContent={<BookIcon />}>
-          Documentation
-        </Button>
-        <Button variant={"icon"} size="xs">
-          <MessageCircleQuestion className="size-4" />
+        <Button
+          variant={"outline"}
+          size="xs"
+          startContent={<Github />}
+          onClick={() => {
+            window.open("https://github.com/supallm/supallm", "_blank");
+          }}
+        >
+          Beta - Help us improve
         </Button>
       </div>
     </div>
