@@ -28,7 +28,7 @@ export const parseCodeForRequiredModules = (code: string) => {
           ts.isIdentifier(declaration.initializer.expression) &&
           declaration.initializer.expression.text === "require" &&
           declaration.initializer.arguments.length === 1 &&
-          ts.isStringLiteral(declaration.initializer.arguments[0])
+          ts.isStringLiteral(declaration.initializer.arguments[0]!)
         ) {
           modules.push(declaration.initializer.arguments[0].text);
         }
@@ -142,7 +142,7 @@ export const parseFunctionOutput = (
   let keys: string[] = [];
 
   const visit = (node: ts.Node) => {
-    if (ts.isFunctionDeclaration(node) && node.name?.text === "main") {
+    if (ts.isFunctionDeclaration(node) && node.name?.text === functionName) {
       if (node.body) {
         node.body.forEachChild((child) => {
           if (ts.isReturnStatement(child) && child.expression) {

@@ -1,4 +1,4 @@
-import { execSync, spawn } from "child_process";
+import { spawn } from "child_process";
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
@@ -7,7 +7,11 @@ import {
   parseCodeForRequiredModules,
   validateMainFunctionExists,
 } from "../../../utils/typescript-utils";
-import { spawnProcessAsync, spawnWrappedFunctionProcessAsync } from "../common/spawn-async";
+import { serializeArg } from "../common/serialize-arg";
+import {
+  spawnProcessAsync,
+  spawnWrappedFunctionProcessAsync,
+} from "../common/spawn-async";
 import {
   CodeExecutionError,
   MainFunctionMissingError,
@@ -18,7 +22,11 @@ import {
   TypeScriptCompilationError,
 } from "./executor.errors";
 
-type Arguments = Record<string, any>;
+export type Argument = {
+  name: string;
+  type: "string" | "number" | "boolean" | "array" | "object";
+  value: string;
+};
 
 const NSJAIL_PATH = "/usr/local/bin/nsjail";
 
@@ -29,12 +37,14 @@ const SANDBOX_ROOT = "/tmp/nsjail";
 const TS_CONFIG = path.join(__dirname, "executor.ts-config.json");
 
 export class NodejsExecutor {
-  private wrapMainFunctionIntoCallable(code: string, args: Arguments) {
+  private wrapMainFunctionIntoCallable(code: string, args: Argument[]) {
+    const argString = args.map((arg) => serializeArg(arg.value)).join(", ");
+
     return `
         ${code}
     
         (async () => {
-            const result = await Promise.resolve(main())
+            const result = await Promise.resolve(main(${argString}))
             console.log('__FUNCTION_RESULT__', JSON.stringify(result))
       })()
       `;
@@ -52,7 +62,7 @@ export class NodejsExecutor {
 
   async runTypeScript(
     code: string,
-    args: Arguments,
+    args: Argument[],
     onLog: (data: string) => void,
     onError: (data: string) => void,
   ): Promise<Result<Record<string, any>, NodejsExecutorError>> {
@@ -63,7 +73,10 @@ export class NodejsExecutor {
     }
 
     const callableScript = this.wrapMainFunctionIntoCallable(code, args);
-    const modulesToInstall = [...parseCodeForRequiredModules(callableScript), "@types/node"];
+    const modulesToInstall = [
+      ...parseCodeForRequiredModules(callableScript),
+      "@types/node",
+    ];
 
     // 1. Generate a unique sandbox ID
     const sandboxId = crypto.randomBytes(4).toString("hex");
@@ -96,24 +109,26 @@ export class NodejsExecutor {
       try {
         onLog(`Installing dependencies...`);
         const npmiSpawnFunc = () => {
-          return spawn(NSJAIL_PATH, [          
-            "--config",
-            protoFilePath,
-            '--',
-            "/bin/npm",
-            "cache",
-            "clean",
-            "--force",
-            "--loglevel=verbose",
-            "&&",
-            "/bin/npm",
-            "install",
-            modulesToInstall.join(" "),
-            "--loglevel=verbose",
-          ],
+          return spawn(
+            NSJAIL_PATH,
+            [
+              "--config",
+              protoFilePath,
+              "--",
+              "/bin/npm",
+              "cache",
+              "clean",
+              "--force",
+              "--loglevel=verbose",
+              "&&",
+              "/bin/npm",
+              "install",
+              modulesToInstall.join(" "),
+              "--loglevel=verbose",
+            ],
             { cwd: sandboxPath, shell: true },
           );
-        }
+        };
 
         await spawnProcessAsync(npmiSpawnFunc, onLog, onError);
 
@@ -128,17 +143,19 @@ export class NodejsExecutor {
     try {
       onLog(`Compiling TypeScript...`);
       const ccSpawnFunc = () => {
-        return spawn(NSJAIL_PATH, [
-          "--config",
-          protoFilePath,
-          '--'          ,
-          '/bin/sh',
-          '-c',
-          '"cd sandbox && ls -la && cat script.ts && tsc --project tsconfig.json && tsc --showConfig script.ts"',
-        ],
+        return spawn(
+          NSJAIL_PATH,
+          [
+            "--config",
+            protoFilePath,
+            "--",
+            "/bin/sh",
+            "-c",
+            '"cd sandbox && ls -la && cat script.ts && tsc --project tsconfig.json && tsc --showConfig script.ts"',
+          ],
           { cwd: sandboxPath, shell: true },
         );
-      }
+      };
 
       await spawnProcessAsync(ccSpawnFunc, onLog, onError);
 
@@ -167,7 +184,11 @@ export class NodejsExecutor {
           },
         );
 
-      result = await spawnWrappedFunctionProcessAsync(spawnFunc, onLog, onError);
+      result = await spawnWrappedFunctionProcessAsync(
+        spawnFunc,
+        onLog,
+        onError,
+      );
     } catch (error: any) {
       onError(`Execution failed: ${error.message}`);
       cleanSandbox();

@@ -7,14 +7,12 @@ import {
   NodeResultCallback,
   NodeType,
 } from "../types";
-import { NodejsExecutor } from "./nodejs-executor/nodejs-executor";
-
-type Arguments = Record<string, any>;
+import { Argument, NodejsExecutor } from "./nodejs-executor/nodejs-executor";
 
 interface CodeExecutorNodeInputs {
   code: string;
   language: "typescript";
-  args: Arguments;
+  args: Argument[];
 }
 
 export class CodeExecutorNode implements INode {
@@ -31,7 +29,7 @@ export class CodeExecutorNode implements INode {
   ): Promise<any> {
     try {
       const resolvedInputs = inputs as CodeExecutorNodeInputs;
-      const { code, language = "typescript", args = {} } = resolvedInputs;
+      const { code, language = "typescript", args = [] } = resolvedInputs;
 
       switch (language) {
         case "typescript":
@@ -41,11 +39,14 @@ export class CodeExecutorNode implements INode {
             args,
             (data) => {
               console.log("STDOUT", data);
+              options.onNodeLog(nodeId, data);
             },
             (data) => {
               console.log("STDERR", data);
+              options.onNodeLog(nodeId, data);
             },
           );
+
           const [parsedResult, error] = result.toTuple();
 
           if (error) {
@@ -78,7 +79,7 @@ codeExecutorNode.execute(
   {
     code: `import { z } from "zod";
 
-    function main() {
+    function main(myValue: any, myValue2: any, double: (num: number) => number, myArray: any[], myObjArray: any[], myNumber: number, myBoolean: boolean) {
         let i = 0;
         while (i < 5) {
             console.log("Hello, world!", i);
@@ -93,18 +94,62 @@ codeExecutorNode.execute(
             "z": {
                 "coucou": true,
                 "i": i,
-            }
+            },
+            "myValue": myValue,
+            "doubled": double(10),
+            "array": myArray,
+            "objArray": myObjArray,
+            "myNumber": myNumber,
+            "myBoolean": myBoolean,
         }
       }`,
     language: "typescript",
-    args: {},
+    args: [
+      {
+        name: "myValue",
+        type: "string",
+        value: "test",
+      },
+      {
+        name: "myValue2",
+        type: "any",
+        value: {
+          coucou: true,
+        },
+      },
+      {
+        name: "double",
+        type: "any",
+        value: (num: number) => num * 2,
+      },
+      {
+        name: "myArray",
+        type: "any",
+        value: [1, 2, 3],
+      },
+      {
+        name: "myObjArray",
+        type: "any",
+        value: [{ i: 1 }, { i: 2 }],
+      },
+      {
+        name: "myNumber",
+        type: "number",
+        value: 10,
+      },
+      {
+        name: "myBoolean",
+        type: "boolean",
+        value: true,
+      },
+    ],
   },
   {
     onNodeLog: async (message) => {
-      console.log("LOG", message);
+      //   console.log("LOG", message);
     },
     onNodeResult: async (result) => {
-      console.log("RESULT", result);
+      //   console.log("RESULT", result);
     },
   },
 );
