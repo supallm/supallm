@@ -16,10 +16,10 @@ export class ResultNode implements INode {
   }
 
   async execute(
-    nodeId: string,
-    definition: NodeDefinition,
+    _nodeId: string,
+    _definition: NodeDefinition,
     inputs: NodeInput,
-    options: {
+    _options: {
       onNodeResult: NodeResultCallback;
       onNodeLog: NodeLogCallback;
     }

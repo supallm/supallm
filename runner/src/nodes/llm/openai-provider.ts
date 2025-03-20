@@ -7,7 +7,10 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 export class OpenAIProvider implements BaseLLMProvider {
   constructor() {}
 
-  async generate(messages: (SystemMessage | HumanMessage)[], options: LLMOptions): Promise<AsyncIterable<{ content: string }>> {
+  async generate(
+    messages: (SystemMessage | HumanMessage)[],
+    options: LLMOptions
+  ): Promise<AsyncIterable<{ content: string }>> {
     const model = this.createModel(options);
     try {
       if (model instanceof ChatOpenAI && options.streaming) {
@@ -16,7 +19,11 @@ export class OpenAIProvider implements BaseLLMProvider {
         return {
           [Symbol.asyncIterator]: async function* () {
             for await (const chunk of stream) {
-              if (typeof chunk === 'object' && chunk !== null && 'content' in chunk) {
+              if (
+                typeof chunk === "object" &&
+                chunk !== null &&
+                "content" in chunk
+              ) {
                 const contentStr = String(chunk.content);
                 yield { content: contentStr };
               }
@@ -25,17 +32,22 @@ export class OpenAIProvider implements BaseLLMProvider {
         };
       } else {
         const response = await model.invoke(messages);
-        let responseContent = '';
-        if (typeof response === 'object' && response !== null && 'content' in response) {
-          responseContent = typeof response.content === 'string' 
-            ? response.content 
-            : JSON.stringify(response.content);
-        } else if (typeof response === 'string') {
+        let responseContent = "";
+        if (
+          typeof response === "object" &&
+          response !== null &&
+          "content" in response
+        ) {
+          responseContent =
+            typeof response.content === "string"
+              ? response.content
+              : JSON.stringify(response.content);
+        } else if (typeof response === "string") {
           responseContent = response;
         } else {
           responseContent = JSON.stringify(response);
         }
-          
+
         return {
           [Symbol.asyncIterator]: async function* () {
             yield { content: responseContent };

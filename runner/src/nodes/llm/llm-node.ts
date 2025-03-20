@@ -56,7 +56,7 @@ export class LLMNode implements INode {
         model,
         provider = ProviderType.OPENAI,
         apiKey,
-        temperature = 0.5,
+        temperature,
         maxTokens,
         streaming = false,
         systemPrompt,
@@ -81,7 +81,7 @@ export class LLMNode implements INode {
         streaming: streaming,
       };
 
-      const output = definition.outputs?.response;
+      const output = definition.outputs["response"] as NodeOutputDef;
 
       return this.executeLLM(
         nodeId,

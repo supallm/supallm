@@ -47,7 +47,7 @@ export class RedisQueueConsumer implements IQueueConsumer {
   private initializeRedisClient(redisUrl: string): Redis {
     const redisOptions = {
       db: 0,
-      password: process.env.REDIS_PASSWORD,
+      password: process.env["REDIS_PASSWORD"],
       retryStrategy: (times: number) => {
         return Math.min(times * 100, 3000); // retry with an increasing delay
       },

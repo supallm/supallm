@@ -222,13 +222,20 @@ export class WorkflowExecutor extends EventEmitter {
 
     for (const nodeId in definition.nodes) {
       const node = definition.nodes[nodeId];
+      if (!node) {
+        throw new Error(`node ${nodeId} not found`);
+      }
 
       if (node.inputs) {
         for (const [_, inputDef] of Object.entries(node.inputs)) {
           if (inputDef && inputDef.source) {
             const sourceNodeId = inputDef.source.split(".")[0];
 
-            if (!dependencies[nodeId].includes(sourceNodeId)) {
+            if (
+              dependencies[nodeId] &&
+              sourceNodeId &&
+              !dependencies[nodeId].includes(sourceNodeId)
+            ) {
               dependencies[nodeId].push(sourceNodeId);
             }
           }
@@ -366,14 +373,15 @@ export class WorkflowExecutor extends EventEmitter {
       message,
     });
   }
-  emit<K extends keyof WorkflowExecutorEvents>(
+
+  override emit<K extends keyof WorkflowExecutorEvents>(
     event: K,
     data: Parameters<WorkflowExecutorEvents[K]>[0]
   ): boolean {
     return super.emit(event, data);
   }
 
-  on<K extends keyof WorkflowExecutorEvents>(
+  override on<K extends keyof WorkflowExecutorEvents>(
     event: K,
     listener: WorkflowExecutorEvents[K]
   ): this {
