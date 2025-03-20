@@ -25,7 +25,9 @@ case "$MODE" in
     OLD_KEY="pk_test_cHJvbXB0LWNvcmFsLTcwLmNsZXJrLmFjY291bnRzLmRldiQ"
     NEW_KEY="${CLERK_PUBLIC_KEY}"
 
+    echo "Replacing Clerk public key..."
     find "$DIR" -type f -exec sed -i "s|$OLD_KEY|$NEW_KEY|g" {} +    
+    echo "Clerk public key replaced"
     ##
     # END REPLACING CLERK PUBLIC KEY
     ##
@@ -37,6 +39,7 @@ case "$MODE" in
     ls -la /app/runner
     exec npm start --prefix /app/runner
     ;;
+    
   *)
     echo "Error: Invalid MODE. Use 'api', 'frontend', or 'runner'."
     exit 1
