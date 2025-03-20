@@ -22,24 +22,31 @@ type (
 		Password string
 	}
 
-	Clerk struct {
-		SecretKey string
-	}
-
 	Postgres struct {
 		URL string
+	}
+
+	InitialUser struct {
+		Email    string
+		Password string
+		Name     string
+	}
+
+	Auth struct {
+		SecretKey   string
+		InitialUser InitialUser
 	}
 
 	Config struct {
 		Server   Server
 		Redis    Redis
 		Postgres Postgres
-		Clerk    Clerk
+		Auth     Auth
 	}
 )
 
 func Load(_ context.Context) Config {
-	mustGet("SECRET_KEY")
+	secretKey := mustGet("SECRET_KEY")
 
 	host := mustGet("POSTGRES_HOST")
 	port := mustGet("POSTGRES_PORT")
@@ -68,8 +75,13 @@ func Load(_ context.Context) Config {
 		Postgres: Postgres{
 			URL: postgresURL,
 		},
-		Clerk: Clerk{
-			SecretKey: mustGet("CLERK_SECRET_KEY"),
+		Auth: Auth{
+			SecretKey: secretKey,
+			InitialUser: InitialUser{
+				Email:    getOrDefault("INITIAL_USER_EMAIL", "admin@supallm.com"),
+				Password: getOrDefault("INITIAL_USER_PASSWORD", "supallm123"),
+				Name:     getOrDefault("INITIAL_USER_NAME", "admin"),
+			},
 		},
 	}
 }
@@ -79,6 +91,14 @@ func mustGet(key string) string {
 	if value == "" {
 		slog.Error("missing required environment variable", "key", key)
 		os.Exit(1)
+	}
+	return value
+}
+
+func getOrDefault(key, defaultValue string) string {
+	value := os.Getenv(key)
+	if value == "" {
+		return defaultValue
 	}
 	return value
 }

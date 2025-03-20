@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 
-	"github.com/clerk/clerk-sdk-go/v2"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/supallm/core/internal/pkg/auth"
 	"github.com/supallm/core/internal/pkg/errs"
 	"github.com/supallm/core/internal/pkg/secret"
 )
@@ -58,41 +59,28 @@ func (s *Server) applyCommonMiddleware() {
 	}))
 }
 
-func (s *Server) ClerkAuthMiddleware(next http.Handler) http.Handler {
-	clerk.SetKey(s.conf.Clerk.SecretKey)
+func (s *Server) JWTAuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := s.storeUserID(r.Context(), "12345")
+		authHeader := r.Header.Get("Authorization")
+		sessionToken := strings.TrimPrefix(authHeader, "Bearer ")
+
+		if sessionToken == "" || sessionToken == authHeader {
+			s.RespondErr(w, r, errs.UnauthorizedError{
+				Err: errors.New("invalid or missing authorization token"),
+			})
+			return
+		}
+
+		claims, err := auth.VerifyToken(sessionToken, s.conf.Auth.SecretKey)
+		if err != nil {
+			s.RespondErr(w, r, errs.UnauthorizedError{
+				Err: err,
+			})
+			return
+		}
+
+		ctx := s.storeUserID(r.Context(), claims.UserID.String())
 		next.ServeHTTP(w, r.WithContext(ctx))
-		// authHeader := c.Get("Authorization")
-		// sessionToken := strings.TrimPrefix(authHeader, "Bearer ")
-
-		// if sessionToken == "" || sessionToken == authHeader {
-		// 	return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-		// 		"error": "Invalid or missing authorization token",
-		// 	})
-		// }
-
-		// claims, err := jwt.Verify(c.Context(), &jwt.VerifyParams{
-		// 	Token: sessionToken,
-		// })
-		// if err != nil {
-		// 	return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-		// 		"error": "Unauthorized: invalid token",
-		// 	})
-		// }
-
-		// usr, err := user.Get(c.Context(), claims.Subject)
-		// if err != nil {
-		// 	return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-		// 		"error": "Failed to retrieve user information",
-		// 	})
-		// }
-
-		// if usr.Banned {
-		// 	return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
-		// 		"error": "User is banned",
-		// 	})
-		// }
 	})
 }
 

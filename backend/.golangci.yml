@@ -141,6 +141,7 @@ linters-settings:
       - "^github.com/supallm/core/internal/infra/http/gen.ChiServerOptions"
       - "^golang.org/x/net/http2.Server"
       - "^github.com/go-chi/cors.Options"
+      - "^github.com/golang-jwt/jwt/v5.RegisteredClaims$"
 
   funlen:
     # Checks the number of lines in a function.

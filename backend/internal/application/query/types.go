@@ -59,3 +59,11 @@ type WorkflowEvent struct {
 	EventType  string
 	Data       map[string]any
 }
+
+type User struct {
+	ID        uuid.UUID
+	Email     string
+	Name      string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}

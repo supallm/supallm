@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/supallm/core/internal/adapters/project"
 	"github.com/supallm/core/internal/adapters/runner"
+	"github.com/supallm/core/internal/adapters/user"
 	"github.com/supallm/core/internal/application/command"
 	"github.com/supallm/core/internal/application/event"
 	"github.com/supallm/core/internal/application/query"
@@ -40,6 +41,7 @@ type Commands struct {
 
 	TriggerWorkflow            command.TriggerWorkflowHandler
 	AuthorizeEventSubscription command.AuthorizeEventSubscriptionHandler
+	CreateJWT                  command.CreateJWTHandler
 }
 
 type Queries struct {
@@ -53,6 +55,7 @@ type Queries struct {
 	GetCredential   query.GetCredentialHandler
 
 	ListenWorkflow query.ListenWorkflowHandler
+	GetUser        query.GetUserHandler
 }
 
 func New(
@@ -72,7 +75,13 @@ func New(
 	})
 
 	projectRepo := project.NewRepository(ctx, pool)
+	userRepo := user.NewRepository(ctx, pool, conf.Auth)
 	runnerService := runner.NewService(ctx, router.RunnerPublisher)
+
+	err = userRepo.LoadFixtures(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	app := &App{
 		pool:             pool,
@@ -92,6 +101,7 @@ func New(
 
 			TriggerWorkflow:            command.NewTriggerWorkflowHandler(projectRepo, runnerService),
 			AuthorizeEventSubscription: command.NewAuthorizeEventSubscriptionHandler(projectRepo),
+			CreateJWT:                  command.NewCreateJWTHandler(userRepo, conf.Auth.SecretKey),
 		},
 		Queries: &Queries{
 			GetProject:   query.NewGetProjectHandler(projectRepo),
@@ -104,6 +114,7 @@ func New(
 			GetWorkflow:   query.NewGetWorkflowHandler(projectRepo),
 
 			ListenWorkflow: query.NewListenWorkflowHandler(projectRepo),
+			GetUser:        query.NewGetUserHandler(userRepo),
 		},
 	}
 

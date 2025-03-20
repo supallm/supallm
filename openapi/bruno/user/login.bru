@@ -1,0 +1,18 @@
+meta {
+  name: login
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseURL}}/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "admin@supallm.com",
+    "password": "supallm123"
+  }
+}
