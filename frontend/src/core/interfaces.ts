@@ -93,7 +93,7 @@ export interface AuthService {
       email: string;
       name: string;
     };
-  }>;
+  } | null>;
   me: () => Promise<AuthUser | null>;
   logout: () => Promise<void>;
 }

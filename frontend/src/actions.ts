@@ -2,13 +2,15 @@
 
 import { parse, serialize } from "cookie";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { loginWithEmailAndPasswordUsecase } from "./core/usecases";
+import { LoginRoute } from "./routes";
 
 export async function loginWithEmailAndPassword(
   email: string,
   password: string,
 ) {
-  await new Promise((resolve) => setTimeout(resolve, 4000));
+  await new Promise((resolve) => setTimeout(resolve, 500));
   const authState = await loginWithEmailAndPasswordUsecase.execute({
     email,
     password,
@@ -40,6 +42,8 @@ export async function loginWithEmailAndPassword(
 
 export async function logout() {
   (await cookies()).delete("session");
+
+  redirect(LoginRoute.path());
 
   return { success: true };
 }

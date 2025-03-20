@@ -15,6 +15,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { OverviewRoute } from "@/routes";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -47,7 +48,15 @@ const LoginPage = () => {
         values.password,
       );
 
-      console.log("RESULT ACTION", result);
+      if (result?.error) {
+        setLoginError(result.error);
+        return;
+      }
+
+      if (result?.success) {
+        router.push(OverviewRoute.path());
+      }
+
       setIsLoggingIn(false);
     } catch (error) {
       setLoginError("Invalid credentials");
@@ -106,9 +115,7 @@ const LoginPage = () => {
                 />
                 {!!loginError && (
                   <AlertMessage
-                    message={
-                      "An error occurred while logging in. Please try again and contact our support team if the issue persists."
-                    }
+                    message={"Invalid credentials"}
                     variant={"danger"}
                   />
                 )}

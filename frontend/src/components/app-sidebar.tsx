@@ -21,15 +21,15 @@ import {
 } from "@/components/ui/sidebar";
 import { ChatFlowsRoute, CredentialsRoute, OverviewRoute } from "@/routes";
 
-import { clearAuthState } from "@/core/store/auth";
+import { logoutUsecase } from "@/core/usecases";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-
 // Menu items.
 const items = [
   {
@@ -55,8 +55,10 @@ const items = [
 ];
 
 export function AppSidebar() {
-  const signOut = () => {
-    clearAuthState();
+  const router = useRouter();
+
+  const signOut = async () => {
+    await logoutUsecase.execute();
   };
 
   return (
