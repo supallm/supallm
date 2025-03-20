@@ -5,7 +5,6 @@ import { patchFlowUsecase } from "@/core/usecases";
 import { hookifyFunction } from "@/hooks/hookify-function";
 import { useAppConfig } from "@/hooks/use-app-config";
 import { ChatFlowsRoute } from "@/routes";
-import { useOrganization } from "@clerk/nextjs";
 import { ArrowLeft, Github, Slash } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { EditableName } from "./editable-name";
@@ -20,7 +19,6 @@ import { Button } from "./ui/button";
 import { Skeleton } from "./ui/skeleton";
 
 const OrganizationBreadcrumb = () => {
-  const { organization, isLoaded: organizationLoaded } = useOrganization();
   const { currentProject, isLoading: currentProjectLoading } = useAppConfig();
   const { currentFlow } = useCurrentFlowStore();
 
@@ -46,10 +44,7 @@ const OrganizationBreadcrumb = () => {
     <div>
       <Breadcrumb>
         <BreadcrumbList>
-          <BreadcrumbItem>
-            {(organizationLoaded && organization?.name) ?? "Personal account"}
-            {!organizationLoaded && <Skeleton className="h-4 w-24" />}
-          </BreadcrumbItem>
+          <BreadcrumbItem>Personal account</BreadcrumbItem>
           <BreadcrumbSeparator>
             <Slash />
           </BreadcrumbSeparator>

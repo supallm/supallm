@@ -1,4 +1,4 @@
-import { getAuthToken } from "@/lib/auth";
+import { getAuthToken } from "@/actions";
 import { OpenAPI } from "./index";
 
 /* We can overwrite the default configuration by exporting a getToken function.
