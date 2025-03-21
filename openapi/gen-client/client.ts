@@ -1,4 +1,4 @@
-import { getAuthToken } from "@/lib/auth";
+import { getAuthToken } from "@/actions";
 import { OpenAPI } from "./index";
 
 /* We can overwrite the default configuration by exporting a getToken function.
@@ -7,6 +7,7 @@ import { OpenAPI } from "./index";
  */
 export const getToken = async () => {
     const result = await getAuthToken();
+    
     if (!result) {
         return "";
     }
@@ -14,3 +15,4 @@ export const getToken = async () => {
 };
 
 OpenAPI.TOKEN = getToken;
+OpenAPI.BASE = "http://api:80";

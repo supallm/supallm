@@ -1,8 +1,7 @@
 "use client";
 
-import { useAppConfig } from "@/hooks/use-app-config";
-import { useOrganization } from "@clerk/nextjs";
-import { BookIcon, MessageCircleQuestion, Slash } from "lucide-react";
+import { useCurrentProjectOrThrow } from "@/hooks/use-current-project-or-throw";
+import { Github, Slash } from "lucide-react";
 import Logo from "./logo";
 import {
   Breadcrumb,
@@ -11,28 +10,19 @@ import {
   BreadcrumbSeparator,
 } from "./ui/breadcrumb";
 import { Button } from "./ui/button";
-import { Skeleton } from "./ui/skeleton";
 
 const OrganizationBreadcrumb = () => {
-  const { organization, isLoaded: organizationLoaded } = useOrganization();
-
-  const { currentProject, isLoading: currentProjectLoading } = useAppConfig();
+  const currentProject = useCurrentProjectOrThrow();
 
   return (
     <div>
       <Breadcrumb>
         <BreadcrumbList>
-          <BreadcrumbItem>
-            {(organizationLoaded && organization?.name) ?? "Personal account"}
-            {!organizationLoaded && <Skeleton className="h-4 w-24" />}
-          </BreadcrumbItem>
+          <BreadcrumbItem>Personal account</BreadcrumbItem>
           <BreadcrumbSeparator>
             <Slash />
           </BreadcrumbSeparator>
-          <BreadcrumbItem>
-            {!currentProjectLoading && currentProject?.name}
-            {currentProjectLoading && <Skeleton className="h-4 w-24" />}
-          </BreadcrumbItem>
+          <BreadcrumbItem>{currentProject?.name}</BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
     </div>
@@ -51,11 +41,15 @@ export const TopNav = () => {
       </div>
 
       <div className="px-3 space-x-2">
-        <Button variant={"outline"} size="xs" startContent={<BookIcon />}>
-          Documentation
-        </Button>
-        <Button variant={"icon"} size="xs">
-          <MessageCircleQuestion className="size-4" />
+        <Button
+          variant={"outline"}
+          size="xs"
+          startContent={<Github />}
+          onClick={() => {
+            window.open("https://github.com/supallm/supallm", "_blank");
+          }}
+        >
+          Beta - Help us improve
         </Button>
       </div>
     </div>

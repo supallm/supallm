@@ -50,15 +50,15 @@ sql:
             nullable: true
   - schema: "../schemas.sql"
     queries:
-      - "./workflow_event_queries.sql"
+      - "./user_queries.sql"
     engine: "postgresql"
     gen:
       go:
-        package: "workflowevent"
+        package: "user"
         sql_package: "pgx/v5"
         emit_exported_queries: false
         emit_json_tags: true
-        out: "../../internal/adapters/workflow_event"
+        out: "../../internal/adapters/user"
         output_models_file_name: "sqlc_models.gen.go"
         output_db_file_name: "sqlc_db.gen.go"
         output_files_suffix: ".gen"

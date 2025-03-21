@@ -49,7 +49,7 @@ func (h TriggerWorkflowHandler) Handle(ctx context.Context, cmd TriggerWorkflowC
 		return errs.NotFoundError{Resource: "project", ID: cmd.ProjectID}
 	}
 
-	workflow, err := project.GetWorkflow(cmd.WorkflowID)
+	workflow, err := project.ComputeWorkflow(cmd.WorkflowID)
 	if err != nil {
 		return errs.NotFoundError{Resource: "workflow", ID: cmd.WorkflowID}
 	}
@@ -59,5 +59,10 @@ func (h TriggerWorkflowHandler) Handle(ctx context.Context, cmd TriggerWorkflowC
 		return errs.InvalidError{Reason: err.Error()}
 	}
 
+	go func() {
+		// cache the computed workflow
+		// error is ignored because it's not critical
+		_ = h.projectRepo.Update(context.Background(), project)
+	}()
 	return nil
 }

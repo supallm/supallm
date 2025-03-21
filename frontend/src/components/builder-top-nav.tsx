@@ -3,15 +3,9 @@
 import { useCurrentFlowStore } from "@/core/store/flow";
 import { patchFlowUsecase } from "@/core/usecases";
 import { hookifyFunction } from "@/hooks/hookify-function";
-import { useAppConfig } from "@/hooks/use-app-config";
+import { useCurrentProjectOrThrow } from "@/hooks/use-current-project-or-throw";
 import { ChatFlowsRoute } from "@/routes";
-import { useOrganization } from "@clerk/nextjs";
-import {
-  ArrowLeft,
-  BookIcon,
-  MessageCircleQuestion,
-  Slash,
-} from "lucide-react";
+import { ArrowLeft, Github, Slash } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { EditableName } from "./editable-name";
 import Logo from "./logo";
@@ -25,8 +19,7 @@ import { Button } from "./ui/button";
 import { Skeleton } from "./ui/skeleton";
 
 const OrganizationBreadcrumb = () => {
-  const { organization, isLoaded: organizationLoaded } = useOrganization();
-  const { currentProject, isLoading: currentProjectLoading } = useAppConfig();
+  const currentProject = useCurrentProjectOrThrow();
   const { currentFlow } = useCurrentFlowStore();
 
   const { isLoading: isPatching, execute: patchFlow } = hookifyFunction(
@@ -51,17 +44,11 @@ const OrganizationBreadcrumb = () => {
     <div>
       <Breadcrumb>
         <BreadcrumbList>
-          <BreadcrumbItem>
-            {(organizationLoaded && organization?.name) ?? "Personal account"}
-            {!organizationLoaded && <Skeleton className="h-4 w-24" />}
-          </BreadcrumbItem>
+          <BreadcrumbItem>Personal account</BreadcrumbItem>
           <BreadcrumbSeparator>
             <Slash />
           </BreadcrumbSeparator>
-          <BreadcrumbItem>
-            {!currentProjectLoading && currentProject?.name}
-            {currentProjectLoading && <Skeleton className="h-4 w-24" />}
-          </BreadcrumbItem>
+          <BreadcrumbItem>{currentProject?.name}</BreadcrumbItem>
           <BreadcrumbSeparator>
             <Slash />
           </BreadcrumbSeparator>
@@ -103,11 +90,15 @@ export const BuilderTopNav = () => {
       </div>
 
       <div className="px-3 space-x-2 flex items-center">
-        <Button variant={"outline"} size="xs" startContent={<BookIcon />}>
-          Documentation
-        </Button>
-        <Button variant={"icon"} size="xs">
-          <MessageCircleQuestion className="size-4" />
+        <Button
+          variant={"outline"}
+          size="xs"
+          startContent={<Github />}
+          onClick={() => {
+            window.open("https://github.com/supallm/supallm", "_blank");
+          }}
+        >
+          Beta - Help us improve
         </Button>
       </div>
     </div>

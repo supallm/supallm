@@ -1,33 +1,16 @@
 "use client";
 
-import { Project } from "@/core/entities/project";
-import { getCurrentProjectUsecase } from "@/core/usecases";
-import { useUser } from "@clerk/nextjs";
-import { useEffect, useState } from "react";
+import { useAuth } from "@/context/auth/use-auth";
+import { useEffect } from "react";
 
 export function useAppConfig() {
-  const [currentProject, setCurrentProject] = useState<Project | null>(null);
-  const { user, isLoaded } = useUser();
-  const [error, setError] = useState<Error | null>(null);
-
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, isLoading } = useAuth();
 
   useEffect(() => {
     if (!user) {
       return;
     }
+  }, [user, isLoading]);
 
-    getCurrentProjectUsecase
-      .execute()
-      .then((project) => {
-        setCurrentProject(project);
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        setError(error);
-        setIsLoading(false);
-      });
-  }, [user, isLoaded]);
-
-  return { currentProject, isLoading, error };
+  return { user, isLoading };
 }

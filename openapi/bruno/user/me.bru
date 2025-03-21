@@ -1,0 +1,22 @@
+meta {
+  name: me
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseURL}}/me
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiMDZkZmRlZjctNDkxOC00ZTkzLWFiOTItMDdjZDEzZTY3YjYyIiwiZW1haWwiOiJhZG1pbkBzdXBhbGxtLmNvbSIsIm5hbWUiOiJhZG1pbiIsImlzcyI6InN1cGFsbG0tYXBpIiwiZXhwIjoxNzQyNTkzODI1LCJpYXQiOjE3NDI1MDc0MjV9.jf_FjUTx2mkQH-8YX2yMlPIkPE97XLrw9tHwAMR17mM
+}
+
+body:json {
+  {
+    "email": "admin@supallm.com",
+    "password": "supallm123"
+  }
+}

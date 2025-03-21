@@ -5,20 +5,25 @@ meta {
 }
 
 post {
-  url: {{baseURL}}/projects/{{projectId}}/workflows/BrpEH3cb8UYo5SkMCNZXkB/trigger
+  url: {{baseURL}}/projects/{{projectId}}/workflows/q6YMYFfTw9TyYPVASiwH3G/trigger
   body: json
-  auth: none
+  auth: bearer
 }
 
 headers {
-  X-Secret-Key: sk_QjuLHU2NcXpuXxtgd6umeD
+  x-request-origin: dashboard
+  ~X-Secret-Key: sk_YSWGKkiBy84F38UCVUPWFi
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiMDZkZmRlZjctNDkxOC00ZTkzLWFiOTItMDdjZDEzZTY3YjYyIiwiZW1haWwiOiJhZG1pbkBzdXBhbGxtLmNvbSIsIm5hbWUiOiJhZG1pbiIsImlzcyI6InN1cGFsbG0tYXBpIiwiZXhwIjoxNzQyNjM3MzQwLCJpYXQiOjE3NDI1NTA5NDB9.veHy6TVI_TFyyJNp6XKJaWyHuqD9bZxb7zFUktfgpds
 }
 
 body:json {
   {
     "triggerId": "40e1dbde-80d8-41b8-8ed0-d16d66185c3e",
     "inputs": {
-      "prompt": "dit moi ce que c'est un agent IA"
+      "prompt": "vanille"
     }
   }
 }

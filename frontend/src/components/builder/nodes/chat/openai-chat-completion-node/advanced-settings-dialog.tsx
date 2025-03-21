@@ -126,7 +126,6 @@ export const OpenAIChatAdvancedSettingsDialog: FC<
   }
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("advanced submited", values);
     onChange(values);
     setOpen(false);
   }

@@ -8,7 +8,9 @@ import {
 } from "@/components/ui/sheet";
 import { EntrypointNodeData } from "@/core/entities/flow/flow-entrypoint";
 import { useCurrentProjectOrThrow } from "@/hooks/use-current-project-or-throw";
-import { getAuthToken } from "@/lib/auth";
+
+import { getAuthToken } from "@/actions";
+import { useValidatedEnv } from "@/context/env/use-env";
 import { Label } from "@radix-ui/react-dropdown-menu";
 import { Pause, PlayIcon } from "lucide-react";
 import { FC, PropsWithChildren, useState } from "react";
@@ -25,6 +27,7 @@ export const TestFlowDialog: FC<
     onChange: (values: string) => void;
   }>
 > = ({ children, data, flowId }) => {
+  const env = useValidatedEnv();
   const { id: projectId } = useCurrentProjectOrThrow();
   const [open, setOpen] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
@@ -52,6 +55,7 @@ export const TestFlowDialog: FC<
 
   const handleRunFlow = async () => {
     const token = await getAuthToken();
+
     if (!token) {
       return;
     }
@@ -63,7 +67,11 @@ export const TestFlowDialog: FC<
         projectId,
       },
       {
-        apiUrl: "http://localhost:3001",
+        apiUrl: env.SUPALLM_API_URL,
+      },
+      {
+        origin: "dashboard",
+        mocked: false,
       },
     );
 
@@ -82,11 +90,15 @@ export const TestFlowDialog: FC<
       setResults((prev) => [...prev, data]);
     });
 
+    const unsubscribeError = subscription.on("error", (error) => {
+      console.log(error.message);
+    });
+
     const unsubscribeComplete = subscription.on("complete", () => {
       setIsRunning(false);
     });
 
-    setUnsubscribes([unsubscribeData, unsubscribeComplete]);
+    setUnsubscribes([unsubscribeData, unsubscribeComplete, unsubscribeError]);
   };
 
   const handlePause = () => {

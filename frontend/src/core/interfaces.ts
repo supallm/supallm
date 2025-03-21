@@ -1,3 +1,4 @@
+import { AuthUser } from "./entities/auth";
 import { AuthProvider } from "./entities/auth-provider";
 import { Credential, ProviderType } from "./entities/credential";
 import { Flow, FlowEdge, FlowNode } from "./entities/flow";
@@ -88,4 +89,20 @@ export interface SandboxService {
     onResult: (result: string) => void;
     onError: (error: string) => void;
   }) => Promise<void>;
+}
+
+export interface AuthService {
+  login: (
+    email: string,
+    password: string,
+  ) => Promise<{
+    token: string;
+    user: {
+      id: string;
+      email: string;
+      name: string;
+    };
+  } | null>;
+  me: () => Promise<AuthUser | null>;
+  logout: () => Promise<void>;
 }

@@ -3,11 +3,13 @@ package server
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"net/http"
+	"strings"
 
-	"github.com/clerk/clerk-sdk-go/v2"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/supallm/core/internal/pkg/auth"
 	"github.com/supallm/core/internal/pkg/errs"
 	"github.com/supallm/core/internal/pkg/secret"
 )
@@ -22,89 +24,41 @@ const (
 	maxAge    int           = 300
 
 	secretKeyContextKey contextKey = "secret-key"
+	originContextKey    contextKey = "origin"
+
+	xSecretKeyHeader     string = "X-Secret-Key"
+	xRequestOriginHeader string = "x-request-origin"
+
+	dashboardOrigin string = "dashboard"
 )
 
-func (s *Server) storeUserID(ctx context.Context, userID string) context.Context {
-	return context.WithValue(ctx, userIDKey, userID)
+func (s *Server) storeUser(r *http.Request, user auth.User) *http.Request {
+	return r.WithContext(context.WithValue(r.Context(), userIDKey, user))
 }
 
-func (s *Server) GetUserID(ctx context.Context) string {
-	id, ok := ctx.Value(userIDKey).(string)
+func (s *Server) GetUser(ctx context.Context) *auth.User {
+	user, ok := ctx.Value(userIDKey).(auth.User)
 	if !ok {
-		return ""
+		return nil
 	}
-	return id
+	return &user
 }
 
-func (s *Server) applyCommonMiddleware() {
-	s.Router.Use(middleware.RequestID)
-	s.Router.Use(middleware.Recoverer)
-	s.Router.Use(middleware.Logger)
-	s.Router.Use(s.withSecretKey)
-	s.Router.Use(cors.Handler(cors.Options{
-		AllowedOrigins: []string{"*"},
-		AllowedMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowedHeaders: []string{
-			"Accept",
-			"Authorization",
-			"Content-Type",
-			"X-CSRF-Token",
-			"X-Secret-Key",
-			"x-request-origin",
-		},
-		ExposedHeaders:   []string{"Link"},
-		AllowCredentials: true,
-		MaxAge:           maxAge,
-	}))
+func (s *Server) storeOrigin(r *http.Request, origin string) *http.Request {
+	return r.WithContext(context.WithValue(r.Context(), originContextKey, origin))
 }
 
-func (s *Server) ClerkAuthMiddleware(next http.Handler) http.Handler {
-	clerk.SetKey(s.conf.Clerk.SecretKey)
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := s.storeUserID(r.Context(), "12345")
-		next.ServeHTTP(w, r.WithContext(ctx))
-		// authHeader := c.Get("Authorization")
-		// sessionToken := strings.TrimPrefix(authHeader, "Bearer ")
-
-		// if sessionToken == "" || sessionToken == authHeader {
-		// 	return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-		// 		"error": "Invalid or missing authorization token",
-		// 	})
-		// }
-
-		// claims, err := jwt.Verify(c.Context(), &jwt.VerifyParams{
-		// 	Token: sessionToken,
-		// })
-		// if err != nil {
-		// 	return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-		// 		"error": "Unauthorized: invalid token",
-		// 	})
-		// }
-
-		// usr, err := user.Get(c.Context(), claims.Subject)
-		// if err != nil {
-		// 	return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-		// 		"error": "Failed to retrieve user information",
-		// 	})
-		// }
-
-		// if usr.Banned {
-		// 	return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
-		// 		"error": "User is banned",
-		// 	})
-		// }
-	})
+func (s *Server) IsDashboardOrigin(ctx context.Context) bool {
+	origin, ok := ctx.Value(originContextKey).(string)
+	if !ok {
+		slog.Error("origin not found in context")
+		return false
+	}
+	return origin == dashboardOrigin
 }
 
-func (s *Server) withSecretKey(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		secretKey := r.Header.Get("X-Secret-Key")
-		if secretKey != "" {
-			ctx := context.WithValue(r.Context(), secretKeyContextKey, secretKey)
-			r = r.WithContext(ctx)
-		}
-		next.ServeHTTP(w, r)
-	})
+func (s *Server) storeSecretKey(r *http.Request, secretKey string) *http.Request {
+	return r.WithContext(context.WithValue(r.Context(), secretKeyContextKey, secretKey))
 }
 
 func (s *Server) GetSecretKeyFromContext(ctx context.Context) (secret.APIKey, error) {
@@ -114,4 +68,100 @@ func (s *Server) GetSecretKeyFromContext(ctx context.Context) (secret.APIKey, er
 	return "", errs.UnauthorizedError{
 		Err: errors.New("secret key is required"),
 	}
+}
+
+func (s *Server) applyCommonMiddleware() {
+	s.Router.Use(middleware.RequestID)
+	s.Router.Use(middleware.Recoverer)
+	s.Router.Use(middleware.Logger)
+	s.Router.Use(s.populateContext)
+	s.Router.Use(cors.Handler(cors.Options{
+		AllowedOrigins: []string{"*"},
+		AllowedMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowedHeaders: []string{
+			"Accept",
+			"Authorization",
+			"Content-Type",
+			"X-CSRF-Token",
+			xSecretKeyHeader,
+			xRequestOriginHeader,
+		},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: true,
+		MaxAge:           maxAge,
+	}))
+}
+
+func (s *Server) JWTAuthMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/login" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		claims, err := s.parseBearerToken(r)
+		if err != nil {
+			s.RespondErr(w, r, err)
+			return
+		}
+
+		r = s.storeUser(r, auth.User{
+			ID:    claims.UserID.String(),
+			Email: claims.Email,
+			Name:  claims.Name,
+		})
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (s *Server) parseBearerToken(r *http.Request) (*auth.Claims, error) {
+	authHeader := r.Header.Get("Authorization")
+	sessionToken := strings.TrimPrefix(authHeader, "Bearer ")
+
+	if sessionToken == "" || sessionToken == authHeader {
+		return nil, errs.UnauthorizedError{
+			Err: errors.New("invalid or missing authorization token"),
+		}
+	}
+
+	claims, err := auth.VerifyToken(sessionToken, s.conf.Auth.SecretKey)
+	if err != nil {
+		return nil, errs.UnauthorizedError{
+			Err: err,
+		}
+	}
+
+	return claims, nil
+}
+
+func (s *Server) populateContext(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		//nolint
+		origin := r.Header.Get(xRequestOriginHeader)
+		r = s.storeOrigin(r, origin)
+
+		if origin == dashboardOrigin {
+			claims, err := s.parseBearerToken(r)
+			if err != nil {
+				s.RespondErr(w, r, err)
+				return
+			}
+
+			r = s.storeUser(r, auth.User{
+				ID:    claims.UserID.String(),
+				Email: claims.Email,
+				Name:  claims.Name,
+			})
+
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		secretKey := r.Header.Get(xSecretKeyHeader)
+		if secretKey != "" {
+			r = s.storeSecretKey(r, secretKey)
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }

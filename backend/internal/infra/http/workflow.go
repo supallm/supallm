@@ -113,13 +113,13 @@ func (s *Server) TriggerWorkflow(w http.ResponseWriter, r *http.Request, project
 		return
 	}
 
-	// err := s.isAuthorize(r.Context(), projectID, s.app.Commands.AuthorizeEventSubscription.Handle)
-	// if err != nil {
-	// 	s.server.RespondErr(w, r, err)
-	// 	return
-	// }
+	err := s.isAuthorize(r.Context(), projectID, s.app.Commands.AuthorizeEventSubscription.Handle)
+	if err != nil {
+		s.server.RespondErr(w, r, err)
+		return
+	}
 
-	err := s.app.Commands.TriggerWorkflow.Handle(r.Context(), command.TriggerWorkflowCommand{
+	err = s.app.Commands.TriggerWorkflow.Handle(r.Context(), command.TriggerWorkflowCommand{
 		ProjectID:  projectID,
 		WorkflowID: model.WorkflowID(workflowID),
 		TriggerID:  req.TriggerId,

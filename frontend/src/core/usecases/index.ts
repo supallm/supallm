@@ -1,3 +1,4 @@
+import { ApiAuthService } from "@/services/api-auth-service";
 import { ApiCredentialService } from "@/services/api-credential-service";
 import { ApiFlowService } from "@/services/api-flow-service";
 import { ApiProjectService } from "@/services/api-project-service";
@@ -17,6 +18,9 @@ import { ListAuthProvidersUsecase } from "./list-auth-providers";
 import { ListCredentialsUsecase } from "./list-credentials";
 import { ListFlowsUsecase } from "./list-flows";
 import { ListProjectsUsecase } from "./list-projects";
+import { LoginWithEmailAndPasswordUsecase } from "./login-with-email-and-password";
+import { LogoutUsecase } from "./logout";
+import { MeUsecase } from "./me";
 import { PatchAuthProviderUsecase } from "./patch-auth-provider";
 import { PatchCredentialUsecase } from "./patch-credential";
 import { PatchFlowUsecase } from "./patch-flow";
@@ -95,3 +99,13 @@ export const patchAuthProviderUsecase = new PatchAuthProviderUsecase(
 export const executeCodeSandboxUsecase = new ExecuteCodeSandboxUsecase(
   new MockSandboxService(),
 );
+
+/**
+ * Auth
+ */
+export const loginWithEmailAndPasswordUsecase =
+  new LoginWithEmailAndPasswordUsecase(new ApiAuthService());
+
+export const meUsecase = new MeUsecase(new ApiAuthService());
+
+export const logoutUsecase = new LogoutUsecase();

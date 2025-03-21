@@ -1,7 +1,8 @@
-import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
+import AuthProvider from "@/context/auth/provider";
+import { EnvProvider } from "@/context/env/provider";
 import { App } from "@/guards/app";
 import "./globals.css";
 
@@ -30,19 +31,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider
-      // Since clerk require to get this key at build time
-      // we set a fake key, and then we will interpolate it
-      // at runtime.
-      publishableKey={"pk_test_cHJvbXB0LWNvcmFsLTcwLmNsZXJrLmFjY291bnRzLmRldiQ"}
-    >
-      <html lang="en">
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        >
-          <App>{children}</App>
-        </body>
-      </html>
-    </ClerkProvider>
+    <html lang="en">
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        <EnvProvider>
+          <AuthProvider>
+            <App>{children}</App>
+          </AuthProvider>
+        </EnvProvider>
+      </body>
+    </html>
   );
 }

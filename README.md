@@ -65,7 +65,6 @@ We integrate with all the major authentication providers to securely run your fl
 Prerequisites:
 - Node.js 20+
 - Docker and Docker Compose
-- **A FREE Clerk account** that you can create [here](https://clerk.com/).
 
 ```bash
 npx install-supallm@latest
@@ -74,10 +73,6 @@ npx install-supallm@latest
 Et voilà! The CLI will walk you through the installation process.
 
 Once finished you will get a `docker-compose.yml` and a `.env` file that you will be able to customize but it's not required.
-
-
-> Important: you will be prompted for your Clerk keys. We currently use Clerk for managing organizations and users. Later we will remove this dependency. You can get your keys for FREE [here](https://clerk.com/).
-
 
 
 ## 🐳 Customize your installation
@@ -92,14 +87,16 @@ Once installed you will be able to customize your docker-compose.yml and your en
 
 | Environment Variable     | Description                                                                 | Default Value          | To Change |
 |--------------------------|-----------------------------------------------------------------------------|------------------------|--------------------|
-| CLERK_PUBLISHABLE_KEY    | The publishable key for Clerk authentication. Later we will remove this dependency.                  | (empty)   | Required   |
-| CLERK_SECRET_KEY         | The secret key for Clerk authentication.                                     | (empty)               | Required               |
+| SUPALLM_API_URL          | The URL of the Supallm API.                                                | http://localhost:3001 | Optional                |
 | SECRET_KEY               | A secret key used for encryption.                                            | change-me | Required                |
 | POSTGRES_USER            | The username for the PostgreSQL database.                                   | postgres               | Optional                |
 | POSTGRES_PASSWORD        | The password for the PostgreSQL database.                                   | postgres               | Optional                |
 | POSTGRES_DB              | The name of the PostgreSQL database.                                         | supallm                | Optional                |
 | POSTGRES_HOST            | The hostname of the PostgreSQL database.                                     | supallm-pg             | Optional                |
 | POSTGRES_PORT            | The port number on which the PostgreSQL database is running.                 | 5432                   | Optional                |
+| INITIAL_USER_EMAIL       | The email of the initial user.                                                | admin@supallm.com       | Optional                |
+| INITIAL_USER_PASSWORD    | The password of the initial user.                                              | supallm123              | Optional                |
+| INITIAL_USER_NAME        | The name of the initial user.                                                  | admin                  | Optional                |
 | FRONTEND_PORT            | The port number on which the frontend server will run.                       | 3000                   | Optional                |
 | BACKEND_PORT             | The port number on which the backend server will run.                        | 3001                   | Optional                |
 | REDIS_HOST               | The hostname of the Redis server.                                            | supallm-redis          | Optional                |

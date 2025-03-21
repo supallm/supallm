@@ -9,6 +9,45 @@ security:
   - BearerAuth: []
 
 paths:
+  /login:
+    post:
+      summary: Authenticate a user
+      operationId: login
+      tags:
+        - Auth
+      security: [] # No auth required for login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
+          description: Authentication failed
+
+  /me:
+    get:
+      summary: Get the current user
+      operationId: getMe
+      tags:
+        - User
+      responses:
+        "200":
+          description: Current user details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthorized
+
   /projects:
     get:
       summary: List all projects
@@ -623,3 +662,39 @@ components:
       required:
         - inputs
         - triggerId
+
+    User:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/UUID"
+        email:
+          type: string
+        name:
+          type: string
+      required:
+        - id
+        - email
+        - name
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      required:
+        - email
+        - password
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+      required:
+        - token
+        - user

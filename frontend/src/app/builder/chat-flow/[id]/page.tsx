@@ -17,6 +17,7 @@ import { useCurrentFlowStore } from "@/core/store/flow";
 import { patchFlowUsecase } from "@/core/usecases";
 import { hookifyFunction } from "@/hooks/hookify-function";
 import { useCurrentProjectOrThrow } from "@/hooks/use-current-project-or-throw";
+import { useDebounce } from "@/hooks/use-debounce";
 import { parseHandleId } from "@/lib/handles";
 
 import {
@@ -37,7 +38,7 @@ import {
   useStoreApi,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { PlayIcon, PlusIcon, SaveIcon } from "lucide-react";
+import { PlayIcon, PlusIcon } from "lucide-react";
 
 import { useCallback, useMemo } from "react";
 
@@ -61,6 +62,7 @@ const ChatFlowPage = () => {
 
   const [nodes, , onNodesChange] = useNodesState(currentFlow.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(currentFlow.edges);
+  const debouncedSaveFlow = useDebounce();
 
   const store = useStoreApi();
   const { screenToFlowPosition, addNodes } = useReactFlow();
@@ -117,10 +119,12 @@ const ChatFlowPage = () => {
 
   const handleNodeChange = (changes: NodeChange<FlowNode>[]) => {
     onNodesChange(changes);
+    onSave();
   };
 
   const handleEdgeChange = (changes: EdgeChange<FlowEdge>[]) => {
     onEdgesChange(changes);
+    onSave();
   };
 
   const addNode = (node: AvailableNode) => {
@@ -155,11 +159,13 @@ const ChatFlowPage = () => {
   };
 
   const onSave = () => {
-    saveFlow(projectId, currentFlow.id, {
-      nodes,
-      edges,
-      name: currentFlow.name,
-    });
+    debouncedSaveFlow(() => {
+      saveFlow(projectId, currentFlow.id, {
+        nodes,
+        edges,
+        name: currentFlow.name,
+      });
+    }, 600);
   };
 
   const entrypointNodeData = useMemo(
@@ -189,7 +195,17 @@ const ChatFlowPage = () => {
           </AddNodeDialog>
         </Panel>
         <Panel position="top-right">
-          <div className="space-x-2">
+          <div className="flex items-center gap-6">
+            {!isSaving && (
+              <div className="text-sm text-muted-foreground bg-white rounded-md px-2 py-1">
+                Flow saved automatically
+              </div>
+            )}
+            {isSaving && (
+              <div className="text-sm text-muted-foreground bg-white rounded-md px-2 py-1">
+                Saving flow...
+              </div>
+            )}
             <TestFlowDialog
               data={entrypointNodeData}
               onChange={() => {}}
@@ -202,14 +218,6 @@ const ChatFlowPage = () => {
                 Test and integrate
               </Button>
             </TestFlowDialog>
-            <Button
-              isLoading={isSaving}
-              onClick={onSave}
-              startContent={<SaveIcon className="w-4 h-4" />}
-              variant={"outline"}
-            >
-              Save
-            </Button>
           </div>
         </Panel>
         <Controls />

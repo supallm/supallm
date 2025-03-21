@@ -77,6 +77,18 @@ type Credential struct {
 	UpdatedAt time.Time    `json:"updatedAt"`
 }
 
+// LoginRequest defines model for LoginRequest.
+type LoginRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+// LoginResponse defines model for LoginResponse.
+type LoginResponse struct {
+	Token string `json:"token"`
+	User  User   `json:"user"`
+}
+
 // Project defines model for Project.
 type Project struct {
 	ApiKey       ApiKey       `json:"apiKey"`
@@ -127,6 +139,13 @@ type UpdateWorkflowRequest struct {
 	Name        string                 `json:"name"`
 }
 
+// User defines model for User.
+type User struct {
+	Email string `json:"email"`
+	Id    UUID   `json:"id"`
+	Name  string `json:"name"`
+}
+
 // Workflow defines model for Workflow.
 type Workflow struct {
 	BuilderFlow map[string]interface{} `json:"builderFlow"`
@@ -135,6 +154,9 @@ type Workflow struct {
 	Name        string                 `json:"name"`
 	UpdatedAt   time.Time              `json:"updatedAt"`
 }
+
+// LoginJSONRequestBody defines body for Login for application/json ContentType.
+type LoginJSONRequestBody = LoginRequest
 
 // CreateProjectJSONRequestBody defines body for CreateProject for application/json ContentType.
 type CreateProjectJSONRequestBody = CreateProjectRequest

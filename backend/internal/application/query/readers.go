@@ -13,3 +13,7 @@ type ProjectReader interface {
 	ReadWorkflow(ctx context.Context, projectID uuid.UUID, workflowID model.WorkflowID) (Workflow, error)
 	ListProjects(ctx context.Context, userID string) ([]Project, error)
 }
+
+type UserReader interface {
+	ReadUser(ctx context.Context, email string) (User, error)
+}

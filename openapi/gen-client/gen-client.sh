@@ -12,10 +12,7 @@ npx --yes openapi-typescript-codegen \
 
 cp client.ts src/
 
-OPENAPI_BASE=${OPENAPI_BASE:-http://localhost:3001}
 
-echo 'Setting environment variables for OpenAPI_BASE:' ${OPENAPI_BASE}
-echo "OpenAPI.BASE = '${OPENAPI_BASE}';" >> src/client.ts
 
 echo 'export { getToken } from "./client";' >> src/index.ts
 # e
