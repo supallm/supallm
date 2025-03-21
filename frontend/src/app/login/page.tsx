@@ -50,6 +50,8 @@ const LoginPage = () => {
         values.password,
       );
 
+      console.log("Login result", result);
+
       if (result?.error) {
         setLoginError(result.error);
         return;

@@ -28,7 +28,7 @@ export async function loginWithEmailAndPassword(
   );
 
   if (!authState?.user) {
-    return { error: "Invalid credentials" };
+    return { error: "Invalid credentials", baseUrl: OpenAPI.BASE };
   }
 
   const session = {
