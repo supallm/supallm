@@ -21,12 +21,13 @@ const (
 
 func (e WorkflowEventType) IsWorkflowEvent() bool {
 	return e == WorkflowStarted ||
-		e == WorkflowCompleted ||
-		e == WorkflowNodeStarted
+		e == WorkflowNodeStarted ||
+		e == WorkflowNodeCompleted
 }
 
-func (e WorkflowEventType) IsWorkflowCompleted() bool {
-	return e == WorkflowCompleted
+func (e WorkflowEventType) IsWorkflowEnded() bool {
+	return e == WorkflowCompleted ||
+		e == WorkflowFailed
 }
 
 func (e WorkflowEventType) IsNodeEvent() bool {
@@ -37,9 +38,8 @@ func (e WorkflowEventType) IsNodeLog() bool {
 	return e == WorkflowEventNodeLog
 }
 
-func (e WorkflowEventType) IsWorkflowError() bool {
-	return e == WorkflowFailed ||
-		e == WorkflowNodeFailed
+func (e WorkflowEventType) IsNodeError() bool {
+	return e == WorkflowNodeFailed
 }
 
 type WorkflowEvent struct {
