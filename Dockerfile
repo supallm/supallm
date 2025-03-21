@@ -20,6 +20,10 @@ RUN go mod download
 
 COPY backend/ .
 
+# We copy the schemas.sql file to the db directory
+# This will be used in the setup container to initialize the database
+COPY backend/sql/schemas.sql /app/db/init.sql
+
 RUN go build -o /app/server ./cmd/api/main.go
 
 # __                 _                 _ 
