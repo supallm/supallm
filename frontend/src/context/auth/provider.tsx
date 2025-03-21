@@ -1,8 +1,8 @@
 "use client";
 
 import { AuthUser } from "@/core/entities/auth";
-import { meUsecase } from "@/core/usecases";
-import { LoginRoute, LogoutRoute } from "@/routes";
+import { logoutUsecase, meUsecase } from "@/core/usecases";
+import { OverviewRoute } from "@/routes";
 import { useRouter } from "next/navigation";
 import {
   createContext,
@@ -15,7 +15,7 @@ import {
 export type AuthContextValue = {
   user: AuthUser | null;
   logout: () => void;
-  login: () => void;
+  login: (user: AuthUser) => void;
   isAuthenticated: boolean;
   isLoading: boolean;
 };
@@ -55,12 +55,13 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
   }, []);
 
   const logout = () => {
-    router.replace(LogoutRoute.path());
     setUser(null);
+    logoutUsecase.execute();
   };
 
-  const login = () => {
-    router.replace(LoginRoute.path());
+  const login = (user: AuthUser) => {
+    setUser(user);
+    router.replace(OverviewRoute.path());
   };
 
   return (

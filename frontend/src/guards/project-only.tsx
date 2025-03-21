@@ -39,7 +39,7 @@ export const ProjectOnly: FC<PropsWithChildren> = ({ children }) => {
         setError(error);
         setIsLoading(false);
       });
-  }, [currentProject, router]);
+  }, [currentProject, router, user]);
 
   if (!currentProject) {
     return <GlobalLoading />;
