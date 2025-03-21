@@ -4,31 +4,21 @@ import { parse, serialize } from "cookie";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { loginWithEmailAndPasswordUsecase } from "./core/usecases";
-import { OpenAPI } from "./lib/services/gen-api";
 import { LoginRoute } from "./routes";
 
 export async function loginWithEmailAndPassword(
   email: string,
   password: string,
 ) {
-  OpenAPI.BASE = process.env.PUBLIC_SUPALLM_API_URL!;
-
   await new Promise((resolve) => setTimeout(resolve, 500));
 
-  console.log("OpenAPI.BASE", OpenAPI.BASE);
-
-  const authState = await loginWithEmailAndPasswordUsecase.execute(
-    {
-      email,
-      password,
-    },
-    {
-      openApiBase: process.env.PUBLIC_SUPALLM_API_URL!,
-    },
-  );
+  const authState = await loginWithEmailAndPasswordUsecase.execute({
+    email,
+    password,
+  });
 
   if (!authState?.user) {
-    return { error: "Invalid credentials", baseUrl: OpenAPI.BASE };
+    return { error: "Invalid credentials" };
   }
 
   const session = {

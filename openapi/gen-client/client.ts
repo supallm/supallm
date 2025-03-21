@@ -14,3 +14,4 @@ export const getToken = async () => {
 };
 
 OpenAPI.TOKEN = getToken;
+OpenAPI.BASE = "/api";
