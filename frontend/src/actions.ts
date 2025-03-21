@@ -3,6 +3,7 @@
 import { parse, serialize } from "cookie";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { getEnv } from "./context/env/env";
 import { loginWithEmailAndPasswordUsecase } from "./core/usecases";
 import { LoginRoute } from "./routes";
 
@@ -10,6 +11,7 @@ export async function loginWithEmailAndPassword(
   email: string,
   password: string,
 ) {
+  await getEnv();
   await new Promise((resolve) => setTimeout(resolve, 500));
   const authState = await loginWithEmailAndPasswordUsecase.execute({
     email,
