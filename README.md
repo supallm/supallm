@@ -94,6 +94,9 @@ Once installed you will be able to customize your docker-compose.yml and your en
 | POSTGRES_DB              | The name of the PostgreSQL database.                                         | supallm                | Optional                |
 | POSTGRES_HOST            | The hostname of the PostgreSQL database.                                     | supallm-pg             | Optional                |
 | POSTGRES_PORT            | The port number on which the PostgreSQL database is running.                 | 5432                   | Optional                |
+| INITIAL_USER_EMAIL       | The email of the initial user.                                                | admin@supallm.com       | Optional                |
+| INITIAL_USER_PASSWORD    | The password of the initial user.                                              | supallm123              | Optional                |
+| INITIAL_USER_NAME        | The name of the initial user.                                                  | admin                  | Optional                |
 | FRONTEND_PORT            | The port number on which the frontend server will run.                       | 3000                   | Optional                |
 | BACKEND_PORT             | The port number on which the backend server will run.                        | 3001                   | Optional                |
 | REDIS_HOST               | The hostname of the Redis server.                                            | supallm-redis          | Optional                |
