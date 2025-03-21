@@ -85,6 +85,9 @@ COPY --from=runner-builder /app/runner/dist /app/runner/dist
 COPY --from=runner-builder /app/runner/package.json  /app/runner/package.json
 COPY --from=runner-builder /app/runner/node_modules /app/runner/node_modules
 
+# Setup
+COPY --from=base /app/db/init.sql /app/db/init.sql
+
 # Expose necessary ports
 EXPOSE 80 3000 50051
 
