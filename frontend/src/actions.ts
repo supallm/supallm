@@ -37,15 +37,13 @@ export async function loginWithEmailAndPassword(
 
   (await cookies()).set("session", cookie);
 
-  return { success: true };
+  return { user: authState.user };
 }
 
 export async function logout() {
   (await cookies()).delete("session");
 
-  redirect(LoginRoute.path());
-
-  return { success: true };
+  return redirect(LoginRoute.path());
 }
 
 export async function getAuthToken() {

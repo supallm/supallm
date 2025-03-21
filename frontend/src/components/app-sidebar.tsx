@@ -19,9 +19,13 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { ChatFlowsRoute, CredentialsRoute, OverviewRoute } from "@/routes";
+import {
+  ChatFlowsRoute,
+  CredentialsRoute,
+  LogoutRoute,
+  OverviewRoute,
+} from "@/routes";
 
-import { logoutUsecase } from "@/core/usecases";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -58,7 +62,7 @@ export function AppSidebar() {
   const router = useRouter();
 
   const signOut = async () => {
-    await logoutUsecase.execute();
+    router.push(LogoutRoute.path());
   };
 
   return (

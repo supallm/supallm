@@ -15,6 +15,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/context/auth/use-auth";
 import { OverviewRoute } from "@/routes";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -26,6 +27,7 @@ const LoginPage = () => {
   const router = useRouter();
   const [loginError, setLoginError] = useState<string | null>(null);
   const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
+  const { login } = useAuth();
 
   const formSchema = z.object({
     email: z.string().email("Invalid email address"),
@@ -53,7 +55,8 @@ const LoginPage = () => {
         return;
       }
 
-      if (result?.success) {
+      if (result?.user) {
+        login(result.user);
         router.push(OverviewRoute.path());
       }
 
