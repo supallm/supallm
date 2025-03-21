@@ -1,20 +1,20 @@
-import { WorkflowDefinition, WorkflowExecutionOptions } from "./types";
+import { EventEmitter } from "events";
 import {
   NodeDefinition,
   NodeInput,
   NodeIOType,
   NodeOutput,
 } from "../../nodes/types";
-import { NodeManager } from "../node/node-manager";
 import { logger } from "../../utils/logger";
-import { EventEmitter } from "events";
-import { WorkflowEvents, WorkflowExecutorEvents } from "../notifier";
 import {
-  IContextService,
   ExecutionContext,
-  NodeExecutionResult,
+  IContextService,
   ManagedExecutionContext,
+  NodeExecutionResult,
 } from "../context";
+import { NodeManager } from "../node/node-manager";
+import { WorkflowEvents, WorkflowExecutorEvents } from "../notifier";
+import { WorkflowDefinition, WorkflowExecutionOptions } from "./types";
 
 export class WorkflowExecutor extends EventEmitter {
   private readonly nodeManager: NodeManager;
@@ -29,12 +29,12 @@ export class WorkflowExecutor extends EventEmitter {
   async execute(
     workflowId: string,
     definition: WorkflowDefinition,
-    options: WorkflowExecutionOptions
+    options: WorkflowExecutionOptions,
   ): Promise<void> {
     let context = await this.contextService.initialize(
       workflowId,
       definition,
-      options
+      options,
     );
 
     try {
@@ -50,7 +50,7 @@ export class WorkflowExecutor extends EventEmitter {
 
   private async executeWorkflow(
     managedContext: ManagedExecutionContext,
-    definition: WorkflowDefinition
+    definition: WorkflowDefinition,
   ): Promise<void> {
     const { dependencies } = this.buildDependencyGraph(definition);
     while (
@@ -74,14 +74,14 @@ export class WorkflowExecutor extends EventEmitter {
       const results = await this.executeReadyNodes(
         managedContext,
         readyNodes,
-        definition
+        definition,
       );
       const errors = results.filter((r) => !r.success);
       if (errors.length > 0) {
         throw new Error(
           `Failed to execute nodes: ${errors
             .map((e) => `${e.nodeId}: ${e.error}`)
-            .join(", ")}`
+            .join(", ")}`,
         );
       }
 
@@ -93,16 +93,16 @@ export class WorkflowExecutor extends EventEmitter {
 
   private handleCircularDependency(
     context: ExecutionContext,
-    dependencies: Record<string, string[]>
+    dependencies: Record<string, string[]>,
   ): never {
     const remainingNodes = Array.from(context.allNodes).filter(
-      (nodeId) => !context.completedNodes.has(nodeId)
+      (nodeId) => !context.completedNodes.has(nodeId),
     );
 
     const blockedNodesInfo = remainingNodes.map((nodeId) => {
       const nodeDeps = dependencies[nodeId] || [];
       const missingDeps = nodeDeps.filter(
-        (depId) => !context.completedNodes.has(depId)
+        (depId) => !context.completedNodes.has(depId),
       );
       return {
         nodeId,
@@ -112,15 +112,15 @@ export class WorkflowExecutor extends EventEmitter {
 
     throw new Error(
       `circular dependency or unreachable nodes detected: ${JSON.stringify(
-        blockedNodesInfo
-      )}`
+        blockedNodesInfo,
+      )}`,
     );
   }
 
   private async executeReadyNodes(
     managedContext: ManagedExecutionContext,
     readyNodes: string[],
-    definition: WorkflowDefinition
+    definition: WorkflowDefinition,
   ): Promise<Array<{ nodeId: string; success: boolean; error?: any }>> {
     const nodePromises = readyNodes.map(async (nodeId) => {
       try {
@@ -139,7 +139,7 @@ export class WorkflowExecutor extends EventEmitter {
           nodeId,
           node,
           inputs,
-          managedContext
+          managedContext,
         );
 
         const result: NodeExecutionResult = {
@@ -176,7 +176,7 @@ export class WorkflowExecutor extends EventEmitter {
     nodeId: string,
     node: NodeDefinition,
     inputs: NodeInput,
-    managedContext: ManagedExecutionContext
+    managedContext: ManagedExecutionContext,
   ): Promise<NodeOutput> {
     this.emitNodeStarted(nodeId, node, inputs, managedContext);
 
@@ -186,7 +186,7 @@ export class WorkflowExecutor extends EventEmitter {
           nodeId: string,
           outputField: string,
           data: string,
-          type: NodeIOType
+          type: NodeIOType,
         ) => {
           this.emitNodeResult(
             nodeId,
@@ -194,7 +194,7 @@ export class WorkflowExecutor extends EventEmitter {
             outputField,
             data,
             type,
-            managedContext
+            managedContext,
           );
         },
         onNodeLog: async (nodeId: string, message: string) => {
@@ -248,7 +248,7 @@ export class WorkflowExecutor extends EventEmitter {
 
   private extractFinalOutput(
     definition: WorkflowDefinition,
-    context: ManagedExecutionContext
+    context: ManagedExecutionContext,
   ): Record<string, any> | null {
     const resultNodes = context.resultNodes(definition);
 
@@ -282,7 +282,7 @@ export class WorkflowExecutor extends EventEmitter {
 
   private emitWorkflowCompleted(
     context: ManagedExecutionContext,
-    result: Record<string, any> | null
+    result: Record<string, any> | null,
   ): void {
     this.emit(WorkflowEvents.WORKFLOW_COMPLETED, {
       ...this.createBaseEventData(context.get),
@@ -292,7 +292,7 @@ export class WorkflowExecutor extends EventEmitter {
 
   private emitWorkflowFailed(
     context: ManagedExecutionContext,
-    error: any
+    error: any,
   ): void {
     this.emit(WorkflowEvents.WORKFLOW_FAILED, {
       ...this.createBaseEventData(context.get),
@@ -304,7 +304,7 @@ export class WorkflowExecutor extends EventEmitter {
     nodeId: string,
     node: NodeDefinition,
     inputs: NodeInput,
-    context: ManagedExecutionContext
+    context: ManagedExecutionContext,
   ): void {
     this.emit(WorkflowEvents.NODE_STARTED, {
       ...this.createBaseEventData(context.get),
@@ -318,7 +318,7 @@ export class WorkflowExecutor extends EventEmitter {
     nodeId: string,
     node: NodeDefinition,
     output: NodeOutput,
-    context: ManagedExecutionContext
+    context: ManagedExecutionContext,
   ): void {
     this.emit(WorkflowEvents.NODE_COMPLETED, {
       ...this.createBaseEventData(context.get),
@@ -332,7 +332,7 @@ export class WorkflowExecutor extends EventEmitter {
     nodeId: string,
     node: NodeDefinition,
     error: any,
-    context: ManagedExecutionContext
+    context: ManagedExecutionContext,
   ): void {
     this.emit(WorkflowEvents.NODE_FAILED, {
       ...this.createBaseEventData(context.get),
@@ -348,7 +348,7 @@ export class WorkflowExecutor extends EventEmitter {
     outputField: string,
     data: string,
     type: NodeIOType,
-    context: ManagedExecutionContext
+    context: ManagedExecutionContext,
   ): void {
     this.emit(WorkflowEvents.NODE_RESULT, {
       ...this.createBaseEventData(context.get),
@@ -364,7 +364,7 @@ export class WorkflowExecutor extends EventEmitter {
     nodeId: string,
     nodeType: string,
     message: string,
-    context: ManagedExecutionContext
+    context: ManagedExecutionContext,
   ): void {
     this.emit(WorkflowEvents.NODE_LOG, {
       ...this.createBaseEventData(context.get),
@@ -376,14 +376,14 @@ export class WorkflowExecutor extends EventEmitter {
 
   override emit<K extends keyof WorkflowExecutorEvents>(
     event: K,
-    data: Parameters<WorkflowExecutorEvents[K]>[0]
+    data: Parameters<WorkflowExecutorEvents[K]>[0],
   ): boolean {
     return super.emit(event, data);
   }
 
   override on<K extends keyof WorkflowExecutorEvents>(
     event: K,
-    listener: WorkflowExecutorEvents[K]
+    listener: WorkflowExecutorEvents[K],
   ): this {
     return super.on(event, listener);
   }

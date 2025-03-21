@@ -1,14 +1,16 @@
-import {
-  NodeType,
-  NodeDefinition,
-  NodeResultCallback,
-  NodeInput,
-  NodeLogCallback,
-} from "../../nodes/types";
-import { INode } from "../../nodes/types";
 import { EntrypointNode } from "../../nodes/base/entrypoint-node";
 import { ResultNode } from "../../nodes/base/result-node";
+import { CodeExecutorNode } from "../../nodes/code-executors/code-executor-node";
 import { LLMNode } from "../../nodes/llm/llm-node";
+import {
+  INode,
+  NodeDefinition,
+  NodeInput,
+  NodeLogCallback,
+  NodeResultCallback,
+  NodeType,
+} from "../../nodes/types";
+
 export class NodeManager {
   private nodes: Map<NodeType, INode> = new Map();
 
@@ -16,6 +18,7 @@ export class NodeManager {
     this.registerNode(new LLMNode());
     this.registerNode(new EntrypointNode());
     this.registerNode(new ResultNode());
+    this.registerNode(new CodeExecutorNode());
   }
 
   private registerNode(node: INode): void {
@@ -37,7 +40,7 @@ export class NodeManager {
     callbacks: {
       onNodeResult: NodeResultCallback;
       onNodeLog: NodeLogCallback;
-    }
+    },
   ): Promise<any> {
     const nodeType = definition.type;
     const nodeImplementation = this.getNode(nodeType);

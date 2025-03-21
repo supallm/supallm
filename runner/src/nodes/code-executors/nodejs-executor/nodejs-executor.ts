@@ -24,7 +24,7 @@ import {
 
 export type Argument = {
   name: string;
-  type: "string" | "number" | "boolean" | "array" | "object";
+  type: "string" | "number" | "boolean" | "array" | "object" | "any";
   value: string;
 };
 
@@ -73,6 +73,8 @@ export class NodejsExecutor {
     }
 
     const callableScript = this.wrapMainFunctionIntoCallable(code, args);
+
+    console.log("CALLABLE SCRIPT", callableScript);
     const modulesToInstall = [
       ...parseCodeForRequiredModules(callableScript),
       "@types/node",

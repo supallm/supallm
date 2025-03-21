@@ -1,5 +1,5 @@
 export type NodeType = "llm" | "entrypoint" | "result" | "code-executor";
-export type NodeIOType = "text" | "image";
+export type NodeIOType = "text" | "image" | "any";
 
 export type NodeInput = Record<string, any>;
 export type NodeOutput = Record<string, any>;
@@ -31,7 +31,7 @@ export type NodeResultCallback = (
 
 export type NodeLogCallback = (
   nodeId: string,
-  message: string
+  message: string,
 ) => Promise<void>;
 
 export interface INode {
@@ -43,6 +43,6 @@ export interface INode {
     options: {
       onNodeResult: NodeResultCallback;
       onNodeLog: NodeLogCallback;
-    }
+    },
   ): Promise<NodeOutput>;
 }

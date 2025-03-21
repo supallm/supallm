@@ -1,7 +1,7 @@
 import Redis from "ioredis";
-import { INotifier, WorkflowEvent } from "./notifier.interface";
-import { logger } from "../../utils/logger";
 import * as msgpack from "msgpack-lite";
+import { logger } from "../../utils/logger";
+import { INotifier, WorkflowEvent } from "./notifier.interface";
 
 const DEFAULT_MAX_EVENTS_LENGTH = 500;
 const DEFAULT_MAX_RESULTS_LENGTH = 1000;
@@ -50,7 +50,7 @@ export class RedisNotifier implements INotifier {
     stream: StreamName,
     maxStreamLength: number,
     event: WorkflowEvent,
-    context: EventContext
+    context: EventContext,
   ): Promise<RedisStreamId> {
     try {
       const metadata = this.encodeMetadata(event);
@@ -58,7 +58,7 @@ export class RedisNotifier implements INotifier {
         stream,
         maxStreamLength,
         event,
-        metadata
+        metadata,
       );
     } catch (err) {
       logger.error(`failed to publish ${context}: ${err}`);
@@ -76,7 +76,7 @@ export class RedisNotifier implements INotifier {
     stream: StreamName,
     maxStreamLength: number,
     event: WorkflowEvent,
-    metadata: Buffer
+    metadata: Buffer,
   ): Promise<RedisStreamId> {
     const id = await this.redis.xadd(
       stream,
@@ -89,7 +89,7 @@ export class RedisNotifier implements INotifier {
       "payload",
       JSON.stringify(event),
       "metadata",
-      metadata
+      metadata,
     );
 
     return id || "";
@@ -97,7 +97,7 @@ export class RedisNotifier implements INotifier {
 
   async publishWorkflowEvent(event: WorkflowEvent): Promise<RedisStreamId> {
     logger.info(
-      `publishing workflow event ${event.type} to ${this.WORKFLOW_DISPATCH_STREAM} - with triggerId: ${event.triggerId}`
+      `publishing workflow event ${event.type} to ${this.WORKFLOW_DISPATCH_STREAM} - with triggerId: ${event.triggerId}`,
     );
     // listenning by the backend without consumer group
     // only the instance who has a client subscribed
@@ -106,7 +106,7 @@ export class RedisNotifier implements INotifier {
       this.WORKFLOW_DISPATCH_STREAM,
       DEFAULT_MAX_EVENTS_LENGTH,
       event,
-      "dispatch workflow event"
+      "dispatch workflow event",
     );
   }
 
@@ -119,7 +119,7 @@ export class RedisNotifier implements INotifier {
       this.NODE_RESULTS_STREAM,
       DEFAULT_MAX_RESULTS_LENGTH,
       event,
-      "node result"
+      "node result",
     );
   }
 
@@ -128,7 +128,7 @@ export class RedisNotifier implements INotifier {
       this.NODE_RESULTS_STREAM,
       DEFAULT_MAX_RESULTS_LENGTH,
       event,
-      "node log"
+      "node log",
     );
   }
   async close(): Promise<void> {
