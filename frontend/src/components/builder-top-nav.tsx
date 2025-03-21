@@ -3,7 +3,7 @@
 import { useCurrentFlowStore } from "@/core/store/flow";
 import { patchFlowUsecase } from "@/core/usecases";
 import { hookifyFunction } from "@/hooks/hookify-function";
-import { useAppConfig } from "@/hooks/use-app-config";
+import { useCurrentProjectOrThrow } from "@/hooks/use-current-project-or-throw";
 import { ChatFlowsRoute } from "@/routes";
 import { ArrowLeft, Github, Slash } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -19,7 +19,7 @@ import { Button } from "./ui/button";
 import { Skeleton } from "./ui/skeleton";
 
 const OrganizationBreadcrumb = () => {
-  const { currentProject, isLoading: currentProjectLoading } = useAppConfig();
+  const currentProject = useCurrentProjectOrThrow();
   const { currentFlow } = useCurrentFlowStore();
 
   const { isLoading: isPatching, execute: patchFlow } = hookifyFunction(
@@ -48,10 +48,7 @@ const OrganizationBreadcrumb = () => {
           <BreadcrumbSeparator>
             <Slash />
           </BreadcrumbSeparator>
-          <BreadcrumbItem>
-            {!currentProjectLoading && currentProject?.name}
-            {currentProjectLoading && <Skeleton className="h-4 w-24" />}
-          </BreadcrumbItem>
+          <BreadcrumbItem>{currentProject?.name}</BreadcrumbItem>
           <BreadcrumbSeparator>
             <Slash />
           </BreadcrumbSeparator>
