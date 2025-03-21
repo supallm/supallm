@@ -3,6 +3,7 @@ package model
 
 import (
 	"encoding/json"
+	"log/slog"
 	"strings"
 
 	"github.com/google/uuid"
@@ -176,6 +177,11 @@ func (p *Project) ComputeWorkflow(id WorkflowID) (*Workflow, error) {
 	w, ok := p.Workflows[id]
 	if !ok {
 		return nil, errs.NotFoundError{Resource: "workflow", ID: id}
+	}
+
+	if w.RunnerFlow != nil {
+		slog.Info("workflow already computed, skipping", "workflow", w.ID)
+		return w, nil
 	}
 
 	runnerFlow, err := p.ComputeRunnerFlow(w.BuilderFlow)
