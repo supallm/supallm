@@ -1,4 +1,5 @@
 "use client";
+import { GlobalLoading } from "@/components/global-loading";
 import { OpenAPI } from "@/lib/services/gen-api";
 import { createContext, useEffect, useState } from "react";
 import { getEnv } from "./env";
@@ -16,15 +17,25 @@ export const EnvProvider = ({
 }: Readonly<{
   children: React.ReactNode;
 }>) => {
+  const [isLoading, setIsLoading] = useState(true);
   const [env, setEnv] = useState<EnvState>({
     SUPALLM_API_URL: null,
   });
 
   useEffect(() => {
-    getEnv().then((env) => {
-      setEnv(env);
-      OpenAPI.BASE = env.SUPALLM_API_URL;
-    });
-  }, []);
+    getEnv()
+      .then((env) => {
+        setEnv(env);
+        OpenAPI.BASE = env.SUPALLM_API_URL;
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, [isLoading]);
+
+  if (isLoading) {
+    return <GlobalLoading />;
+  }
+
   return <EnvContext.Provider value={env}>{children}</EnvContext.Provider>;
 };

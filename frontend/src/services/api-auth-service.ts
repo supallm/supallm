@@ -27,6 +27,7 @@ export class ApiAuthService implements AuthService {
   }
 
   async me(): Promise<AuthUser | null> {
+    console.log("me");
     const user = await UserService.getMe();
 
     if (!user) {
