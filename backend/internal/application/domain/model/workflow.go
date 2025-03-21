@@ -143,11 +143,7 @@ func (p *Project) CreateWorkflow(id WorkflowID, name string, builderFlow json.Ra
 	if err := w.SetBuilderFlow(builderFlow); err != nil {
 		return nil, err
 	}
-	runnerFlow, err := p.ComputeRunnerFlow(builderFlow)
-	if err != nil {
-		return nil, err
-	}
-	w.RunnerFlow = runnerFlow
+
 	p.Workflows[id] = w
 	return w, nil
 }
@@ -170,20 +166,23 @@ func (p *Project) UpdateWorkflowBuilderFlow(id WorkflowID, builderFlow json.RawM
 	if err := w.SetBuilderFlow(builderFlow); err != nil {
 		return err
 	}
-	runnerFlow, err := p.ComputeRunnerFlow(builderFlow)
-	if err != nil {
-		return err
-	}
-	w.RunnerFlow = runnerFlow
+
+	w.RunnerFlow = json.RawMessage{}
 	p.Workflows[id] = w
 	return nil
 }
 
-func (p *Project) GetWorkflow(id WorkflowID) (*Workflow, error) {
+func (p *Project) ComputeWorkflow(id WorkflowID) (*Workflow, error) {
 	w, ok := p.Workflows[id]
 	if !ok {
 		return nil, errs.NotFoundError{Resource: "workflow", ID: id}
 	}
+
+	runnerFlow, err := p.ComputeRunnerFlow(w.BuilderFlow)
+	if err != nil {
+		return nil, err
+	}
+	w.RunnerFlow = runnerFlow
 	return w, nil
 }
 
@@ -196,12 +195,7 @@ func (w *Workflow) SetBuilderFlow(builderFlowJSON json.RawMessage) error {
 	return nil
 }
 
-func (p *Project) ComputeRunnerFlow(builderFlowJSON json.RawMessage) (json.RawMessage, error) {
-	var builderFlow BuilderFlow
-	if err := json.Unmarshal(builderFlowJSON, &builderFlow); err != nil {
-		return nil, errs.InvalidError{Reason: "unable to unmarshal builder flow", Err: err}
-	}
-
+func (p *Project) ComputeRunnerFlow(builderFlow BuilderFlow) (json.RawMessage, error) {
 	result, err := p.convertBuilderToRunnerFlow(builderFlow)
 	if err != nil {
 		return nil, err
