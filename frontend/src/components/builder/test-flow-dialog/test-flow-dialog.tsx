@@ -56,8 +56,6 @@ export const TestFlowDialog: FC<
   const handleRunFlow = async () => {
     const token = await getAuthToken();
 
-    console.log("TOKEN", token);
-
     if (!token) {
       return;
     }
@@ -92,11 +90,15 @@ export const TestFlowDialog: FC<
       setResults((prev) => [...prev, data]);
     });
 
+    const unsubscribeError = subscription.on("error", (error) => {
+      console.log(error.message);
+    });
+
     const unsubscribeComplete = subscription.on("complete", () => {
       setIsRunning(false);
     });
 
-    setUnsubscribes([unsubscribeData, unsubscribeComplete]);
+    setUnsubscribes([unsubscribeData, unsubscribeComplete, unsubscribeError]);
   };
 
   const handlePause = () => {
