@@ -93,6 +93,9 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_PORT: ${POSTGRES_PORT}
       SECRET_KEY: ${SECRET_KEY}
+      INITIAL_USER_EMAIL: ${INITIAL_USER_EMAIL}
+      INITIAL_USER_PASSWORD: ${INITIAL_USER_PASSWORD}
+      INITIAL_USER_NAME: ${INITIAL_USER_NAME}
     depends_on:
       postgres:
         condition: service_healthy

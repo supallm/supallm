@@ -89,7 +89,7 @@ COPY --from=runner-builder /app/runner/node_modules /app/runner/node_modules
 COPY --from=base /app/db/init.sql /app/db/init.sql
 
 # Expose necessary ports
-EXPOSE 80 3000 50051
+EXPOSE 80 3000
 
 # Copy entrypoint script and make it executable
 COPY entrypoint.sh /entrypoint.sh
