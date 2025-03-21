@@ -7,6 +7,7 @@ import { OpenAPI } from "./index";
  */
 export const getToken = async () => {
     const result = await getAuthToken();
+    
     if (!result) {
         return "";
     }
@@ -14,4 +15,4 @@ export const getToken = async () => {
 };
 
 OpenAPI.TOKEN = getToken;
-OpenAPI.BASE = "/api";
+OpenAPI.BASE = "http://api:80";

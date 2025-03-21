@@ -3,7 +3,7 @@
 import { parse, serialize } from "cookie";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { loginWithEmailAndPasswordUsecase } from "./core/usecases";
+import { AuthService } from "./lib/services/gen-api";
 import { LoginRoute } from "./routes";
 
 export async function loginWithEmailAndPassword(
@@ -12,9 +12,11 @@ export async function loginWithEmailAndPassword(
 ) {
   await new Promise((resolve) => setTimeout(resolve, 500));
 
-  const authState = await loginWithEmailAndPasswordUsecase.execute({
-    email,
-    password,
+  const authState = await AuthService.login({
+    requestBody: {
+      email,
+      password,
+    },
   });
 
   if (!authState?.user) {
