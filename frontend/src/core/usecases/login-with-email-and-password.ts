@@ -12,7 +12,7 @@ export class LoginWithEmailAndPasswordUsecase {
       const provider = await this.service.login(req.email, req.password);
 
       return provider;
-    } catch (error) {
+    } catch {
       return null;
     }
   }

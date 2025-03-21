@@ -52,7 +52,7 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
       .finally(() => {
         setIsLoading(false);
       });
-  }, []);
+  }, [fetchUser]);
 
   const logout = () => {
     setUser(null);

@@ -9,7 +9,7 @@ export class MeUsecase {
       const user = await this.service.me();
 
       return user;
-    } catch (error) {
+    } catch {
       return null;
     }
   }

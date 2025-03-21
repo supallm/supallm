@@ -61,7 +61,7 @@ const LoginPage = () => {
       }
 
       setIsLoggingIn(false);
-    } catch (error) {
+    } catch {
       setLoginError("Invalid credentials");
       setIsLoggingIn(false);
     } finally {

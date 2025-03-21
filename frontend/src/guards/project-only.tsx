@@ -6,12 +6,10 @@ import { useAppConfigStore } from "@/core/store/app-config";
 import { getCurrentProjectUsecase } from "@/core/usecases";
 import { NoProjectRoute } from "@/routes";
 import { useRouter } from "next/navigation";
-import { FC, PropsWithChildren, useEffect, useState } from "react";
+import { FC, PropsWithChildren, useEffect } from "react";
 
 export const ProjectOnly: FC<PropsWithChildren> = ({ children }) => {
   const { currentProject, setCurrentProject } = useAppConfigStore();
-  const [error, setError] = useState<Error | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
   const router = useRouter();
 
@@ -21,7 +19,6 @@ export const ProjectOnly: FC<PropsWithChildren> = ({ children }) => {
     }
 
     if (currentProject) {
-      setIsLoading(false);
       return;
     }
 
@@ -33,11 +30,9 @@ export const ProjectOnly: FC<PropsWithChildren> = ({ children }) => {
         }
 
         setCurrentProject(project!);
-        setIsLoading(false);
       })
       .catch((error) => {
-        setError(error);
-        setIsLoading(false);
+        console.error("Error getting current project", error);
       });
   }, [currentProject, router, user]);
 
