@@ -137,7 +137,7 @@ func (p *Project) CreateWorkflow(id WorkflowID, name string, builderFlow json.Ra
 			Nodes: []BuilderNode{},
 			Edges: []BuilderEdge{},
 		},
-		RunnerFlow: json.RawMessage{},
+		RunnerFlow: nil,
 	}
 
 	if err := w.SetBuilderFlow(builderFlow); err != nil {
@@ -167,7 +167,7 @@ func (p *Project) UpdateWorkflowBuilderFlow(id WorkflowID, builderFlow json.RawM
 		return err
 	}
 
-	w.RunnerFlow = json.RawMessage{}
+	w.RunnerFlow = nil
 	p.Workflows[id] = w
 	return nil
 }
