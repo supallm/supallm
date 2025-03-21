@@ -6,6 +6,13 @@ WORKDIR /app
 # Install required dependencies for all services
 RUN apk add --no-cache nodejs npm git
 
+# Setup step
+# We copy the schemas.sql file to the db directory
+# This will be used in the setup container to initialize the database
+
+WORKDIR /app/db
+COPY backend/sql/schemas.sql /app/db/init.sql
+
 # _                _                  _ 
 # | |__   __ _  ___| | _____ _ __   __| |
 # | '_ \ / _` |/ __| |/ / _ \ '_ \ / _` |
@@ -19,10 +26,6 @@ COPY backend/go.mod backend/go.sum ./
 RUN go mod download
 
 COPY backend/ .
-
-# We copy the schemas.sql file to the db directory
-# This will be used in the setup container to initialize the database
-COPY backend/sql/schemas.sql /app/db/init.sql
 
 RUN go build -o /app/server ./cmd/api/main.go
 
