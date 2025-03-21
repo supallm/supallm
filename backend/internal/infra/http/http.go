@@ -72,6 +72,10 @@ func (s *Server) isAuthorize(
 	projectID uuid.UUID,
 	fn func(ctx context.Context, cmd command.AuthorizeEventSubscriptionCommand) error,
 ) error {
+	if s.server.IsDashboardOrigin(ctx) {
+		return nil
+	}
+
 	secretKey, err := s.server.GetSecretKeyFromContext(ctx)
 	if err != nil {
 		return err

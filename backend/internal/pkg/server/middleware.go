@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -23,10 +24,16 @@ const (
 	maxAge    int           = 300
 
 	secretKeyContextKey contextKey = "secret-key"
+	originContextKey    contextKey = "origin"
+
+	xSecretKeyHeader     string = "X-Secret-Key"
+	xRequestOriginHeader string = "x-request-origin"
+
+	dashboardOrigin string = "dashboard"
 )
 
-func (s *Server) storeUser(ctx context.Context, user auth.User) context.Context {
-	return context.WithValue(ctx, userIDKey, user)
+func (s *Server) storeUser(r *http.Request, user auth.User) *http.Request {
+	return r.WithContext(context.WithValue(r.Context(), userIDKey, user))
 }
 
 func (s *Server) GetUser(ctx context.Context) *auth.User {
@@ -37,11 +44,37 @@ func (s *Server) GetUser(ctx context.Context) *auth.User {
 	return &user
 }
 
+func (s *Server) storeOrigin(r *http.Request, origin string) *http.Request {
+	return r.WithContext(context.WithValue(r.Context(), originContextKey, origin))
+}
+
+func (s *Server) IsDashboardOrigin(ctx context.Context) bool {
+	origin, ok := ctx.Value(originContextKey).(string)
+	if !ok {
+		slog.Error("origin not found in context")
+		return false
+	}
+	return origin == dashboardOrigin
+}
+
+func (s *Server) storeSecretKey(r *http.Request, secretKey string) *http.Request {
+	return r.WithContext(context.WithValue(r.Context(), secretKeyContextKey, secretKey))
+}
+
+func (s *Server) GetSecretKeyFromContext(ctx context.Context) (secret.APIKey, error) {
+	if secretKey, ok := ctx.Value(secretKeyContextKey).(string); ok {
+		return secret.APIKey(secretKey), nil
+	}
+	return "", errs.UnauthorizedError{
+		Err: errors.New("secret key is required"),
+	}
+}
+
 func (s *Server) applyCommonMiddleware() {
 	s.Router.Use(middleware.RequestID)
 	s.Router.Use(middleware.Recoverer)
 	s.Router.Use(middleware.Logger)
-	s.Router.Use(s.withSecretKey)
+	s.Router.Use(s.populateContext)
 	s.Router.Use(cors.Handler(cors.Options{
 		AllowedOrigins: []string{"*"},
 		AllowedMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
@@ -50,8 +83,8 @@ func (s *Server) applyCommonMiddleware() {
 			"Authorization",
 			"Content-Type",
 			"X-CSRF-Token",
-			"X-Secret-Key",
-			"x-request-origin",
+			xSecretKeyHeader,
+			xRequestOriginHeader,
 		},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
@@ -66,49 +99,69 @@ func (s *Server) JWTAuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		authHeader := r.Header.Get("Authorization")
-		sessionToken := strings.TrimPrefix(authHeader, "Bearer ")
-
-		if sessionToken == "" || sessionToken == authHeader {
-			s.RespondErr(w, r, errs.UnauthorizedError{
-				Err: errors.New("invalid or missing authorization token"),
-			})
-			return
-		}
-
-		claims, err := auth.VerifyToken(sessionToken, s.conf.Auth.SecretKey)
+		claims, err := s.parseBearerToken(r)
 		if err != nil {
-			s.RespondErr(w, r, errs.UnauthorizedError{
-				Err: err,
-			})
+			s.RespondErr(w, r, err)
 			return
 		}
 
-		ctx := s.storeUser(r.Context(), auth.User{
+		r = s.storeUser(r, auth.User{
 			ID:    claims.UserID.String(),
 			Email: claims.Email,
 			Name:  claims.Name,
 		})
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
-}
-
-func (s *Server) withSecretKey(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		secretKey := r.Header.Get("X-Secret-Key")
-		if secretKey != "" {
-			ctx := context.WithValue(r.Context(), secretKeyContextKey, secretKey)
-			r = r.WithContext(ctx)
-		}
 		next.ServeHTTP(w, r)
 	})
 }
 
-func (s *Server) GetSecretKeyFromContext(ctx context.Context) (secret.APIKey, error) {
-	if secretKey, ok := ctx.Value(secretKeyContextKey).(string); ok {
-		return secret.APIKey(secretKey), nil
+func (s *Server) parseBearerToken(r *http.Request) (*auth.Claims, error) {
+	authHeader := r.Header.Get("Authorization")
+	sessionToken := strings.TrimPrefix(authHeader, "Bearer ")
+
+	if sessionToken == "" || sessionToken == authHeader {
+		return nil, errs.UnauthorizedError{
+			Err: errors.New("invalid or missing authorization token"),
+		}
 	}
-	return "", errs.UnauthorizedError{
-		Err: errors.New("secret key is required"),
+
+	claims, err := auth.VerifyToken(sessionToken, s.conf.Auth.SecretKey)
+	if err != nil {
+		return nil, errs.UnauthorizedError{
+			Err: err,
+		}
 	}
+
+	return claims, nil
+}
+
+func (s *Server) populateContext(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		//nolint
+		origin := r.Header.Get(xRequestOriginHeader)
+		r = s.storeOrigin(r, origin)
+
+		if origin == dashboardOrigin {
+			claims, err := s.parseBearerToken(r)
+			if err != nil {
+				s.RespondErr(w, r, err)
+				return
+			}
+
+			r = s.storeUser(r, auth.User{
+				ID:    claims.UserID.String(),
+				Email: claims.Email,
+				Name:  claims.Name,
+			})
+
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		secretKey := r.Header.Get(xSecretKeyHeader)
+		if secretKey != "" {
+			r = s.storeSecretKey(r, secretKey)
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
