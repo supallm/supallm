@@ -69,8 +69,8 @@ func (j workflowSSEMarshaller) Marshal(_ context.Context, payload any) (watermil
 	eventType := "data"
 	if msg, ok := payload.(event.WorkflowEventMessage); ok {
 		switch {
-		case msg.Type.IsWorkflowEnded():
-			eventType = "end"
+		case msg.Type.IsWorkflowCompleted():
+			eventType = "complete"
 		case msg.Type.IsWorkflowEvent():
 			eventType = "workflow"
 		case msg.Type.IsNodeLog():

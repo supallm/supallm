@@ -25,7 +25,7 @@ func (e WorkflowEventType) IsWorkflowEvent() bool {
 		e == WorkflowNodeCompleted
 }
 
-func (e WorkflowEventType) IsWorkflowEnded() bool {
+func (e WorkflowEventType) IsWorkflowCompleted() bool {
 	return e == WorkflowCompleted ||
 		e == WorkflowFailed
 }
