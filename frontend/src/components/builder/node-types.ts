@@ -4,4 +4,7 @@ export type NodeType =
   | "result"
   | "chat-anthropic"
   | "chat-google"
-  | "chat-azure";
+  | "chat-azure"
+  | "e2b-interpreter"
+  | "http-request"
+  | "code-executor";

@@ -11,6 +11,8 @@ import {
 import { NODE_WIDTH } from "../../constants";
 import { LabeledHandle } from "../../labeled-handle";
 
+export type BaseNodeHandleType = "text" | "image" | "any";
+
 export type BaseNodeHandle = {
   /**
    * Name displayed in the node
@@ -21,7 +23,7 @@ export type BaseNodeHandle = {
    */
   id: string;
   tooltip?: string | ReactNode;
-  type: "text" | "image";
+  type: BaseNodeHandleType;
 };
 
 export type BaseNodeProps = {

@@ -91,6 +91,7 @@ services:
       dockerfile: Dockerfile.dev
     container_name: supallm-runner
     volumes:
+      - /tmp:/tmp
       - ./runner:/app
       - /app/node_modules
     env_file:

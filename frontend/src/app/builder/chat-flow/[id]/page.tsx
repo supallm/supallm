@@ -4,9 +4,12 @@ import { AddNodeDialog } from "@/components/builder/add-node-dialog/add-node-dia
 import { AvailableNode } from "@/components/builder/add-node-dialog/available-nodes";
 import { NODE_WIDTH } from "@/components/builder/constants";
 import { NodeType } from "@/components/builder/node-types";
-import openAIChatCompletionNode from "@/components/builder/nodes/chat/openai-chat-completion-node";
+import { default as openAIChatCompletionNode } from "@/components/builder/nodes/chat/openai-chat-completion-node";
+import codeExecutorNode from "@/components/builder/nodes/code/code-executor/code-executor-node";
+import e2bInterpreterNode from "@/components/builder/nodes/code/e2b-interpreter/e2b-interpreter-node";
 import entrypointNode from "@/components/builder/nodes/fixed/entrypoint-node";
 import resultNode from "@/components/builder/nodes/fixed/result-node";
+import httpRequestNode from "@/components/builder/nodes/utilities/http-request-node/http-request-node";
 import { TestFlowDialog } from "@/components/builder/test-flow-dialog/test-flow-dialog";
 import { Button } from "@/components/ui/button";
 import { FlowEdge, FlowNode } from "@/core/entities/flow";
@@ -83,6 +86,20 @@ const ChatFlowPage = () => {
     const { type: sourceType } = parseHandleId(sourceHandle);
     const { type: targetType } = parseHandleId(targetHandle);
 
+    /**
+     * Same node handles cannot be connected together
+     */
+    if (params.source === params.target) {
+      return false;
+    }
+
+    /**
+     * We can connect outputHandle to any inputHandle with an "any" type
+     */
+    if (sourceType === "any" || targetType === "any") {
+      return true;
+    }
+
     return sourceType === targetType;
   };
 
@@ -91,8 +108,10 @@ const ChatFlowPage = () => {
     () => ({
       "chat-openai": openAIChatCompletionNode,
       result: resultNode,
-      // promptTemplateNode: promptTemplateNode,
       entrypoint: entrypointNode,
+      "code-executor": codeExecutorNode,
+      "e2b-interpreter": e2bInterpreterNode,
+      "http-request": httpRequestNode,
       "chat-anthropic": () => null,
       "chat-google": () => null,
       "chat-azure": () => null,
@@ -101,6 +120,7 @@ const ChatFlowPage = () => {
   );
 
   const handleNodeChange = (changes: NodeChange<FlowNode>[]) => {
+    console.log("CHANGES", changes);
     onNodesChange(changes);
     onSave();
   };
@@ -125,15 +145,15 @@ const ChatFlowPage = () => {
         y: center.y - NODE_WIDTH / 2,
       };
 
-      addNodes([
-        {
-          id: crypto.randomUUID(),
-          type: node.type,
-          data: {},
-          position: { x: centerCoords.x, y: centerCoords.y },
-          zIndex: nodes.length + 1,
-        },
-      ]);
+      const newNode = {
+        id: crypto.randomUUID(),
+        type: node.type,
+        data: {},
+        position: { x: centerCoords.x, y: centerCoords.y },
+        zIndex: nodes.length + 1,
+      };
+
+      addNodes([newNode]);
     }
   };
 

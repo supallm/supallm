@@ -114,6 +114,10 @@ type LLMNodeData struct {
 	OutputMode          string          `json:"outputMode"`
 }
 
+type CodeExecutorNodeData struct {
+	Code string `json:"code"`
+}
+
 type RunnerFlow struct {
 	Nodes map[string]json.RawMessage `json:"nodes" exhaustruct:"optional"`
 }
@@ -248,6 +252,8 @@ func (p *Project) convertBuilderToRunnerFlow(builderFlow BuilderFlow) (map[strin
 			err = p.processResultNode(nodes, runnerNodeID, node, builderFlow.Edges)
 		case "chat-openai", "llm":
 			err = p.processLLMNode(nodes, runnerNodeID, node, builderFlow.Edges, nodeMap)
+		case "code-executor":
+			err = p.processCodeExecutorNode(nodes, runnerNodeID, node, builderFlow.Edges, nodeMap)
 		// Add additional node types as needed
 		// case "code":
 		//     err = p.processCodeNode(nodes, runnerNodeID, node, builderFlow.Edges, nodeMap)
@@ -326,6 +332,111 @@ func (p *Project) processResultNode(nodes map[string]any, nodeID string, node Bu
 		"type":   "result",
 		"inputs": inputs,
 	}
+
+	return nil
+}
+
+// processCodeExecutorNode processes a code executor node
+func (p *Project) processCodeExecutorNode(nodes map[string]any, nodeID string, node BuilderNode, edges []BuilderEdge, nodeMap map[string]BuilderNode) error {
+	var data CodeExecutorNodeData
+	if err := json.Unmarshal(node.Data, &data); err != nil {
+		return errs.InvalidError{Reason: "unable to unmarshal code executor node data", Err: err}
+	}
+
+	nodeConfig := map[string]any{
+		"type": "code-executor",
+		"code": data.Code,
+	}
+
+	// Process inputs
+	inputs := make(map[string]any)
+
+	// Find all edges that target this node
+	for _, edge := range edges {
+		if edge.Target == node.ID {
+			// This is an input edge
+			sourceNode := edge.Source
+			targetHandle := edge.TargetHandle
+
+			// Parse handle format
+			handleParts := p.parseHandle(targetHandle)
+			if len(handleParts) != 2 {
+				continue
+			}
+
+			handleType := handleParts[0]
+			handleName := handleParts[1]
+
+			// Create the input entry
+			sourceNodeID := sourceNode
+			if sourceNode == EntrypointID {
+				sourceNodeID = "entrypoint"
+			}
+
+			// Get source handle parts
+			sourceHandleParts := p.parseHandle(edge.SourceHandle)
+			if len(sourceHandleParts) != 2 {
+				continue
+			}
+			sourceHandleName := sourceHandleParts[1]
+
+			inputs[handleName] = map[string]string{
+				"type":   handleType,
+				"source": sourceNodeID + "." + sourceHandleName,
+			}
+		}
+	}
+
+	nodeConfig["inputs"] = inputs
+
+	// Process outputs
+	outputs := make(map[string]any)
+
+	// Add a default response output
+	responseOutput := map[string]string{
+		"type": "text",
+	}
+
+	// Check if this node has an edge to the result node
+	for _, edge := range edges {
+		if edge.Source == node.ID && edge.Target == ResultNodeID {
+			// This node has a connection to the result node
+			sourceHandle := edge.SourceHandle
+			targetHandle := edge.TargetHandle
+
+			// Parse handles
+			sourceHandleParts := p.parseHandle(sourceHandle)
+			targetHandleParts := p.parseHandle(targetHandle)
+
+			if len(sourceHandleParts) == 2 && len(targetHandleParts) == 2 {
+				// Find the result node to get the handle label
+				for _, resultNode := range nodeMap {
+					if resultNode.ID == ResultNodeID {
+						var resultData ResultNodeData
+						if err := json.Unmarshal(resultNode.Data, &resultData); err != nil {
+							return err
+						}
+
+						// Find the matching handle in the result node
+						for _, handle := range resultData.Handles {
+							if handle.ID == targetHandle {
+								// Add the result_key to the output
+								responseOutput["result_key"] = handle.Label
+								break
+							}
+						}
+						break
+					}
+				}
+			}
+			break
+		}
+	}
+
+	outputs["response"] = responseOutput
+	nodeConfig["outputs"] = outputs
+
+	nodes[nodeID] = nodeConfig
 
 	return nil
 }

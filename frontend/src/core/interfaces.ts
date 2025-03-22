@@ -79,9 +79,18 @@ export interface AuthProviderService {
   patch: (id: string, data: { secretKey: string }) => Promise<void>;
 }
 
-/**
- * Auth service
- */
+export interface SandboxService {
+  runCode: (data: {
+    projectId: string;
+    code: string;
+    language: "typescript";
+    args: unknown[];
+    onLog: (log: string) => void;
+    onResult: (result: string) => void;
+    onError: (error: string) => void;
+  }) => Promise<void>;
+}
+
 export interface AuthService {
   login: (
     email: string,
