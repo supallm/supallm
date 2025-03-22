@@ -1,3 +1,4 @@
+import { Result } from "typescript-result";
 import { EntrypointNode } from "../../nodes/base/entrypoint-node";
 import { ResultNode } from "../../nodes/base/result-node";
 import { CodeExecutorNode } from "../../nodes/code-executors/code-executor-node";
@@ -7,6 +8,7 @@ import {
   NodeDefinition,
   NodeInput,
   NodeLogCallback,
+  NodeOutput,
   NodeResultCallback,
   NodeType,
 } from "../../nodes/types";
@@ -41,15 +43,15 @@ export class NodeManager {
       onNodeResult: NodeResultCallback;
       onNodeLog: NodeLogCallback;
     },
-  ): Promise<any> {
+  ): Promise<Result<NodeOutput, Error>> {
     const nodeType = definition.type;
     const nodeImplementation = this.getNode(nodeType);
 
     if (!nodeImplementation) {
-      throw new Error(`unsupported node type: ${nodeType}`);
+      return Result.error(new Error(`unsupported node type: ${nodeType}`));
     }
 
-    return await nodeImplementation.execute(nodeId, definition, inputs, {
+    return nodeImplementation.execute(nodeId, definition, inputs, {
       onNodeResult: callbacks.onNodeResult,
       onNodeLog: callbacks.onNodeLog,
     });

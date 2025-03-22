@@ -1,9 +1,10 @@
-import { assertUnreachable } from "../../utils/type-safety";
+import { Result } from "typescript-result";
 import {
   INode,
   NodeDefinition,
   NodeInput,
   NodeLogCallback,
+  NodeOutput,
   NodeResultCallback,
   NodeType,
 } from "../types";
@@ -29,7 +30,7 @@ export class CodeExecutorNode implements INode {
       onNodeResult: NodeResultCallback;
       onNodeLog: NodeLogCallback;
     },
-  ): Promise<any> {
+  ): Promise<Result<NodeOutput, Error>> {
     try {
       const { code, expectedArguments } =
         definition as unknown as CodeExecutorNodeDefinition;
@@ -79,21 +80,19 @@ export class CodeExecutorNode implements INode {
           const [parsedResult, error] = result.toTuple();
 
           if (error) {
-            // TODO @val: do what you need to do with the Error
-            console.error(`Error executing code node ${nodeId}: ${error}`);
-            throw error;
+            return Result.error(error);
           }
 
           Object.entries(parsedResult).forEach(([key, value]) => {
             options.onNodeResult(nodeId, key, value, "any");
           });
-          return parsedResult;
+          return Result.ok(parsedResult);
         default:
-          assertUnreachable(language);
+          return Result.error(new Error("Unsupported language"));
       }
     } catch (error) {
-      console.error("Unexpected error while executing code node", error);
-      throw error;
+      console.error(error);
+      return Result.error(error as Error);
     }
   }
 }

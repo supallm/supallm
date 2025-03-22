@@ -1,4 +1,5 @@
 import { Result } from "typescript-result";
+import { CryptoError } from "../../services/secret/crypto-service";
 
 export class ModelNotFoundError extends Error {
   readonly type = "model-not-found-error";
@@ -48,7 +49,8 @@ export type LLMExecutionError =
   | TokenLimitExceededError
   | MessageFormatError
   | InvalidInputError
-  | InvalidOutputError;
+  | InvalidOutputError
+  | CryptoError;
 
 // Type alias to simplify function signatures
 export type LLMResult<T> = Result<T, LLMExecutionError>;

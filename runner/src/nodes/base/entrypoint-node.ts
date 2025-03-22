@@ -1,13 +1,13 @@
+import { Result } from "typescript-result";
 import {
-  NodeDefinition,
-  NodeResultCallback,
-  NodeInput,
-  NodeOutput,
-  NodeType,
   INode,
+  NodeDefinition,
+  NodeInput,
   NodeLogCallback,
+  NodeOutput,
+  NodeResultCallback,
+  NodeType,
 } from "../types";
-
 export class EntrypointNode implements INode {
   type: NodeType;
 
@@ -22,13 +22,13 @@ export class EntrypointNode implements INode {
     _options: {
       onNodeResult: NodeResultCallback;
       onNodeLog: NodeLogCallback;
-    }
-  ): Promise<NodeOutput> {
+    },
+  ): Promise<Result<NodeOutput, Error>> {
     // entrypoint node is the first node to be executed
     // it takes the global inputs and makes them available to the next nodes
     // these inputs are already available in context.inputs
     // we just return them as is
     // the result will be stored in context.outputs[nodeId] by the workflow executor
-    return { ...inputs };
+    return Result.ok({ ...inputs });
   }
 }

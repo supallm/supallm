@@ -1,4 +1,5 @@
 import { EventEmitter } from "events";
+import { Result } from "typescript-result";
 import {
   NodeDefinition,
   NodeInput,
@@ -39,19 +40,26 @@ export class WorkflowExecutor extends EventEmitter {
 
     try {
       this.emitWorkflowStarted(context);
-      await this.executeWorkflow(context, definition);
-      const output = this.extractFinalOutput(definition, context);
+
+      const [output, outputError] = (
+        await this.executeWorkflow(context, definition)
+      ).toTuple();
+      if (outputError) {
+        throw outputError;
+      }
+
       this.emitWorkflowCompleted(context, output);
     } catch (error) {
       logger.error(`error executing workflow ${workflowId}: ${error}`);
-      this.emitWorkflowFailed(context, error);
+      // TODO: handle error
+      this.emitWorkflowFailed(context, error as Error);
     }
   }
 
   private async executeWorkflow(
     managedContext: ManagedExecutionContext,
     definition: WorkflowDefinition,
-  ): Promise<void> {
+  ): Promise<Result<Record<string, any> | null, Error>> {
     const { dependencies } = this.buildDependencyGraph(definition);
     while (
       managedContext.get.completedNodes.size < managedContext.get.allNodes.size
@@ -66,7 +74,13 @@ export class WorkflowExecutor extends EventEmitter {
           managedContext.get.completedNodes.size <
           managedContext.get.allNodes.size
         ) {
-          this.handleCircularDependency(managedContext.get, dependencies);
+          const circular = this.handleCircularDependency(
+            managedContext.get,
+            dependencies,
+          );
+          if (circular.isError()) {
+            return Result.error(circular.error);
+          }
         }
         break;
       }
@@ -78,10 +92,12 @@ export class WorkflowExecutor extends EventEmitter {
       );
       const errors = results.filter((r) => !r.success);
       if (errors.length > 0) {
-        throw new Error(
-          `Failed to execute nodes: ${errors
-            .map((e) => `${e.nodeId}: ${e.error}`)
-            .join(", ")}`,
+        return Result.error(
+          new Error(
+            `failed to execute nodes: ${errors
+              .map((e) => `${e.nodeId}: ${e.error}`)
+              .join(", ")}`,
+          ),
         );
       }
 
@@ -89,12 +105,14 @@ export class WorkflowExecutor extends EventEmitter {
         await managedContext.markNodeCompleted(result.nodeId);
       }
     }
+
+    return Result.ok(this.extractFinalOutput(definition, managedContext));
   }
 
   private handleCircularDependency(
     context: ExecutionContext,
     dependencies: Record<string, string[]>,
-  ): never {
+  ): Result<void, Error> {
     const remainingNodes = Array.from(context.allNodes).filter(
       (nodeId) => !context.completedNodes.has(nodeId),
     );
@@ -110,10 +128,12 @@ export class WorkflowExecutor extends EventEmitter {
       };
     });
 
-    throw new Error(
-      `circular dependency or unreachable nodes detected: ${JSON.stringify(
-        blockedNodesInfo,
-      )}`,
+    return Result.error(
+      new Error(
+        `circular dependency or unreachable nodes detected: ${JSON.stringify(
+          blockedNodesInfo,
+        )}`,
+      ),
     );
   }
 
@@ -123,50 +143,32 @@ export class WorkflowExecutor extends EventEmitter {
     definition: WorkflowDefinition,
   ): Promise<Array<{ nodeId: string; success: boolean; error?: any }>> {
     const nodePromises = readyNodes.map(async (nodeId) => {
-      try {
-        const node = definition.nodes[nodeId];
-        if (!node) {
-          logger.error(`node definition not found for nodeId: ${nodeId}`);
-          return {
-            nodeId,
-            success: false,
-            error: `node definition not found for nodeId: ${nodeId}`,
-          };
-        }
-
-        const inputs = managedContext.resolveInputs(nodeId, node);
-        const output = await this.executeNode(
+      const node = definition.nodes[nodeId];
+      if (!node) {
+        return {
           nodeId,
-          node,
-          inputs,
-          managedContext,
-        );
-
-        const result: NodeExecutionResult = {
-          id: nodeId,
-          success: true,
-          inputs,
-          output,
-          executionTime: 0,
-          error: undefined,
-        };
-
-        await managedContext.updateNode(nodeId, result);
-        return { nodeId, success: true };
-      } catch (error) {
-        const result: NodeExecutionResult = {
-          id: nodeId,
           success: false,
-          inputs: null,
-          output: null,
-          executionTime: 0,
-          error: error instanceof Error ? error.message : String(error),
+          error: `node definition not found for nodeId: ${nodeId}`,
         };
-
-        await managedContext.updateNode(nodeId, result);
-        logger.error(`error executing node ${nodeId}: ${error}`);
-        return { nodeId, success: false, error };
       }
+
+      const inputs = managedContext.resolveInputs(nodeId, node);
+      const [output, outputError] = (
+        await this.executeNode(nodeId, node, inputs, managedContext)
+      ).toTuple();
+
+      const success = outputError ? false : true;
+      const result: NodeExecutionResult = {
+        id: nodeId,
+        success,
+        inputs,
+        output,
+        executionTime: 0,
+        error: outputError ? outputError.message : undefined,
+      };
+
+      await managedContext.updateNode(nodeId, result);
+      return { nodeId, success, error: outputError };
     });
 
     return Promise.all(nodePromises);
@@ -177,11 +179,11 @@ export class WorkflowExecutor extends EventEmitter {
     node: NodeDefinition,
     inputs: NodeInput,
     managedContext: ManagedExecutionContext,
-  ): Promise<NodeOutput> {
+  ): Promise<Result<NodeOutput, Error>> {
     this.emitNodeStarted(nodeId, node, inputs, managedContext);
 
-    try {
-      const output = await this.nodeManager.executeNode(nodeId, node, inputs, {
+    const [output, outputError] = (
+      await this.nodeManager.executeNode(nodeId, node, inputs, {
         onNodeResult: async (
           nodeId: string,
           outputField: string,
@@ -200,15 +202,16 @@ export class WorkflowExecutor extends EventEmitter {
         onNodeLog: async (nodeId: string, message: string) => {
           this.emitNodeLog(nodeId, node.type, message, managedContext);
         },
-      });
+      })
+    ).toTuple();
 
-      this.emitNodeCompleted(nodeId, node, output, managedContext);
-      return output;
-    } catch (error) {
-      logger.error(`error executing node ${nodeId}: ${error}`);
-      this.emitNodeFailed(nodeId, node, error, managedContext);
-      throw error;
+    if (outputError) {
+      this.emitNodeFailed(nodeId, node, outputError, managedContext);
+      return Result.error(outputError);
     }
+
+    this.emitNodeCompleted(nodeId, node, output, managedContext);
+    return Result.ok(output);
   }
 
   private buildDependencyGraph(definition: WorkflowDefinition): {
@@ -292,11 +295,11 @@ export class WorkflowExecutor extends EventEmitter {
 
   private emitWorkflowFailed(
     context: ManagedExecutionContext,
-    error: any,
+    error: Error,
   ): void {
     this.emit(WorkflowEvents.WORKFLOW_FAILED, {
       ...this.createBaseEventData(context.get),
-      error: error instanceof Error ? error.message : String(error),
+      error: error.message,
     });
   }
 
@@ -331,14 +334,14 @@ export class WorkflowExecutor extends EventEmitter {
   private emitNodeFailed(
     nodeId: string,
     node: NodeDefinition,
-    error: any,
+    error: Error,
     context: ManagedExecutionContext,
   ): void {
     this.emit(WorkflowEvents.NODE_FAILED, {
       ...this.createBaseEventData(context.get),
       nodeId,
       nodeType: node.type,
-      error: error instanceof Error ? error.message : String(error),
+      error: error.message,
     });
   }
 
