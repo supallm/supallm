@@ -129,6 +129,51 @@ export const parseCodeForInputs = (
   return inputs;
 };
 
+export const getFunctionReturnLines = (
+  code: string,
+  functionName: string = "main",
+): { startLine: number; endLine: number } => {
+  const sourceFile = ts.createSourceFile(
+    "temp.ts",
+    code,
+    ts.ScriptTarget.Latest,
+    true,
+  );
+
+  let startLine: number | undefined;
+  let endLine: number | undefined;
+
+  const visit = (node: ts.Node) => {
+    if (ts.isFunctionDeclaration(node) && node.name?.text === functionName) {
+      startLine = node.getStart(sourceFile, false);
+      endLine = node.getEnd();
+
+      if (node.body) {
+        node.body.forEachChild((child) => {
+          if (ts.isReturnStatement(child)) {
+            startLine = child.getStart(sourceFile, false);
+            endLine = child.getEnd();
+          }
+        });
+      }
+    }
+    ts.forEachChild(node, visit);
+  };
+
+  visit(sourceFile);
+
+  return {
+    startLine:
+      startLine !== undefined
+        ? sourceFile.getLineAndCharacterOfPosition(startLine).line + 1
+        : 0,
+    endLine:
+      endLine !== undefined
+        ? sourceFile.getLineAndCharacterOfPosition(endLine).line + 1
+        : 0,
+  };
+};
+
 export const parseFunctionOutput = (
   code: string,
   functionName: string = "main",
@@ -142,7 +187,7 @@ export const parseFunctionOutput = (
   let keys: string[] = [];
 
   const visit = (node: ts.Node) => {
-    if (ts.isFunctionDeclaration(node) && node.name?.text === "main") {
+    if (ts.isFunctionDeclaration(node) && node.name?.text === functionName) {
       if (node.body) {
         node.body.forEachChild((child) => {
           if (ts.isReturnStatement(child) && child.expression) {

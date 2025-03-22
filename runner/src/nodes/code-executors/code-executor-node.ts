@@ -11,6 +11,9 @@ import { Argument, NodejsExecutor } from "./nodejs-executor/nodejs-executor";
 
 interface CodeExecutorNodeDefinition {
   code: string;
+  language: "typescript";
+  inputs: Record<string, string>;
+  outputs: Record<string, string>;
 }
 
 export class CodeExecutorNode implements INode {

@@ -13,14 +13,14 @@ import {
 } from "@/components/ui/sheet";
 import { executeCodeSandboxUsecase } from "@/core/usecases";
 import {
+  getFunctionReturnLines,
   parseCodeForInputs,
   parseCodeForRequiredModules,
   parseFunctionOutput,
-  TypeScriptType,
 } from "@/lib/typescript-utils";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import MonacoEditor from "@monaco-editor/react";
+import MonacoEditor, { useMonaco } from "@monaco-editor/react";
 import { Label } from "@radix-ui/react-dropdown-menu";
 import { BracesIcon, Logs, PlayIcon } from "lucide-react";
 import { FC, PropsWithChildren, useMemo, useState } from "react";
@@ -51,20 +51,22 @@ const PaneButton: FC<{
   );
 };
 
+export type CodeEditorOnChangeParams = {
+  code: string;
+  inputs: Array<{
+    name: string;
+    type: string;
+  }>;
+  requiredModules: string[];
+  outputs: { keys: string[] };
+};
+
 export const CodeEditorDialog: FC<
   PropsWithChildren<{
     data: {
       code: string;
     };
-    onChange: (values: {
-      code: string;
-      inputs: Array<{
-        name: string;
-        type: TypeScriptType;
-      }>;
-      requiredModules: string[];
-      functionOutput: { keys: string[] };
-    }) => void;
+    onChange: (values: CodeEditorOnChangeParams) => void;
   }>
 > = ({ children, data, onChange }) => {
   const [open, setOpen] = useState(false);
@@ -88,6 +90,8 @@ export const CodeEditorDialog: FC<
     },
   });
 
+  const monaco = useMonaco();
+
   const onOpenChange = (open: boolean) => {
     if (!open) {
       form.reset();
@@ -104,8 +108,6 @@ export const CodeEditorDialog: FC<
 
     const requiredModules = parseCodeForRequiredModules(values.code);
     const outputs = parseFunctionOutput(values.code, "main");
-
-    console.log("outputs", outputs);
 
     onChange({
       ...values,
@@ -137,6 +139,52 @@ export const CodeEditorDialog: FC<
       },
       onError: addLog,
     });
+  };
+
+  const setMonacoReturnFunctionError = (
+    startLineNumber: number,
+    endLineNumber: number,
+  ) => {
+    if (monaco) {
+      const model = monaco.editor.getModels()[0];
+      monaco.editor.setModelMarkers(model, "owner", [
+        {
+          startLineNumber,
+          startColumn: 1,
+          endLineNumber,
+          endColumn: 100,
+          code: "return-must-be-object",
+          message: `You must return an object with the key(s) you want to expose as outputs.
+
+Example:
+    return {
+      output1: [1,2,3],
+      output2: { something: "else" },
+    }
+`,
+          severity: monaco.MarkerSeverity.Error,
+        },
+      ]);
+    }
+  };
+
+  const clearMonacoReturnFunctionError = () => {
+    if (monaco) {
+      const model = monaco.editor.getModels()[0];
+      monaco.editor.setModelMarkers(model, "owner", []);
+    }
+  };
+
+  const onCodeChange = (value: string) => {
+    form.setValue("code", value);
+    const { keys } = parseFunctionOutput(value);
+    if (!keys.length) {
+      const { startLine, endLine } = getFunctionReturnLines(value);
+      console.log("startLine", startLine, "endLine", endLine);
+      setMonacoReturnFunctionError(startLine, endLine);
+    } else {
+      clearMonacoReturnFunctionError();
+    }
   };
 
   return (
@@ -234,7 +282,7 @@ export const CodeEditorDialog: FC<
                             height="100%"
                             language="typescript"
                             value={field.value}
-                            onChange={(value) => field.onChange(value)}
+                            onChange={onCodeChange}
                             options={{
                               automaticLayout: true,
                               minimap: { enabled: false },

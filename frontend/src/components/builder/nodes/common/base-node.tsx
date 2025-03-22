@@ -1,5 +1,11 @@
 import { cn } from "@/lib/utils";
-import { Position } from "@xyflow/react";
+import {
+  Edge,
+  getConnectedEdges,
+  Position,
+  useReactFlow,
+  useUpdateNodeInternals,
+} from "@xyflow/react";
 import {
   FC,
   memo,
@@ -27,23 +33,80 @@ export type BaseNodeHandle = {
 };
 
 export type BaseNodeProps = {
+  nodeId: string;
   header: ReactNode;
   inputHandles: BaseNodeHandle[];
   outputHandles: BaseNodeHandle[];
 };
 
 const BaseNode: FC<PropsWithChildren<BaseNodeProps>> = ({
+  nodeId,
   children,
   header,
   inputHandles,
   outputHandles,
 }) => {
+  const updateNodeInternals = useUpdateNodeInternals();
+
+  const { getEdges, deleteElements } = useReactFlow();
   const [active, setActive] = useState(true);
 
   useEffect(() => {
     const timer = setTimeout(() => setActive(false), 1000);
     return () => clearTimeout(timer);
   }, []);
+
+  /**
+   * See:
+   * https://reactflow.dev/api-reference/hooks/use-update-node-internals
+   */
+  useEffect(() => {
+    updateNodeInternals(nodeId);
+  }, [nodeId, updateNodeInternals, inputHandles, outputHandles]);
+
+  useEffect(() => {
+    updateNodeInternals(nodeId);
+
+    const ingoingEdges = getConnectedEdges(
+      // @ts-ignore
+      [{ id: nodeId }],
+      getEdges(),
+    ).filter((e) => {
+      return e.source === nodeId;
+    });
+
+    const outgoingEdges = getConnectedEdges(
+      // @ts-ignore
+      [{ id: nodeId }],
+      getEdges(),
+    ).filter((e) => {
+      return e.target === nodeId;
+    });
+
+    const ghostEdges: Edge[] = [];
+
+    ingoingEdges.forEach((edge) => {
+      const isGhostEdge = !inputHandles.find(
+        (input) => input.id === edge.sourceHandle,
+      );
+
+      if (isGhostEdge) {
+        ghostEdges.push(edge);
+      }
+    });
+
+    outgoingEdges.forEach((edge) => {
+      const isGhostEdge = !outputHandles.find(
+        (output) => output.id === edge.targetHandle,
+      );
+
+      if (isGhostEdge) {
+        ghostEdges.push(edge);
+      }
+    });
+
+    deleteElements({ edges: ghostEdges });
+  }, [nodeId, inputHandles, updateNodeInternals, outputHandles]);
 
   return (
     <div

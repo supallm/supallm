@@ -19,7 +19,7 @@ const ResultNode: FC<ResultNodeProps> = ({ data, id: nodeId }) => {
   const formSchema = z.object({
     handles: z.array(
       z.object({
-        type: z.enum(["text", "image"]),
+        type: z.enum(["text", "image", "any"]),
         id: z.string(),
         label: z.string(),
       }),
@@ -64,6 +64,7 @@ const ResultNode: FC<ResultNodeProps> = ({ data, id: nodeId }) => {
 
   return (
     <BaseNode
+      nodeId={nodeId}
       outputHandles={[]}
       inputHandles={formHandles}
       header={

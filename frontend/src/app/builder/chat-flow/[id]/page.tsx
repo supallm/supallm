@@ -120,7 +120,6 @@ const ChatFlowPage = () => {
   );
 
   const handleNodeChange = (changes: NodeChange<FlowNode>[]) => {
-    console.log("CHANGES", changes);
     onNodesChange(changes);
     onSave();
   };

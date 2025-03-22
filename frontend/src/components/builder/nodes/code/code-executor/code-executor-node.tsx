@@ -8,14 +8,17 @@ import {
 } from "@/components/ui/form";
 import { generateHandleId, sanitizeHandleLabel } from "@/lib/handles";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { NodeProps, useReactFlow, useUpdateNodeInternals } from "@xyflow/react";
+import { NodeProps, useReactFlow } from "@xyflow/react";
 import { Code } from "lucide-react";
-import { FC, memo, useEffect, useState } from "react";
+import { FC, memo } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import BaseNode, { BaseNodeHandle } from "../../common/base-node";
 import { BaseNodeContent } from "../../common/base-node-content";
-import { CodeEditorDialog } from "./code-editor-dialog";
+import {
+  CodeEditorDialog,
+  CodeEditorOnChangeParams,
+} from "./code-editor-dialog";
 import { CodePreview } from "./code-preview";
 
 type CustomCodeNodeProps = NodeProps & {
@@ -23,7 +26,6 @@ type CustomCodeNodeProps = NodeProps & {
     code: string;
     inputs: Array<BaseNodeHandle>;
     outputs: Array<BaseNodeHandle>;
-    requiredModules: string[];
   };
 };
 
@@ -42,22 +44,21 @@ export async function main(myString: string, myNumber: number) {
 
 const CodeExecutorNode: FC<CustomCodeNodeProps> = ({ data, id: nodeId }) => {
   const { updateNodeData } = useReactFlow();
-  const updateNodeInternals = useUpdateNodeInternals();
 
   const formSchema = z.object({
     code: z.string().min(1, "Code cannot be empty"),
     inputs: z.array(
       z.object({
-        type: z.string(),
-        label: z.string(),
+        type: z.enum(["text", "image", "any"]),
         id: z.string(),
+        label: z.string(),
       }),
     ),
     outputs: z.array(
       z.object({
-        type: z.string(),
-        label: z.string(),
+        type: z.enum(["text", "image", "any"]),
         id: z.string(),
+        label: z.string(),
       }),
     ),
   });
@@ -72,46 +73,45 @@ const CodeExecutorNode: FC<CustomCodeNodeProps> = ({ data, id: nodeId }) => {
     },
   });
 
-  const [inputHandles, setInputHandles] = useState(data.inputs ?? []);
+  const inputHandles = form.watch("inputs");
+  const outputHandles = form.watch("outputs");
 
-  const [outputHandles, setOutputHandles] = useState<BaseNodeHandle[]>(
-    data.outputs ?? [
-      {
-        label: "result",
-        id: generateHandleId("any", "result"),
-        type: "any",
-      },
-    ],
-  );
+  const handleCodeChange = (values: CodeEditorOnChangeParams) => {
+    console.log("values", values);
+    const inputHandles = values.inputs.map(
+      (input) =>
+        ({
+          label: sanitizeHandleLabel(input.name),
+          id: generateHandleId("any", input.name),
+          type: "any",
+        }) as const,
+    );
 
-  form.watch(() => {
-    const formValues = form.getValues();
-    const data = {
-      code: formValues.code,
-    };
+    const outputHandles = values.outputs.keys.map(
+      (key) =>
+        ({
+          label: sanitizeHandleLabel(key),
+          id: generateHandleId("any", key),
+          type: "any",
+        }) as const,
+    );
 
-    console.log("CHANGES", data);
-    updateNodeData(nodeId, data);
-  });
+    form.setValue("inputs", inputHandles);
+    form.setValue("outputs", outputHandles);
+    form.setValue("code", values.code);
 
-  useEffect(() => {
-    updateNodeInternals(nodeId);
-  }, [nodeId, inputHandles, updateNodeInternals]);
+    updateNodeData(nodeId, {
+      code: values.code,
+      inputs: inputHandles,
+      outputs: outputHandles,
+    });
+  };
 
   return (
     <BaseNode
-      outputHandles={outputHandles.map((output) => {
-        return {
-          label: output.label,
-          id: output.id,
-          type: "any",
-        };
-      })}
-      inputHandles={inputHandles.map((input) => ({
-        label: input.label,
-        id: input.id,
-        type: "any",
-      }))}
+      nodeId={nodeId}
+      outputHandles={outputHandles}
+      inputHandles={inputHandles}
       header={
         <>
           <Code width={10} height={10} />
@@ -144,34 +144,7 @@ const CodeExecutorNode: FC<CustomCodeNodeProps> = ({ data, id: nodeId }) => {
                         data={{
                           code: field.value,
                         }}
-                        onChange={(values) => {
-                          field.onChange(values.code);
-                          if (!!values.outputs?.keys?.length) {
-                            setOutputHandles(
-                              values.outputs.keys.map((key) => ({
-                                label: sanitizeHandleLabel(key),
-                                id: generateHandleId("any", key),
-                                type: "any",
-                              })),
-                            );
-                          }
-                          if (!!values.inputs?.length) {
-                            setInputHandles(
-                              values.inputs.map((input) => ({
-                                label: sanitizeHandleLabel(input.name),
-                                id: generateHandleId("any", input.name),
-                                // We set all handle to "any" so it's user's responsibility to set the correct type.
-                                type: "any",
-                              })),
-                            );
-                          }
-
-                          // updateNodeData(nodeId, {
-                          //   ...data,
-                          //   inputs: values.inputs,
-                          //   requiredModules: values.requiredModules,
-                          // });
-                        }}
+                        onChange={handleCodeChange}
                       >
                         <Button
                           size={"sm"}

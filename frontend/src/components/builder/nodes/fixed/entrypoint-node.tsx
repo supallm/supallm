@@ -69,6 +69,7 @@ const EntrypointNode: FC<NodeProps & { data: EntrypointNodeData }> = ({
 
   return (
     <BaseNode
+      nodeId={nodeId}
       inputHandles={[]}
       outputHandles={formHandles}
       header={

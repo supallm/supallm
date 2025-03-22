@@ -125,6 +125,7 @@ const OpenAIChatCompletionNode: FC<OpenAIChatCompletionNodeProps> = ({
 
   return (
     <BaseNode
+      nodeId={nodeId}
       outputHandles={outputHandles}
       inputHandles={[
         {
