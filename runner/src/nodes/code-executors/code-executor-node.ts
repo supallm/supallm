@@ -1,19 +1,22 @@
-import { assertUnreachable } from "../../utils/type-safety";
+import { Result } from "typescript-result";
 import {
   INode,
   NodeDefinition,
   NodeInput,
   NodeLogCallback,
+  NodeOutput,
   NodeResultCallback,
   NodeType,
 } from "../types";
+import { MissingArgumentError } from "./nodejs-executor/executor.errors";
 import { Argument, NodejsExecutor } from "./nodejs-executor/nodejs-executor";
 
 interface CodeExecutorNodeDefinition {
   code: string;
   language: "typescript";
   inputs: Record<string, string>;
-  outputs: Record<string, string>;
+  expectedArguments: { id: string; label: string; type: string }[];
+  expectedOutputs: { id: string; label: string; type: string }[];
 }
 
 export class CodeExecutorNode implements INode {
@@ -27,17 +30,29 @@ export class CodeExecutorNode implements INode {
       onNodeResult: NodeResultCallback;
       onNodeLog: NodeLogCallback;
     },
-  ): Promise<any> {
+  ): Promise<Result<NodeOutput, Error>> {
     try {
-      const { code } = definition as unknown as CodeExecutorNodeDefinition;
-      const resolvedInputs = inputs as Record<string, string>;
+      const { code, expectedArguments } =
+        definition as unknown as CodeExecutorNodeDefinition;
 
-      const args = Object.entries(resolvedInputs).map(([key, value]) => {
+      const sortedExpectedArgumentLabels = expectedArguments.map(
+        (arg) => arg.label,
+      );
+
+      const args = sortedExpectedArgumentLabels.map((label) => {
+        const matchingInput = inputs[label];
+
+        // TODO @val: you can add your error handling here
+        if (!matchingInput) {
+          const errorMessage = `Missing argument named ${label}. This is likely a mistake in your flow.`;
+          options.onNodeLog(nodeId, errorMessage);
+          throw new MissingArgumentError(errorMessage);
+        }
+
         return {
-          name: key,
-          // TODO @val: how do we know the type of the value?
+          name: label,
           type: "any",
-          value,
+          value: matchingInput,
         } as Argument;
       });
 
@@ -65,109 +80,19 @@ export class CodeExecutorNode implements INode {
           const [parsedResult, error] = result.toTuple();
 
           if (error) {
-            // TODO @val: do what you need to do with the Error
-            console.error(`Error executing code node ${nodeId}: ${error}`);
-            throw error;
+            return Result.error(error);
           }
 
           Object.entries(parsedResult).forEach(([key, value]) => {
-            console.log("ON NODE RESULT", key, value);
             options.onNodeResult(nodeId, key, value, "any");
           });
-          return parsedResult;
+          return Result.ok(parsedResult);
         default:
-          assertUnreachable(language);
+          return Result.error(new Error("Unsupported language"));
       }
     } catch (error) {
       console.error(error);
-      throw error;
+      return Result.error(error as Error);
     }
   }
 }
-
-// const codeExecutorNode = new CodeExecutorNode();
-
-// codeExecutorNode.execute(
-//   "1",
-//   {
-//     type: "code-executor",
-//     inputs: {},
-//     outputs: {},
-//   },
-//   {
-//     code: `import { z } from "zod";
-
-//     function main(myValue: any, myValue2: any, double: (num: number) => number, myArray: any[], myObjArray: any[], myNumber: number, myBoolean: boolean) {
-//         let i = 0;
-//         while (i < 5) {
-//             console.log("Hello, world!", i);
-//             i++;
-//         }
-
-//         console.log('ZOD', z);
-
-//         return {
-//             "coucou": true,
-//             "i": i,
-//             "z": {
-//                 "coucou": true,
-//                 "i": i,
-//             },
-//             "myValue": myValue,
-//             "doubled": double(10),
-//             "array": myArray,
-//             "objArray": myObjArray,
-//             "myNumber": myNumber,
-//             "myBoolean": myBoolean,
-//         }
-//       }`,
-//     language: "typescript",
-//     args: [
-//       {
-//         name: "myValue",
-//         type: "string",
-//         value: "test",
-//       },
-//       {
-//         name: "myValue2",
-//         type: "any",
-//         value: {
-//           coucou: true,
-//         },
-//       },
-//       {
-//         name: "double",
-//         type: "any",
-//         value: (num: number) => num * 2,
-//       },
-//       {
-//         name: "myArray",
-//         type: "any",
-//         value: [1, 2, 3],
-//       },
-//       {
-//         name: "myObjArray",
-//         type: "any",
-//         value: [{ i: 1 }, { i: 2 }],
-//       },
-//       {
-//         name: "myNumber",
-//         type: "number",
-//         value: 10,
-//       },
-//       {
-//         name: "myBoolean",
-//         type: "boolean",
-//         value: true,
-//       },
-//     ],
-//   },
-//   {
-//     onNodeLog: async (message) => {
-//       //   console.log("LOG", message);
-//     },
-//     onNodeResult: async (result) => {
-//       //   console.log("RESULT", result);
-//     },
-//   },
-// );

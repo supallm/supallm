@@ -1,13 +1,13 @@
+import { Result } from "typescript-result";
 import {
-  NodeDefinition,
-  NodeResultCallback,
-  NodeInput,
-  NodeOutput,
-  NodeType,
   INode,
+  NodeDefinition,
+  NodeInput,
   NodeLogCallback,
+  NodeOutput,
+  NodeResultCallback,
+  NodeType,
 } from "../types";
-
 export class ResultNode implements INode {
   type: NodeType;
 
@@ -22,12 +22,12 @@ export class ResultNode implements INode {
     _options: {
       onNodeResult: NodeResultCallback;
       onNodeLog: NodeLogCallback;
-    }
-  ): Promise<NodeOutput> {
+    },
+  ): Promise<Result<NodeOutput, Error>> {
     // result node is the last node to be executed
     // it collects the results of the previous nodes and formats them as the final result
     // these results will be stored in context.outputs[nodeId] by the workflow executor
     // we just return the resolved inputs as is
-    return inputs;
+    return Result.ok(inputs);
   }
 }

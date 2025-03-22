@@ -1,4 +1,5 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { LLMResult } from "./llm.errors";
 
 export interface LLMOptions {
   model: string;
@@ -8,9 +9,11 @@ export interface LLMOptions {
   streaming?: boolean;
 }
 
+export type GenerateResult = AsyncIterable<{ content: string }>;
+
 export interface BaseLLMProvider {
   generate(
     messages: (SystemMessage | HumanMessage)[],
-    options: LLMOptions
-  ): Promise<AsyncIterable<{ content: string }>>;
+    options: LLMOptions,
+  ): Promise<LLMResult<GenerateResult>>;
 }

@@ -1,3 +1,5 @@
+import { Result } from "typescript-result";
+
 export type NodeType = "llm" | "entrypoint" | "result" | "code-executor";
 export type NodeIOType = "text" | "image" | "any";
 
@@ -44,5 +46,5 @@ export interface INode {
       onNodeResult: NodeResultCallback;
       onNodeLog: NodeLogCallback;
     },
-  ): Promise<NodeOutput>;
+  ): Promise<Result<NodeOutput, Error>>;
 }

@@ -22,11 +22,15 @@ export class ParseResultError extends Error {
   readonly type = "parse-result-error";
 }
 
+export class MissingArgumentError extends Error {
+  readonly type = "missing-argument-error";
+}
+
 export type ScriptValidationError =
   | MainFunctionMissingError
   | TypeScriptCompilationError
-  | ExpectedRecordReturnError;
-
+  | ExpectedRecordReturnError
+  | MissingArgumentError;
 export type NodejsExecutorError =
   | ScriptValidationError
   | NpmInstallError

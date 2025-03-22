@@ -114,8 +114,16 @@ type LLMNodeData struct {
 	OutputMode          string          `json:"outputMode"`
 }
 
+type CodeExecutorNodeHandle struct {
+	ID    string `json:"id"`
+	Type  string `json:"type"`
+	Label string `json:"label"`
+}
+
 type CodeExecutorNodeData struct {
-	Code string `json:"code"`
+	Code    string                   `json:"code"`
+	Inputs  []CodeExecutorNodeHandle `json:"inputs"`
+	Outputs []CodeExecutorNodeHandle `json:"outputs"`
 }
 
 type RunnerFlow struct {
@@ -179,6 +187,7 @@ func (p *Project) UpdateWorkflowBuilderFlow(id WorkflowID, builderFlow json.RawM
 
 func (p *Project) ComputeWorkflow(id WorkflowID) (*Workflow, error) {
 	w, ok := p.Workflows[id]
+	slog.Info("computing workflow", "workflow", w.ID)
 	if !ok {
 		return nil, errs.NotFoundError{Resource: "workflow", ID: id}
 	}
@@ -188,7 +197,9 @@ func (p *Project) ComputeWorkflow(id WorkflowID) (*Workflow, error) {
 		return w, nil
 	}
 
+	slog.Info("computing runner flow", "workflow", w.ID)
 	runnerFlow, err := p.ComputeRunnerFlow(w.BuilderFlow)
+	slog.Info("runner flow computed", "workflow", w.ID, "runnerFlow", err)
 	if err != nil {
 		return nil, err
 	}
@@ -261,6 +272,8 @@ func (p *Project) convertBuilderToRunnerFlow(builderFlow BuilderFlow) (map[strin
 			// Skip unknown node types
 			continue
 		}
+
+		slog.Info("processed node", "nodeID", runnerNodeID, "node", node)
 
 		if err != nil {
 			return nil, err
@@ -338,14 +351,17 @@ func (p *Project) processResultNode(nodes map[string]any, nodeID string, node Bu
 
 // processCodeExecutorNode processes a code executor node
 func (p *Project) processCodeExecutorNode(nodes map[string]any, nodeID string, node BuilderNode, edges []BuilderEdge, nodeMap map[string]BuilderNode) error {
+	slog.Info("processing code executor node", "nodeID", nodeID, "node", node)
 	var data CodeExecutorNodeData
 	if err := json.Unmarshal(node.Data, &data); err != nil {
 		return errs.InvalidError{Reason: "unable to unmarshal code executor node data", Err: err}
 	}
 
 	nodeConfig := map[string]any{
-		"type": "code-executor",
-		"code": data.Code,
+		"type":              "code-executor",
+		"code":              data.Code,
+		"expectedArguments": data.Inputs,
+		"expectedOutputs":   data.Outputs,
 	}
 
 	// Process inputs

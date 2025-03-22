@@ -1,19 +1,26 @@
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { Result } from "typescript-result";
+import { CryptoService } from "../../services/secret/crypto-service";
 import {
   INode,
   NodeDefinition,
-  NodeResultCallback,
-  NodeOutputDef,
   NodeInput,
   NodeOutput,
+  NodeOutputDef,
+  NodeResultCallback,
   NodeType,
-  NodeLogCallback,
 } from "../types";
-import { logger } from "../../utils/logger";
-import { CryptoService } from "../../services/crypto-service";
-import { BaseLLMProvider, LLMOptions } from "./base-provider";
-import { OpenAIProvider } from "./openai-provider";
 import { AnthropicProvider } from "./anthropic-provider";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { BaseLLMProvider, LLMOptions } from "./base-provider";
+import {
+  InvalidInputError,
+  InvalidOutputError,
+  LLMExecutionError,
+  MissingAPIKeyError,
+  ProviderAPIError,
+  ProviderNotSupportedError,
+} from "./llm.errors";
+import { OpenAIProvider } from "./openai-provider";
 
 const ProviderType = {
   OPENAI: "openai",
@@ -47,80 +54,79 @@ export class LLMNode implements INode {
     inputs: NodeInput,
     options: {
       onNodeResult: NodeResultCallback;
-      onNodeLog: NodeLogCallback;
+    },
+  ): Promise<Result<NodeOutput, LLMExecutionError>> {
+    const [resolvedInputs, validationError] =
+      this.validateInputs(inputs).toTuple();
+
+    if (validationError) {
+      return Result.error(validationError);
     }
-  ): Promise<NodeOutput> {
-    try {
-      const resolvedInputs = inputs as LLMNodeInputs;
-      const {
-        model,
-        provider = ProviderType.OPENAI,
-        apiKey,
-        temperature,
-        maxTokens,
-        streaming = false,
-        systemPrompt,
-      } = definition;
 
-      if (!model) {
-        throw new Error(`model is required for LLM node ${nodeId}`);
-      }
+    const [resolvedOutputs, outputValidationError] = this.validateOutputs(
+      definition.outputs,
+    ).toTuple();
 
-      const llmProvider = this.getProvider(provider as SupportedProviders);
-      const decryptedApiKey = this.cryptoService.decrypt(apiKey);
-      const messages = this.createMessagesFromInputs(
-        systemPrompt,
-        resolvedInputs
+    if (outputValidationError) {
+      return Result.error(outputValidationError);
+    }
+
+    const {
+      model,
+      provider = ProviderType.OPENAI,
+      apiKey,
+      temperature,
+      maxTokens,
+      streaming = false,
+      systemPrompt,
+    } = definition;
+
+    if (!model) {
+      return Result.error(
+        new MissingAPIKeyError("model parameter is required"),
       );
-
-      const llmOptions: LLMOptions = {
-        model,
-        apiKey: decryptedApiKey,
-        temperature: parseFloat(temperature.toString()),
-        maxTokens: maxTokens ? parseInt(maxTokens.toString()) : undefined,
-        streaming: streaming,
-      };
-
-      const output = definition.outputs["response"] as NodeOutputDef;
-
-      return this.executeLLM(
-        nodeId,
-        llmProvider,
-        messages,
-        llmOptions,
-        options.onNodeResult,
-        output
-      );
-    } catch (error) {
-      logger.error(`Error executing LLM node ${nodeId}: ${error}`);
-      throw error;
-    }
-  }
-
-  private createMessagesFromInputs(
-    systemPrompt: string | undefined,
-    inputs: LLMNodeInputs
-  ): (SystemMessage | HumanMessage)[] {
-    const messages: (SystemMessage | HumanMessage)[] = [];
-
-    if (systemPrompt) {
-      messages.push(new SystemMessage(systemPrompt));
     }
 
-    let promptText = inputs.prompt;
-    messages.push(new HumanMessage(promptText));
-
-    return messages;
-  }
-
-  private getProvider(providerType: SupportedProviders): BaseLLMProvider {
-    const provider = this.providers.get(providerType);
-
-    if (!provider) {
-      throw new Error(`Unsupported LLM provider: ${providerType}`);
+    if (!apiKey) {
+      return Result.error(new MissingAPIKeyError("API key is required"));
     }
 
-    return provider;
+    const [providerInstance, providerError] =
+      this.getProvider(provider).toTuple();
+
+    if (providerError) {
+      return Result.error(providerError);
+    }
+
+    const [decryptedApiKey, decryptedApiKeyError] = this.cryptoService
+      .decrypt(apiKey)
+      .toTuple();
+
+    if (decryptedApiKeyError) {
+      return Result.error(decryptedApiKeyError);
+    }
+
+    const messages = this.createMessagesFromInputs(
+      systemPrompt,
+      resolvedInputs,
+    );
+
+    const llmOptions: LLMOptions = {
+      model,
+      apiKey: decryptedApiKey,
+      temperature: parseFloat(temperature.toString()),
+      maxTokens: maxTokens ? parseInt(maxTokens.toString()) : undefined,
+      streaming: streaming,
+    };
+
+    return this.executeLLM(
+      nodeId,
+      providerInstance!,
+      messages,
+      llmOptions,
+      options.onNodeResult,
+      resolvedOutputs,
+    );
   }
 
   private async executeLLM(
@@ -129,13 +135,20 @@ export class LLMNode implements INode {
     messages: (SystemMessage | HumanMessage)[],
     options: LLMOptions,
     onNodeResult: NodeResultCallback,
-    output: NodeOutputDef
-  ): Promise<NodeOutput> {
+    output: NodeOutputDef,
+  ): Promise<Result<NodeOutput, LLMExecutionError>> {
     let fullResponse = "";
+    const [generateResult, generateError] = (
+      await provider.generate(messages, options)
+    ).toTuple();
+
+    if (generateError) {
+      return Result.error(generateError);
+    }
 
     try {
       const outputField = output.result_key;
-      const response = await provider.generate(messages, options);
+      const response = generateResult;
 
       for await (const data of response) {
         const chunkContent =
@@ -150,13 +163,106 @@ export class LLMNode implements INode {
           fullResponse += chunkContent;
         }
       }
-
-      return {
+      return Result.ok({
         response: fullResponse,
-      };
+      });
     } catch (error) {
-      logger.error(`error in LLM execution for node ${nodeId}: ${error}`);
-      throw error;
+      return Result.error(
+        new ProviderAPIError(
+          `failed to execute LLM: ${error instanceof Error ? error.message : String(error)}`,
+        ),
+      );
     }
+  }
+
+  private validateInputs(
+    inputs: NodeInput,
+  ): Result<LLMNodeInputs, LLMExecutionError> {
+    if (!inputs || typeof inputs !== "object") {
+      return Result.error(
+        new InvalidInputError("invalid input: inputs must be an object"),
+      );
+    }
+
+    if (typeof inputs["prompt"] !== "string") {
+      return Result.error(
+        new InvalidInputError("invalid input: missing or invalid prompt"),
+      );
+    }
+
+    if (inputs["images"] !== undefined && !Array.isArray(inputs["images"])) {
+      return Result.error(
+        new InvalidInputError("invalid input: images must be an array"),
+      );
+    }
+
+    if (Array.isArray(inputs["images"])) {
+      const hasInvalidImage = inputs["images"].some(
+        (img) => typeof img !== "string",
+      );
+      if (hasInvalidImage) {
+        return Result.error(
+          new InvalidInputError("invalid input: all images must be strings"),
+        );
+      }
+    }
+
+    return Result.ok({
+      prompt: inputs["prompt"] as string,
+      images: Array.isArray(inputs["images"])
+        ? (inputs["images"] as string[])
+        : undefined,
+    });
+  }
+
+  private validateOutputs(
+    outputs: NodeOutput,
+  ): Result<NodeOutputDef, InvalidOutputError> {
+    if (!outputs || typeof outputs !== "object") {
+      return Result.error(
+        new InvalidOutputError("invalid output: outputs must be an object"),
+      );
+    }
+
+    if (!outputs["response"]) {
+      return Result.error(
+        new InvalidOutputError("invalid output: missing response"),
+      );
+    }
+
+    const output = outputs["response"] as NodeOutputDef;
+    return Result.ok(output);
+  }
+
+  private createMessagesFromInputs(
+    systemPrompt: string | undefined,
+    inputs: LLMNodeInputs,
+  ): (SystemMessage | HumanMessage)[] {
+    const messages: (SystemMessage | HumanMessage)[] = [];
+
+    if (systemPrompt) {
+      messages.push(new SystemMessage(systemPrompt));
+    }
+
+    let promptText = inputs.prompt;
+    messages.push(new HumanMessage(promptText));
+
+    return messages;
+  }
+
+  private getProvider(
+    providerType: SupportedProviders,
+  ): Result<BaseLLMProvider, ProviderNotSupportedError> {
+    const provider = this.providers.get(providerType);
+
+    if (!provider) {
+      return Result.error(
+        new ProviderNotSupportedError(
+          `unsupported LLM provider: ${providerType}`,
+        ),
+      );
+    }
+
+    return Result.ok(provider);
   }
 }

@@ -1,85 +1,177 @@
-import { OpenAI } from "@langchain/openai";
-import { ChatOpenAI } from "@langchain/openai";
-import { BaseLLMProvider, LLMOptions } from "./base-provider";
-import { logger } from "../../utils/logger";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { ChatOpenAI, OpenAI } from "@langchain/openai";
+import { Result } from "typescript-result";
+import { BaseLLMProvider, GenerateResult, LLMOptions } from "./base-provider";
+import {
+  LLMResult,
+  MissingAPIKeyError,
+  ModelNotFoundError,
+  ProviderAPIError,
+} from "./llm.errors";
 
 export class OpenAIProvider implements BaseLLMProvider {
   constructor() {}
 
   async generate(
     messages: (SystemMessage | HumanMessage)[],
-    options: LLMOptions
-  ): Promise<AsyncIterable<{ content: string }>> {
-    const model = this.createModel(options);
+    options: LLMOptions,
+  ): Promise<LLMResult<GenerateResult>> {
     try {
+      const [model, modelError] = this.createModel(options).toTuple();
+      if (modelError) {
+        return Result.error(modelError);
+      }
+
       if (model instanceof ChatOpenAI && options.streaming) {
-        const stream = await model.stream(messages);
-
-        return {
-          [Symbol.asyncIterator]: async function* () {
-            for await (const chunk of stream) {
-              if (
-                typeof chunk === "object" &&
-                chunk !== null &&
-                "content" in chunk
-              ) {
-                const contentStr = String(chunk.content);
-                yield { content: contentStr };
-              }
-            }
-          },
-        };
+        return this.handleStreamingResponse(model, messages);
       } else {
-        const response = await model.invoke(messages);
-        let responseContent = "";
-        if (
-          typeof response === "object" &&
-          response !== null &&
-          "content" in response
-        ) {
-          responseContent =
-            typeof response.content === "string"
-              ? response.content
-              : JSON.stringify(response.content);
-        } else if (typeof response === "string") {
-          responseContent = response;
-        } else {
-          responseContent = JSON.stringify(response);
-        }
-
-        return {
-          [Symbol.asyncIterator]: async function* () {
-            yield { content: responseContent };
-          },
-        };
+        return this.handleNonStreamingResponse(model, messages);
       }
     } catch (error) {
-      logger.error(`Error streaming with OpenAI: ${error}`);
-      throw error;
+      return this.mapApiError(error, options.model);
     }
   }
 
-  private createModel(options: LLMOptions): OpenAI | ChatOpenAI {
-    const isChatModel = this.isChatModel(options.model);
+  private async handleStreamingResponse(
+    model: ChatOpenAI,
+    messages: (SystemMessage | HumanMessage)[],
+  ): Promise<LLMResult<GenerateResult>> {
+    try {
+      const stream = await model.stream(messages);
 
-    if (isChatModel) {
-      return new ChatOpenAI({
-        modelName: options.model,
-        temperature: options.temperature,
-        maxTokens: options.maxTokens,
-        openAIApiKey: options.apiKey,
-        streaming: options.streaming,
+      return Result.ok({
+        [Symbol.asyncIterator]: async function* () {
+          for await (const chunk of stream) {
+            if (
+              typeof chunk === "object" &&
+              chunk !== null &&
+              "content" in chunk
+            ) {
+              const contentStr = String(chunk.content);
+              yield { content: contentStr };
+            }
+          }
+        },
       });
-    } else {
-      return new OpenAI({
-        modelName: options.model,
-        temperature: options.temperature,
-        maxTokens: options.maxTokens,
-        openAIApiKey: options.apiKey,
-        streaming: options.streaming,
-      });
+    } catch (error) {
+      return this.mapApiError(error);
     }
+  }
+
+  private async handleNonStreamingResponse(
+    model: OpenAI | ChatOpenAI,
+    messages: (SystemMessage | HumanMessage)[],
+  ): Promise<LLMResult<GenerateResult>> {
+    try {
+      const response = await model.invoke(messages);
+      const responseContent = this.parseModelResponse(response);
+
+      return Result.ok({
+        [Symbol.asyncIterator]: async function* () {
+          yield { content: responseContent };
+        },
+      });
+    } catch (error) {
+      return this.mapApiError(error);
+    }
+  }
+
+  private parseModelResponse(response: any): string {
+    if (
+      typeof response === "object" &&
+      response !== null &&
+      "content" in response
+    ) {
+      return typeof response.content === "string"
+        ? response.content
+        : JSON.stringify(response.content);
+    } else if (typeof response === "string") {
+      return response;
+    } else {
+      return JSON.stringify(response);
+    }
+  }
+
+  private createModel(
+    options: LLMOptions,
+  ): Result<OpenAI | ChatOpenAI, ModelNotFoundError | ProviderAPIError> {
+    try {
+      const isChatModel = this.isChatModel(options.model);
+
+      if (isChatModel) {
+        return Result.ok(
+          new ChatOpenAI({
+            modelName: options.model,
+            temperature: options.temperature,
+            maxTokens: options.maxTokens,
+            openAIApiKey: options.apiKey,
+            streaming: options.streaming,
+          }),
+        );
+      } else {
+        return Result.ok(
+          new OpenAI({
+            modelName: options.model,
+            temperature: options.temperature,
+            maxTokens: options.maxTokens,
+            openAIApiKey: options.apiKey,
+            streaming: options.streaming,
+          }),
+        );
+      }
+    } catch (error) {
+      return Result.error(
+        new ProviderAPIError(
+          `Failed to initialize OpenAI model: ${error instanceof Error ? error.message : String(error)}`,
+        ),
+      );
+    }
+  }
+
+  private mapApiError(
+    error: unknown,
+    model?: string,
+  ): LLMResult<GenerateResult> {
+    if (error instanceof Error) {
+      const message = error.message.toLowerCase();
+
+      if (
+        message.includes("model") ||
+        message.includes("not found") ||
+        message.includes("doesn't exist")
+      ) {
+        return Result.error(
+          new ModelNotFoundError(
+            `OpenAI model not found: ${model || "unknown"}`,
+          ),
+        );
+      }
+
+      if (
+        message.includes("api key") ||
+        message.includes("apikey") ||
+        message.includes("authentication")
+      ) {
+        return Result.error(
+          new MissingAPIKeyError(`Invalid OpenAI API key: ${error.message}`),
+        );
+      }
+
+      // API error handling with status code extraction if available
+      if (typeof error === "object" && error !== null && "status" in error) {
+        const status = Number(error.status);
+        return Result.error(
+          new ProviderAPIError(`OpenAI API error: ${error.message}`, status),
+        );
+      }
+    }
+
+    // Generic provider error
+    return Result.error(
+      new ProviderAPIError(
+        `Error with OpenAI provider: ${error instanceof Error ? error.message : String(error)}`,
+      ),
+    );
   }
 
   private isChatModel(model: string): boolean {
@@ -94,7 +186,7 @@ export class OpenAIProvider implements BaseLLMProvider {
     ];
 
     return chatModels.some((chatModel) =>
-      model.toLowerCase().startsWith(chatModel.toLowerCase())
+      model.toLowerCase().startsWith(chatModel.toLowerCase()),
     );
   }
 }
