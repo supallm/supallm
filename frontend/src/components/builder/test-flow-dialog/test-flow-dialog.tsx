@@ -48,6 +48,8 @@ export const TestFlowDialog: FC<
 
   const [unsubscribes, setUnsubscribes] = useState<Unsubscribe[]>([]);
 
+  const [flowError, setFlowError] = useState<string | null>(null);
+
   const [flowSubscription, setFlowSubscription] =
     useState<FlowSubscription | null>(null);
 
@@ -74,6 +76,7 @@ export const TestFlowDialog: FC<
     }
 
     setResults([]);
+    setFlowError(null);
 
     const supallm = initSupallm(
       {
@@ -105,32 +108,15 @@ export const TestFlowDialog: FC<
     });
 
     const unsubscribeFail = subscription.on("flowFail", (error) => {
-      console.log("error", error.message);
+      setFlowError(error.message);
+      setIsRunning(false);
     });
 
     const unsubscribeEnd = subscription.on("flowEnd", () => {
       setIsRunning(false);
     });
 
-    const unsubscribeNodeLog = subscription.on("nodeLog", (data) => {
-      console.log("nodeLog", data);
-    });
-
-    const unsubscribeNodeStart = subscription.on("nodeStart", (data) => {
-      console.log("nodeStart", data);
-    });
-
-    const unsubscribeNodeEnd = subscription.on("nodeEnd", (data) => {
-      console.log("nodeEnd", data);
-    });
-
-    setUnsubscribes([
-      unsubscribeResult,
-      unsubscribeFail,
-      unsubscribeEnd,
-      unsubscribeNodeLog,
-      unsubscribeNodeStart,
-    ]);
+    setUnsubscribes([unsubscribeResult, unsubscribeFail, unsubscribeEnd]);
   };
 
   const handlePause = () => {
@@ -214,6 +200,7 @@ export const TestFlowDialog: FC<
               isRunning={isRunning}
               entrypointNodeData={data}
               resultNodeData={data}
+              flowError={flowError}
               inputs={
                 data?.handles?.map((h) => ({
                   label: h.label,

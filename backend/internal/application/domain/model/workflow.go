@@ -261,9 +261,9 @@ func (p *Project) convertBuilderToRunnerFlow(builderFlow BuilderFlow) (map[strin
 func (p *Project) getRunnerNodeID(nodeID string) string {
 	switch nodeID {
 	case EntrypointID:
-		return "entrypoint"
+		return "entrypoint-node"
 	case ResultNodeID:
-		return "result"
+		return "result-node"
 	default:
 		return nodeID
 	}

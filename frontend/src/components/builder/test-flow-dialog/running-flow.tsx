@@ -164,6 +164,7 @@ export const RunningFlow: FC<{
     const unsubscribeNodeFail = flowSubscription.on(
       "nodeFail",
       ({ nodeId }) => {
+        console.log("nodeFail", nodeId);
         setFailedNode(nodeId);
       },
     );

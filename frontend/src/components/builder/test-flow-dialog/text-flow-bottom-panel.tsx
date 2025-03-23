@@ -10,15 +10,16 @@ import { BookCheck, BracesIcon, LogsIcon } from "lucide-react";
 import { FC, useMemo, useState } from "react";
 import { JsonView, allExpanded, defaultStyles } from "react-json-view-lite";
 import "react-json-view-lite/dist/index.css";
-import { FlowEventData } from "supallm";
+import { FlowResultStreamEvent } from "supallm";
 
 interface LogsPaneProps {
-  events: FlowEventData[];
+  events: FlowResultStreamEvent[];
   isRunning: boolean;
   entrypointNodeData: EntrypointNodeData | undefined;
   resultNodeData: ResultNodeData | undefined;
   flowId: string;
   inputs: { label: string; value: string }[];
+  flowError: string | null;
 }
 
 const PaneButton: FC<{
@@ -89,7 +90,7 @@ const LogList: FC<{ events: FlowEventData[] }> = ({ events }) => {
   );
 };
 
-const FinalResult: FC<{ events: FlowEventData[] }> = ({ events }) => {
+const FinalResult: FC<{ events: FlowResultStreamEvent[] }> = ({ events }) => {
   const agregatedResult = useMemo(() => {
     if (events.length === 0) {
       return null;
@@ -132,6 +133,7 @@ export const TestFlowBottomPanel: FC<LogsPaneProps> = ({
   isRunning,
   flowId,
   inputs,
+  flowError,
 }) => {
   const [activePane, setActivePane] = useState<
     "full-result" | "source-code" | "logs"
@@ -167,6 +169,9 @@ export const TestFlowBottomPanel: FC<LogsPaneProps> = ({
 
       {activePane === "full-result" && (
         <div className="p-4">
+          {flowError && (
+            <AlertMessage variant="danger" message={flowError}></AlertMessage>
+          )}
           {isRunning && <Spinner />}
           <FinalResult events={events} />
         </div>
