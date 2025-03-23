@@ -6,7 +6,7 @@ import {
 } from "@langchain/core/messages";
 import { Result } from "typescript-result";
 import { CryptoService } from "../../services/secret/crypto-service";
-import { Tool, ToolContext } from "../../tools";
+import { MemoryTool, Tool, ToolContext } from "../../tools";
 import {
   INode,
   NodeDefinition,
@@ -18,16 +18,18 @@ import {
   NodeType,
 } from "../types";
 import { AnthropicProvider } from "./anthropic-provider";
-import { BaseLLMProvider, LLMOptions } from "./base-provider";
+import { BaseLLMProvider, GenerateResult, LLMOptions } from "./base-provider";
 import {
   InvalidInputError,
   InvalidOutputError,
   LLMExecutionError,
+  MessageFormatError,
   MissingAPIKeyError,
   ProviderAPIError,
   ProviderNotSupportedError,
 } from "./llm.errors";
 import { OpenAIProvider } from "./openai-provider";
+
 const ProviderType = {
   OPENAI: "openai",
   ANTHROPIC: "anthropic",
@@ -38,6 +40,23 @@ type SupportedProviders = (typeof ProviderType)[keyof typeof ProviderType];
 interface LLMNodeInputs {
   prompt: string;
   images?: string[];
+}
+
+interface LLMRequestConfig {
+  model: string;
+  provider: SupportedProviders;
+  apiKey: string;
+  decryptedApiKey: string;
+  temperature: number;
+  maxTokens?: number;
+  streaming: boolean;
+  systemPrompt?: string;
+}
+
+interface ValidationResult {
+  resolvedInputs: LLMNodeInputs;
+  resolvedOutputs: NodeOutputDef;
+  config: LLMRequestConfig;
 }
 
 export class LLMNode implements INode {
@@ -58,24 +77,92 @@ export class LLMNode implements INode {
     nodeId: string,
     definition: NodeDefinition,
     inputs: NodeInput,
-    tools: Record<string, Tool>,
+    _tools: Record<string, Tool>,
     options: NodeOptions,
   ): Promise<Result<NodeOutput, LLMExecutionError>> {
-    const toolContext = new ToolContext(this.type, tools);
+    const toolContext = new ToolContext(this.type, {
+      memory: new MemoryTool("memory"),
+    });
 
-    const [resolvedInputs, validationError] =
-      this.validateInputs(inputs).toTuple();
-
-    if (validationError) {
-      return Result.error(validationError);
+    const validateAndPrepare = await this.validateAndPrepare(
+      definition,
+      inputs,
+    );
+    const [validateAndPrepareResult, validateAndPrepareError] =
+      validateAndPrepare.toTuple();
+    if (validateAndPrepareError) {
+      return Result.error(validateAndPrepareError);
     }
 
-    const [resolvedOutputs, outputValidationError] = this.validateOutputs(
+    const { resolvedInputs, resolvedOutputs, config } =
+      validateAndPrepareResult;
+
+    const [getProviderResult, getProviderError] = this.getProvider(
+      config.provider,
+    ).toTuple();
+    if (getProviderError) {
+      return Result.error(getProviderError);
+    }
+
+    const prepareMessages = await this.prepareMessages(
+      nodeId,
+      toolContext,
+      config.systemPrompt,
+      resolvedInputs,
+      options.sessionId,
+    );
+    const [prepareMessagesResult, prepareMessagesError] =
+      prepareMessages.toTuple();
+    if (prepareMessagesError) {
+      return Result.error(prepareMessagesError);
+    }
+
+    const executeLLM = await this.executeLLM(
+      nodeId,
+      getProviderResult,
+      prepareMessagesResult,
+      {
+        model: config.model,
+        apiKey: config.decryptedApiKey,
+        temperature: config.temperature,
+        maxTokens: config.maxTokens,
+        streaming: config.streaming,
+      },
+      options.onNodeResult,
+      resolvedOutputs,
+    );
+    const [executeLLMResult, executeLLMError] = executeLLM.toTuple();
+    if (executeLLMError) {
+      return Result.error(executeLLMError);
+    }
+
+    if (executeLLMResult["response"]) {
+      await this.appendToMemory(
+        toolContext,
+        nodeId,
+        options.sessionId,
+        resolvedInputs.prompt,
+        executeLLMResult["response"] as string,
+      );
+    }
+
+    return Result.ok(executeLLMResult);
+  }
+
+  private async validateAndPrepare(
+    definition: NodeDefinition,
+    inputs: NodeInput,
+  ): Promise<Result<ValidationResult, LLMExecutionError>> {
+    const [resolvedInputs, inputError] = this.validateInputs(inputs).toTuple();
+    if (inputError) {
+      return Result.error(inputError);
+    }
+
+    const [resolvedOutputs, outputError] = this.validateOutputs(
       definition.outputs,
     ).toTuple();
-
-    if (outputValidationError) {
-      return Result.error(outputValidationError);
+    if (outputError) {
+      return Result.error(outputError);
     }
 
     const {
@@ -98,63 +185,77 @@ export class LLMNode implements INode {
       return Result.error(new MissingAPIKeyError("API key is required"));
     }
 
-    const [providerInstance, providerError] =
-      this.getProvider(provider).toTuple();
-
-    if (providerError) {
-      return Result.error(providerError);
-    }
-
     const [decryptedApiKey, decryptedApiKeyError] = this.cryptoService
       .decrypt(apiKey)
       .toTuple();
-
     if (decryptedApiKeyError) {
       return Result.error(decryptedApiKeyError);
     }
 
-    const loadResult = await toolContext.run<BaseMessage[]>("memory", "load", {
-      sessionId: options.sessionId,
-      nodeId,
-    });
-
-    const messages = this.createMessagesFromInputs(
+    const config: LLMRequestConfig = {
+      model,
+      provider,
+      apiKey,
+      decryptedApiKey,
+      temperature: parseFloat(temperature.toString()),
+      maxTokens: maxTokens ? parseInt(maxTokens.toString()) : undefined,
+      streaming,
       systemPrompt,
+    };
+
+    return Result.ok({
       resolvedInputs,
-      !loadResult.isError() && loadResult.isOk() ? loadResult.value : [],
-    );
-
-    const res = await this.executeLLM(
-      nodeId,
-      providerInstance!,
-      messages,
-      {
-        model,
-        apiKey: decryptedApiKey,
-        temperature: parseFloat(temperature.toString()),
-        maxTokens: maxTokens ? parseInt(maxTokens.toString()) : undefined,
-        streaming: streaming,
-      },
-      options.onNodeResult,
       resolvedOutputs,
-    );
-
-    const [result, error] = res.toTuple();
-    if (error) {
-      return Result.error(error);
-    }
-
-    await toolContext.run("memory", "append", {
-      nodeId,
-      sessionId: options.sessionId,
-      messages: [
-        new HumanMessage(resolvedInputs.prompt),
-        new AIMessage(result["response"]),
-      ],
+      config,
     });
-    return res;
   }
 
+  /**
+   * Prepare messages for the LLM request including memory
+   */
+  private async prepareMessages(
+    nodeId: string,
+    toolContext: ToolContext,
+    systemPrompt: string | undefined,
+    inputs: LLMNodeInputs,
+    _sessionId: string,
+  ): Promise<Result<BaseMessage[], LLMExecutionError>> {
+    const memoryResult = await toolContext.run<BaseMessage[]>(
+      "memory",
+      "load",
+      {
+        sessionId: "sessionId",
+        nodeId,
+      },
+    );
+    const [loadResult, loadError] = memoryResult.toTuple();
+    if (loadError) {
+      return Result.error(new MessageFormatError(`load memory history error`));
+    }
+
+    return this.createMessagesFromInputs(systemPrompt, inputs, loadResult);
+  }
+
+  /**
+   * Save conversation to memory
+   */
+  private async appendToMemory(
+    toolContext: ToolContext,
+    nodeId: string,
+    _sessionId: string,
+    prompt: string,
+    response: string,
+  ): Promise<void> {
+    await toolContext.run("memory", "append", {
+      nodeId,
+      sessionId: "sessionId",
+      messages: [new HumanMessage(prompt), new AIMessage(response)],
+    });
+  }
+
+  /**
+   * Execute an LLM request and handle streaming
+   */
   private async executeLLM(
     nodeId: string,
     provider: BaseLLMProvider,
@@ -163,24 +264,18 @@ export class LLMNode implements INode {
     onNodeResult: NodeResultCallback,
     output: NodeOutputDef,
   ): Promise<Result<NodeOutput, LLMExecutionError>> {
-    let fullResponse = "";
-    const [generateResult, generateError] = (
-      await provider.generate(messages, options)
-    ).toTuple();
-
-    if (generateError) {
-      return Result.error(generateError);
-    }
-
     try {
+      const generateResult = await provider.generate(messages, options);
+      if (generateResult.isError()) {
+        return Result.error(generateResult.error);
+      }
+
+      let fullResponse = "";
+      const response = generateResult.value as GenerateResult;
       const outputField = output.result_key;
-      const response = generateResult;
 
       for await (const data of response) {
-        const chunkContent =
-          typeof data.content === "string"
-            ? data.content
-            : JSON.stringify(data.content);
+        const chunkContent = this.formatChunkContent(data);
 
         if (chunkContent) {
           if (outputField) {
@@ -190,16 +285,16 @@ export class LLMNode implements INode {
         }
       }
 
-      return Result.ok({
-        response: fullResponse,
-      });
+      return Result.ok({ response: fullResponse });
     } catch (error) {
-      return Result.error(
-        new ProviderAPIError(
-          `failed to execute LLM: ${error instanceof Error ? error.message : String(error)}`,
-        ),
-      );
+      return Result.error(new ProviderAPIError(`failed to execute LLM`));
     }
+  }
+
+  private formatChunkContent(data: { content: string | object }): string {
+    return typeof data.content === "string"
+      ? data.content
+      : JSON.stringify(data.content);
   }
 
   private validateInputs(
@@ -265,7 +360,7 @@ export class LLMNode implements INode {
     systemPrompt: string | undefined,
     inputs: LLMNodeInputs,
     memoryMessages: BaseMessage[],
-  ): BaseMessage[] {
+  ): Result<BaseMessage[], LLMExecutionError> {
     const messages: BaseMessage[] = [];
 
     if (systemPrompt) {
@@ -278,7 +373,7 @@ export class LLMNode implements INode {
 
     messages.push(new HumanMessage(inputs.prompt));
 
-    return messages;
+    return Result.ok(messages);
   }
 
   private getProvider(
