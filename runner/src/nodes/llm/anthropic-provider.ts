@@ -1,5 +1,5 @@
 import { ChatAnthropic } from "@langchain/anthropic";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { BaseMessage } from "@langchain/core/messages";
 import { Result } from "typescript-result";
 import { BaseLLMProvider, GenerateResult, LLMOptions } from "./base-provider";
 import {
@@ -13,7 +13,7 @@ export class AnthropicProvider implements BaseLLMProvider {
   constructor() {}
 
   async generate(
-    messages: (SystemMessage | HumanMessage)[],
+    messages: BaseMessage[],
     options: LLMOptions,
   ): Promise<LLMResult<GenerateResult>> {
     try {
@@ -34,7 +34,7 @@ export class AnthropicProvider implements BaseLLMProvider {
 
   private async handleStreamingResponse(
     model: ChatAnthropic,
-    messages: (SystemMessage | HumanMessage)[],
+    messages: BaseMessage[],
   ): Promise<LLMResult<GenerateResult>> {
     try {
       const stream = await model.stream(messages);
@@ -60,7 +60,7 @@ export class AnthropicProvider implements BaseLLMProvider {
 
   private async handleNonStreamingResponse(
     model: ChatAnthropic,
-    messages: (SystemMessage | HumanMessage)[],
+    messages: BaseMessage[],
   ): Promise<LLMResult<GenerateResult>> {
     try {
       const response = await model.invoke(messages);

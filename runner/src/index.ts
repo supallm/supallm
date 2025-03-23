@@ -1,12 +1,9 @@
-import dotenv from "dotenv";
 import { RunnerServer } from "./server";
+import config from "./utils/config";
 import { logger } from "./utils/logger";
-dotenv.config();
-
 async function main() {
   try {
-    const redisUrl = `redis://${process.env["REDIS_HOST"]}:${process.env["REDIS_PORT"]}`;
-    const server = new RunnerServer({ redisUrl });
+    const server = new RunnerServer(config);
 
     process.on("SIGINT", async () => {
       logger.info("received SIGINT. Shutting down...");

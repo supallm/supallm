@@ -1,4 +1,4 @@
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { BaseMessage } from "@langchain/core/messages";
 import { LLMResult } from "./llm.errors";
 
 export interface LLMOptions {
@@ -13,7 +13,7 @@ export type GenerateResult = AsyncIterable<{ content: string }>;
 
 export interface BaseLLMProvider {
   generate(
-    messages: (SystemMessage | HumanMessage)[],
+    messages: BaseMessage[],
     options: LLMOptions,
   ): Promise<LLMResult<GenerateResult>>;
 }

@@ -6,6 +6,7 @@ import {
   NodeIOType,
   NodeOutput,
 } from "../../nodes/types";
+import { Tool } from "../../tools";
 import { logger } from "../../utils/logger";
 import {
   ExecutionContext,
@@ -153,8 +154,18 @@ export class WorkflowExecutor extends EventEmitter {
       }
 
       const inputs = managedContext.resolveInputs(nodeId, node);
+      const [tools, toolsError] = managedContext
+        .resolveTools(nodeId, node)
+        .toTuple();
+      if (toolsError) {
+        return {
+          nodeId,
+          success: false,
+          error: toolsError,
+        };
+      }
       const [output, outputError] = (
-        await this.executeNode(nodeId, node, inputs, managedContext)
+        await this.executeNode(nodeId, node, inputs, tools, managedContext)
       ).toTuple();
 
       const success = outputError ? false : true;
@@ -178,12 +189,14 @@ export class WorkflowExecutor extends EventEmitter {
     nodeId: string,
     node: NodeDefinition,
     inputs: NodeInput,
+    tools: Record<string, Tool>,
     managedContext: ManagedExecutionContext,
   ): Promise<Result<NodeOutput, Error>> {
     this.emitNodeStarted(nodeId, node, inputs, managedContext);
 
     const [output, outputError] = (
-      await this.nodeManager.executeNode(nodeId, node, inputs, {
+      await this.nodeManager.executeNode(nodeId, node, inputs, tools, {
+        sessionId: managedContext.get.sessionId,
         onNodeResult: async (
           nodeId: string,
           outputField: string,

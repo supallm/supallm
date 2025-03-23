@@ -1,11 +1,11 @@
 import { Result } from "typescript-result";
+import { Tool } from "../../tools";
 import {
   INode,
   NodeDefinition,
   NodeInput,
-  NodeLogCallback,
+  NodeOptions,
   NodeOutput,
-  NodeResultCallback,
   NodeType,
 } from "../types";
 export class EntrypointNode implements INode {
@@ -19,10 +19,8 @@ export class EntrypointNode implements INode {
     _nodeId: string,
     _definition: NodeDefinition,
     inputs: NodeInput,
-    _options: {
-      onNodeResult: NodeResultCallback;
-      onNodeLog: NodeLogCallback;
-    },
+    _tools: Record<string, Tool>,
+    _options: NodeOptions,
   ): Promise<Result<NodeOutput, Error>> {
     // entrypoint node is the first node to be executed
     // it takes the global inputs and makes them available to the next nodes

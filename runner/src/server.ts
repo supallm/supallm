@@ -1,18 +1,15 @@
-import { WorkflowExecutor } from "./services/workflow/workflow.executor";
-import { RedisNotifier, INotifier, WorkflowEvents } from "./services/notifier";
+import { IContextService, RedisContextService } from "./services/context";
+import { RedisMemoryService } from "./services/llm-memory/redis-llm-memory-service";
+import { NodeManager } from "./services/node/node-manager";
+import { INotifier, RedisNotifier, WorkflowEvents } from "./services/notifier";
 import {
-  RedisQueueConsumer,
   IQueueConsumer,
+  RedisQueueConsumer,
   WorkflowMessage,
 } from "./services/queue";
-import { NodeManager } from "./services/node/node-manager";
+import { WorkflowExecutor } from "./services/workflow/workflow.executor";
+import { RunnerConfig } from "./utils/config";
 import { logger } from "./utils/logger";
-import { IContextService, RedisContextService } from "./services/context";
-
-interface RunnerConfig {
-  maxParallelJobs?: number;
-  redisUrl: string;
-}
 
 export class RunnerServer {
   private readonly queueConsumer: IQueueConsumer;
@@ -23,10 +20,11 @@ export class RunnerServer {
 
   constructor(config: RunnerConfig) {
     this.queueConsumer = new RedisQueueConsumer(config.redisUrl, {
-      maxParallelJobs: config.maxParallelJobs ?? 5,
+      maxParallelJobs: config.maxConcurrentJobs,
     });
+    const memoryService = new RedisMemoryService(config.redisUrl);
     this.notifier = new RedisNotifier(config.redisUrl);
-    this.nodeManager = new NodeManager();
+    this.nodeManager = new NodeManager(memoryService);
     this.contextService = new RedisContextService(config.redisUrl);
     this.executor = new WorkflowExecutor(this.nodeManager, this.contextService);
 
@@ -40,7 +38,7 @@ export class RunnerServer {
       logger.info("runner server started");
 
       this.queueConsumer.consumeWorkflowQueue(
-        this.handleWorkflowExecution.bind(this)
+        this.handleWorkflowExecution.bind(this),
       );
     } catch (error) {
       logger.error(`failed to start runner server: ${error}`);
@@ -55,7 +53,7 @@ export class RunnerServer {
   }
 
   private async handleWorkflowExecution(
-    message: WorkflowMessage
+    message: WorkflowMessage,
   ): Promise<void> {
     const {
       workflow_id,
@@ -90,13 +88,13 @@ export class RunnerServer {
 
     for (const eventType of workflowEvents) {
       this.executor.on(eventType, (data: any) =>
-        this.handleWorkflowEvent(eventType, data)
+        this.handleWorkflowEvent(eventType, data),
       );
     }
 
     this.executor.on(
       WorkflowEvents.NODE_RESULT,
-      this.handleNodeResult.bind(this)
+      this.handleNodeResult.bind(this),
     );
 
     this.executor.on(WorkflowEvents.NODE_LOG, this.handleNodeLog.bind(this));
@@ -104,7 +102,7 @@ export class RunnerServer {
 
   private async handleWorkflowEvent(
     eventType: (typeof WorkflowEvents)[keyof typeof WorkflowEvents],
-    data: any
+    data: any,
   ): Promise<void> {
     await this.notifier.publishWorkflowEvent({
       type: eventType,
@@ -117,7 +115,7 @@ export class RunnerServer {
 
   private extractEventData(
     eventType: (typeof WorkflowEvents)[keyof typeof WorkflowEvents],
-    data: any
+    data: any,
   ): any {
     switch (eventType) {
       case WorkflowEvents.WORKFLOW_STARTED:

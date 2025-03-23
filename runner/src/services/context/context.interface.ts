@@ -1,4 +1,5 @@
 import _ from "lodash";
+import { Result } from "typescript-result";
 import { NodeDefinition } from "../../nodes/types";
 import { logger } from "../../utils/logger";
 import {
@@ -29,7 +30,7 @@ export interface ExecutionContext {
   allNodes: Set<string>;
 }
 
-export interface IContextService {
+export interface ContextService {
   initialize(
     workflowId: string,
     definition: WorkflowDefinition,
@@ -50,7 +51,7 @@ export class ManagedExecutionContext {
   context: ExecutionContext;
 
   constructor(
-    private readonly contextService: IContextService,
+    private readonly contextService: ContextService,
     readonly workflowId: string,
     readonly triggerId: string,
     context: ExecutionContext,
@@ -224,5 +225,13 @@ export class ManagedExecutionContext {
     }
 
     return resolvedInputs;
+  }
+
+  resolveTools(
+    _nodeId: string,
+    _definition: NodeDefinition,
+  ): Result<Record<string, Tool>, Error> {
+    const resolvedTools: Record<string, Tool> = {};
+    return Result.ok(resolvedTools);
   }
 }

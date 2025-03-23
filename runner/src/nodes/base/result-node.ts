@@ -1,11 +1,11 @@
 import { Result } from "typescript-result";
+import { Tool } from "../../tools";
 import {
   INode,
   NodeDefinition,
   NodeInput,
-  NodeLogCallback,
+  NodeOptions,
   NodeOutput,
-  NodeResultCallback,
   NodeType,
 } from "../types";
 export class ResultNode implements INode {
@@ -19,10 +19,8 @@ export class ResultNode implements INode {
     _nodeId: string,
     _definition: NodeDefinition,
     inputs: NodeInput,
-    _options: {
-      onNodeResult: NodeResultCallback;
-      onNodeLog: NodeLogCallback;
-    },
+    _tools: Record<string, Tool>,
+    _options: NodeOptions,
   ): Promise<Result<NodeOutput, Error>> {
     // result node is the last node to be executed
     // it collects the results of the previous nodes and formats them as the final result

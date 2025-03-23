@@ -7,16 +7,17 @@ import {
   INode,
   NodeDefinition,
   NodeInput,
-  NodeLogCallback,
+  NodeOptions,
   NodeOutput,
-  NodeResultCallback,
   NodeType,
 } from "../../nodes/types";
+import { Tool } from "../../tools";
+import { LLMMemoryService } from "../llm-memory/llm-memory.interface";
 
 export class NodeManager {
   private nodes: Map<NodeType, INode> = new Map();
 
-  constructor() {
+  constructor(_memoryService: LLMMemoryService) {
     this.registerNode(new LLMNode());
     this.registerNode(new EntrypointNode());
     this.registerNode(new ResultNode());
@@ -39,10 +40,8 @@ export class NodeManager {
     nodeId: string,
     definition: NodeDefinition,
     inputs: NodeInput,
-    callbacks: {
-      onNodeResult: NodeResultCallback;
-      onNodeLog: NodeLogCallback;
-    },
+    tools: Record<string, Tool>,
+    options: NodeOptions,
   ): Promise<Result<NodeOutput, Error>> {
     const nodeType = definition.type;
     const nodeImplementation = this.getNode(nodeType);
@@ -51,9 +50,12 @@ export class NodeManager {
       return Result.error(new Error(`unsupported node type: ${nodeType}`));
     }
 
-    return nodeImplementation.execute(nodeId, definition, inputs, {
-      onNodeResult: callbacks.onNodeResult,
-      onNodeLog: callbacks.onNodeLog,
-    });
+    return nodeImplementation.execute(
+      nodeId,
+      definition,
+      inputs,
+      tools,
+      options,
+    );
   }
 }

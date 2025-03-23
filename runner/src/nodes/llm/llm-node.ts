@@ -1,10 +1,17 @@
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import {
+  AIMessage,
+  BaseMessage,
+  HumanMessage,
+  SystemMessage,
+} from "@langchain/core/messages";
 import { Result } from "typescript-result";
 import { CryptoService } from "../../services/secret/crypto-service";
+import { Tool, ToolContext } from "../../tools";
 import {
   INode,
   NodeDefinition,
   NodeInput,
+  NodeOptions,
   NodeOutput,
   NodeOutputDef,
   NodeResultCallback,
@@ -21,7 +28,6 @@ import {
   ProviderNotSupportedError,
 } from "./llm.errors";
 import { OpenAIProvider } from "./openai-provider";
-
 const ProviderType = {
   OPENAI: "openai",
   ANTHROPIC: "anthropic",
@@ -52,10 +58,11 @@ export class LLMNode implements INode {
     nodeId: string,
     definition: NodeDefinition,
     inputs: NodeInput,
-    options: {
-      onNodeResult: NodeResultCallback;
-    },
+    tools: Record<string, Tool>,
+    options: NodeOptions,
   ): Promise<Result<NodeOutput, LLMExecutionError>> {
+    const toolContext = new ToolContext(this.type, tools);
+
     const [resolvedInputs, validationError] =
       this.validateInputs(inputs).toTuple();
 
@@ -106,33 +113,52 @@ export class LLMNode implements INode {
       return Result.error(decryptedApiKeyError);
     }
 
+    const loadResult = await toolContext.run<BaseMessage[]>("memory", "load", {
+      sessionId: options.sessionId,
+      nodeId,
+    });
+
     const messages = this.createMessagesFromInputs(
       systemPrompt,
       resolvedInputs,
+      !loadResult.isError() && loadResult.isOk() ? loadResult.value : [],
     );
 
-    const llmOptions: LLMOptions = {
-      model,
-      apiKey: decryptedApiKey,
-      temperature: parseFloat(temperature.toString()),
-      maxTokens: maxTokens ? parseInt(maxTokens.toString()) : undefined,
-      streaming: streaming,
-    };
-
-    return this.executeLLM(
+    const res = await this.executeLLM(
       nodeId,
       providerInstance!,
       messages,
-      llmOptions,
+      {
+        model,
+        apiKey: decryptedApiKey,
+        temperature: parseFloat(temperature.toString()),
+        maxTokens: maxTokens ? parseInt(maxTokens.toString()) : undefined,
+        streaming: streaming,
+      },
       options.onNodeResult,
       resolvedOutputs,
     );
+
+    const [result, error] = res.toTuple();
+    if (error) {
+      return Result.error(error);
+    }
+
+    await toolContext.run("memory", "append", {
+      nodeId,
+      sessionId: options.sessionId,
+      messages: [
+        new HumanMessage(resolvedInputs.prompt),
+        new AIMessage(result["response"]),
+      ],
+    });
+    return res;
   }
 
   private async executeLLM(
     nodeId: string,
     provider: BaseLLMProvider,
-    messages: (SystemMessage | HumanMessage)[],
+    messages: BaseMessage[],
     options: LLMOptions,
     onNodeResult: NodeResultCallback,
     output: NodeOutputDef,
@@ -163,6 +189,7 @@ export class LLMNode implements INode {
           fullResponse += chunkContent;
         }
       }
+
       return Result.ok({
         response: fullResponse,
       });
@@ -237,15 +264,19 @@ export class LLMNode implements INode {
   private createMessagesFromInputs(
     systemPrompt: string | undefined,
     inputs: LLMNodeInputs,
-  ): (SystemMessage | HumanMessage)[] {
-    const messages: (SystemMessage | HumanMessage)[] = [];
+    memoryMessages: BaseMessage[],
+  ): BaseMessage[] {
+    const messages: BaseMessage[] = [];
 
     if (systemPrompt) {
       messages.push(new SystemMessage(systemPrompt));
     }
 
-    let promptText = inputs.prompt;
-    messages.push(new HumanMessage(promptText));
+    if (memoryMessages.length > 0) {
+      messages.push(...memoryMessages);
+    }
+
+    messages.push(new HumanMessage(inputs.prompt));
 
     return messages;
   }

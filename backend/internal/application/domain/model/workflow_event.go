@@ -50,18 +50,3 @@ type WorkflowEvent struct {
 	EventType  WorkflowEventType
 	Data       json.RawMessage
 }
-
-func (w *Workflow) CreateEvent(
-	id, triggerID uuid.UUID,
-	eventType WorkflowEventType,
-	data json.RawMessage,
-) (*WorkflowEvent, error) {
-	return &WorkflowEvent{
-		ID:         id,
-		ProjectID:  w.ProjectID,
-		WorkflowID: w.ID,
-		TriggerID:  triggerID,
-		EventType:  eventType,
-		Data:       data,
-	}, nil
-}

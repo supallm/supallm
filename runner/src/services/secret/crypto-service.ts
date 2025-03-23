@@ -1,15 +1,12 @@
 import * as crypto from "crypto";
 import { Result } from "typescript-result";
+import config from "../../utils/config";
 
 export class CryptoService {
   private envKey: Buffer;
 
   constructor() {
-    const envKeyStr = process.env["SECRET_KEY"] || "";
-    if (!envKeyStr) {
-      throw new Error("SECRET_KEY is not set");
-    }
-    this.envKey = Buffer.from(envKeyStr);
+    this.envKey = Buffer.from(config.secretKey);
   }
 
   private deriveKey(key: Buffer): Buffer {

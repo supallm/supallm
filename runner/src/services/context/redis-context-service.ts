@@ -1,17 +1,17 @@
-import {
-  IContextService,
-  ExecutionContext,
-  ManagedExecutionContext,
-} from "./context.interface";
-import { logger } from "../../utils/logger";
+import Redis from "ioredis";
 import _ from "lodash";
+import { logger } from "../../utils/logger";
 import {
   WorkflowDefinition,
   WorkflowExecutionOptions,
 } from "../workflow/types";
-import Redis from "ioredis";
+import {
+  ContextService,
+  ExecutionContext,
+  ManagedExecutionContext,
+} from "./context.interface";
 
-export class RedisContextService implements IContextService {
+export class RedisContextService implements ContextService {
   private readonly keyPrefix = "workflow:context:";
   private redis: Redis;
   private ttl: number;
@@ -25,7 +25,7 @@ export class RedisContextService implements IContextService {
 
   private initializeRedisClient(redisUrl: string): Redis {
     const redisOptions = {
-      db: 1,
+      db: 1, // context db
       password: process.env["REDIS_PASSWORD"],
       retryStrategy: (times: number) => {
         return Math.min(times * 100, 3000); // retry with an increasing delay
@@ -44,7 +44,7 @@ export class RedisContextService implements IContextService {
   async initialize(
     workflowId: string,
     definition: WorkflowDefinition,
-    options: WorkflowExecutionOptions
+    options: WorkflowExecutionOptions,
   ): Promise<ManagedExecutionContext> {
     const triggerId = options.triggerId;
     const existingContext = await this.getContext(workflowId, triggerId);
@@ -54,7 +54,7 @@ export class RedisContextService implements IContextService {
         this,
         workflowId,
         triggerId,
-        existingContext
+        existingContext,
       );
     }
 
@@ -67,7 +67,7 @@ export class RedisContextService implements IContextService {
   private initializeContext(
     workflowId: string,
     definition: WorkflowDefinition,
-    options: WorkflowExecutionOptions
+    options: WorkflowExecutionOptions,
   ): ExecutionContext {
     return {
       workflowId,
@@ -82,7 +82,7 @@ export class RedisContextService implements IContextService {
 
   private async getContext(
     workflowId: string,
-    triggerId: string
+    triggerId: string,
   ): Promise<ExecutionContext | null> {
     const key = this.getKey(workflowId, triggerId);
     const data = await this.redis.get(key);
@@ -103,7 +103,7 @@ export class RedisContextService implements IContextService {
 
   async getManagedContext(
     workflowId: string,
-    triggerId: string
+    triggerId: string,
   ): Promise<ManagedExecutionContext | null> {
     const context = await this.getContext(workflowId, triggerId);
     if (!context) {
@@ -115,13 +115,13 @@ export class RedisContextService implements IContextService {
   async updateContext(
     workflowId: string,
     triggerId: string,
-    update: Partial<ExecutionContext>
+    update: Partial<ExecutionContext>,
   ): Promise<void> {
     const context = await this.getContext(workflowId, triggerId);
 
     if (!context) {
       logger.error(
-        `cannot update context for workflow ${workflowId}: context not found in Redis`
+        `cannot update context for workflow ${workflowId}: context not found in Redis`,
       );
       throw new Error(`context for workflow ${workflowId} not found`);
     }
@@ -133,13 +133,13 @@ export class RedisContextService implements IContextService {
   async markNodeCompleted(
     workflowId: string,
     triggerId: string,
-    nodeId: string
+    nodeId: string,
   ): Promise<void> {
     const context = await this.getContext(workflowId, triggerId);
 
     if (!context) {
       logger.error(
-        `cannot mark node ${nodeId} as completed: context for workflow ${workflowId} not found in Redis`
+        `cannot mark node ${nodeId} as completed: context for workflow ${workflowId} not found in Redis`,
       );
       throw new Error(`context for workflow ${workflowId} not found`);
     }
@@ -155,7 +155,7 @@ export class RedisContextService implements IContextService {
   private async saveContext(
     workflowId: string,
     triggerId: string,
-    context: ExecutionContext
+    context: ExecutionContext,
   ): Promise<void> {
     const key = this.getKey(workflowId, triggerId);
     const serialized = this.serializeContext(context);

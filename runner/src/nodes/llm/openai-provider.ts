@@ -1,4 +1,4 @@
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { BaseMessage } from "@langchain/core/messages";
 import { ChatOpenAI, OpenAI } from "@langchain/openai";
 import { Result } from "typescript-result";
 import { BaseLLMProvider, GenerateResult, LLMOptions } from "./base-provider";
@@ -12,7 +12,7 @@ export class OpenAIProvider implements BaseLLMProvider {
   constructor() {}
 
   async generate(
-    messages: (SystemMessage | HumanMessage)[],
+    messages: BaseMessage[],
     options: LLMOptions,
   ): Promise<LLMResult<GenerateResult>> {
     try {
@@ -33,7 +33,7 @@ export class OpenAIProvider implements BaseLLMProvider {
 
   private async handleStreamingResponse(
     model: ChatOpenAI,
-    messages: (SystemMessage | HumanMessage)[],
+    messages: BaseMessage[],
   ): Promise<LLMResult<GenerateResult>> {
     try {
       const stream = await model.stream(messages);
@@ -59,7 +59,7 @@ export class OpenAIProvider implements BaseLLMProvider {
 
   private async handleNonStreamingResponse(
     model: OpenAI | ChatOpenAI,
-    messages: (SystemMessage | HumanMessage)[],
+    messages: BaseMessage[],
   ): Promise<LLMResult<GenerateResult>> {
     try {
       const response = await model.invoke(messages);

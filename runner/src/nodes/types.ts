@@ -1,4 +1,5 @@
 import { Result } from "typescript-result";
+import { Tool } from "../tools";
 
 export type NodeType = "llm" | "entrypoint" | "result" | "code-executor";
 export type NodeIOType = "text" | "image" | "any";
@@ -36,15 +37,19 @@ export type NodeLogCallback = (
   message: string,
 ) => Promise<void>;
 
+export type NodeOptions = {
+  sessionId: string;
+  onNodeResult: NodeResultCallback;
+  onNodeLog: NodeLogCallback;
+};
+
 export interface INode {
   type: NodeType;
   execute(
     nodeId: string,
     definition: NodeDefinition,
     inputs: NodeInput,
-    options: {
-      onNodeResult: NodeResultCallback;
-      onNodeLog: NodeLogCallback;
-    },
+    tools: Record<string, Tool>,
+    options: NodeOptions,
   ): Promise<Result<NodeOutput, Error>>;
 }

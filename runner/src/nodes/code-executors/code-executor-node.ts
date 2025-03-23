@@ -1,11 +1,11 @@
 import { Result } from "typescript-result";
+import { Tool } from "../../tools";
 import {
   INode,
   NodeDefinition,
   NodeInput,
-  NodeLogCallback,
+  NodeOptions,
   NodeOutput,
-  NodeResultCallback,
   NodeType,
 } from "../types";
 import { MissingArgumentError } from "./nodejs-executor/executor.errors";
@@ -26,10 +26,8 @@ export class CodeExecutorNode implements INode {
     nodeId: string,
     definition: NodeDefinition,
     inputs: NodeInput,
-    options: {
-      onNodeResult: NodeResultCallback;
-      onNodeLog: NodeLogCallback;
-    },
+    _tools: Record<string, Tool>,
+    options: NodeOptions,
   ): Promise<Result<NodeOutput, Error>> {
     try {
       const { code, expectedArguments } =

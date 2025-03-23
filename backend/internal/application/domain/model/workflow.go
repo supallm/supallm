@@ -102,30 +102,6 @@ type ResultNodeData struct {
 	Handles []NodeHandle `json:"handles"`
 }
 
-type LLMNodeData struct {
-	CredentialID        string          `json:"credentialId"`
-	ProviderType        string          `json:"providerType"`
-	Model               string          `json:"model"`
-	Temperature         float64         `json:"temperature"`
-	MaxCompletionTokens int             `json:"maxCompletionTokens"`
-	DeveloperMessage    string          `json:"developerMessage"`
-	ImageResolution     string          `json:"imageResolution"`
-	ResponseFormat      json.RawMessage `json:"responseFormat"`
-	OutputMode          string          `json:"outputMode"`
-}
-
-type CodeExecutorNodeHandle struct {
-	ID    string `json:"id"`
-	Type  string `json:"type"`
-	Label string `json:"label"`
-}
-
-type CodeExecutorNodeData struct {
-	Code    string                   `json:"code"`
-	Inputs  []CodeExecutorNodeHandle `json:"inputs"`
-	Outputs []CodeExecutorNodeHandle `json:"outputs"`
-}
-
 type RunnerFlow struct {
 	Nodes map[string]json.RawMessage `json:"nodes" exhaustruct:"optional"`
 }
@@ -325,6 +301,18 @@ func (p *Project) processResultNode(nodes map[string]any, nodeID string, node Bu
 	return nil
 }
 
+type CodeExecutorNodeHandle struct {
+	ID    string `json:"id"`
+	Type  string `json:"type"`
+	Label string `json:"label"`
+}
+
+type CodeExecutorNodeData struct {
+	Code    string                   `json:"code"`
+	Inputs  []CodeExecutorNodeHandle `json:"inputs"`
+	Outputs []CodeExecutorNodeHandle `json:"outputs"`
+}
+
 func (p *Project) processCodeExecutorNode(nodes map[string]any, nodeID string, node BuilderNode, edges []BuilderEdge, nodeMap map[string]BuilderNode) error {
 	var data CodeExecutorNodeData
 	if err := json.Unmarshal(node.Data, &data); err != nil {
@@ -349,6 +337,19 @@ func (p *Project) processCodeExecutorNode(nodes map[string]any, nodeID string, n
 	nodes[nodeID] = nodeConfig
 
 	return nil
+}
+
+type LLMNodeData struct {
+	CredentialID        string          `json:"credentialId"`
+	ProviderType        string          `json:"providerType"`
+	Model               string          `json:"model"`
+	Temperature         float64         `json:"temperature"`
+	MaxCompletionTokens int             `json:"maxCompletionTokens"`
+	DeveloperMessage    string          `json:"developerMessage"`
+	ImageResolution     string          `json:"imageResolution"`
+	ResponseFormat      json.RawMessage `json:"responseFormat"`
+	OutputMode          string          `json:"outputMode"`
+	WithMemory          bool            `json:"withMemory"`
 }
 
 // processLLMNode processes an LLM node
