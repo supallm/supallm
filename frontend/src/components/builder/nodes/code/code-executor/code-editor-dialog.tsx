@@ -190,7 +190,7 @@ Example:
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>{children}</SheetTrigger>
       <SheetContent
-        className="sm:max-w-[900px] gap-0"
+        className="w-3/4 gap-0"
         onEscapeKeyDown={(event) => event.preventDefault()}
       >
         <Form {...form}>

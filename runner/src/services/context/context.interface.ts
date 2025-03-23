@@ -116,17 +116,17 @@ export class ManagedExecutionContext {
   }
 
   entrypoint(): NodeExecution {
-    if (!this.context.nodeExecutions["entrypoint"]) {
+    if (!this.context.nodeExecutions["entrypoint-node"]) {
       throw new Error(`entrypoint node not found`);
     }
-    return this.context.nodeExecutions["entrypoint"];
+    return this.context.nodeExecutions["entrypoint-node"];
   }
 
   result(): NodeExecution {
-    if (!this.context.nodeExecutions["result"]) {
+    if (!this.context.nodeExecutions["result-node"]) {
       throw new Error(`result node not found`);
     }
-    return this.context.nodeExecutions["result"];
+    return this.context.nodeExecutions["result-node"];
   }
 
   node(nodeId: string): NodeExecution | undefined {

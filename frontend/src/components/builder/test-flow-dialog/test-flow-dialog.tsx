@@ -50,6 +50,8 @@ export const TestFlowDialog: FC<
 
   const [flowError, setFlowError] = useState<string | null>(null);
 
+  const [runId, setRunId] = useState<string>(crypto.randomUUID());
+
   const [flowSubscription, setFlowSubscription] =
     useState<FlowSubscription | null>(null);
 
@@ -69,6 +71,7 @@ export const TestFlowDialog: FC<
   };
 
   const handleRunFlow = async () => {
+    setRunId(crypto.randomUUID());
     const token = await getAuthToken();
 
     if (!token) {
@@ -139,6 +142,7 @@ export const TestFlowDialog: FC<
           {/* Left panel */}
           <div className="h-full grow">
             <RunningFlow
+              key={runId}
               initialNodes={nodes}
               initialEdges={edges}
               flowSubscription={flowSubscription}
@@ -146,7 +150,7 @@ export const TestFlowDialog: FC<
           </div>
 
           {/* Right panel */}
-          <div className="w-1/4 flex flex-col border-l h-full shrink-0">
+          <div className="w-1/4 min-w-[500px] flex flex-col border-l h-full shrink-0">
             <div className="p-4 overflow-y-auto space-y-4 flex flex-col justify-between">
               {!data?.handles?.length && (
                 <>

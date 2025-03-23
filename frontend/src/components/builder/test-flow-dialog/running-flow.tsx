@@ -147,8 +147,36 @@ export const RunningFlow: FC<{
     });
   };
 
+  const setWorkflowOutputStatus = (status: "ended" | "failed") => {
+    setNodes((nds) => {
+      return nds.map((node) => {
+        if (node.id === "result-node") {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              status: status,
+            },
+          };
+        }
+
+        return node;
+      });
+    });
+  };
+
   useEffect(() => {
     if (!flowSubscription) return;
+
+    const unsubscribeFlowEnd = flowSubscription.on("flowEnd", () => {
+      console.log("flowEnd");
+      setWorkflowOutputStatus("ended");
+    });
+
+    const unsubscribeFlowFail = flowSubscription.on("flowFail", () => {
+      console.log("flowFail");
+      setWorkflowOutputStatus("failed");
+    });
 
     const unsubscribeNodeStart = flowSubscription.on(
       "nodeStart",
@@ -173,6 +201,8 @@ export const RunningFlow: FC<{
       unsubscribeNodeStart();
       unsubscribeNodeEnd();
       unsubscribeNodeFail();
+      unsubscribeFlowEnd();
+      unsubscribeFlowFail();
     };
   }, [flowSubscription]);
 

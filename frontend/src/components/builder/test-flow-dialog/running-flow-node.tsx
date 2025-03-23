@@ -68,7 +68,8 @@ export const RunningFlowNode: FC<RunningFlowNodeProps> = ({
   const statusClasses: Record<RunningFlowNodeProps["data"]["status"], string> =
     {
       idle: "border-gray-300",
-      active: "border-indigo-300 shadow shadow-indigo-300",
+      active:
+        "border-indigo-300 shadow shadow-indigo-300 animate-shadow-pulse-indigo",
       ended: "border-green-500 shadow shadow-green-500",
       failed: "border-red-500 shadow shadow-red-500",
     };
