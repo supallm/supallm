@@ -68,7 +68,7 @@ const BaseNode: FC<PropsWithChildren<BaseNodeProps>> = ({
     updateNodeInternals(nodeId);
 
     const ingoingEdges = getConnectedEdges(
-      // @ts-ignore
+      // @ts-expect-error - this is the right type
       [{ id: nodeId }],
       getEdges(),
     ).filter((e) => {
@@ -76,7 +76,7 @@ const BaseNode: FC<PropsWithChildren<BaseNodeProps>> = ({
     });
 
     const outgoingEdges = getConnectedEdges(
-      // @ts-ignore
+      // @ts-expect-error - this is the right type
       [{ id: nodeId }],
       getEdges(),
     ).filter((e) => {
@@ -106,7 +106,14 @@ const BaseNode: FC<PropsWithChildren<BaseNodeProps>> = ({
     });
 
     deleteElements({ edges: ghostEdges });
-  }, [nodeId, inputHandles, updateNodeInternals, outputHandles]);
+  }, [
+    nodeId,
+    inputHandles,
+    updateNodeInternals,
+    outputHandles,
+    deleteElements,
+    getEdges,
+  ]);
 
   return (
     <div

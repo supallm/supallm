@@ -11,7 +11,7 @@ export class MockSandboxService implements SandboxService {
     onResult: (result: string) => void;
     onError: (error: string) => void;
   }) {
-    const { code, language, args, onLog, onResult, onError } = data;
+    const { args, onLog, onResult, onError } = data;
 
     try {
       onLog("Starting code execution with args: " + args.join(", "));
@@ -28,8 +28,10 @@ export class MockSandboxService implements SandboxService {
       onResult(simulatedResult);
 
       onLog("Code execution completed successfully.");
-    } catch (e: any) {
-      onError(`Error during code execution: ${e.message}`);
+    } catch (e: unknown) {
+      onError(
+        `Error during code execution: ${e instanceof Error ? e.message : String(e)}`,
+      );
     }
   }
 }

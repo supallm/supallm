@@ -24,7 +24,7 @@ export const parseCodeForRequiredModules = (code: string) => {
     ) {
       node.declarationList.declarations.forEach((declaration) => {
         if (
-          ts.isCallExpression(declaration.initializer) &&
+          ts.isCallExpression(declaration.initializer!) &&
           ts.isIdentifier(declaration.initializer.expression) &&
           declaration.initializer.expression.text === "require" &&
           declaration.initializer.arguments.length === 1 &&
@@ -75,7 +75,7 @@ export const parseCodeForInputs = (
         const name = param.name.getText();
         const typeNode = param.type;
 
-        let type: TypeScriptType = "any";
+        const type: TypeScriptType = "any";
 
         const typeText = typeNode?.getText() ?? "any";
 

@@ -34,7 +34,7 @@ export const ProjectOnly: FC<PropsWithChildren> = ({ children }) => {
       .catch((error) => {
         console.error("Error getting current project", error);
       });
-  }, [currentProject, router, user]);
+  }, [currentProject, router, user, setCurrentProject]);
 
   if (!currentProject) {
     return <GlobalLoading />;

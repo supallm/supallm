@@ -30,16 +30,16 @@ const sub = supallm.run({
     inputs: ${formattedInput}
 }).subscribe();
 
-sub.on('data', (data) => {
+sub.on('flowResultStream', (data) => {
     console.log(\`Field \${data.fieldName} received value \${data.value}\`);
 });
 
-sub.on('complete', (fullResult) => {
-    console.log('Full aggregated result', fullResult);
+sub.on('flowEnd', (event) => {
+    console.log('Full aggregated result', event.result);
 });
 
-sub.on('error', (error) => {
-    console.error(error);
+sub.on('flowFail', (event) => {
+    console.error(event.error);
 });
     `;
   }, [flowInputObjectExample, flowId]);
@@ -52,12 +52,16 @@ sub.on('error', (error) => {
 
     return `import { supallm } from './supallm';
 
-const result = await supallm.run({
+const response = await supallm.run({
     flowId: '${flowId}',
     inputs: ${formattedInput}
 }).wait();
 
-console.log('Full aggregated result', result);
+if (response.isSuccess) {
+    console.log('Full aggregated result', response.result);
+} else {
+    console.error(response.result);
+}
     `;
   }, [flowInputObjectExample, flowId]);
 

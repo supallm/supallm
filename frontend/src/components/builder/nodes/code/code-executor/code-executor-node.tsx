@@ -30,15 +30,15 @@ type CustomCodeNodeProps = NodeProps & {
 };
 
 const defaultCode = `// You can import modules like this:
-// import Papa from 'papaparse';
+// import axios from 'axios';
 
 // Your code *MUST* export a function called "main".
 // The arguments of this function will be the inputs of the node.
-export async function main(myString: string, myNumber: number) {
+export async function main(myInput: string) {
 
     // You *MUST* return an object with the keys you want to expose as outputs.
     return {
-        result: "Hello world",
+        result: myInput.length,
     }
 }`;
 

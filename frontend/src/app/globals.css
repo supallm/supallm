@@ -141,3 +141,17 @@
     transform: scale(1.1);
   }
 }
+
+.animate-shadow-pulse-indigo {
+  animation: shadow-pulse-indigo 2s infinite;
+}
+
+@keyframes shadow-pulse-indigo {
+  0%,
+  100% {
+    box-shadow: 0 0 0 rgba(75, 0, 130, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 3px rgba(75, 0, 130, 0.5);
+  }
+}

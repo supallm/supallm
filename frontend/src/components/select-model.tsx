@@ -18,6 +18,7 @@ export const ProviderModels: Record<ProviderType, Readonly<string[]>> = {
   google: [],
   azure: [],
   mistral: [],
+  e2b: [],
 };
 
 export const SelectModel: FC<{

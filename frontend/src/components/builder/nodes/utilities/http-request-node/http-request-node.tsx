@@ -54,6 +54,7 @@ const HttpRequestNode: FC<HttpRequestNodeProps> = ({ data, id: nodeId }) => {
 
   return (
     <BaseNode
+      nodeId={nodeId}
       outputHandles={[
         {
           label: "Response",

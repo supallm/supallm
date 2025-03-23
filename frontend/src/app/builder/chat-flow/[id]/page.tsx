@@ -6,7 +6,6 @@ import { NODE_WIDTH } from "@/components/builder/constants";
 import { NodeType } from "@/components/builder/node-types";
 import { default as openAIChatCompletionNode } from "@/components/builder/nodes/chat/openai-chat-completion-node";
 import codeExecutorNode from "@/components/builder/nodes/code/code-executor/code-executor-node";
-import e2bInterpreterNode from "@/components/builder/nodes/code/e2b-interpreter/e2b-interpreter-node";
 import entrypointNode from "@/components/builder/nodes/fixed/entrypoint-node";
 import resultNode from "@/components/builder/nodes/fixed/result-node";
 import httpRequestNode from "@/components/builder/nodes/utilities/http-request-node/http-request-node";
@@ -110,7 +109,7 @@ const ChatFlowPage = () => {
       result: resultNode,
       entrypoint: entrypointNode,
       "code-executor": codeExecutorNode,
-      "e2b-interpreter": e2bInterpreterNode,
+      "e2b-interpreter": () => null,
       "http-request": httpRequestNode,
       "chat-anthropic": () => null,
       "chat-google": () => null,
@@ -209,6 +208,8 @@ const ChatFlowPage = () => {
               </div>
             )}
             <TestFlowDialog
+              nodes={nodes}
+              edges={edges}
               data={entrypointNodeData}
               onChange={() => {}}
               flowId={currentFlow.id}
