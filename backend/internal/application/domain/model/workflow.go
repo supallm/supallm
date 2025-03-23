@@ -3,6 +3,7 @@ package model
 
 import (
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"strings"
 
@@ -187,21 +188,17 @@ func (p *Project) UpdateWorkflowBuilderFlow(id WorkflowID, builderFlow json.RawM
 
 func (p *Project) ComputeWorkflow(id WorkflowID) (*Workflow, error) {
 	w, ok := p.Workflows[id]
-	slog.Info("computing workflow", "workflow", w.ID)
 	if !ok {
-		return nil, errs.NotFoundError{Resource: "workflow", ID: id}
+		return nil, ErrWorkflowNotFound
 	}
 
 	if w.RunnerFlow != nil {
-		slog.Info("workflow already computed, skipping", "workflow", w.ID)
 		return w, nil
 	}
 
-	slog.Info("computing runner flow", "workflow", w.ID)
 	runnerFlow, err := p.ComputeRunnerFlow(w.BuilderFlow)
-	slog.Info("runner flow computed", "workflow", w.ID, "runnerFlow", err)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to compute runner flow: %w", err)
 	}
 	w.RunnerFlow = runnerFlow
 	return w, nil
@@ -219,12 +216,12 @@ func (w *Workflow) SetBuilderFlow(builderFlowJSON json.RawMessage) error {
 func (p *Project) ComputeRunnerFlow(builderFlow BuilderFlow) (json.RawMessage, error) {
 	result, err := p.convertBuilderToRunnerFlow(builderFlow)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to convert builder to runner flow: %w", err)
 	}
 
 	runnerFlowJSON, err := json.Marshal(result)
 	if err != nil {
-		return nil, errs.InternalError{Err: err}
+		return nil, fmt.Errorf("unable to marshal runner flow: %w", err)
 	}
 
 	return runnerFlowJSON, nil
@@ -265,15 +262,10 @@ func (p *Project) convertBuilderToRunnerFlow(builderFlow BuilderFlow) (map[strin
 			err = p.processLLMNode(nodes, runnerNodeID, node, builderFlow.Edges, nodeMap)
 		case "code-executor":
 			err = p.processCodeExecutorNode(nodes, runnerNodeID, node, builderFlow.Edges, nodeMap)
-		// Add additional node types as needed
-		// case "code":
-		//     err = p.processCodeNode(nodes, runnerNodeID, node, builderFlow.Edges, nodeMap)
 		default:
 			// Skip unknown node types
 			continue
 		}
-
-		slog.Info("processed node", "nodeID", runnerNodeID, "node", node)
 
 		if err != nil {
 			return nil, err
@@ -461,17 +453,17 @@ func (p *Project) processCodeExecutorNode(nodes map[string]any, nodeID string, n
 func (p *Project) processLLMNode(nodes map[string]any, nodeID string, node BuilderNode, edges []BuilderEdge, nodeMap map[string]BuilderNode) error {
 	var data LLMNodeData
 	if err := json.Unmarshal(node.Data, &data); err != nil {
-		return errs.InvalidError{Reason: "unable to unmarshal LLM node data", Err: err}
+		return fmt.Errorf("unable to unmarshal LLM node data: %w", err)
 	}
 
 	credentialID, err := uuid.Parse(data.CredentialID)
 	if err != nil {
-		return errs.InvalidError{Reason: "invalid credential ID", Err: err}
+		return fmt.Errorf("invalid credential ID: %w", err)
 	}
 
 	apiKey, err := p.getCredentialAPIKey(credentialID)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to get credential API key: %w", err)
 	}
 
 	nodeConfig := map[string]any{
@@ -586,15 +578,10 @@ func (p *Project) parseHandle(handle string) []string {
 func (p *Project) getCredentialAPIKey(credentialID uuid.UUID) (string, error) {
 	credential, ok := p.Credentials[credentialID]
 	if !ok {
-		return "", errs.NotFoundError{Resource: "credential", ID: credentialID}
+		return "", ErrCredentialNotFound
 	}
 
-	apiKey, err := credential.APIKey.Decrypt()
-	if err != nil {
-		return "", errs.InternalError{Err: err}
-	}
-
-	return apiKey.String(), nil
+	return credential.APIKey.String(), nil
 }
 
 func (w *Workflow) UpdateStatus(status WorkflowStatus) {
