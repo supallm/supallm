@@ -1,7 +1,5 @@
-import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
 import { Form, FormField } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import {
   Sheet,
   SheetContent,
@@ -21,8 +19,7 @@ import {
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import MonacoEditor, { useMonaco } from "@monaco-editor/react";
-import { Label } from "@radix-ui/react-dropdown-menu";
-import { BracesIcon, Logs, PlayIcon } from "lucide-react";
+import { BracesIcon } from "lucide-react";
 import { FC, PropsWithChildren, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -175,7 +172,9 @@ Example:
     }
   };
 
-  const onCodeChange = (value: string) => {
+  const onCodeChange = (value: string | undefined) => {
+    if (!value) return;
+
     form.setValue("code", value);
     const { keys } = parseFunctionOutput(value);
     if (!keys.length) {
@@ -203,54 +202,7 @@ Example:
           </SheetHeader>
           <div className="h-full relative">
             <div className="absolute top-0 left-0 right-0 bottom-0">
-              {/* Top Part */}
-              <div className="p-4 left-0 right-0 max-h-[50%] top-0 space-y-4 overflow-y-auto">
-                {!inputs?.length && (
-                  <EmptyState
-                    title="No inputs found"
-                    description="Add at least one argument to your main function"
-                  ></EmptyState>
-                )}
-                {!!inputs?.length && (
-                  <>
-                    {inputs.map((input) => {
-                      return (
-                        <div key={input.name}>
-                          <Label className="mb-2">
-                            {input.name}{" "}
-                            <span className="text-xs text-gray-500">
-                              ({input.type})
-                            </span>
-                          </Label>
-                          <Input
-                            value={testFormInputValues[input.name] ?? ""}
-                            onChange={(e) =>
-                              setTestFormInputValues({
-                                ...testFormInputValues,
-                                [input.name]: e.target.value,
-                              })
-                            }
-                            placeholder="Enter value"
-                          />
-                        </div>
-                      );
-                    })}
-
-                    <Button
-                      type="button"
-                      variant={"outline"}
-                      startContent={<PlayIcon className="w-4 h-4" />}
-                      onClick={handleRunCode}
-                      isLoading={isCodeRunning}
-                    >
-                      Test function
-                    </Button>
-                  </>
-                )}
-              </div>
-
-              {/* Bottom Part */}
-              <div className="bg-muted grow border-t absolute bottom-0 left-0 right-0 top-[50%] flex flex-col">
+              <div className="bg-muted grow absolute bottom-0 left-0 right-0 top-0 flex flex-col">
                 <div className="pane-controls w-full flex justify-start gap-0 border-b items-center bg-gray-100 shrink-0">
                   <PaneButton
                     active={activePane === "source-code"}
@@ -258,13 +210,6 @@ Example:
                     startContent={<BracesIcon className="w-4 h-4" />}
                   >
                     Code editor
-                  </PaneButton>
-                  <PaneButton
-                    active={activePane === "logs"}
-                    onClick={() => setActivePane("logs")}
-                    startContent={<Logs className="w-4 h-4" />}
-                  >
-                    Execution logs
                   </PaneButton>
                 </div>
 
@@ -292,14 +237,6 @@ Example:
                         )}
                       />
                     </form>
-                  )}
-
-                  {activePane === "logs" && (
-                    <div className="h-full p-4 grow text-sm flex flex-col gap-2">
-                      {logs.map((log, index) => (
-                        <div key={index}>{log}</div>
-                      ))}
-                    </div>
                   )}
                 </div>
               </div>

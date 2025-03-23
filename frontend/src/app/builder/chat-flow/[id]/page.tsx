@@ -209,6 +209,8 @@ const ChatFlowPage = () => {
               </div>
             )}
             <TestFlowDialog
+              nodes={nodes}
+              edges={edges}
               data={entrypointNodeData}
               onChange={() => {}}
               flowId={currentFlow.id}

@@ -1,10 +1,10 @@
 import _ from "lodash";
+import { NodeDefinition } from "../../nodes/types";
+import { logger } from "../../utils/logger";
 import {
   WorkflowDefinition,
   WorkflowExecutionOptions,
 } from "../workflow/types";
-import { NodeDefinition } from "../../nodes/types";
-import { logger } from "../../utils/logger";
 
 export interface WorkflowInputs {
   [key: string]: any;
@@ -33,16 +33,16 @@ export interface IContextService {
   initialize(
     workflowId: string,
     definition: WorkflowDefinition,
-    options: WorkflowExecutionOptions
+    options: WorkflowExecutionOptions,
   ): Promise<ManagedExecutionContext>;
   getManagedContext(
     workflowId: string,
-    triggerId: string
+    triggerId: string,
   ): Promise<ManagedExecutionContext | null>;
   updateContext(
     workflowId: string,
     triggerId: string,
-    update: Partial<ExecutionContext>
+    update: Partial<ExecutionContext>,
   ): Promise<void>;
 }
 
@@ -53,7 +53,7 @@ export class ManagedExecutionContext {
     private readonly contextService: IContextService,
     readonly workflowId: string,
     readonly triggerId: string,
-    context: ExecutionContext
+    context: ExecutionContext,
   ) {
     this.context = context;
   }
@@ -66,7 +66,7 @@ export class ManagedExecutionContext {
     await this.contextService.updateContext(
       this.workflowId,
       this.triggerId,
-      this.context
+      this.context,
     );
   }
 
@@ -87,7 +87,7 @@ export class ManagedExecutionContext {
 
   async updateNodeInputs(
     nodeId: string,
-    inputs: Record<string, any>
+    inputs: Record<string, any>,
   ): Promise<void> {
     if (!this.context.nodeExecutions[nodeId]) {
       throw new Error(`node ${nodeId} not found`);
@@ -98,7 +98,7 @@ export class ManagedExecutionContext {
 
   async updateNodeOutputs(
     nodeId: string,
-    output: Record<string, any>
+    output: Record<string, any>,
   ): Promise<void> {
     if (!this.context.nodeExecutions[nodeId]) {
       throw new Error(`node ${nodeId} not found`);
@@ -152,7 +152,7 @@ export class ManagedExecutionContext {
       .filter((nodeId) => {
         const nodeDeps = dependencies[nodeId] || [];
         return nodeDeps.every((depId) =>
-          this.context.completedNodes.has(depId)
+          this.context.completedNodes.has(depId),
         );
       });
   }
@@ -164,11 +164,11 @@ export class ManagedExecutionContext {
    */
   resolveInputs(
     nodeId: string,
-    definition: NodeDefinition
+    definition: NodeDefinition,
   ): Record<string, any> {
     const resolvedInputs: Record<string, any> = {};
 
-    if (nodeId === "entrypoint") {
+    if (nodeId === "entrypoint-node") {
       return this.context.workflowInputs;
     }
 
@@ -181,7 +181,7 @@ export class ManagedExecutionContext {
 
         if (!sourceNodeId) {
           logger.warn(
-            `invalid source format for input ${inputName} in node ${nodeId}`
+            `invalid source format for input ${inputName} in node ${nodeId}`,
           );
           continue;
         }
@@ -189,7 +189,7 @@ export class ManagedExecutionContext {
         // check if source node exists in context
         if (!this.node(sourceNodeId)) {
           logger.warn(
-            `source node ${sourceNodeId} not found for input ${inputName} in node ${nodeId}`
+            `source node ${sourceNodeId} not found for input ${inputName} in node ${nodeId}`,
           );
           continue;
         }
@@ -218,7 +218,7 @@ export class ManagedExecutionContext {
     for (const inputName of Object.keys(definition.inputs)) {
       if (resolvedInputs[inputName] === undefined) {
         logger.warn(
-          `input ${inputName} for node ${nodeId} could not be resolved`
+          `input ${inputName} for node ${nodeId} could not be resolved`,
         );
       }
     }
