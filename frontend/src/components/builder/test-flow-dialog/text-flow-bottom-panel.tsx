@@ -46,7 +46,7 @@ const EmptyLogs: FC = () => {
   return <p className="text-muted-foreground text-sm">No logs available</p>;
 };
 
-const LogList: FC<{ events: FlowEventData[] }> = ({ events }) => {
+const LogList: FC<{ events: FlowResultStreamEvent[] }> = ({ events }) => {
   const numberOfLatestEvents = 5;
 
   const reversedEvents = useMemo(() => {

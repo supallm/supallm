@@ -1,9 +1,9 @@
 import { BaseHandle } from "@/components/base-handle";
 import { OpenAI } from "@/components/logos/openai";
 import { cn } from "@/lib/utils";
-import { NodeProps, Position, useUpdateNodeInternals } from "@xyflow/react";
+import { NodeProps, Position } from "@xyflow/react";
 import { Code, Flag, FolderSymlink } from "lucide-react";
-import { FC, memo, useEffect } from "react";
+import { FC, memo } from "react";
 import { NodeType } from "../node-types";
 
 export type RunningFlowNodeProps = NodeProps & {
@@ -57,13 +57,7 @@ export const RunningFlowNode: FC<RunningFlowNodeProps> = ({
   type,
   id: nodeId,
 }) => {
-  const updateNodeInternals = useUpdateNodeInternals();
-
   const NODE_WIDTH = 200;
-
-  useEffect(() => {
-    updateNodeInternals(nodeId);
-  }, []);
 
   const statusClasses: Record<RunningFlowNodeProps["data"]["status"], string> =
     {

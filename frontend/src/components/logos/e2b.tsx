@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { FC } from "react";
 
 export const E2B: FC<{ width: number; height: number }> = ({
@@ -5,7 +6,7 @@ export const E2B: FC<{ width: number; height: number }> = ({
   height,
 }) => {
   return (
-    <img
+    <Image
       src="/images/logos/e2b.gif"
       alt="E2B"
       width={width}

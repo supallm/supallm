@@ -9,7 +9,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { executeCodeSandboxUsecase } from "@/core/usecases";
 import {
   getFunctionReturnLines,
   parseCodeForInputs,
@@ -20,7 +19,7 @@ import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import MonacoEditor, { useMonaco } from "@monaco-editor/react";
 import { BracesIcon } from "lucide-react";
-import { FC, PropsWithChildren, useMemo, useState } from "react";
+import { FC, PropsWithChildren, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -67,18 +66,6 @@ export const CodeEditorDialog: FC<
   }>
 > = ({ children, data, onChange }) => {
   const [open, setOpen] = useState(false);
-  const [isCodeRunning, setIsCodeRunning] = useState(false);
-  const [testFormInputValues, setTestFormInputValues] = useState<
-    Record<string, string>
-  >({});
-
-  const [logs, setLogs] = useState<string[]>([]);
-  const clearLogs = () => {
-    setLogs([]);
-  };
-  const addLog = (log: string) => {
-    setLogs((prev) => [...prev, log]);
-  };
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -95,10 +82,6 @@ export const CodeEditorDialog: FC<
     }
     setOpen(open);
   };
-
-  const code = form.watch("code");
-
-  const inputs = useMemo(() => parseCodeForInputs(code), [code]);
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     const inputs = parseCodeForInputs(values.code);
@@ -119,24 +102,6 @@ export const CodeEditorDialog: FC<
   const [activePane, setActivePane] = useState<"source-code" | "logs">(
     "source-code",
   );
-
-  const handleRunCode = () => {
-    clearLogs();
-    setActivePane("logs");
-    setIsCodeRunning(true);
-    executeCodeSandboxUsecase.execute({
-      code: form.getValues("code"),
-      language: "typescript",
-      projectId: "1",
-      inputs: testFormInputValues,
-      onLog: addLog,
-      onResult: (log: string) => {
-        setIsCodeRunning(false);
-        addLog(log);
-      },
-      onError: addLog,
-    });
-  };
 
   const setMonacoReturnFunctionError = (
     startLineNumber: number,

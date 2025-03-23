@@ -25,24 +25,13 @@ type CodeBlockProps = {
 
 export const CodePreview = ({
   language,
-  filename,
   code,
   highlightLines = [],
   tabs = [],
 }: CodeBlockProps) => {
-  const [copied, setCopied] = React.useState(false);
-  const [activeTab, setActiveTab] = React.useState(0);
+  const [activeTab] = React.useState(0);
 
   const tabsExist = tabs.length > 0;
-
-  const copyToClipboard = async () => {
-    const textToCopy = tabsExist ? tabs[activeTab].code : code;
-    if (textToCopy) {
-      await navigator.clipboard.writeText(textToCopy);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
 
   const activeCode = tabsExist ? tabs[activeTab].code : code;
   const activeLanguage = tabsExist

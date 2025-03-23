@@ -10,7 +10,7 @@ import {
   useNodesState,
 } from "@xyflow/react";
 import dagre from "dagre";
-import { FC, useEffect, useMemo } from "react";
+import { FC, useCallback, useEffect, useMemo } from "react";
 import { FlowSubscription } from "supallm/browser";
 import { NodeType } from "../node-types";
 import RunningFlowNode from "./running-flow-node";
@@ -26,8 +26,6 @@ export function layoutGraphWithStandardHandles(
   const dagreGraph = new dagre.graphlib.Graph();
   dagreGraph.setDefaultEdgeLabel(() => ({}));
   dagreGraph.setGraph({ rankdir: direction });
-
-  const isHorizontal = direction === "LR";
 
   // Step 1: Add nodes to the graph
   nodes.forEach((node) => {
@@ -91,79 +89,89 @@ export const RunningFlow: FC<{
 
   const [nodes, setNodes, onNodesChange] = useNodesState(layoutedNodes);
 
-  const setActiveNode = (nodeId: string) => {
-    console.log("setActiveNode", nodeId);
+  const setActiveNode = useCallback(
+    (nodeId: string) => {
+      setNodes((nds) => {
+        return nds.map((node) => {
+          if (node.id === nodeId) {
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                status: "active",
+              },
+            };
+          }
 
-    setNodes((nds) => {
-      return nds.map((node) => {
-        if (node.id === nodeId) {
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              status: "active",
-            },
-          };
-        }
-
-        return node;
+          return node;
+        });
       });
-    });
-  };
+    },
+    [setNodes],
+  );
 
-  const setEndedNode = (nodeId: string) => {
-    setNodes((nds) => {
-      return nds.map((node) => {
-        if (node.id === nodeId) {
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              status: "ended",
-            },
-          };
-        }
+  const setEndedNode = useCallback(
+    (nodeId: string) => {
+      setNodes((nds) => {
+        return nds.map((node) => {
+          if (node.id === nodeId) {
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                status: "ended",
+              },
+            };
+          }
 
-        return node;
+          return node;
+        });
       });
-    });
-  };
+    },
+    [setNodes],
+  );
 
-  const setFailedNode = (nodeId: string) => {
-    setNodes((nds) => {
-      return nds.map((node) => {
-        if (node.id === nodeId) {
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              status: "failed",
-            },
-          };
-        }
+  const setFailedNode = useCallback(
+    (nodeId: string) => {
+      setNodes((nds) => {
+        return nds.map((node) => {
+          if (node.id === nodeId) {
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                status: "failed",
+              },
+            };
+          }
 
-        return node;
+          return node;
+        });
       });
-    });
-  };
+    },
+    [setNodes],
+  );
 
-  const setWorkflowOutputStatus = (status: "ended" | "failed") => {
-    setNodes((nds) => {
-      return nds.map((node) => {
-        if (node.id === "result-node") {
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              status: status,
-            },
-          };
-        }
+  const setWorkflowOutputStatus = useCallback(
+    (status: "ended" | "failed") => {
+      setNodes((nds) => {
+        return nds.map((node) => {
+          if (node.id === "result-node") {
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                status: status,
+              },
+            };
+          }
 
-        return node;
+          return node;
+        });
       });
-    });
-  };
+    },
+    [setNodes],
+  );
 
   useEffect(() => {
     if (!flowSubscription) return;
@@ -204,8 +212,15 @@ export const RunningFlow: FC<{
       unsubscribeFlowEnd();
       unsubscribeFlowFail();
     };
-  }, [flowSubscription]);
+  }, [
+    flowSubscription,
+    setActiveNode,
+    setEndedNode,
+    setFailedNode,
+    setWorkflowOutputStatus,
+  ]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const nodeTypes: Record<NodeType, any> = useMemo(
     () => ({
       "chat-openai": RunningFlowNode,
