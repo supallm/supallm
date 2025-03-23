@@ -12,18 +12,20 @@ export async function spawnProcessAsync(
     let stderrBuffer = "";
 
     child.stdout.on("data", (data) => {
+      console.log("LOG", data.toString());
       const chunk = data.toString();
       stdoutBuffer += chunk;
 
       const lines = stdoutBuffer.split("\n");
       stdoutBuffer = lines.pop() ?? "";
 
-      for (const line of lines) {       
+      for (const line of lines) {
         onLog(line);
       }
     });
 
     child.stderr.on("data", (data) => {
+      console.log("ERROR", data.toString());
       const chunk = data.toString();
       stderrBuffer += chunk;
 
@@ -31,24 +33,24 @@ export async function spawnProcessAsync(
       stderrBuffer = lines.pop() ?? "";
 
       for (const line of lines) {
+        console.log("LOG", line);
         onLog(line);
       }
     });
 
-    child.on("error", (err) => onError(err.message));
+    child.on("error", (err) => {
+      onError(err.message);
+    });
 
     child.on("close", (code) => {
       if (code ?? 0 > 0) {
-        reject(
-          new Error(`Process exited with code ${code}.`),
-        );
+        reject(new Error(`Process exited with code ${code}.`));
       } else {
         resolve();
       }
     });
   });
 }
-
 
 export async function spawnWrappedFunctionProcessAsync(
   spawnFunction: () => ChildProcessWithoutNullStreams,
