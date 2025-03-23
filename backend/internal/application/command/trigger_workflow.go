@@ -2,6 +2,7 @@ package command
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"os"
 
@@ -51,12 +52,18 @@ func (h TriggerWorkflowHandler) Handle(ctx context.Context, cmd TriggerWorkflowC
 
 	workflow, err := project.ComputeWorkflow(cmd.WorkflowID)
 	if err != nil {
-		return errs.NotFoundError{Resource: "workflow", ID: cmd.WorkflowID}
+		if errors.Is(err, model.ErrWorkflowNotFound) {
+			return errs.NotFoundError{Resource: "workflow", ID: cmd.WorkflowID}
+		}
+		if errors.Is(err, model.ErrCredentialNotFound) {
+			return errs.NotFoundError{Resource: "credential", ID: cmd.WorkflowID}
+		}
+		return errs.InvalidError{Reason: "unable to compute workflow", Err: err}
 	}
 
 	err = h.runnerService.QueueWorkflow(ctx, cmd.TriggerID, workflow, cmd.Inputs)
 	if err != nil {
-		return errs.InvalidError{Reason: err.Error()}
+		return errs.InternalError{Err: err}
 	}
 
 	go func() {

@@ -8,7 +8,6 @@ import {
   ModelNotFoundError,
   ProviderAPIError,
 } from "./llm.errors";
-
 export class OpenAIProvider implements BaseLLMProvider {
   constructor() {}
 
@@ -97,7 +96,6 @@ export class OpenAIProvider implements BaseLLMProvider {
   ): Result<OpenAI | ChatOpenAI, ModelNotFoundError | ProviderAPIError> {
     try {
       const isChatModel = this.isChatModel(options.model);
-
       if (isChatModel) {
         return Result.ok(
           new ChatOpenAI({
@@ -121,9 +119,7 @@ export class OpenAIProvider implements BaseLLMProvider {
       }
     } catch (error) {
       return Result.error(
-        new ProviderAPIError(
-          `Failed to initialize OpenAI model: ${error instanceof Error ? error.message : String(error)}`,
-        ),
+        new ProviderAPIError(`failed to initialize openai model`),
       );
     }
   }
@@ -136,42 +132,34 @@ export class OpenAIProvider implements BaseLLMProvider {
       const message = error.message.toLowerCase();
 
       if (
+        message.includes("api key") ||
+        message.includes("apikey") ||
+        message.includes("authentication")
+      ) {
+        return Result.error(new MissingAPIKeyError(`invalid openai api key`));
+      }
+
+      if (
         message.includes("model") ||
         message.includes("not found") ||
         message.includes("doesn't exist")
       ) {
         return Result.error(
           new ModelNotFoundError(
-            `OpenAI model not found: ${model || "unknown"}`,
+            `openai model not found: ${model || "unknown"}`,
           ),
-        );
-      }
-
-      if (
-        message.includes("api key") ||
-        message.includes("apikey") ||
-        message.includes("authentication")
-      ) {
-        return Result.error(
-          new MissingAPIKeyError(`Invalid OpenAI API key: ${error.message}`),
         );
       }
 
       // API error handling with status code extraction if available
       if (typeof error === "object" && error !== null && "status" in error) {
         const status = Number(error.status);
-        return Result.error(
-          new ProviderAPIError(`OpenAI API error: ${error.message}`, status),
-        );
+        return Result.error(new ProviderAPIError(`openai api error`, status));
       }
     }
 
     // Generic provider error
-    return Result.error(
-      new ProviderAPIError(
-        `Error with OpenAI provider: ${error instanceof Error ? error.message : String(error)}`,
-      ),
-    );
+    return Result.error(new ProviderAPIError(`error with openai provider`));
   }
 
   private isChatModel(model: string): boolean {
