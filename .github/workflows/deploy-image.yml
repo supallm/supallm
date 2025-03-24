@@ -76,4 +76,4 @@ jobs:
           push: true
           tags: | 
             ghcr.io/${{ github.repository }}:latest
-            ghcr.io/${{ github.repository }}:$VERSION
+            ghcr.io/${{ github.repository }}:${{ env.VERSION }}
