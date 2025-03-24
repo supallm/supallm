@@ -6,7 +6,7 @@ up:
 
 backend:
 	@echo [ starting backend... ]
-	@docker compose -f docker-compose.dev.yml up api runner --build
+	@docker compose -f docker-compose.dev.yml up api runner
 
 bb:
 	@echo [ starting backend... ]

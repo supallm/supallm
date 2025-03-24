@@ -52,15 +52,52 @@ RUN npm prune --production
 # | |  | |_| | | | | | | |  __/ |   
 # |_|   \__,_|_| |_|_| |_|\___|_|   
 
-FROM node:lts-alpine AS runner-builder
+FROM debian:bookworm-slim AS runner-builder
+
+WORKDIR /nsjail
+
+RUN apt-get -y update \
+    && apt-get install -y \
+    bison=2:3.8.* \
+    flex=2.6.* \
+    g++=4:12.2.* \
+    gcc=4:12.2.* \
+    git=1:2.39.* \
+    libprotobuf-dev=3.21.* \
+    libnl-route-3-dev=3.7.* \
+    make=4.3-4.1 \
+    pkg-config=1.8.* \
+    protobuf-compiler=3.21.*
+
+RUN git clone -b master --single-branch https://github.com/google/nsjail.git .
+
+RUN make
+
+RUN ls -la
+
+RUN cp /nsjail/nsjail /usr/local/bin/nsjail
+RUN chmod +x /usr/local/bin/nsjail
+
 WORKDIR /app/runner
 
+RUN apt-get install -y curl \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs
+
+RUN npm install -g nodemon
+
+RUN npm install -g typescript
+
+RUN npm install -g ts-node
+
 COPY ./runner/package*.json ./
+
 RUN npm install
 
 COPY ./runner .
 
 RUN npm run build
+
 
 # _____ ___ _   _    _    _     
 # |  ___|_ _| \ | |  / \  | |    
@@ -68,7 +105,7 @@ RUN npm run build
 # |  _|  | || |\  |/ ___ \| |___ 
 # |_|   |___|_| \_/_/   \_\_____|
 
-FROM node:lts-alpine AS final
+FROM debian:bookworm-slim AS final
 WORKDIR /app
 
 # Backend
@@ -81,9 +118,22 @@ COPY --from=frontend-builder /app/frontend/.next /app/frontend/.next
 COPY --from=frontend-builder /app/frontend/public /app/frontend/public
 
 # Runner
+RUN apt-get update && apt-get install -y \
+    libprotobuf-dev \
+    libnl-route-3-200 \
+    curl \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get install -y curl \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs
+
+RUN npm install -g typescript
+
 COPY --from=runner-builder /app/runner/dist /app/runner/dist
 COPY --from=runner-builder /app/runner/package.json  /app/runner/package.json
 COPY --from=runner-builder /app/runner/node_modules /app/runner/node_modules
+COPY --from=runner-builder /usr/local/bin/nsjail /usr/local/bin/nsjail
 
 # Setup
 COPY --from=base /app/db/init.sql /app/db/init.sql
