@@ -12,4 +12,6 @@ const (
 	ErrInvalid   RepoError = "invalid"
 	ErrInternal  RepoError = "internal"
 	ErrConflict  RepoError = "conflict"
+
+	ErrUnmarshal RepoError = "unmarshal"
 )

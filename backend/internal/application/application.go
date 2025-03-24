@@ -7,6 +7,7 @@ import (
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/supallm/core/internal/adapters/execution"
 	"github.com/supallm/core/internal/adapters/project"
 	"github.com/supallm/core/internal/adapters/runner"
 	"github.com/supallm/core/internal/adapters/user"
@@ -58,6 +59,9 @@ type Queries struct {
 
 	ListenWorkflow query.ListenWorkflowHandler
 	GetUser        query.GetUserHandler
+
+	GetWorkflowExecutions query.GetWorkflowExecutionsHandler
+	GetTriggerExecution   query.GetTriggerExecutionHandler
 }
 
 func New(
@@ -70,6 +74,10 @@ func New(
 	if err != nil {
 		return nil, err
 	}
+	redisExecutions, err := redis.NewClient(conf.Redis, redis.DBExecutions)
+	if err != nil {
+		return nil, err
+	}
 
 	router := event.CreateRouter(event.Config{
 		WorkflowsRedis: redisWorkflows,
@@ -79,6 +87,7 @@ func New(
 	projectRepo := project.NewRepository(ctx, pool)
 	userRepo := user.NewRepository(ctx, pool)
 	runnerService := runner.NewService(ctx, router.RunnerPublisher)
+	executionRepo := execution.NewRedisExecutionRepository(redisExecutions)
 
 	app := &App{
 		pool:             pool,
@@ -114,6 +123,9 @@ func New(
 
 			ListenWorkflow: query.NewListenWorkflowHandler(projectRepo),
 			GetUser:        query.NewGetUserHandler(userRepo),
+
+			GetWorkflowExecutions: query.NewGetWorkflowExecutionsHandler(executionRepo),
+			GetTriggerExecution:   query.NewGetTriggerExecutionHandler(executionRepo),
 		},
 	}
 

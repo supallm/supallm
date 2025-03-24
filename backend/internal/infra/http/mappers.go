@@ -97,3 +97,53 @@ func queryProjectsToDTOs(projects []query.Project) []gen.Project {
 	}
 	return dtos
 }
+
+func queryExecutionToDTO(execution query.Execution) gen.Execution {
+	return gen.Execution{
+		AllNodes:       execution.AllNodes,
+		CompletedNodes: execution.CompletedNodes,
+		WorkflowId:     execution.WorkflowID,
+		TriggerId:      execution.TriggerID,
+		SessionId:      execution.SessionID,
+		WorkflowInputs: gen.WorkflowInputs{
+			Prompt: execution.WorkflowInputs.Prompt,
+		},
+		NodeExecutions: queryNodeExecutionsToDTOs(execution.NodeExecutions),
+	}
+}
+
+func queryNodeExecutionsToDTOs(nodeExecutions map[string]query.NodeExecution) map[string]gen.NodeExecution {
+	dtos := make(map[string]gen.NodeExecution, len(nodeExecutions))
+	for k, v := range nodeExecutions {
+		dtos[k] = queryNodeExecutionToDTO(v)
+	}
+	return dtos
+}
+
+func queryNodeExecutionToDTO(nodeExecution query.NodeExecution) gen.NodeExecution {
+	inputs := make(map[string]any, len(nodeExecution.Inputs))
+	for k, v := range nodeExecution.Inputs {
+		inputs[k] = v
+	}
+
+	outputs := make(map[string]any, len(nodeExecution.Output))
+	for k, v := range nodeExecution.Output {
+		outputs[k] = v
+	}
+
+	return gen.NodeExecution{
+		Id:            nodeExecution.ID,
+		Success:       nodeExecution.Success,
+		Inputs:        inputs,
+		Output:        outputs,
+		ExecutionTime: nodeExecution.ExecutionTime,
+	}
+}
+
+func queryExecutionsToDTOs(executions []query.Execution) []gen.Execution {
+	dtos := make([]gen.Execution, len(executions))
+	for i, execution := range executions {
+		dtos[i] = queryExecutionToDTO(execution)
+	}
+	return dtos
+}

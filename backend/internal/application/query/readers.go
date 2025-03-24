@@ -17,3 +17,8 @@ type ProjectReader interface {
 type UserReader interface {
 	ReadUser(ctx context.Context, email string) (User, error)
 }
+
+type ExecutionReader interface {
+	ReadWorkflowExecutions(ctx context.Context, workflowID string) ([]Execution, error)
+	ReadTriggerExecution(ctx context.Context, workflowID string, triggerID uuid.UUID) (Execution, error)
+}

@@ -443,6 +443,67 @@ paths:
         "404":
           description: Project or workflow not found
 
+  /projects/{projectId}/workflows/{workflowId}/executions:
+    get:
+      summary: "Get all executions for a workflow"
+      operationId: listWorkflowExecutions
+      tags:
+        - Workflow
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/UUID"
+        - name: workflowId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "List of workflow executions"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Execution"
+        "404":
+          description: "Workflow or project not found"
+
+  /projects/{projectId}/workflows/{workflowId}/executions/{triggerId}:
+    get:
+      summary: "Get a specific execution by trigger ID"
+      operationId: getWorkflowExecution
+      tags:
+        - Workflow
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/UUID"
+        - name: workflowId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: triggerId
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: "Execution details"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Execution"
+        "404":
+          description: "Execution, workflow or project not found"
+
 components:
   securitySchemes:
     BearerAuth:
@@ -698,3 +759,63 @@ components:
       required:
         - token
         - user
+
+    Execution:
+      type: object
+      properties:
+        workflowId:
+          type: string
+        sessionId:
+          type: string
+        triggerId:
+          type: string
+        workflowInputs:
+          $ref: "#/components/schemas/WorkflowInputs"
+        nodeExecutions:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/NodeExecution"
+        completedNodes:
+          type: array
+          items:
+            type: string
+        allNodes:
+          type: array
+          items:
+            type: string
+      required:
+        - workflowId
+        - sessionId
+        - triggerId
+        - workflowInputs
+        - nodeExecutions
+        - completedNodes
+        - allNodes
+
+    WorkflowInputs:
+      type: object
+      properties:
+        prompt:
+          type: string
+      required:
+        - prompt
+
+    NodeExecution:
+      type: object
+      properties:
+        id:
+          type: string
+        success:
+          type: boolean
+        inputs:
+          type: object
+        output:
+          type: object
+        executionTime:
+          type: integer
+      required:
+        - id
+        - success
+        - inputs
+        - output
+        - executionTime

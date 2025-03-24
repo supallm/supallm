@@ -77,6 +77,17 @@ type Credential struct {
 	UpdatedAt time.Time    `json:"updatedAt"`
 }
 
+// Execution defines model for Execution.
+type Execution struct {
+	AllNodes       []string                 `json:"allNodes"`
+	CompletedNodes []string                 `json:"completedNodes"`
+	NodeExecutions map[string]NodeExecution `json:"nodeExecutions"`
+	SessionId      string                   `json:"sessionId"`
+	TriggerId      string                   `json:"triggerId"`
+	WorkflowId     string                   `json:"workflowId"`
+	WorkflowInputs WorkflowInputs           `json:"workflowInputs"`
+}
+
 // LoginRequest defines model for LoginRequest.
 type LoginRequest struct {
 	Email    string `json:"email"`
@@ -87,6 +98,15 @@ type LoginRequest struct {
 type LoginResponse struct {
 	Token string `json:"token"`
 	User  User   `json:"user"`
+}
+
+// NodeExecution defines model for NodeExecution.
+type NodeExecution struct {
+	ExecutionTime int                    `json:"executionTime"`
+	Id            string                 `json:"id"`
+	Inputs        map[string]interface{} `json:"inputs"`
+	Output        map[string]interface{} `json:"output"`
+	Success       bool                   `json:"success"`
 }
 
 // Project defines model for Project.
@@ -153,6 +173,11 @@ type Workflow struct {
 	Id          string                 `json:"id"`
 	Name        string                 `json:"name"`
 	UpdatedAt   time.Time              `json:"updatedAt"`
+}
+
+// WorkflowInputs defines model for WorkflowInputs.
+type WorkflowInputs struct {
+	Prompt string `json:"prompt"`
 }
 
 // LoginJSONRequestBody defines body for Login for application/json ContentType.

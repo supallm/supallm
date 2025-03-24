@@ -2,7 +2,6 @@ package redis
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"time"
 
@@ -14,7 +13,8 @@ import (
 // as a trade-off between operational complexity and perfect isolation.
 // This can be split into separate instances if needed in the future.
 const (
-	DBWorkflows = 0
+	DBWorkflows  = 0
+	DBExecutions = 1
 
 	maxRetries   = 3
 	poolSize     = 100
@@ -67,7 +67,7 @@ func NewClient(conf config.Redis, db int) (*redis.Client, error) {
 
 	_, err := client.Ping(context.Background()).Result()
 	if err != nil {
-		return nil, fmt.Errorf("redis ping failed: %w", err)
+		return nil, err
 	}
 
 	clients[db] = client

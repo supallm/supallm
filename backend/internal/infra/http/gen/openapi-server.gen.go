@@ -68,6 +68,12 @@ type ServerInterface interface {
 	// Update a workflow
 	// (PUT /projects/{projectId}/workflows/{workflowId})
 	UpdateWorkflow(w http.ResponseWriter, r *http.Request, projectId UUID, workflowId string)
+	// Get all executions for a workflow
+	// (GET /projects/{projectId}/workflows/{workflowId}/executions)
+	ListWorkflowExecutions(w http.ResponseWriter, r *http.Request, projectId UUID, workflowId string)
+	// Get a specific execution by trigger ID
+	// (GET /projects/{projectId}/workflows/{workflowId}/executions/{triggerId})
+	GetWorkflowExecution(w http.ResponseWriter, r *http.Request, projectId UUID, workflowId string, triggerId UUID)
 	// Trigger a workflow
 	// (POST /projects/{projectId}/workflows/{workflowId}/trigger)
 	TriggerWorkflow(w http.ResponseWriter, r *http.Request, projectId UUID, workflowId string)
@@ -182,6 +188,18 @@ func (_ Unimplemented) GetWorkflow(w http.ResponseWriter, r *http.Request, proje
 // Update a workflow
 // (PUT /projects/{projectId}/workflows/{workflowId})
 func (_ Unimplemented) UpdateWorkflow(w http.ResponseWriter, r *http.Request, projectId UUID, workflowId string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Get all executions for a workflow
+// (GET /projects/{projectId}/workflows/{workflowId}/executions)
+func (_ Unimplemented) ListWorkflowExecutions(w http.ResponseWriter, r *http.Request, projectId UUID, workflowId string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Get a specific execution by trigger ID
+// (GET /projects/{projectId}/workflows/{workflowId}/executions/{triggerId})
+func (_ Unimplemented) GetWorkflowExecution(w http.ResponseWriter, r *http.Request, projectId UUID, workflowId string, triggerId UUID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -762,6 +780,95 @@ func (siw *ServerInterfaceWrapper) UpdateWorkflow(w http.ResponseWriter, r *http
 	handler.ServeHTTP(w, r)
 }
 
+// ListWorkflowExecutions operation middleware
+func (siw *ServerInterfaceWrapper) ListWorkflowExecutions(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "projectId" -------------
+	var projectId UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "projectId", chi.URLParam(r, "projectId"), &projectId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "projectId", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "workflowId" -------------
+	var workflowId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "workflowId", chi.URLParam(r, "workflowId"), &workflowId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "workflowId", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListWorkflowExecutions(w, r, projectId, workflowId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetWorkflowExecution operation middleware
+func (siw *ServerInterfaceWrapper) GetWorkflowExecution(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "projectId" -------------
+	var projectId UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "projectId", chi.URLParam(r, "projectId"), &projectId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "projectId", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "workflowId" -------------
+	var workflowId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "workflowId", chi.URLParam(r, "workflowId"), &workflowId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "workflowId", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "triggerId" -------------
+	var triggerId UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "triggerId", chi.URLParam(r, "triggerId"), &triggerId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "triggerId", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetWorkflowExecution(w, r, projectId, workflowId, triggerId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // TriggerWorkflow operation middleware
 func (siw *ServerInterfaceWrapper) TriggerWorkflow(w http.ResponseWriter, r *http.Request) {
 
@@ -968,6 +1075,12 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Put(options.BaseURL+"/projects/{projectId}/workflows/{workflowId}", wrapper.UpdateWorkflow)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/projects/{projectId}/workflows/{workflowId}/executions", wrapper.ListWorkflowExecutions)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/projects/{projectId}/workflows/{workflowId}/executions/{triggerId}", wrapper.GetWorkflowExecution)
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/projects/{projectId}/workflows/{workflowId}/trigger", wrapper.TriggerWorkflow)

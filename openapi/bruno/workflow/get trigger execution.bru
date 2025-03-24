@@ -1,21 +1,15 @@
 meta {
-  name: List all workflows of a project
+  name: get trigger execution
   type: http
-  seq: 1
+  seq: 7
 }
 
 get {
-  url: {{baseURL}}/projects/{{projectId}}/workflows
+  url: {{baseURL}}/projects/{{projectId}}/workflows/{{workflowId}}/executions/edbea162-c661-4e3b-b9f7-9cec305740a1
   body: none
   auth: bearer
 }
 
 auth:bearer {
   token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiODc2MDNlY2EtNGUxOC00YWQ5LThhM2ItMGU5Y2FhYWE2ZTc3IiwiZW1haWwiOiJhZG1pbkBzdXBhbGxtLmNvbSIsIm5hbWUiOiJhZG1pbiIsImlzcyI6InN1cGFsbG0tYXBpIiwiZXhwIjoxNzQyOTI5OTg4LCJpYXQiOjE3NDI4NDM1ODh9.su4Il3_PeY0bF0osbVC7BJREUCnc2ENITGmSjTbyuxg
-}
-
-tests {
-  let jsonData = res.getBody();
-  if(!jsonData[0]) return
-  bru.setEnvVar("workflowId", jsonData[0].id);
 }

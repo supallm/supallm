@@ -67,3 +67,25 @@ type User struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
+
+type Execution struct {
+	WorkflowID     string
+	SessionID      string
+	TriggerID      string
+	WorkflowInputs WorkflowInputs
+	NodeExecutions map[string]NodeExecution
+	CompletedNodes []string
+	AllNodes       []string
+}
+
+type WorkflowInputs struct {
+	Prompt string
+}
+
+type NodeExecution struct {
+	ID            string
+	Success       bool
+	Inputs        map[string]any
+	Output        map[string]any
+	ExecutionTime int
+}
