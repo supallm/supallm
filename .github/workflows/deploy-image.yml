@@ -38,7 +38,7 @@ jobs:
       - name: Test Docker Build (Fail Fast)
         run: |
           docker buildx create --use
-          docker buildx build --platform=linux/amd64 -t ghcr.io/${{ github.repository }}:test .
+          docker buildx build --platform=linux/amd64 --load -t ghcr.io/${{ github.repository }}:test .
         # If this step fails, the workflow stops, and no release is published.
 
       - name: Run Semantic Release
