@@ -83,25 +83,7 @@ Once installed you will be able to customize your docker-compose.yml and your en
 
 **If you can't use the CLI for any reason simply open an issue.**
 
-**The CLI will guide you to configure the required variables.  In case you want to go further, here are the variable definitions you can customize in the .env file.**
-
-| Environment Variable     | Description                                                                 | Default Value          | To Change |
-|--------------------------|-----------------------------------------------------------------------------|------------------------|--------------------|
-| SUPALLM_API_URL          | The URL of the Supallm API.                                                | http://localhost:3001 | Optional                |
-| SECRET_KEY               | A secret key used for encryption.                                            | change-me | Required                |
-| POSTGRES_USER            | The username for the PostgreSQL database.                                   | postgres               | Optional                |
-| POSTGRES_PASSWORD        | The password for the PostgreSQL database.                                   | postgres               | Optional                |
-| POSTGRES_DB              | The name of the PostgreSQL database.                                         | supallm                | Optional                |
-| POSTGRES_HOST            | The hostname of the PostgreSQL database.                                     | supallm-pg             | Optional                |
-| POSTGRES_PORT            | The port number on which the PostgreSQL database is running.                 | 5432                   | Optional                |
-| INITIAL_USER_EMAIL       | The email of the initial user.                                                | admin@supallm.com       | Optional                |
-| INITIAL_USER_PASSWORD    | The password of the initial user.                                              | supallm123              | Optional                |
-| INITIAL_USER_NAME        | The name of the initial user.                                                  | admin                  | Optional                |
-| FRONTEND_PORT            | The port number on which the frontend server will run.                       | 3000                   | Optional                |
-| BACKEND_PORT             | The port number on which the backend server will run.                        | 3001                   | Optional                |
-| REDIS_HOST               | The hostname of the Redis server.                                            | supallm-redis          | Optional                |
-| REDIS_PORT               | The port number on which the Redis server is running.                        | 6379                   | Optional                |
-| REDIS_PASSWORD           | The password for the Redis server.                                           | redis                  | Optional                |
+**The CLI will guide you to configure the required variables.  In case you want to go further, you can open the .env file and check for the variable definitions you can customize.**
 
 
 ## 👨‍💻 Integrate in your application
@@ -124,18 +106,35 @@ const supallm = initSupallm({
     projectId: 'your-project-id',
 });
 
-const sub = await supallm.runFlow('your-flow-id').subscribe();
+const sub = await supallm.runFlow({
+    flowId: 'your-flow-id',
+    inputs: {
+        yourCustomInput: 'What is the capital of France?',
+    },
+}).subscribe();
 
-sub.on('data', (data) => {
-    console.log(data);
+sub.on('flowResultStream', (data) => {
+    console.log('Received realtime result chunk', data);
 });
 
-sub.on('complete', (fullResult) => {
-    console.log(fullResult);
+sub.on('flowEnded', (event) => {
+    console.log('Flow ended with result', event.result);
 });
 
-sub.on('error', (error) => {
-    console.error(error);
+sub.on('flowFail', (event) => {
+    console.log('Flow failed with error', event.result);
+});
+
+sub.on('nodeStart', (event) => {
+    console.log('Node started', event.nodeId);
+});
+
+sub.on('nodeEnd', (event) => {
+    console.log('Node ended', event.nodeId);
+});
+
+sub.on('nodeFail', (event) => {
+    console.log('Node failed', event.nodeId);
 });
 
 ```
@@ -143,7 +142,18 @@ sub.on('error', (error) => {
 Or you can use wait for the flow to complete and get the full result:
 
 ```typescript
-const result = await supallm.runFlow('your-flow-id').wait();
+const response = await supallm.runFlow({
+    flowId: 'your-flow-id',
+    inputs: {
+        yourCustomInput: 'What is the capital of France?',
+    },
+}).wait();
+
+// Since we believe exceptions are hell, we don't throw errors.
+// Instead we return a response object with the following properties:
+
+response.isSuccess // true if the flow ran successfully
+response.result
 ```
 
 
@@ -156,6 +166,11 @@ Unlike other tools, we're crafting Supallm with performance in mind.
 - Backend in Golang is stateless, horizontally scalable and highly-available.
 - Our runners pull jobs from a Redis Queue and run code execution in a sandboxed environment.
 - Our frontend is built with Next.js and TypeScript.
+
+## 🔒 Security
+
+- Code is compiled and run in a sandboxed environment using the great [nsjail](https://github.com/google/nsjail) project by Google.
+- All sensitive data is encrypted and never shared in the logs.
 
 ## 📈 Performance
 
