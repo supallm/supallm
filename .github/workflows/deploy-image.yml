@@ -35,22 +35,19 @@ jobs:
         run: |
           DOCKER_BUILDKIT=1 docker build -f Dockerfile.generate --target oapi-frontend --output ./frontend/src/lib/services/gen-api .
 
-      - name: Set up QEMU (for cross-platform builds)
-        uses: docker/setup-qemu-action@v3
-      
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        
-        # If this step fails, the workflow stops, and no release is published.
-      - name: Build and Push Multi-Platform Image
-        run: |
-          docker buildx create --use
-          docker buildx build \
-            --push \
-            --platform linux/amd64,linux/arm64 \
-            -t ghcr.io/${{ github.repository }}:test .
-        env:
-          DOCKER_BUILDKIT: 1
+      - name: Set up Depot CLI
+        uses: depot/setup-action@v1
+
+      - name: Build and push
+        uses: depot/build-push-action@v1
+        with:
+          project: '616gnrr5ss'
+          token: ${{ secrets.DEPOT_PROJECT_TOKEN }}
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: false
+          load: true
+          tags: ghcr.io/${{ github.repository }}:test
 
       - name: Run Semantic Release
         id: release
@@ -73,9 +70,7 @@ jobs:
         env:
           VERSION: ${{ env.VERSION }}
         run: |
-          docker buildx build \
-              --platform=linux/amd64,linux/arm64 \
-              --push \
-              -t ghcr.io/${{ github.repository }}:$VERSION \
-              -t ghcr.io/${{ github.repository }}:latest \
-              .
+          docker tag ghcr.io/${{ github.repository }}:test ghcr.io/${{ github.repository }}:$VERSION
+          docker tag ghcr.io/${{ github.repository }}:$VERSION ghcr.io/${{ github.repository }}:latest
+          docker push ghcr.io/${{ github.repository }}:$VERSION
+          docker push ghcr.io/${{ github.repository }}:latest
