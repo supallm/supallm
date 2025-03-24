@@ -30,6 +30,9 @@ export type Argument = {
 
 const NSJAIL_PATH = "/usr/local/bin/nsjail";
 
+// Caution: this may change depending on the distribution used
+const NPM_PATH = "/bin/npm";
+
 const NSJAIL_TEMPLATE = path.join(__dirname, "nsjail.nodejs.proto");
 
 const SANDBOX_ROOT = "/tmp/nsjail";
@@ -117,13 +120,13 @@ export class NodejsExecutor {
               "--config",
               protoFilePath,
               "--",
-              "/bin/npm",
+              NPM_PATH,
               "cache",
               "clean",
               "--force",
               "--loglevel=verbose",
               "&&",
-              "/bin/npm",
+              NPM_PATH,
               "install",
               modulesToInstall.join(" "),
               "--loglevel=verbose",

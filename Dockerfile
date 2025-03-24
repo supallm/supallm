@@ -105,7 +105,7 @@ RUN npm run build
 # |  _|  | || |\  |/ ___ \| |___ 
 # |_|   |___|_| \_/_/   \_\_____|
 
-FROM node:20-slim AS final
+FROM debian:bookworm-slim AS final
 WORKDIR /app
 
 # Backend
@@ -118,12 +118,17 @@ COPY --from=frontend-builder /app/frontend/.next /app/frontend/.next
 COPY --from=frontend-builder /app/frontend/public /app/frontend/public
 
 # Runner
-RUN npm install -g typescript
-
 RUN apt-get update && apt-get install -y \
     libprotobuf-dev \
     libnl-route-3-200 \
- && apt-get clean && rm -rf /var/lib/apt/lists/*
+    curl \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get install -y curl \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs
+
+RUN npm install -g typescript
 
 COPY --from=runner-builder /app/runner/dist /app/runner/dist
 COPY --from=runner-builder /app/runner/package.json  /app/runner/package.json

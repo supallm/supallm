@@ -105,8 +105,7 @@ services:
       - supallm-network
 
   runner:
-    # image: 'ghcr.io/supallm/supallm:latest'
-    image: supallm-nsjail
+    image: 'ghcr.io/supallm/supallm:latest'
     container_name: supallm-runner
     env_file:
       - .env
