@@ -110,6 +110,8 @@ export class NodejsExecutor {
       fs.rmSync(sandboxPath, { recursive: true, force: true });
     };
 
+    console.log("New version.");
+
     if (modulesToInstall.length > 0) {
       try {
         onLog(`Installing dependencies...`);

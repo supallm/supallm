@@ -84,15 +84,11 @@ RUN apt-get install -y curl \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs
 
-RUN npm install -g nodemon
-
 RUN npm install -g typescript
-
-RUN npm install -g ts-node
 
 COPY ./runner/package*.json ./
 
-RUN npm install
+RUN npm ci
 
 COPY ./runner .
 
