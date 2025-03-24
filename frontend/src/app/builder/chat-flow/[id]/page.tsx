@@ -67,40 +67,68 @@ const ChatFlowPage = () => {
   const store = useStoreApi();
   const { screenToFlowPosition, addNodes } = useReactFlow();
 
+  const onSave = useCallback(
+    (overrideEdges: FlowEdge[] | undefined = undefined) => {
+      debouncedSaveFlow(() => {
+        saveFlow(projectId, currentFlow.id, {
+          nodes,
+          edges: overrideEdges ?? edges,
+          name: currentFlow.name,
+        });
+      }, 600);
+    },
+    [
+      debouncedSaveFlow,
+      saveFlow,
+      projectId,
+      currentFlow.id,
+      currentFlow.name,
+      nodes,
+      edges,
+    ],
+  );
+
   const onConnect = useCallback(
     (params: Connection) => {
-      return setEdges((eds) => addEdge(params, eds));
+      setEdges((eds) => {
+        const newEdges = addEdge(params, eds);
+        onSave(newEdges);
+        return newEdges;
+      });
     },
-    [setEdges],
+    [addEdge, onSave, edges, setEdges],
   );
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const isValidConnection: IsValidConnection<any> = (params: Connection) => {
-    const { sourceHandle, targetHandle } = params;
+  const isValidConnection: IsValidConnection<any> = useCallback(
+    (params: Connection) => {
+      const { sourceHandle, targetHandle } = params;
 
-    if (!sourceHandle || !targetHandle) {
-      return params.source !== params.target;
-    }
+      if (!sourceHandle || !targetHandle) {
+        return params.source !== params.target;
+      }
 
-    const { type: sourceType } = parseHandleId(sourceHandle);
-    const { type: targetType } = parseHandleId(targetHandle);
+      const { type: sourceType } = parseHandleId(sourceHandle);
+      const { type: targetType } = parseHandleId(targetHandle);
 
-    /**
-     * Same node handles cannot be connected together
-     */
-    if (params.source === params.target) {
-      return false;
-    }
+      /**
+       * Same node handles cannot be connected together
+       */
+      if (params.source === params.target) {
+        return false;
+      }
 
-    /**
-     * We can connect outputHandle to any inputHandle with an "any" type
-     */
-    if (sourceType === "any" || targetType === "any") {
-      return true;
-    }
+      /**
+       * We can connect outputHandle to any inputHandle with an "any" type
+       */
+      if (sourceType === "any" || targetType === "any") {
+        return true;
+      }
 
-    return sourceType === targetType;
-  };
+      return sourceType === targetType;
+    },
+    [],
+  );
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const nodeTypes: Record<NodeType, any> = useMemo(
@@ -157,16 +185,6 @@ const ChatFlowPage = () => {
 
   const onNodeSelected = (node: AvailableNode) => {
     addNode(node);
-  };
-
-  const onSave = () => {
-    debouncedSaveFlow(() => {
-      saveFlow(projectId, currentFlow.id, {
-        nodes,
-        edges,
-        name: currentFlow.name,
-      });
-    }, 600);
   };
 
   const entrypointNodeData = useMemo(

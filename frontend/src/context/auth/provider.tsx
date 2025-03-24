@@ -47,6 +47,9 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
   useEffect(() => {
     fetchUser()
       .then((user) => {
+        if (!user) {
+          logoutUsecase.execute();
+        }
         setUser(user);
       })
       .catch(() => {
