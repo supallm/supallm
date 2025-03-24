@@ -216,33 +216,18 @@ func (p *Project) convertBuilderToRunnerFlow(builderFlow BuilderFlow) (map[strin
 
 	// First pass: Add all nodes to the result map with their basic info
 	for _, node := range builderFlow.Nodes {
-		// The ID for entrypoint and result nodes in the runner are simplified
-		runnerNodeID := p.getRunnerNodeID(node.ID)
-
 		processor := p.getNodeProcessor(node.Type)
 		if processor == nil {
 			// Skip unknown node types
 			continue
 		}
 
-		if err := processor(nodes, runnerNodeID, node, builderFlow.Edges, nodeMap); err != nil {
+		if err := processor(nodes, node.ID, node, builderFlow.Edges, nodeMap); err != nil {
 			return nil, err
 		}
 	}
 
 	return result, nil
-}
-
-// getRunnerNodeID converts builder node IDs to runner node IDs
-func (p *Project) getRunnerNodeID(nodeID string) string {
-	switch nodeID {
-	case EntrypointID:
-		return "entrypoint"
-	case ResultNodeID:
-		return "result"
-	default:
-		return nodeID
-	}
 }
 
 // getNodeProcessor returns the appropriate processor function for a given node type
@@ -412,7 +397,7 @@ func (p *Project) buildInputsFromEdges(nodeID string, handles []NodeHandle, edge
 
 				inputs[handle.Label] = map[string]string{
 					"type":   handle.Type,
-					"source": p.getRunnerNodeID(sourceNode) + "." + handleParts[1],
+					"source": sourceNode + "." + handleParts[1],
 				}
 				break
 			}
@@ -451,7 +436,7 @@ func (p *Project) buildNodeInputs(nodeID string, edges []BuilderEdge) map[string
 
 			inputs[handleName] = map[string]string{
 				"type":   handleType,
-				"source": p.getRunnerNodeID(sourceNode) + "." + sourceHandleName,
+				"source": sourceNode + "." + sourceHandleName,
 			}
 		}
 	}

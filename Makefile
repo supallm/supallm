@@ -18,7 +18,7 @@ api:
 
 runner:
 	@echo [ starting runner... ]
-	@docker compose -f docker-compose.dev.yml up runner
+	@docker compose -f docker-compose.dev.yml up --build runner
 
 ## Generate all code from specs | eq: sqlc + oapi
 gen: oapi sqlc
