@@ -8,7 +8,6 @@ import (
 
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill-redisstream/pkg/redisstream"
-	"github.com/ThreeDotsLabs/watermill/components/fanin"
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/ThreeDotsLabs/watermill/message/router/plugin"
 	"github.com/ThreeDotsLabs/watermill/pubsub/gochannel"
@@ -21,7 +20,6 @@ const (
 
 	// Upstream topics (runner → API)
 	UpstreamWorkflowEventDispatchTopic = "workflows:upstream:events:dispatch" // dispatch workflow events
-	UpstreamNodeResultTopic            = "workflows:upstream:nodes:results"   // nodes results
 
 	// Internal topics
 	InternalEventsTopic = "workflows:internal:events" // merged workflow events for clients stream
@@ -32,7 +30,6 @@ const (
 
 type EventRouter struct {
 	router             *message.Router
-	fi                 *fanin.FanIn
 	InternalSubscriber message.Subscriber
 	RunnerPublisher    message.Publisher
 
@@ -70,26 +67,26 @@ func CreateRouter(config Config) *EventRouter {
 		slog.Error("error creating redis stream runner publisher", "error", err)
 		os.Exit(1)
 	}
-	// FanIn is used to merge events from different sources into a single topic
-	// in our case we merge events from workflows and nodes to our internal subscriber
-	fi, err := fanin.NewFanIn(
+
+	router.AddHandler(
+		"runner:to:sse",
+		UpstreamWorkflowEventDispatchTopic,
 		subscriber,
+		InternalEventsTopic,
 		internalPubSub,
-		fanin.Config{
-			SourceTopics: []string{UpstreamWorkflowEventDispatchTopic, UpstreamNodeResultTopic},
-			TargetTopic:  InternalEventsTopic,
-			CloseTimeout: CloseTimeout,
+		func(msg *message.Message) (messages []*message.Message, err error) {
+			defer func() {
+				if err != nil {
+					config.Logger.Error("error while dispatching SSE event message", err, nil)
+				}
+			}()
+
+			return []*message.Message{msg}, nil
 		},
-		config.Logger,
 	)
-	if err != nil {
-		slog.Error("error creating fanin", "error", err)
-		os.Exit(1)
-	}
 
 	return &EventRouter{
 		router:             router,
-		fi:                 fi,
 		InternalSubscriber: internalPubSub,
 		RunnerPublisher:    runnerPublisher,
 		Logger:             config.Logger,
@@ -97,14 +94,6 @@ func CreateRouter(config Config) *EventRouter {
 }
 
 func (r *EventRouter) Run() {
-	go func() {
-		err := r.fi.Run(context.Background())
-		if err != nil {
-			r.Logger.Error("error running fanin", err, nil)
-			os.Exit(1)
-		}
-	}()
-
 	go func() {
 		err := r.router.Run(context.Background())
 		if err != nil {
@@ -114,7 +103,6 @@ func (r *EventRouter) Run() {
 	}()
 
 	<-r.router.Running()
-	<-r.fi.Running()
 }
 
 func (r *EventRouter) Close() error {

@@ -110,19 +110,6 @@ export class RedisNotifier implements INotifier {
     );
   }
 
-  async publishNodeResult(event: WorkflowEvent): Promise<RedisStreamId> {
-    // listenning by the backend with consumer group
-    // only the instance who has a client subscribed
-    // will dispatch the result to the SDK
-    // this.logPublishEvent(this.NODE_RESULTS_STREAM, event, "debug");
-    return this.publish(
-      this.NODE_RESULTS_STREAM,
-      DEFAULT_MAX_RESULTS_LENGTH,
-      event,
-      "node result",
-    );
-  }
-
   async publishNodeLog(event: WorkflowEvent): Promise<RedisStreamId> {
     return this.publish(
       this.NODE_RESULTS_STREAM,

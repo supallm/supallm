@@ -24,7 +24,6 @@ export interface WorkflowEvent {
 export interface INotifier {
   initialize(): Promise<void>;
   publishWorkflowEvent(event: WorkflowEvent): Promise<string>;
-  publishNodeResult(event: WorkflowEvent): Promise<string>;
   publishNodeLog(event: WorkflowEvent): Promise<string>;
   close(): Promise<void>;
 }

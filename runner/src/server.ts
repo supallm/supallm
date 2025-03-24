@@ -148,7 +148,7 @@ export class RunnerServer {
   }
 
   private async handleNodeResult(data: any): Promise<void> {
-    await this.notifier.publishNodeResult({
+    await this.notifier.publishWorkflowEvent({
       type: WorkflowEvents.NODE_RESULT,
       workflowId: data.workflowId,
       triggerId: data.triggerId,
