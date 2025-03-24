@@ -38,7 +38,7 @@ jobs:
       - name: Set up Depot CLI
         uses: depot/setup-action@v1
 
-      - name: Build and push
+      - name: Build and fail fast
         uses: depot/build-push-action@v1
         with:
           project: '616gnrr5ss'
@@ -46,8 +46,6 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: false
-          load: true
-          tags: ghcr.io/${{ github.repository }}:test
 
       - name: Run Semantic Release
         id: release
@@ -65,12 +63,17 @@ jobs:
         if: env.NEW_RELEASE == 'true'
         run: echo "VERSION=$(cat .VERSION)" >> $GITHUB_ENV
 
-      - name: Tag and Push Docker Image
+      - name: Build, tag and push
         if: env.NEW_RELEASE == 'true'
         env:
           VERSION: ${{ env.VERSION }}
-        run: |
-          docker tag ghcr.io/${{ github.repository }}:test ghcr.io/${{ github.repository }}:$VERSION
-          docker tag ghcr.io/${{ github.repository }}:$VERSION ghcr.io/${{ github.repository }}:latest
-          docker push ghcr.io/${{ github.repository }}:$VERSION
-          docker push ghcr.io/${{ github.repository }}:latest
+        uses: depot/build-push-action@v1
+        with:
+          project: '616gnrr5ss'
+          token: ${{ secrets.DEPOT_PROJECT_TOKEN }}
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: | 
+            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ github.repository }}:$VERSION
