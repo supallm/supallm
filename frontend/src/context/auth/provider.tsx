@@ -49,6 +49,10 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
       .then((user) => {
         setUser(user);
       })
+      .catch(() => {
+        setUser(null);
+        logoutUsecase.execute();
+      })
       .finally(() => {
         setIsLoading(false);
       });

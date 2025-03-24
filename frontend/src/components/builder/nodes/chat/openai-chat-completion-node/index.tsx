@@ -133,11 +133,6 @@ const OpenAIChatCompletionNode: FC<OpenAIChatCompletionNodeProps> = ({
           id: generateHandleId("text", "prompt"),
           type: "text",
         },
-        {
-          label: "Image",
-          id: generateHandleId("image", "image"),
-          type: "image",
-        },
       ]}
       header={
         <>

@@ -50,10 +50,7 @@ export const NewHandleInput: FC<{
             setHandleType(value as ResultHandle["type"])
           }
           defaultValue={handleType}
-          choices={[
-            { value: "image", label: "Image" },
-            { value: "text", label: "Text" },
-          ]}
+          choices={[{ value: "text", label: "Text" }]}
         />
       </div>
       <Button
