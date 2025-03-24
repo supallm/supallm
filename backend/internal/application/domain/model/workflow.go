@@ -237,9 +237,9 @@ func (p *Project) convertBuilderToRunnerFlow(builderFlow BuilderFlow) (map[strin
 func (p *Project) getRunnerNodeID(nodeID string) string {
 	switch nodeID {
 	case EntrypointID:
-		return "entrypoint-node"
+		return "entrypoint"
 	case ResultNodeID:
-		return "result-node"
+		return "result"
 	default:
 		return nodeID
 	}
@@ -323,7 +323,6 @@ func (p *Project) processCodeExecutorNode(nodes map[string]any, nodeID string, n
 		"type":              "code-executor",
 		"code":              data.Code,
 		"expectedArguments": data.Inputs,
-		"expectedOutputs":   data.Outputs,
 	}
 
 	// Build inputs from edges
@@ -463,45 +462,91 @@ func (p *Project) buildNodeInputs(nodeID string, edges []BuilderEdge) map[string
 // buildNodeOutputs creates a standard outputs map for a node and checks for result connections
 func (p *Project) buildNodeOutputs(nodeID string, edges []BuilderEdge, nodeMap map[string]BuilderNode) map[string]any {
 	outputs := make(map[string]any)
-
-	// Add a default response output
-	responseOutput := map[string]string{
-		"type": "text",
+	node, exists := nodeMap[nodeID]
+	if !exists {
+		return outputs
 	}
 
-	// Check if this node has an edge to the result node
+	// Find all outgoing connections from this node
+	outEdges := []BuilderEdge{}
 	for _, edge := range edges {
-		if edge.Source == nodeID && edge.Target == ResultNodeID {
-			// this node has a connection to the result node
-			sourceHandle := edge.SourceHandle
-			targetHandle := edge.TargetHandle
-
-			// parse the handles
-			sourceHandleParts := p.parseHandle(sourceHandle)
-			targetHandleParts := p.parseHandle(targetHandle)
-
-			if len(sourceHandleParts) == 2 && len(targetHandleParts) == 2 {
-				if resultNode, exists := nodeMap[ResultNodeID]; exists {
-					var resultData ResultNodeData
-					if err := json.Unmarshal(resultNode.Data, &resultData); err != nil {
-						continue
-					}
-
-					// find the matching handle in the result node
-					for _, handle := range resultData.Handles {
-						if handle.ID == targetHandle {
-							// add the result_key to the output
-							responseOutput["result_key"] = handle.Label
-							break
-						}
-					}
-				}
-			}
-			break
+		if edge.Source == nodeID {
+			outEdges = append(outEdges, edge)
 		}
 	}
 
-	outputs["response"] = responseOutput
+	// Group edges by source handle
+	edgesBySourceHandle := make(map[string][]BuilderEdge)
+	for _, edge := range outEdges {
+		sourceHandle := edge.SourceHandle
+		edgesBySourceHandle[sourceHandle] = append(edgesBySourceHandle[sourceHandle], edge)
+	}
+
+	// If no outgoing edges, add default response for LLM nodes
+	if len(outEdges) == 0 && (node.Type == "chat-openai" || node.Type == "llm") {
+		outputs["response"] = map[string]string{
+			"type": "text",
+		}
+		return outputs
+	}
+
+	// Process each output handle
+	for sourceHandle, handleEdges := range edgesBySourceHandle {
+		sourceHandleParts := p.parseHandle(sourceHandle)
+		if len(sourceHandleParts) != 2 {
+			continue
+		}
+
+		sourceType := sourceHandleParts[0]
+		sourceName := sourceHandleParts[1]
+
+		// For each handle, check if it's connected to the result node
+		resultKey := ""
+		for _, edge := range handleEdges {
+			if edge.Target == ResultNodeID {
+				targetHandle := edge.TargetHandle
+
+				// Find the label in the result node
+				if resultNode, exists := nodeMap[ResultNodeID]; exists {
+					var resultData ResultNodeData
+					if err := json.Unmarshal(resultNode.Data, &resultData); err == nil {
+						for _, handle := range resultData.Handles {
+							if handle.ID == targetHandle {
+								resultKey = handle.Label
+								break
+							}
+						}
+					}
+				}
+				break
+			}
+		}
+
+		// Create output config
+		outputConfig := map[string]string{
+			"type": sourceType,
+		}
+		if resultKey != "" {
+			outputConfig["result_key"] = resultKey
+		}
+
+		outputs[sourceName] = outputConfig
+	}
+
+	// Special case for LLM nodes, use "response" as the output name
+	if (node.Type == "chat-openai" || node.Type == "llm") && len(outputs) > 0 {
+		// Convert any output to "response" for LLM nodes
+		for _, output := range outputs {
+			outputConfig, ok := output.(map[string]string)
+			if ok {
+				outputs = map[string]any{
+					"response": outputConfig,
+				}
+				break
+			}
+		}
+	}
+
 	return outputs
 }
 

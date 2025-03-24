@@ -6,6 +6,7 @@ import {
   NodeInput,
   NodeOptions,
   NodeOutput,
+  NodeOutputDef,
   NodeType,
 } from "../types";
 import { MissingArgumentError } from "./nodejs-executor/executor.errors";
@@ -82,7 +83,10 @@ export class CodeExecutorNode implements INode {
           }
 
           Object.entries(parsedResult).forEach(([key, value]) => {
-            options.onNodeResult(nodeId, key, value, "any");
+            const outputKey = this.getOutputKey(key, definition.outputs);
+            if (outputKey) {
+              options.onNodeResult(nodeId, outputKey, value, "any");
+            }
           });
           return Result.ok(parsedResult);
         default:
@@ -92,5 +96,16 @@ export class CodeExecutorNode implements INode {
       console.error(error);
       return Result.error(error as Error);
     }
+  }
+
+  private getOutputKey(
+    output: string,
+    outputs: Record<string, NodeOutputDef>,
+  ): string {
+    const outputDef = outputs[output];
+    if (outputDef && outputDef.result_key) {
+      return outputDef.result_key;
+    }
+    return "";
   }
 }

@@ -1,6 +1,7 @@
 import _ from "lodash";
 import { Result } from "typescript-result";
 import { NodeDefinition } from "../../nodes/types";
+import { Tool } from "../../tools/tool.interface";
 import { logger } from "../../utils/logger";
 import {
   WorkflowDefinition,

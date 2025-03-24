@@ -1,6 +1,7 @@
 import { Result } from "typescript-result";
 import { NodeType } from "../nodes/types";
 import { Params, Tool, ToolAction, ToolType } from "./tool.interface";
+
 export class ToolContext {
   constructor(
     private nodeType: NodeType,
