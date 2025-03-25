@@ -3,6 +3,11 @@ import { EntrypointNode } from "../../nodes/base/entrypoint-node";
 import { ResultNode } from "../../nodes/base/result-node";
 import { CodeExecutorNode } from "../../nodes/code-executors/code-executor-node";
 import { AnthropicProvider } from "../../nodes/llm/anthropic-provider";
+import { DeepSeekProvider } from "../../nodes/llm/deepseek-provider";
+import { GeminiProvider } from "../../nodes/llm/gemini-provider";
+import { GroqProvider } from "../../nodes/llm/groq-provider";
+import { MistralProvider } from "../../nodes/llm/mistral-provider";
+import { OllamaProvider } from "../../nodes/llm/ollama-provider";
 import { OpenAIProvider } from "../../nodes/llm/openai-provider";
 import {
   INode,
@@ -19,8 +24,14 @@ export class NodeManager {
   private nodes: Map<NodeType, INode> = new Map();
 
   constructor(_memoryService: LLMMemoryService) {
+    // TODO: not proud of this, but it's a quick way to get the nodes working
     this.registerNode(new AnthropicProvider());
     this.registerNode(new OpenAIProvider());
+    this.registerNode(new GeminiProvider());
+    this.registerNode(new MistralProvider());
+    this.registerNode(new GroqProvider());
+    this.registerNode(new DeepSeekProvider());
+    this.registerNode(new OllamaProvider());
     this.registerNode(new EntrypointNode());
     this.registerNode(new ResultNode());
     this.registerNode(new CodeExecutorNode());
