@@ -1,12 +1,15 @@
 import { Result } from "typescript-result";
 import { Tool } from "../tools";
 
-export type NodeType =
+type LLMProvider =
   | "chat-openai"
   | "chat-anthropic"
-  | "entrypoint"
-  | "result"
-  | "code-executor";
+  | "chat-mistral"
+  | "chat-groq"
+  | "chat-gemini"
+  | "chat-deepseek";
+
+export type NodeType = LLMProvider | "entrypoint" | "result" | "code-executor";
 
 export type NodeIOType = "text" | "image" | "any";
 
