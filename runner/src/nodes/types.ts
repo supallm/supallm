@@ -7,6 +7,7 @@ export type NodeType =
   | "entrypoint"
   | "result"
   | "code-executor";
+
 export type NodeIOType = "text" | "image" | "any";
 
 export type NodeInput = Record<string, any>;
