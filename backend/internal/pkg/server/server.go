@@ -14,8 +14,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/supallm/core/internal/pkg/config"
 	"github.com/supallm/core/internal/pkg/errs"
-	"golang.org/x/net/http2"
-	"golang.org/x/net/http2/h2c"
 )
 
 const (
@@ -47,10 +45,9 @@ func New(conf config.Config) *Server {
 
 func (s *Server) Start() error {
 	slog.Info("starting HTTP server", slog.String("address", s.Addr()))
-	h2s := &http2.Server{}
 	server := &http.Server{
 		Addr:              s.Addr(),
-		Handler:           h2c.NewHandler(s.Router, h2s),
+		Handler:           s.Router,
 		ReadHeaderTimeout: readHeaderTimeout,
 	}
 	return server.ListenAndServe()
