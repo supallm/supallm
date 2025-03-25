@@ -219,7 +219,10 @@ func (p *Project) convertBuilderToRunnerFlow(builderFlow BuilderFlow) (map[strin
 
 	// First pass: Add all nodes to the result map with their basic info
 	for _, node := range builderFlow.Nodes {
-		processor := p.getNodeProcessor(node.Type)
+		processor, err := p.getNodeProcessor(node.Type)
+		if err != nil {
+			return nil, err
+		}
 		if processor == nil {
 			// Skip unknown node types
 			continue
@@ -234,18 +237,18 @@ func (p *Project) convertBuilderToRunnerFlow(builderFlow BuilderFlow) (map[strin
 }
 
 // getNodeProcessor returns the appropriate processor function for a given node type
-func (p *Project) getNodeProcessor(nodeType string) func(map[string]any, string, BuilderNode, []BuilderEdge, map[string]BuilderNode) error {
+func (p *Project) getNodeProcessor(nodeType string) (func(map[string]any, string, BuilderNode, []BuilderEdge, map[string]BuilderNode) error, error) {
 	switch {
 	case nodeType == "entrypoint":
-		return p.processEntrypointNode
+		return p.processEntrypointNode, nil
 	case nodeType == "result":
-		return p.processResultNode
+		return p.processResultNode, nil
 	case LLMNodeType[nodeType]:
-		return p.processLLMNode
+		return p.processLLMNode, nil
 	case nodeType == "code-executor":
-		return p.processCodeExecutorNode
+		return p.processCodeExecutorNode, nil
 	default:
-		return nil
+		return nil, ErrInvalidNodeError
 	}
 }
 

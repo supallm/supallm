@@ -29,4 +29,6 @@ const (
 	//nolint:all
 	ErrInvalidCredential    Error = "invalid credential"
 	ErrInvalidProviderModel Error = "invalid provider model"
+
+	ErrInvalidNodeError Error = "invalid node"
 )
