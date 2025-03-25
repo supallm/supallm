@@ -86,7 +86,7 @@ func (r repository) GetUserByID(ctx context.Context, id uuid.UUID) (*model.User,
 func (r repository) ReadUser(ctx context.Context, email string) (query.User, error) {
 	u, err := r.q.getUserByEmail(ctx, email)
 	if err != nil {
-		return query.User{}, fmt.Errorf("failed to get user by email: %w", err)
+		return query.User{}, r.errorDecoder(err)
 	}
 
 	return mapDBUserToQuery(u), nil
