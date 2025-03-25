@@ -1,6 +1,5 @@
 import { getAuthToken } from "@/actions";
 import { OpenAPI } from "./index";
-import { getEnv } from "@/context/env/env";
 
 /* We can overwrite the default configuration by exporting a getToken function.
  * This function will be called before each request to get a token.
@@ -16,4 +15,4 @@ export const getToken = async () => {
 };
 
 OpenAPI.TOKEN = getToken;
-OpenAPI.BASE = process?.env?.NEXT_PUBLIC_SUPALLM_API_URL ?? "undefined";
+OpenAPI.BASE = "http://supallm_api:80";

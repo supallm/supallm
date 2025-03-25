@@ -8,7 +8,7 @@ networks:
     driver: bridge
 
 services:
-  setup:
+  supallm_setup:
     image: ghcr.io/supallm/supallm:latest
     container_name: supallm-setup
     volumes:
@@ -17,7 +17,7 @@ services:
       sh -c "cp /app/db/init.sql /shared_init/init.sql"
     restart: "no"
 
-  frontend:
+  supallm_frontend:
     image: "ghcr.io/supallm/supallm:latest"
     container_name: supallm-frontend
     hostname: supallm-frontend
@@ -29,9 +29,9 @@ services:
       - supallm-network
     environment:
       - MODE=frontend
-      - NEXT_PUBLIC_SUPALLM_API_URL=${SUPALLM_API_URL}
+      - PUBLIC_SUPALLM_API_URL=${SUPALLM_API_URL}
 
-  postgres:
+  supallm_postgres:
     image: postgres:16
     container_name: supallm-pg
     environment:
@@ -61,7 +61,7 @@ services:
       timeout: 5s
       retries: 5
 
-  redis:
+  supallm_redis:
     image: redis:7.4
     container_name: supallm-redis
     ports:
@@ -77,7 +77,7 @@ services:
       timeout: 5s
       retries: 5
 
-  api:
+  supallm_api:
     image: "ghcr.io/supallm/supallm:latest"
     container_name: supallm-api
     ports:
@@ -104,7 +104,7 @@ services:
     networks:
       - supallm-network
 
-  runner:
+  supallm_runner:
     image: "ghcr.io/supallm/supallm:latest"
     container_name: supallm-runner
     env_file:

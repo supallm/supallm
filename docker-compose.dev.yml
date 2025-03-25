@@ -7,7 +7,7 @@ networks:
     driver: bridge
 
 services:
-  frontend:
+  supallm_frontend:
     build:
       context: .
       dockerfile: ./frontend/Dockerfile.dev
@@ -24,7 +24,7 @@ services:
     environment:
       - NEXT_PUBLIC_SUPALLM_API_URL=${SUPALLM_API_URL}
 
-  postgres:
+  supallm_postgres:
     image: postgres:16
     container_name: supallm-pg
     environment:
@@ -50,7 +50,7 @@ services:
       timeout: 5s
       retries: 5
 
-  redis:
+  supallm_redis:
     image: redis:7.4
     container_name: supallm-redis
     ports:
@@ -66,7 +66,7 @@ services:
       timeout: 5s
       retries: 5
 
-  api:
+  supallm_api:
     build:
       context: ./backend
       dockerfile: Dockerfile.dev
@@ -85,7 +85,7 @@ services:
     networks:
       - supallm-network
 
-  runner:
+  supallm_runner:
     build:
       context: ./runner
       dockerfile: Dockerfile.dev
