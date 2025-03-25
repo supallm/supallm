@@ -18,7 +18,7 @@ services:
     volumes:
       - ./frontend:/src
     depends_on:
-      - api
+      - supallm_api
     networks:
       - supallm-network
     environment:
@@ -78,9 +78,9 @@ services:
     volumes:
       - ./backend:/src
     depends_on:
-      postgres:
+      supallm_postgres:
         condition: service_healthy
-      redis:
+      supallm_redis:
         condition: service_healthy
     networks:
       - supallm-network
@@ -99,5 +99,5 @@ services:
     networks:
       - supallm-network
     depends_on:
-      redis:
+      supallm_redis:
         condition: service_healthy

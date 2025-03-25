@@ -24,7 +24,7 @@ services:
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
     depends_on:
-      - api
+      - supallm_api
     networks:
       - supallm-network
     environment:
@@ -40,7 +40,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_PORT: ${POSTGRES_PORT}
     depends_on:
-      setup:
+      supallm_setup:
         condition: service_completed_successfully
     volumes:
       - supallm_data:/var/lib/postgresql/data
@@ -97,9 +97,9 @@ services:
       INITIAL_USER_PASSWORD: ${INITIAL_USER_PASSWORD}
       INITIAL_USER_NAME: ${INITIAL_USER_NAME}
     depends_on:
-      postgres:
+      supallm_postgres:
         condition: service_healthy
-      redis:
+      supallm_redis:
         condition: service_healthy
     networks:
       - supallm-network
@@ -119,5 +119,5 @@ services:
     networks:
       - supallm-network
     depends_on:
-      redis:
+      supallm_redis:
         condition: service_healthy
