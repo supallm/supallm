@@ -60,7 +60,7 @@ const ChatFlowPage = () => {
     patchFlowUsecase.execute.bind(patchFlowUsecase),
   );
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(currentFlow.nodes);
+  const [nodes, , onNodesChange] = useNodesState(currentFlow.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(currentFlow.edges);
   const debouncedSaveFlow = useDebounce();
 
@@ -150,11 +150,8 @@ const ChatFlowPage = () => {
   );
 
   const handleNodeChange = (changes: NodeChange<FlowNode>[]) => {
-    setNodes((nds) => {
-      onNodesChange(changes);
-      onSave(undefined, nds);
-      return nds;
-    });
+    onNodesChange(changes);
+    onSave();
   };
 
   const handleEdgeChange = (changes: EdgeChange<FlowEdge>[]) => {

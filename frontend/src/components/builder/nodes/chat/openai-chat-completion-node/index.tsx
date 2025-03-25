@@ -85,8 +85,6 @@ const OpenAIChatCompletionNode: FC<OpenAIChatCompletionNodeProps> = ({
       imageResolution: formValues.advancedSettings.imageResolution,
       responseFormat: formValues.advancedSettings.responseFormat,
     };
-
-    console.log("data", data);
     updateNodeData(nodeId, data);
   });
 
