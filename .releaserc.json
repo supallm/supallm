@@ -3,6 +3,11 @@
       "release",
       {
         "name": "main",
+        "channel": "beta",
+        "prerelease": "beta"
+      },
+      {
+        "name": "next",
         "channel": "alpha",
         "prerelease": "alpha"
       }
