@@ -16,4 +16,4 @@ export const getToken = async () => {
 };
 
 OpenAPI.TOKEN = getToken;
-OpenAPI.BASE = process.env.NEXT_PUBLIC_SUPALLM_API_URL;
+OpenAPI.BASE = process?.env?.NEXT_PUBLIC_SUPALLM_API_URL ?? "undefined";

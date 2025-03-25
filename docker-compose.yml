@@ -111,6 +111,11 @@ services:
       - .env
     environment:
       - MODE=runner
+      - RUNNER_MAX_CONCURRENT_JOBS=5
+      - SECRET_KEY=${SECRET_KEY}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
     networks:
       - supallm-network
     depends_on:
