@@ -99,7 +99,7 @@ const ChatFlowPage = () => {
         return newEdges;
       });
     },
-    [addEdge, onSave, edges, setEdges],
+    [onSave, setEdges],
   );
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
