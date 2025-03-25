@@ -86,6 +86,7 @@ const OpenAIChatCompletionNode: FC<OpenAIChatCompletionNodeProps> = ({
       responseFormat: formValues.advancedSettings.responseFormat,
     };
 
+    console.log("data", data);
     updateNodeData(nodeId, data);
   });
 

@@ -60,7 +60,7 @@ const ChatFlowPage = () => {
     patchFlowUsecase.execute.bind(patchFlowUsecase),
   );
 
-  const [nodes, , onNodesChange] = useNodesState(currentFlow.nodes);
+  const [nodes, setNodes, onNodesChange] = useNodesState(currentFlow.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(currentFlow.edges);
   const debouncedSaveFlow = useDebounce();
 
@@ -68,10 +68,13 @@ const ChatFlowPage = () => {
   const { screenToFlowPosition, addNodes } = useReactFlow();
 
   const onSave = useCallback(
-    (overrideEdges: FlowEdge[] | undefined = undefined) => {
+    (
+      overrideEdges: FlowEdge[] | undefined = undefined,
+      overrideNodes: FlowNode[] | undefined = undefined,
+    ) => {
       debouncedSaveFlow(() => {
         saveFlow(projectId, currentFlow.id, {
-          nodes,
+          nodes: overrideNodes ?? nodes,
           edges: overrideEdges ?? edges,
           name: currentFlow.name,
         });
@@ -147,8 +150,11 @@ const ChatFlowPage = () => {
   );
 
   const handleNodeChange = (changes: NodeChange<FlowNode>[]) => {
-    onNodesChange(changes);
-    onSave();
+    setNodes((nds) => {
+      onNodesChange(changes);
+      onSave(undefined, nds);
+      return nds;
+    });
   };
 
   const handleEdgeChange = (changes: EdgeChange<FlowEdge>[]) => {
