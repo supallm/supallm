@@ -1,6 +1,5 @@
 "use client";
 import { GlobalLoading } from "@/components/global-loading";
-import { OpenAPI } from "@/lib/services/gen-api";
 import { createContext, useEffect, useState } from "react";
 import { getEnv } from "./env";
 
@@ -25,7 +24,6 @@ export const EnvProvider = ({
   useEffect(() => {
     getEnv()
       .then((env) => {
-        OpenAPI.BASE = env.SUPALLM_API_URL;
         setEnv(env);
       })
       .finally(() => {

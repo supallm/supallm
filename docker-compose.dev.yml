@@ -22,7 +22,7 @@ services:
     networks:
       - supallm-network
     environment:
-      - PUBLIC_SUPALLM_API_URL=${SUPALLM_API_URL}
+      - NEXT_PUBLIC_SUPALLM_API_URL=${SUPALLM_API_URL}
 
   postgres:
     image: postgres:16

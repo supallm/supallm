@@ -18,7 +18,7 @@ services:
     restart: "no"
 
   frontend:
-    image: 'ghcr.io/supallm/supallm:latest'
+    image: "ghcr.io/supallm/supallm:latest"
     container_name: supallm-frontend
     hostname: supallm-frontend
     ports:
@@ -29,7 +29,7 @@ services:
       - supallm-network
     environment:
       - MODE=frontend
-      - PUBLIC_SUPALLM_API_URL=${SUPALLM_API_URL}
+      - NEXT_PUBLIC_SUPALLM_API_URL=${SUPALLM_API_URL}
 
   postgres:
     image: postgres:16
@@ -78,7 +78,7 @@ services:
       retries: 5
 
   api:
-    image: 'ghcr.io/supallm/supallm:latest'
+    image: "ghcr.io/supallm/supallm:latest"
     container_name: supallm-api
     ports:
       - "${BACKEND_PORT:-3001}:80"
@@ -105,7 +105,7 @@ services:
       - supallm-network
 
   runner:
-    image: 'ghcr.io/supallm/supallm:latest'
+    image: "ghcr.io/supallm/supallm:latest"
     container_name: supallm-runner
     env_file:
       - .env
