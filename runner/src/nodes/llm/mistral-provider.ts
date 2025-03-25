@@ -56,13 +56,7 @@ export class MistralProvider implements INode {
       return Result.error(prepareMessagesError);
     }
 
-    const generate = await this.generateResponse(prepareMessagesResult, {
-      model: config.model,
-      apiKey: config.decryptedApiKey,
-      temperature: config.temperature,
-      maxTokens: config.maxTokens,
-      streaming: config.streaming,
-    });
+    const generate = await this.generateResponse(prepareMessagesResult, config);
     const [generateResult, generateError] = generate.toTuple();
     if (generateError) {
       return Result.error(generateError);

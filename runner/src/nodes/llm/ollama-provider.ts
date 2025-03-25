@@ -1,5 +1,5 @@
 import { BaseMessage } from "@langchain/core/messages";
-import { ChatGroq } from "@langchain/groq";
+import { ChatOllama } from "@langchain/ollama";
 import { Result } from "typescript-result";
 import { CryptoService } from "../../services/secret/crypto-service";
 import { Tool, ToolContext } from "../../tools";
@@ -14,12 +14,27 @@ import {
 import { GenerateResult, LLMOptions, LLMUtils } from "./llm-utils";
 import { ModelNotFoundError, ProviderAPIError } from "./llm.errors";
 
-export class GroqProvider implements INode {
-  type: NodeType = "chat-groq";
+interface OllamaOptions extends LLMOptions {
+  baseUrl: string;
+  format?: "json";
+}
+
+export class OllamaProvider implements INode {
+  type: NodeType = "chat-ollama";
   private utils: LLMUtils;
 
   constructor() {
     this.utils = new LLMUtils(new CryptoService());
+  }
+
+  private prepareOllamaOptions(
+    config: LLMOptions,
+    definition: NodeDefinition,
+  ): OllamaOptions {
+    return {
+      ...config,
+      baseUrl: definition["baseUrl"],
+    };
   }
 
   async execute(
@@ -42,6 +57,7 @@ export class GroqProvider implements INode {
 
     const { resolvedInputs, resolvedOutputs, config } =
       validateAndPrepareResult;
+    const ollamaOptions = this.prepareOllamaOptions(config, definition);
 
     const prepareMessages = await this.utils.prepareMessages(
       nodeId,
@@ -56,7 +72,10 @@ export class GroqProvider implements INode {
       return Result.error(prepareMessagesError);
     }
 
-    const generate = await this.generateResponse(prepareMessagesResult, config);
+    const generate = await this.generateResponse(
+      prepareMessagesResult,
+      ollamaOptions,
+    );
     const [generateResult, generateError] = generate.toTuple();
     if (generateError) {
       return Result.error(generateError);
@@ -96,7 +115,7 @@ export class GroqProvider implements INode {
 
   private async generateResponse(
     messages: BaseMessage[],
-    options: LLMOptions,
+    options: OllamaOptions,
   ): Promise<GenerateResult> {
     try {
       const [model, modelError] = this.createModel(options).toTuple();
@@ -119,26 +138,25 @@ export class GroqProvider implements INode {
   }
 
   private createModel(
-    options: LLMOptions,
-  ): Result<ChatGroq, ModelNotFoundError | ProviderAPIError> {
+    options: OllamaOptions,
+  ): Result<ChatOllama, ModelNotFoundError | ProviderAPIError> {
     try {
       return Result.ok(
-        new ChatGroq({
+        new ChatOllama({
           model: options.model,
           temperature: options.temperature,
-          maxTokens: options.maxTokens,
-          apiKey: options.apiKey,
+          baseUrl: options.baseUrl,
           streaming: options.streaming,
         }),
       );
     } catch (error) {
       return Result.error(
-        new ProviderAPIError(`failed to initialize Groq model`),
+        new ProviderAPIError(`failed to initialize Ollama model`),
       );
     }
   }
 
   private mapApiError(error: unknown, model?: string): GenerateResult {
-    return LLMUtils.mapProviderError(error, model, "groq");
+    return LLMUtils.mapProviderError(error, model, "ollama");
   }
 }

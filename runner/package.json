@@ -25,6 +25,7 @@
     "@langchain/google-genai": "^0.2.0",
     "@langchain/groq": "^0.2.0",
     "@langchain/mistralai": "^0.2.0",
+    "@langchain/ollama": "^0.2.0",
     "@langchain/openai": "^0.4.4",
     "@node-redis/json": "^1.0.2",
     "dotenv": "^16.4.7",

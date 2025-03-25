@@ -15,6 +15,7 @@ const (
 	ProviderTypeGroq      ProviderType = "groq"
 	ProviderTypeGemini    ProviderType = "gemini"
 	ProviderTypeDeepSeek  ProviderType = "deepseek"
+	ProviderTypeOllama    ProviderType = "ollama"
 
 	ProviderTypeE2B ProviderType = "e2b"
 )

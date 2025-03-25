@@ -7,7 +7,8 @@ type LLMProvider =
   | "chat-mistral"
   | "chat-groq"
   | "chat-gemini"
-  | "chat-deepseek";
+  | "chat-deepseek"
+  | "chat-ollama";
 
 export type NodeType = LLMProvider | "entrypoint" | "result" | "code-executor";
 

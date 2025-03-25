@@ -43,10 +43,6 @@ export interface ValidationResult {
   config: LLMOptions & { decryptedApiKey: string };
 }
 
-// export interface GenerateResult {
-//   [Symbol.asyncIterator](): AsyncIterator<{ content: string }>;
-// }
-
 export class LLMUtils {
   constructor(private cryptoService: CryptoService) {}
 
