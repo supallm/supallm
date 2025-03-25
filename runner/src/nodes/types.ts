@@ -1,7 +1,12 @@
 import { Result } from "typescript-result";
 import { Tool } from "../tools";
 
-export type NodeType = "llm" | "entrypoint" | "result" | "code-executor";
+export type NodeType =
+  | "chat-openai"
+  | "chat-anthropic"
+  | "entrypoint"
+  | "result"
+  | "code-executor";
 export type NodeIOType = "text" | "image" | "any";
 
 export type NodeInput = Record<string, any>;

@@ -39,9 +39,12 @@ const (
 	TextType  = "text"
 	ImageType = "image"
 	AnyType   = "any"
-
-	LLMNodeType = "llm"
 )
+
+var LLMNodeType = map[string]bool{
+	"chat-openai":    true,
+	"chat-anthropic": true,
+}
 
 type Workflow struct {
 	ID          WorkflowID
@@ -232,14 +235,14 @@ func (p *Project) convertBuilderToRunnerFlow(builderFlow BuilderFlow) (map[strin
 
 // getNodeProcessor returns the appropriate processor function for a given node type
 func (p *Project) getNodeProcessor(nodeType string) func(map[string]any, string, BuilderNode, []BuilderEdge, map[string]BuilderNode) error {
-	switch nodeType {
-	case "entrypoint":
+	switch {
+	case nodeType == "entrypoint":
 		return p.processEntrypointNode
-	case "result":
+	case nodeType == "result":
 		return p.processResultNode
-	case "chat-openai", "llm":
+	case LLMNodeType[nodeType]:
 		return p.processLLMNode
-	case "code-executor":
+	case nodeType == "code-executor":
 		return p.processCodeExecutorNode
 	default:
 		return nil
@@ -354,7 +357,7 @@ func (p *Project) processLLMNode(nodes map[string]any, nodeID string, node Build
 	}
 
 	nodeConfig := map[string]any{
-		"type":         "llm",
+		"type":         node.Type,
 		"model":        data.Model,
 		"apiKey":       apiKey,
 		"provider":     data.ProviderType,

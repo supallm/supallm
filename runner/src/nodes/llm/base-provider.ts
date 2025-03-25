@@ -1,5 +1,5 @@
-import { BaseMessage } from "@langchain/core/messages";
-import { LLMResult } from "./llm.errors";
+import { Result } from "typescript-result";
+import { LLMExecutionError } from "./llm.errors";
 
 export interface LLMOptions {
   model: string;
@@ -9,11 +9,7 @@ export interface LLMOptions {
   streaming?: boolean;
 }
 
-export type GenerateResult = AsyncIterable<{ content: string }>;
-
-export interface BaseLLMProvider {
-  generate(
-    messages: BaseMessage[],
-    options: LLMOptions,
-  ): Promise<LLMResult<GenerateResult>>;
-}
+export type GenerateResult = Result<
+  AsyncIterable<{ content: string }>,
+  LLMExecutionError
+>;

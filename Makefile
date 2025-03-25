@@ -1,4 +1,4 @@
-.PHONY: gen oapi sqlc api runner clean backend
+.PHONY: gen oapi sqlc api runner clean backend frontend
 
 up:
 	@echo [ starting all services... ]
@@ -6,19 +6,23 @@ up:
 
 backend:
 	@echo [ starting backend... ]
-	@docker compose -f docker-compose.dev.yml up api runner
+	@docker compose -f docker-compose.dev.yml up supallm_api supallm_runner
 
 bb:
 	@echo [ starting backend... ]
-	@docker compose -f docker-compose.dev.yml up api runner --build
+	@docker compose -f docker-compose.dev.yml up supallm_api supallm_runner --build
 
 api:
 	@echo [ starting api... ]
-	@docker compose -f docker-compose.dev.yml up api
+	@docker compose -f docker-compose.dev.yml up supallm_api
 
 runner:
 	@echo [ starting runner... ]
-	@docker compose -f docker-compose.dev.yml up --build runner
+	@docker compose -f docker-compose.dev.yml up supallm_runner
+
+frontend:
+	@echo [ starting frontend... ]
+	@docker compose -f docker-compose.dev.yml up supallm_frontend
 
 ## Generate all code from specs | eq: sqlc + oapi
 gen: oapi sqlc

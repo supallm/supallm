@@ -2,7 +2,8 @@ import { Result } from "typescript-result";
 import { EntrypointNode } from "../../nodes/base/entrypoint-node";
 import { ResultNode } from "../../nodes/base/result-node";
 import { CodeExecutorNode } from "../../nodes/code-executors/code-executor-node";
-import { LLMNode } from "../../nodes/llm/llm-node";
+import { AnthropicProvider } from "../../nodes/llm/anthropic-provider";
+import { OpenAIProvider } from "../../nodes/llm/openai-provider";
 import {
   INode,
   NodeDefinition,
@@ -18,7 +19,8 @@ export class NodeManager {
   private nodes: Map<NodeType, INode> = new Map();
 
   constructor(_memoryService: LLMMemoryService) {
-    this.registerNode(new LLMNode());
+    this.registerNode(new AnthropicProvider());
+    this.registerNode(new OpenAIProvider());
     this.registerNode(new EntrypointNode());
     this.registerNode(new ResultNode());
     this.registerNode(new CodeExecutorNode());
