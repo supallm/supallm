@@ -40,7 +40,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import { PlayIcon, PlusIcon } from "lucide-react";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 
 const ChatFlowPage = () => {
   /**
@@ -95,11 +95,10 @@ const ChatFlowPage = () => {
     (params: Connection) => {
       setEdges((eds) => {
         const newEdges = addEdge(params, eds);
-        onSave(newEdges);
         return newEdges;
       });
     },
-    [onSave, setEdges],
+    [setEdges],
   );
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -132,6 +131,10 @@ const ChatFlowPage = () => {
     },
     [],
   );
+
+  useEffect(() => {
+    onSave(edges, nodes);
+  }, [edges, nodes]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const nodeTypes: Record<NodeType, any> = useMemo(
