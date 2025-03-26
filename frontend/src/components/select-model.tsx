@@ -1,6 +1,7 @@
 "use client";
 
 import { ProviderType } from "@/core/entities/credential";
+import { AnthropicModels } from "@/core/entities/flow/flow-anthropic";
 import { OpenAIModels } from "@/core/entities/flow/flow-openai";
 import { FC, useMemo } from "react";
 import { FormControl } from "./ui/form";
@@ -14,7 +15,7 @@ import {
 
 export const ProviderModels: Record<ProviderType, Readonly<string[]>> = {
   openai: OpenAIModels,
-  anthropic: [],
+  anthropic: AnthropicModels,
   google: [],
   azure: [],
   mistral: [],

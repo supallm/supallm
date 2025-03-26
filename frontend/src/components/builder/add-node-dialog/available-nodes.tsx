@@ -22,6 +22,14 @@ export const availableNodes: AvailableNode[] = [
     commingSoon: false,
   },
   {
+    type: "chat-anthropic",
+    name: "Anthropic Chat Completion",
+    description:
+      "Use this node to send a message to an Anthropic Chat Completion model",
+    logo: <ProviderLogo name="anthropic" width={30} height={30} />,
+    commingSoon: false,
+  },
+  {
     type: "code-executor",
     name: "Code executor",
     description: "Run custom TypeScript in our secure sandbox",
@@ -40,14 +48,6 @@ export const availableNodes: AvailableNode[] = [
     name: "HTTP Request",
     description: "Trigger an HTTP endpoint in your AI flow",
     logo: <Network width={20} height={20} />,
-    commingSoon: true,
-  },
-  {
-    type: "chat-anthropic",
-    name: "Anthropic Chat Completion",
-    description:
-      "Use this node to send a message to an Anthropic Chat Completion model",
-    logo: <ProviderLogo name="anthropic" width={30} height={30} />,
     commingSoon: true,
   },
   {

@@ -15,7 +15,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { ProviderType, ProviderTypes } from "@/core/entities/credential";
+import { ProviderType } from "@/core/entities/credential";
 import { useAppConfigStore } from "@/core/store/app-config";
 import { createCredentialUsecase } from "@/core/usecases";
 import { hookifyFunction } from "@/hooks/hookify-function";
@@ -34,8 +34,9 @@ export const AddCredentialDialog: FC<
   PropsWithChildren<{
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
+    initialProviderType?: ProviderType | undefined;
   }>
-> = ({ isOpen, onOpenChange, children }) => {
+> = ({ isOpen, onOpenChange, children, initialProviderType }) => {
   const { currentProject } = useAppConfigStore();
   const { execute: createCredential, isLoading: isCreatingCredential } =
     hookifyFunction(
@@ -48,8 +49,9 @@ export const AddCredentialDialog: FC<
 
   const [open, setOpen] = useState(isOpen);
   const [selectedProvider, setSelectedProvider] = useState<ProviderType | null>(
-    null,
+    initialProviderType ?? null,
   );
+  console.log("selectedProvider", selectedProvider);
 
   useEffect(() => {
     setOpen(isOpen);
@@ -58,7 +60,6 @@ export const AddCredentialDialog: FC<
   const formSchema = z.object({
     name: z.string().min(2).max(50),
     apiKey: z.string().min(10),
-    providerType: z.enum(ProviderTypes),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -66,23 +67,26 @@ export const AddCredentialDialog: FC<
     defaultValues: {
       name: "",
       apiKey: "",
-      providerType: "openai",
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!selectedProvider) {
+      throw new Error("Selected provider is not set");
+    }
+
     await createCredential({
       projectId: currentProject!.id,
       name: values.name,
       apiKey: values.apiKey,
-      providerType: values.providerType,
+      providerType: selectedProvider,
     });
     reset();
     onOpenChange(false);
   }
 
   const reset = () => {
-    setSelectedProvider(null);
+    setSelectedProvider(initialProviderType ?? null);
     form.reset();
   };
 
@@ -107,7 +111,7 @@ export const AddCredentialDialog: FC<
           {!selectedProvider && (
             <ProviderCardList onSelected={setSelectedProvider} />
           )}
-          {selectedProvider && (
+          {!!selectedProvider && (
             <div className="flex flex-col gap-4 w-full">
               <Card
                 className={cn(
@@ -119,16 +123,18 @@ export const AddCredentialDialog: FC<
                     <ProviderLogo name={selectedProvider} />
                     <h2 className="text-lg font-medium">{selectedProvider}</h2>
                   </div>
-                  <div>
-                    <Button
-                      variant={"outline"}
-                      className="w-full"
-                      size={"sm"}
-                      onClick={reset}
-                    >
-                      Choose another provider
-                    </Button>
-                  </div>
+                  {!initialProviderType && (
+                    <div>
+                      <Button
+                        variant={"outline"}
+                        className="w-full"
+                        size={"sm"}
+                        onClick={reset}
+                      >
+                        Choose another provider
+                      </Button>
+                    </div>
+                  )}
                 </CardHeader>
                 <CardContent>
                   <div className="max-w-md mt-4">
@@ -144,10 +150,7 @@ export const AddCredentialDialog: FC<
                             <FormItem>
                               <FormLabel>Name</FormLabel>
                               <FormControl>
-                                <Input
-                                  placeholder="OpenAI Account #1"
-                                  {...field}
-                                />
+                                <Input placeholder="Account #1" {...field} />
                               </FormControl>
                               <FormDescription>
                                 This name is only for you to stay organized.

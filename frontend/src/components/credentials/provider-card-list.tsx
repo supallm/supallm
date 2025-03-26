@@ -29,7 +29,7 @@ export const ProviderCardList: FC<{
       name: "Anthropic",
       description: "Anthropic is a powerful AI provider",
       logo: <ProviderLogo name="anthropic" width={30} height={30} />,
-      commingSoon: true,
+      commingSoon: false,
     },
     google: {
       name: "Google",
