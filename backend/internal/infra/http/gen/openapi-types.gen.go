@@ -23,6 +23,12 @@ const (
 // Defines values for ProviderType.
 const (
 	Anthropic ProviderType = "anthropic"
+	Deepseek  ProviderType = "deepseek"
+	E2b       ProviderType = "e2b"
+	Gemini    ProviderType = "gemini"
+	Groq      ProviderType = "groq"
+	Mistral   ProviderType = "mistral"
+	Ollama    ProviderType = "ollama"
 	Openai    ProviderType = "openai"
 )
 
