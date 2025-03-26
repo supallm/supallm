@@ -68,7 +68,7 @@ const AnthropicChatCompletionNode: FC<AnthropicChatCompletionNodeProps> = ({
 
     const data: ChatAnthropicNodeData = {
       credentialId: formValues.credentialId,
-      providerType: "openai",
+      providerType: "anthropic",
       model: formValues.model,
       outputMode: formValues.outputMode,
       temperature: formValues.advancedSettings.temperature,
