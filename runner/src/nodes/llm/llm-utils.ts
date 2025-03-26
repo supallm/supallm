@@ -30,17 +30,13 @@ export interface LLMNodeInputs {
 
 export interface LLMOptions {
   model: string;
-  apiKey: string;
-  temperature: number;
-  maxTokens?: number;
-  streaming: boolean;
-  systemPrompt?: string;
+  decryptedApiKey: string;
 }
 
 export interface ValidationResult {
   resolvedInputs: LLMNodeInputs;
   resolvedOutputs: NodeOutputDef;
-  config: LLMOptions & { decryptedApiKey: string };
+  config: LLMOptions;
 }
 
 export class LLMUtils {
@@ -62,15 +58,7 @@ export class LLMUtils {
       return Result.error(outputError);
     }
 
-    const {
-      model,
-      apiKey,
-      temperature,
-      maxTokens,
-      streaming = false,
-      systemPrompt,
-    } = definition;
-
+    const { model, apiKey } = definition;
     if (!model) {
       return Result.error(
         new MissingAPIKeyError("model parameter is required"),
@@ -93,12 +81,7 @@ export class LLMUtils {
       resolvedOutputs,
       config: {
         model,
-        apiKey,
         decryptedApiKey,
-        temperature: parseFloat(temperature.toString()),
-        maxTokens: maxTokens ? parseInt(maxTokens.toString()) : undefined,
-        streaming,
-        systemPrompt,
       },
     });
   }
@@ -167,6 +150,7 @@ export class LLMUtils {
         },
       });
     } catch (error) {
+      logger.error(`streaming response error from ${model} provider`, error);
       return Result.error(
         new ProviderAPIError(`streaming response error from ${model} provider`),
       );

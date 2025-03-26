@@ -575,9 +575,6 @@ components:
         - openai
         - anthropic
         - mistral
-        - groq
-        - gemini
-        - deepseek
         - ollama
         - e2b
 

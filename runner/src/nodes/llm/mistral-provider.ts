@@ -14,12 +14,30 @@ import {
 import { GenerateResult, LLMOptions, LLMUtils } from "./llm-utils";
 import { ModelNotFoundError, ProviderAPIError } from "./llm.errors";
 
+interface MistralOptions extends LLMOptions {
+  temperature: number;
+  maxTokens?: number;
+  streaming: boolean;
+}
+
 export class MistralProvider implements INode {
   type: NodeType = "chat-mistral";
   private utils: LLMUtils;
 
   constructor() {
     this.utils = new LLMUtils(new CryptoService());
+  }
+
+  private prepareMistralOptions(
+    config: LLMOptions,
+    definition: NodeDefinition,
+  ): Result<MistralOptions, Error> {
+    return Result.ok({
+      ...config,
+      temperature: definition["temperature"],
+      maxTokens: definition["maxTokens"],
+      streaming: definition["streaming"],
+    });
   }
 
   async execute(
@@ -42,11 +60,18 @@ export class MistralProvider implements INode {
 
     const { resolvedInputs, resolvedOutputs, config } =
       validateAndPrepareResult;
+    const [mistralOptions, mistralOptionsError] = this.prepareMistralOptions(
+      config,
+      definition,
+    ).toTuple();
+    if (mistralOptionsError) {
+      return Result.error(mistralOptionsError);
+    }
 
     const prepareMessages = await this.utils.prepareMessages(
       nodeId,
       toolContext,
-      config.systemPrompt,
+      undefined,
       resolvedInputs,
       options.sessionId,
     );
@@ -56,7 +81,10 @@ export class MistralProvider implements INode {
       return Result.error(prepareMessagesError);
     }
 
-    const generate = await this.generateResponse(prepareMessagesResult, config);
+    const generate = await this.generateResponse(
+      prepareMessagesResult,
+      mistralOptions,
+    );
     const [generateResult, generateError] = generate.toTuple();
     if (generateError) {
       return Result.error(generateError);
@@ -96,7 +124,7 @@ export class MistralProvider implements INode {
 
   private async generateResponse(
     messages: BaseMessage[],
-    options: LLMOptions,
+    options: MistralOptions,
   ): Promise<GenerateResult> {
     try {
       const [model, modelError] = this.createModel(options).toTuple();
@@ -119,7 +147,7 @@ export class MistralProvider implements INode {
   }
 
   private createModel(
-    options: LLMOptions,
+    options: MistralOptions,
   ): Result<ChatMistralAI, ModelNotFoundError | ProviderAPIError> {
     try {
       return Result.ok(
@@ -127,7 +155,7 @@ export class MistralProvider implements INode {
           model: options.model,
           temperature: options.temperature,
           maxTokens: options.maxTokens,
-          apiKey: options.apiKey,
+          apiKey: options.decryptedApiKey,
           streaming: options.streaming,
         }),
       );

@@ -5,7 +5,7 @@ type LLMProvider =
   | "chat-openai"
   | "chat-anthropic"
   | "chat-mistral"
-  | "chat-groq"
+  | "chat-grok"
   | "chat-gemini"
   | "chat-deepseek"
   | "chat-ollama";

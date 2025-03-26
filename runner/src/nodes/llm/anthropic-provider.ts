@@ -3,6 +3,7 @@ import { BaseMessage } from "@langchain/core/messages";
 import { Result } from "typescript-result";
 import { CryptoService } from "../../services/secret/crypto-service";
 import { Tool, ToolContext } from "../../tools";
+import { logger } from "../../utils/logger";
 import {
   INode,
   NodeDefinition,
@@ -14,12 +15,32 @@ import {
 import { GenerateResult, LLMOptions, LLMUtils } from "./llm-utils";
 import { ModelNotFoundError, ProviderAPIError } from "./llm.errors";
 
+interface AnthropicOptions extends LLMOptions {
+  temperature: number;
+  maxTokenToSample?: number;
+  streaming: boolean;
+  systemPrompt?: string;
+}
+
 export class AnthropicProvider implements INode {
   type: NodeType = "chat-anthropic";
   private utils: LLMUtils;
 
   constructor() {
     this.utils = new LLMUtils(new CryptoService());
+  }
+
+  private prepareAnthropicOptions(
+    config: LLMOptions,
+    definition: NodeDefinition,
+  ): Result<AnthropicOptions, Error> {
+    return Result.ok({
+      ...config,
+      temperature: definition["temperature"],
+      maxTokenToSample: definition["maxTokenToSample"],
+      streaming: definition["streaming"],
+      systemPrompt: definition["systemPrompt"],
+    });
   }
 
   async execute(
@@ -42,11 +63,16 @@ export class AnthropicProvider implements INode {
 
     const { resolvedInputs, resolvedOutputs, config } =
       validateAndPrepareResult;
+    const [anthropicOptions, anthropicOptionsError] =
+      this.prepareAnthropicOptions(config, definition).toTuple();
+    if (anthropicOptionsError) {
+      return Result.error(anthropicOptionsError);
+    }
 
     const prepareMessages = await this.utils.prepareMessages(
       nodeId,
       toolContext,
-      config.systemPrompt,
+      anthropicOptions.systemPrompt,
       resolvedInputs,
       options.sessionId,
     );
@@ -56,7 +82,10 @@ export class AnthropicProvider implements INode {
       return Result.error(prepareMessagesError);
     }
 
-    const generate = await this.generateResponse(prepareMessagesResult, config);
+    const generate = await this.generateResponse(
+      prepareMessagesResult,
+      anthropicOptions,
+    );
     const [generateResult, generateError] = generate.toTuple();
     if (generateError) {
       return Result.error(generateError);
@@ -96,7 +125,7 @@ export class AnthropicProvider implements INode {
 
   private async generateResponse(
     messages: BaseMessage[],
-    options: LLMOptions,
+    options: AnthropicOptions,
   ): Promise<GenerateResult> {
     try {
       const [model, modelError] = this.createModel(options).toTuple();
@@ -119,15 +148,16 @@ export class AnthropicProvider implements INode {
   }
 
   private createModel(
-    options: LLMOptions,
+    options: AnthropicOptions,
   ): Result<ChatAnthropic, ModelNotFoundError | ProviderAPIError> {
+    logger.info(`creating Anthropic model ${JSON.stringify(options)}`);
     try {
       return Result.ok(
         new ChatAnthropic({
           modelName: options.model,
           temperature: options.temperature,
-          maxTokens: options.maxTokens,
-          anthropicApiKey: options.apiKey,
+          maxTokens: options.maxTokenToSample,
+          anthropicApiKey: options.decryptedApiKey,
           streaming: options.streaming,
         }),
       );

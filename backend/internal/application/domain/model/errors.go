@@ -30,5 +30,5 @@ const (
 	ErrInvalidCredential    Error = "invalid credential"
 	ErrInvalidProviderModel Error = "invalid provider model"
 
-	ErrInvalidNodeError Error = "invalid node"
+	ErrInvalidNodeError Error = "invalid node type"
 )

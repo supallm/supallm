@@ -14,12 +14,32 @@ import {
 import { GenerateResult, LLMOptions, LLMUtils } from "./llm-utils";
 import { ModelNotFoundError, ProviderAPIError } from "./llm.errors";
 
+interface DeepSeekOptions extends LLMOptions {
+  temperature: number;
+  maxTokens?: number;
+  streaming: boolean;
+  systemPrompt?: string;
+}
+
 export class DeepSeekProvider implements INode {
   type: NodeType = "chat-deepseek";
   private utils: LLMUtils;
 
   constructor() {
     this.utils = new LLMUtils(new CryptoService());
+  }
+
+  private prepareDeepSeekOptions(
+    config: LLMOptions,
+    definition: NodeDefinition,
+  ): Result<DeepSeekOptions, Error> {
+    return Result.ok({
+      ...config,
+      temperature: definition["temperature"],
+      maxTokens: definition["maxTokens"],
+      streaming: definition["streaming"],
+      systemPrompt: definition["systemPrompt"],
+    });
   }
 
   async execute(
@@ -42,11 +62,18 @@ export class DeepSeekProvider implements INode {
 
     const { resolvedInputs, resolvedOutputs, config } =
       validateAndPrepareResult;
+    const [deepSeekOptions, deepSeekOptionsError] = this.prepareDeepSeekOptions(
+      config,
+      definition,
+    ).toTuple();
+    if (deepSeekOptionsError) {
+      return Result.error(deepSeekOptionsError);
+    }
 
     const prepareMessages = await this.utils.prepareMessages(
       nodeId,
       toolContext,
-      config.systemPrompt,
+      deepSeekOptions.systemPrompt,
       resolvedInputs,
       options.sessionId,
     );
@@ -56,7 +83,10 @@ export class DeepSeekProvider implements INode {
       return Result.error(prepareMessagesError);
     }
 
-    const generate = await this.generateResponse(prepareMessagesResult, config);
+    const generate = await this.generateResponse(
+      prepareMessagesResult,
+      deepSeekOptions,
+    );
     const [generateResult, generateError] = generate.toTuple();
     if (generateError) {
       return Result.error(generateError);
@@ -96,7 +126,7 @@ export class DeepSeekProvider implements INode {
 
   private async generateResponse(
     messages: BaseMessage[],
-    options: LLMOptions,
+    options: DeepSeekOptions,
   ): Promise<GenerateResult> {
     try {
       const [model, modelError] = this.createModel(options).toTuple();
@@ -119,7 +149,7 @@ export class DeepSeekProvider implements INode {
   }
 
   private createModel(
-    options: LLMOptions,
+    options: DeepSeekOptions,
   ): Result<ChatDeepSeek, ModelNotFoundError | ProviderAPIError> {
     try {
       return Result.ok(
@@ -127,7 +157,7 @@ export class DeepSeekProvider implements INode {
           modelName: options.model,
           temperature: options.temperature,
           maxTokens: options.maxTokens,
-          apiKey: options.apiKey,
+          apiKey: options.decryptedApiKey,
           streaming: options.streaming,
         }),
       );

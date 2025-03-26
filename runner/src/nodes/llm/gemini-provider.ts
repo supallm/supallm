@@ -14,12 +14,32 @@ import {
 import { GenerateResult, LLMOptions, LLMUtils } from "./llm-utils";
 import { ModelNotFoundError, ProviderAPIError } from "./llm.errors";
 
+interface GeminiOptions extends LLMOptions {
+  temperature: number;
+  maxTokens?: number;
+  streaming: boolean;
+  systemPrompt?: string;
+}
+
 export class GeminiProvider implements INode {
   type: NodeType = "chat-gemini";
   private utils: LLMUtils;
 
   constructor() {
     this.utils = new LLMUtils(new CryptoService());
+  }
+
+  private prepareGeminiOptions(
+    config: LLMOptions,
+    definition: NodeDefinition,
+  ): Result<GeminiOptions, Error> {
+    return Result.ok({
+      ...config,
+      temperature: definition["temperature"],
+      maxTokens: definition["maxTokens"],
+      streaming: definition["streaming"],
+      systemPrompt: definition["systemPrompt"],
+    });
   }
 
   async execute(
@@ -42,11 +62,18 @@ export class GeminiProvider implements INode {
 
     const { resolvedInputs, resolvedOutputs, config } =
       validateAndPrepareResult;
+    const [geminiOptions, geminiOptionsError] = this.prepareGeminiOptions(
+      config,
+      definition,
+    ).toTuple();
+    if (geminiOptionsError) {
+      return Result.error(geminiOptionsError);
+    }
 
     const prepareMessages = await this.utils.prepareMessages(
       nodeId,
       toolContext,
-      config.systemPrompt,
+      geminiOptions.systemPrompt,
       resolvedInputs,
       options.sessionId,
     );
@@ -56,7 +83,10 @@ export class GeminiProvider implements INode {
       return Result.error(prepareMessagesError);
     }
 
-    const generate = await this.generateResponse(prepareMessagesResult, config);
+    const generate = await this.generateResponse(
+      prepareMessagesResult,
+      geminiOptions,
+    );
     const [generateResult, generateError] = generate.toTuple();
     if (generateError) {
       return Result.error(generateError);
@@ -96,7 +126,7 @@ export class GeminiProvider implements INode {
 
   private async generateResponse(
     messages: BaseMessage[],
-    options: LLMOptions,
+    options: GeminiOptions,
   ): Promise<GenerateResult> {
     try {
       const [model, modelError] = this.createModel(options).toTuple();
@@ -119,7 +149,7 @@ export class GeminiProvider implements INode {
   }
 
   private createModel(
-    options: LLMOptions,
+    options: GeminiOptions,
   ): Result<ChatGoogleGenerativeAI, ModelNotFoundError | ProviderAPIError> {
     try {
       return Result.ok(
@@ -127,7 +157,7 @@ export class GeminiProvider implements INode {
           model: options.model,
           temperature: options.temperature,
           maxOutputTokens: options.maxTokens,
-          apiKey: options.apiKey,
+          apiKey: options.decryptedApiKey,
           streaming: options.streaming,
         }),
       );

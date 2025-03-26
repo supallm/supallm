@@ -44,6 +44,9 @@ const (
 var LLMNodeType = map[string]bool{
 	"chat-openai":    true,
 	"chat-anthropic": true,
+	"chat-gemini":    true,
+	"chat-mistral":   true,
+	"chat-ollama":    true,
 }
 
 type Workflow struct {
@@ -221,7 +224,7 @@ func (p *Project) convertBuilderToRunnerFlow(builderFlow BuilderFlow) (map[strin
 	for _, node := range builderFlow.Nodes {
 		processor, err := p.getNodeProcessor(node.Type)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("unable to get node processor: %w", err)
 		}
 		if processor == nil {
 			// Skip unknown node types
@@ -229,7 +232,7 @@ func (p *Project) convertBuilderToRunnerFlow(builderFlow BuilderFlow) (map[strin
 		}
 
 		if err := processor(nodes, node.ID, node, builderFlow.Edges, nodeMap); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("unable to process node: %w", err)
 		}
 	}
 
@@ -329,27 +332,14 @@ func (p *Project) processCodeExecutorNode(nodes map[string]any, nodeID string, n
 	return nil
 }
 
-type LLMNodeData struct {
-	CredentialID        string          `json:"credentialId"`
-	ProviderType        string          `json:"providerType"`
-	Model               string          `json:"model"`
-	Temperature         float64         `json:"temperature"`
-	MaxCompletionTokens int             `json:"maxCompletionTokens"`
-	DeveloperMessage    string          `json:"developerMessage"`
-	ImageResolution     string          `json:"imageResolution"`
-	ResponseFormat      json.RawMessage `json:"responseFormat"`
-	OutputMode          string          `json:"outputMode"`
-	WithMemory          bool            `json:"withMemory"`
-}
-
 // processLLMNode processes an LLM node
 func (p *Project) processLLMNode(nodes map[string]any, nodeID string, node BuilderNode, edges []BuilderEdge, nodeMap map[string]BuilderNode) error {
-	var data LLMNodeData
-	if err := json.Unmarshal(node.Data, &data); err != nil {
+	var nodeConfig map[string]any
+	if err := json.Unmarshal(node.Data, &nodeConfig); err != nil {
 		return fmt.Errorf("unable to unmarshal LLM node data: %w", err)
 	}
 
-	credentialID, err := uuid.Parse(data.CredentialID)
+	credentialID, err := uuid.Parse(nodeConfig["credentialId"].(string))
 	if err != nil {
 		return fmt.Errorf("invalid credential ID: %w", err)
 	}
@@ -359,16 +349,9 @@ func (p *Project) processLLMNode(nodes map[string]any, nodeID string, node Build
 		return fmt.Errorf("unable to get credential API key: %w", err)
 	}
 
-	nodeConfig := map[string]any{
-		"type":         node.Type,
-		"model":        data.Model,
-		"apiKey":       apiKey,
-		"provider":     data.ProviderType,
-		"maxTokens":    data.MaxCompletionTokens,
-		"streaming":    data.OutputMode == "text-stream",
-		"temperature":  data.Temperature,
-		"systemPrompt": data.DeveloperMessage,
-	}
+	nodeConfig["type"] = node.Type
+	nodeConfig["apiKey"] = apiKey
+	nodeConfig["streaming"] = nodeConfig["outputMode"].(string) == "text-stream"
 
 	// Build inputs from edges
 	inputs := p.buildNodeInputs(node.ID, edges)

@@ -15,6 +15,10 @@ import { GenerateResult, LLMOptions, LLMUtils } from "./llm-utils";
 import { ModelNotFoundError, ProviderAPIError } from "./llm.errors";
 
 interface OllamaOptions extends LLMOptions {
+  temperature: number;
+  maxTokens?: number;
+  streaming: boolean;
+  systemPrompt?: string;
   baseUrl: string;
   format?: "json";
 }
@@ -30,11 +34,18 @@ export class OllamaProvider implements INode {
   private prepareOllamaOptions(
     config: LLMOptions,
     definition: NodeDefinition,
-  ): OllamaOptions {
-    return {
+  ): Result<OllamaOptions, Error> {
+    if (!definition["baseUrl"]) {
+      return Result.error(new Error("baseUrl is required"));
+    }
+
+    return Result.ok({
       ...config,
       baseUrl: definition["baseUrl"],
-    };
+      temperature: definition["temperature"],
+      maxTokens: definition["maxTokens"],
+      streaming: definition["streaming"],
+    });
   }
 
   async execute(
@@ -57,12 +68,18 @@ export class OllamaProvider implements INode {
 
     const { resolvedInputs, resolvedOutputs, config } =
       validateAndPrepareResult;
-    const ollamaOptions = this.prepareOllamaOptions(config, definition);
+    const [ollamaOptions, ollamaOptionsError] = this.prepareOllamaOptions(
+      config,
+      definition,
+    ).toTuple();
+    if (ollamaOptionsError) {
+      return Result.error(ollamaOptionsError);
+    }
 
     const prepareMessages = await this.utils.prepareMessages(
       nodeId,
       toolContext,
-      config.systemPrompt,
+      ollamaOptions.systemPrompt,
       resolvedInputs,
       options.sessionId,
     );

@@ -14,12 +14,32 @@ import {
 import { GenerateResult, LLMOptions, LLMUtils } from "./llm-utils";
 import { ModelNotFoundError, ProviderAPIError } from "./llm.errors";
 
-export class GroqProvider implements INode {
-  type: NodeType = "chat-groq";
+interface GrokOptions extends LLMOptions {
+  temperature: number;
+  maxTokens?: number;
+  streaming: boolean;
+  systemPrompt?: string;
+}
+
+export class GrokProvider implements INode {
+  type: NodeType = "chat-grok";
   private utils: LLMUtils;
 
   constructor() {
     this.utils = new LLMUtils(new CryptoService());
+  }
+
+  private prepareGrokOptions(
+    config: LLMOptions,
+    definition: NodeDefinition,
+  ): Result<GrokOptions, Error> {
+    return Result.ok({
+      ...config,
+      temperature: definition["temperature"],
+      maxTokens: definition["maxTokens"],
+      streaming: definition["streaming"],
+      systemPrompt: definition["systemPrompt"],
+    });
   }
 
   async execute(
@@ -42,11 +62,18 @@ export class GroqProvider implements INode {
 
     const { resolvedInputs, resolvedOutputs, config } =
       validateAndPrepareResult;
+    const [grokOptions, grokOptionsError] = this.prepareGrokOptions(
+      config,
+      definition,
+    ).toTuple();
+    if (grokOptionsError) {
+      return Result.error(grokOptionsError);
+    }
 
     const prepareMessages = await this.utils.prepareMessages(
       nodeId,
       toolContext,
-      config.systemPrompt,
+      grokOptions.systemPrompt,
       resolvedInputs,
       options.sessionId,
     );
@@ -56,7 +83,10 @@ export class GroqProvider implements INode {
       return Result.error(prepareMessagesError);
     }
 
-    const generate = await this.generateResponse(prepareMessagesResult, config);
+    const generate = await this.generateResponse(
+      prepareMessagesResult,
+      grokOptions,
+    );
     const [generateResult, generateError] = generate.toTuple();
     if (generateError) {
       return Result.error(generateError);
@@ -96,7 +126,7 @@ export class GroqProvider implements INode {
 
   private async generateResponse(
     messages: BaseMessage[],
-    options: LLMOptions,
+    options: GrokOptions,
   ): Promise<GenerateResult> {
     try {
       const [model, modelError] = this.createModel(options).toTuple();
@@ -119,7 +149,7 @@ export class GroqProvider implements INode {
   }
 
   private createModel(
-    options: LLMOptions,
+    options: GrokOptions,
   ): Result<ChatGroq, ModelNotFoundError | ProviderAPIError> {
     try {
       return Result.ok(
@@ -127,7 +157,7 @@ export class GroqProvider implements INode {
           model: options.model,
           temperature: options.temperature,
           maxTokens: options.maxTokens,
-          apiKey: options.apiKey,
+          apiKey: options.decryptedApiKey,
           streaming: options.streaming,
         }),
       );

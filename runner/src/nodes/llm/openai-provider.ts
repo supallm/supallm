@@ -14,12 +14,32 @@ import {
 import { GenerateResult, LLMOptions, LLMUtils } from "./llm-utils";
 import { ModelNotFoundError, ProviderAPIError } from "./llm.errors";
 
+interface OpenAIOptions extends LLMOptions {
+  temperature: number;
+  maxTokens?: number;
+  streaming: boolean;
+  systemPrompt?: string;
+}
+
 export class OpenAIProvider implements INode {
   type: NodeType = "chat-openai";
   private utils: LLMUtils;
 
   constructor() {
     this.utils = new LLMUtils(new CryptoService());
+  }
+
+  private prepareOpenAIOptions(
+    config: LLMOptions,
+    definition: NodeDefinition,
+  ): Result<OpenAIOptions, Error> {
+    return Result.ok({
+      ...config,
+      temperature: definition["temperature"],
+      maxTokens: definition["maxTokens"],
+      streaming: definition["streaming"],
+      systemPrompt: definition["systemPrompt"],
+    });
   }
 
   async execute(
@@ -42,11 +62,18 @@ export class OpenAIProvider implements INode {
 
     const { resolvedInputs, resolvedOutputs, config } =
       validateAndPrepareResult;
+    const [openaiOptions, openaiOptionsError] = this.prepareOpenAIOptions(
+      config,
+      definition,
+    ).toTuple();
+    if (openaiOptionsError) {
+      return Result.error(openaiOptionsError);
+    }
 
     const prepareMessages = await this.utils.prepareMessages(
       nodeId,
       toolContext,
-      config.systemPrompt,
+      openaiOptions.systemPrompt,
       resolvedInputs,
       options.sessionId,
     );
@@ -56,7 +83,10 @@ export class OpenAIProvider implements INode {
       return Result.error(prepareMessagesError);
     }
 
-    const generate = await this.generateResponse(prepareMessagesResult, config);
+    const generate = await this.generateResponse(
+      prepareMessagesResult,
+      openaiOptions,
+    );
     const [generateResult, generateError] = generate.toTuple();
     if (generateError) {
       return Result.error(generateError);
@@ -96,7 +126,7 @@ export class OpenAIProvider implements INode {
 
   private async generateResponse(
     messages: BaseMessage[],
-    options: LLMOptions,
+    options: OpenAIOptions,
   ): Promise<GenerateResult> {
     try {
       const [model, modelError] = this.createModel(options).toTuple();
@@ -119,7 +149,7 @@ export class OpenAIProvider implements INode {
   }
 
   private createModel(
-    options: LLMOptions,
+    options: OpenAIOptions,
   ): Result<OpenAI | ChatOpenAI, ModelNotFoundError | ProviderAPIError> {
     try {
       const isChatModel = this.isChatModel(options.model);
@@ -129,7 +159,7 @@ export class OpenAIProvider implements INode {
             modelName: options.model,
             temperature: options.temperature,
             maxTokens: options.maxTokens,
-            openAIApiKey: options.apiKey,
+            openAIApiKey: options.decryptedApiKey,
             streaming: options.streaming,
           }),
         );
@@ -139,7 +169,7 @@ export class OpenAIProvider implements INode {
             modelName: options.model,
             temperature: options.temperature,
             maxTokens: options.maxTokens,
-            openAIApiKey: options.apiKey,
+            openAIApiKey: options.decryptedApiKey,
             streaming: options.streaming,
           }),
         );
