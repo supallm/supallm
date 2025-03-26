@@ -7,7 +7,7 @@ import { ResultNodeData } from "@/core/entities/flow/flow-result";
 import { useCurrentProjectOrThrow } from "@/hooks/use-current-project-or-throw";
 import { cn } from "@/lib/utils";
 import { BookCheck, BracesIcon, LogsIcon } from "lucide-react";
-import { FC, useMemo, useState } from "react";
+import { FC, useEffect, useMemo, useRef, useState } from "react";
 import { JsonView, allExpanded, defaultStyles } from "react-json-view-lite";
 import "react-json-view-lite/dist/index.css";
 import { FlowResultStreamEvent } from "supallm";
@@ -141,9 +141,45 @@ export const TestFlowBottomPanel: FC<LogsPaneProps> = ({
 
   const { id: projectId } = useCurrentProjectOrThrow();
 
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isAutoScroll, setIsAutoScroll] = useState(true);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const handleUserScroll = () => {
+      const isNearBottom =
+        el.scrollHeight - el.scrollTop - el.clientHeight < 50;
+      setIsAutoScroll(isNearBottom);
+    };
+
+    el.addEventListener("scroll", handleUserScroll);
+
+    const resizeObserver = new ResizeObserver(() => {
+      if (isAutoScroll) {
+        el.scrollTop = el.scrollHeight;
+      }
+    });
+
+    resizeObserver.observe(el);
+
+    return () => {
+      el.removeEventListener("scroll", handleUserScroll);
+      resizeObserver.disconnect();
+    };
+  }, [isAutoScroll]);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el && isAutoScroll) {
+      el.scrollTop = el.scrollHeight;
+    }
+  }, [events, activePane, flowError, isRunning, isAutoScroll]);
+
   return (
-    <div className="bg-muted grow border-t overflow-y-auto">
-      <div className="pane-controls w-full flex justify-start gap-0 border-b items-center bg-gray-100">
+    <div className="bg-muted border-t flex flex-col max-h-full justify-start">
+      <div className="pane-controls w-full flex justify-start gap-0 border-b items-center bg-gray-100 sticky top-0 z-10 shrink-0">
         <PaneButton
           active={activePane === "full-result"}
           onClick={() => setActivePane("full-result")}
@@ -167,34 +203,36 @@ export const TestFlowBottomPanel: FC<LogsPaneProps> = ({
         </PaneButton>
       </div>
 
-      {activePane === "full-result" && (
-        <div className="p-4">
-          {flowError && (
-            <AlertMessage variant="danger" message={flowError}></AlertMessage>
-          )}
-          {isRunning && <Spinner />}
-          <FinalResult events={events} />
-        </div>
-      )}
+      <div className="grow overflow-y-auto" ref={scrollRef}>
+        {activePane === "full-result" && (
+          <div className="p-4">
+            {flowError && (
+              <AlertMessage variant="danger" message={flowError}></AlertMessage>
+            )}
+            {isRunning && <Spinner />}
+            <FinalResult events={events} />
+          </div>
+        )}
 
-      {activePane === "logs" && (
-        <div className="p-4">
-          {isRunning && <Spinner />}
-          <LogList events={events} />
-        </div>
-      )}
+        {activePane === "logs" && (
+          <div className="p-4">
+            {isRunning && <Spinner />}
+            <LogList events={events} />
+          </div>
+        )}
 
-      {activePane === "source-code" && (
-        <div className="p-4">
-          <SdkCodeExample
-            projectId={projectId}
-            secretKey={"<your-secret-key>"}
-            flowId={flowId}
-            inputs={inputs}
-            showInitSdk={false}
-          ></SdkCodeExample>
-        </div>
-      )}
+        {activePane === "source-code" && (
+          <div className="p-4">
+            <SdkCodeExample
+              projectId={projectId}
+              secretKey={"<your-secret-key>"}
+              flowId={flowId}
+              inputs={inputs}
+              showInitSdk={false}
+            ></SdkCodeExample>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

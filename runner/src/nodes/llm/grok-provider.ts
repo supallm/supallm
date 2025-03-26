@@ -1,5 +1,5 @@
 import { BaseMessage } from "@langchain/core/messages";
-import { ChatOpenAI, OpenAI } from "@langchain/openai";
+import { ChatGroq } from "@langchain/groq";
 import { Result } from "typescript-result";
 import { CryptoService } from "../../services/secret/crypto-service";
 import { Tool, ToolContext } from "../../tools";
@@ -14,31 +14,31 @@ import {
 import { GenerateResult, LLMOptions, LLMUtils } from "./llm-utils";
 import { ModelNotFoundError, ProviderAPIError } from "./llm.errors";
 
-interface OpenAIOptions extends LLMOptions {
+interface GrokOptions extends LLMOptions {
   temperature: number;
   maxTokens?: number;
   streaming: boolean;
   systemPrompt?: string;
 }
 
-export class OpenAIProvider implements INode {
-  type: NodeType = "chat-openai";
+export class GrokProvider implements INode {
+  type: NodeType = "chat-grok";
   private utils: LLMUtils;
 
   constructor() {
     this.utils = new LLMUtils(new CryptoService());
   }
 
-  private prepareOpenAIOptions(
+  private prepareGrokOptions(
     config: LLMOptions,
     definition: NodeDefinition,
-  ): Result<OpenAIOptions, Error> {
+  ): Result<GrokOptions, Error> {
     return Result.ok({
       ...config,
       temperature: definition["temperature"],
-      maxTokens: definition["maxCompletionTokens"],
+      maxTokens: definition["maxTokens"],
       streaming: definition["streaming"],
-      systemPrompt: definition["developerMessage"],
+      systemPrompt: definition["systemPrompt"],
     });
   }
 
@@ -62,18 +62,18 @@ export class OpenAIProvider implements INode {
 
     const { resolvedInputs, resolvedOutputs, config } =
       validateAndPrepareResult;
-    const [openaiOptions, openaiOptionsError] = this.prepareOpenAIOptions(
+    const [grokOptions, grokOptionsError] = this.prepareGrokOptions(
       config,
       definition,
     ).toTuple();
-    if (openaiOptionsError) {
-      return Result.error(openaiOptionsError);
+    if (grokOptionsError) {
+      return Result.error(grokOptionsError);
     }
 
     const prepareMessages = await this.utils.prepareMessages(
       nodeId,
       toolContext,
-      openaiOptions.systemPrompt,
+      grokOptions.systemPrompt,
       resolvedInputs,
       options.sessionId,
     );
@@ -85,7 +85,7 @@ export class OpenAIProvider implements INode {
 
     const generate = await this.generateResponse(
       prepareMessagesResult,
-      openaiOptions,
+      grokOptions,
     );
     const [generateResult, generateError] = generate.toTuple();
     if (generateError) {
@@ -126,7 +126,7 @@ export class OpenAIProvider implements INode {
 
   private async generateResponse(
     messages: BaseMessage[],
-    options: OpenAIOptions,
+    options: GrokOptions,
   ): Promise<GenerateResult> {
     try {
       const [model, modelError] = this.createModel(options).toTuple();
@@ -134,7 +134,7 @@ export class OpenAIProvider implements INode {
         return Result.error(modelError);
       }
 
-      if (model instanceof ChatOpenAI && options.streaming) {
+      if (options.streaming) {
         return LLMUtils.handleStreamingResponse(model, messages, (m, msgs) =>
           m.stream(msgs),
         );
@@ -149,55 +149,26 @@ export class OpenAIProvider implements INode {
   }
 
   private createModel(
-    options: OpenAIOptions,
-  ): Result<OpenAI | ChatOpenAI, ModelNotFoundError | ProviderAPIError> {
+    options: GrokOptions,
+  ): Result<ChatGroq, ModelNotFoundError | ProviderAPIError> {
     try {
-      const isChatModel = this.isChatModel(options.model);
-      if (isChatModel) {
-        return Result.ok(
-          new ChatOpenAI({
-            modelName: options.model,
-            temperature: options.temperature,
-            maxTokens: options.maxTokens,
-            openAIApiKey: options.decryptedApiKey,
-            streaming: options.streaming,
-          }),
-        );
-      } else {
-        return Result.ok(
-          new OpenAI({
-            modelName: options.model,
-            temperature: options.temperature,
-            maxTokens: options.maxTokens,
-            openAIApiKey: options.decryptedApiKey,
-            streaming: options.streaming,
-          }),
-        );
-      }
+      return Result.ok(
+        new ChatGroq({
+          model: options.model,
+          temperature: options.temperature,
+          maxTokens: options.maxTokens,
+          apiKey: options.decryptedApiKey,
+          streaming: options.streaming,
+        }),
+      );
     } catch (error) {
       return Result.error(
-        new ProviderAPIError(`failed to initialize openai model`),
+        new ProviderAPIError(`failed to initialize Groq model`),
       );
     }
   }
 
   private mapApiError(error: unknown, model?: string): GenerateResult {
-    return LLMUtils.mapProviderError(error, model, "openai");
-  }
-
-  private isChatModel(model: string): boolean {
-    const chatModels = [
-      "gpt-4",
-      "gpt-4-turbo",
-      "gpt-4o",
-      "gpt-4o-mini",
-      "gpt-3.5-turbo",
-      "gpt-3.5",
-      "gpt-35-turbo",
-    ];
-
-    return chatModels.some((chatModel) =>
-      model.toLowerCase().startsWith(chatModel.toLowerCase()),
-    );
+    return LLMUtils.mapProviderError(error, model, "groq");
   }
 }

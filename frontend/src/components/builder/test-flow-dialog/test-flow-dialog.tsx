@@ -1,11 +1,4 @@
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { EntrypointNodeData } from "@/core/entities/flow/flow-entrypoint";
 import { useCurrentProjectOrThrow } from "@/hooks/use-current-project-or-throw";
 
@@ -131,12 +124,6 @@ export const TestFlowDialog: FC<
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>{children}</SheetTrigger>
       <SheetContent className="w-full gap-0">
-        <SheetHeader className="border-b">
-          <SheetTitle>Test your flow</SheetTitle>
-          <SheetDescription>
-            Test your flow with the parameters below.
-          </SheetDescription>
-        </SheetHeader>
         {/* Content */}
         <div className="flex justify-between h-full">
           {/* Left panel */}
@@ -150,8 +137,9 @@ export const TestFlowDialog: FC<
           </div>
 
           {/* Right panel */}
-          <div className="w-1/4 min-w-[500px] flex flex-col border-l h-full shrink-0">
-            <div className="p-4 overflow-y-auto space-y-4 flex flex-col justify-between">
+          <div className="w-1/4 min-w-[500px] flex flex-col border-l h-full justify-start shrink-0">
+            {/* Right Top Panel */}
+            <div className="p-4 overflow-y-auto space-y-4 flex flex-col justify-start min-h-[180px] max-h-1/2">
               {!data?.handles?.length && (
                 <>
                   <EmptyState
@@ -198,21 +186,23 @@ export const TestFlowDialog: FC<
                 </>
               )}
             </div>
-
-            <TestFlowBottomPanel
-              events={results}
-              isRunning={isRunning}
-              entrypointNodeData={data}
-              resultNodeData={data}
-              flowError={flowError}
-              inputs={
-                data?.handles?.map((h) => ({
-                  label: h.label,
-                  value: inputs[h.label] ?? "<your-value>",
-                })) ?? []
-              }
-              flowId={flowId}
-            />
+            {/* Right Bottom Panel */}
+            <div className="grow overflow-hidden">
+              <TestFlowBottomPanel
+                events={results}
+                isRunning={isRunning}
+                entrypointNodeData={data}
+                resultNodeData={data}
+                flowError={flowError}
+                inputs={
+                  data?.handles?.map((h) => ({
+                    label: h.label,
+                    value: inputs[h.label] ?? "<your-value>",
+                  })) ?? []
+                }
+                flowId={flowId}
+              />
+            </div>
           </div>
         </div>
       </SheetContent>

@@ -11,21 +11,6 @@ export type OpenAIUserMessage = {
   content: OpenAIUserMessageContent;
 };
 
-// Later we can add support for image and audio
-// That's why we're having an object for OpenAIUserMessageContent
-//   | {
-//       type: "image_url";
-//       image_url: {
-//         url: string;
-//       };
-//     }
-//   | {
-//       type: "audio_url";
-//       input_audio: {
-//         data: string;
-//         format: "wav" | "mp3";
-//       };
-//     };
 export type OpenAIUserMessageContent = {
   type: "text";
   text: string;

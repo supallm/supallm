@@ -20,7 +20,7 @@ export class MemoryTool<T> implements Tool<T> {
   }
 
   canHandle(nodeType: NodeType): boolean {
-    return nodeType === "llm";
+    return nodeType === "chat-anthropic" || nodeType === "chat-openai";
   }
 
   async run(

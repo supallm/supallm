@@ -1,6 +1,9 @@
 import { Credential, ProviderType } from "@/core/entities/credential";
 import { CredentialService } from "@/core/interfaces";
-import { CredentialService as GenCredentialService } from "@/lib/services/gen-api";
+import {
+  ProviderType as ApiProviderType,
+  CredentialService as GenCredentialService,
+} from "@/lib/services/gen-api";
 
 export class ApiCredentialService implements CredentialService {
   constructor() {}
@@ -18,14 +21,14 @@ export class ApiCredentialService implements CredentialService {
       requestBody: {
         name: data.name,
         apiKey: data.apiKey,
-        provider: "openai",
+        provider: data.providerType as ApiProviderType,
       },
     });
 
     return {
       id,
       name: data.name,
-      providerType: "openai",
+      providerType: data.providerType,
       apiKeyPreview: data.apiKey,
       projectId: data.projectId,
     };

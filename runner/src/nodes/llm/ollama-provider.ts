@@ -1,5 +1,5 @@
 import { BaseMessage } from "@langchain/core/messages";
-import { ChatOpenAI, OpenAI } from "@langchain/openai";
+import { ChatOllama } from "@langchain/ollama";
 import { Result } from "typescript-result";
 import { CryptoService } from "../../services/secret/crypto-service";
 import { Tool, ToolContext } from "../../tools";
@@ -14,31 +14,37 @@ import {
 import { GenerateResult, LLMOptions, LLMUtils } from "./llm-utils";
 import { ModelNotFoundError, ProviderAPIError } from "./llm.errors";
 
-interface OpenAIOptions extends LLMOptions {
+interface OllamaOptions extends LLMOptions {
   temperature: number;
   maxTokens?: number;
   streaming: boolean;
   systemPrompt?: string;
+  baseUrl: string;
+  format?: "json";
 }
 
-export class OpenAIProvider implements INode {
-  type: NodeType = "chat-openai";
+export class OllamaProvider implements INode {
+  type: NodeType = "chat-ollama";
   private utils: LLMUtils;
 
   constructor() {
     this.utils = new LLMUtils(new CryptoService());
   }
 
-  private prepareOpenAIOptions(
+  private prepareOllamaOptions(
     config: LLMOptions,
     definition: NodeDefinition,
-  ): Result<OpenAIOptions, Error> {
+  ): Result<OllamaOptions, Error> {
+    if (!definition["baseUrl"]) {
+      return Result.error(new Error("baseUrl is required"));
+    }
+
     return Result.ok({
       ...config,
+      baseUrl: definition["baseUrl"],
       temperature: definition["temperature"],
-      maxTokens: definition["maxCompletionTokens"],
+      maxTokens: definition["maxTokens"],
       streaming: definition["streaming"],
-      systemPrompt: definition["developerMessage"],
     });
   }
 
@@ -62,18 +68,18 @@ export class OpenAIProvider implements INode {
 
     const { resolvedInputs, resolvedOutputs, config } =
       validateAndPrepareResult;
-    const [openaiOptions, openaiOptionsError] = this.prepareOpenAIOptions(
+    const [ollamaOptions, ollamaOptionsError] = this.prepareOllamaOptions(
       config,
       definition,
     ).toTuple();
-    if (openaiOptionsError) {
-      return Result.error(openaiOptionsError);
+    if (ollamaOptionsError) {
+      return Result.error(ollamaOptionsError);
     }
 
     const prepareMessages = await this.utils.prepareMessages(
       nodeId,
       toolContext,
-      openaiOptions.systemPrompt,
+      ollamaOptions.systemPrompt,
       resolvedInputs,
       options.sessionId,
     );
@@ -85,7 +91,7 @@ export class OpenAIProvider implements INode {
 
     const generate = await this.generateResponse(
       prepareMessagesResult,
-      openaiOptions,
+      ollamaOptions,
     );
     const [generateResult, generateError] = generate.toTuple();
     if (generateError) {
@@ -126,7 +132,7 @@ export class OpenAIProvider implements INode {
 
   private async generateResponse(
     messages: BaseMessage[],
-    options: OpenAIOptions,
+    options: OllamaOptions,
   ): Promise<GenerateResult> {
     try {
       const [model, modelError] = this.createModel(options).toTuple();
@@ -134,7 +140,7 @@ export class OpenAIProvider implements INode {
         return Result.error(modelError);
       }
 
-      if (model instanceof ChatOpenAI && options.streaming) {
+      if (options.streaming) {
         return LLMUtils.handleStreamingResponse(model, messages, (m, msgs) =>
           m.stream(msgs),
         );
@@ -149,55 +155,25 @@ export class OpenAIProvider implements INode {
   }
 
   private createModel(
-    options: OpenAIOptions,
-  ): Result<OpenAI | ChatOpenAI, ModelNotFoundError | ProviderAPIError> {
+    options: OllamaOptions,
+  ): Result<ChatOllama, ModelNotFoundError | ProviderAPIError> {
     try {
-      const isChatModel = this.isChatModel(options.model);
-      if (isChatModel) {
-        return Result.ok(
-          new ChatOpenAI({
-            modelName: options.model,
-            temperature: options.temperature,
-            maxTokens: options.maxTokens,
-            openAIApiKey: options.decryptedApiKey,
-            streaming: options.streaming,
-          }),
-        );
-      } else {
-        return Result.ok(
-          new OpenAI({
-            modelName: options.model,
-            temperature: options.temperature,
-            maxTokens: options.maxTokens,
-            openAIApiKey: options.decryptedApiKey,
-            streaming: options.streaming,
-          }),
-        );
-      }
+      return Result.ok(
+        new ChatOllama({
+          model: options.model,
+          temperature: options.temperature,
+          baseUrl: options.baseUrl,
+          streaming: options.streaming,
+        }),
+      );
     } catch (error) {
       return Result.error(
-        new ProviderAPIError(`failed to initialize openai model`),
+        new ProviderAPIError(`failed to initialize Ollama model`),
       );
     }
   }
 
   private mapApiError(error: unknown, model?: string): GenerateResult {
-    return LLMUtils.mapProviderError(error, model, "openai");
-  }
-
-  private isChatModel(model: string): boolean {
-    const chatModels = [
-      "gpt-4",
-      "gpt-4-turbo",
-      "gpt-4o",
-      "gpt-4o-mini",
-      "gpt-3.5-turbo",
-      "gpt-3.5",
-      "gpt-35-turbo",
-    ];
-
-    return chatModels.some((chatModel) =>
-      model.toLowerCase().startsWith(chatModel.toLowerCase()),
-    );
+    return LLMUtils.mapProviderError(error, model, "ollama");
   }
 }

@@ -1,5 +1,6 @@
 import { BaseHandle } from "@/components/base-handle";
 import { OpenAI } from "@/components/logos/openai";
+import { ProviderLogo } from "@/components/logos/provider-logo";
 import { cn } from "@/lib/utils";
 import { NodeProps, Position } from "@xyflow/react";
 import { Code, Flag, FolderSymlink } from "lucide-react";
@@ -36,6 +37,30 @@ const NodeHeader: FC<{ nodeType: NodeType }> = ({ nodeType }) => {
         <>
           <Flag className="w-4 h-4" />
           <span className="font-medium text-sm">Flow input</span>
+        </>
+      );
+
+    case "chat-anthropic":
+      return (
+        <>
+          <ProviderLogo name="anthropic" />
+          <span className="font-medium text-sm">Chat Anthropic</span>
+        </>
+      );
+
+    case "chat-mistral":
+      return (
+        <>
+          <ProviderLogo name="mistral" />
+          <span className="font-medium text-sm">Chat Mistral</span>
+        </>
+      );
+
+    case "chat-ollama":
+      return (
+        <>
+          <ProviderLogo name="ollama" />
+          <span className="font-medium text-sm">Chat Ollama</span>
         </>
       );
 

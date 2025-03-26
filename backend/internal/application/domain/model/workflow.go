@@ -39,9 +39,15 @@ const (
 	TextType  = "text"
 	ImageType = "image"
 	AnyType   = "any"
-
-	LLMNodeType = "llm"
 )
+
+var LLMNodeType = map[string]bool{
+	"chat-openai":    true,
+	"chat-anthropic": true,
+	"chat-gemini":    true,
+	"chat-mistral":   true,
+	"chat-ollama":    true,
+}
 
 type Workflow struct {
 	ID          WorkflowID
@@ -216,14 +222,17 @@ func (p *Project) convertBuilderToRunnerFlow(builderFlow BuilderFlow) (map[strin
 
 	// First pass: Add all nodes to the result map with their basic info
 	for _, node := range builderFlow.Nodes {
-		processor := p.getNodeProcessor(node.Type)
+		processor, err := p.getNodeProcessor(node.Type)
+		if err != nil {
+			return nil, fmt.Errorf("unable to get node processor: %w", err)
+		}
 		if processor == nil {
 			// Skip unknown node types
 			continue
 		}
 
 		if err := processor(nodes, node.ID, node, builderFlow.Edges, nodeMap); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("unable to process node: %w", err)
 		}
 	}
 
@@ -231,18 +240,18 @@ func (p *Project) convertBuilderToRunnerFlow(builderFlow BuilderFlow) (map[strin
 }
 
 // getNodeProcessor returns the appropriate processor function for a given node type
-func (p *Project) getNodeProcessor(nodeType string) func(map[string]any, string, BuilderNode, []BuilderEdge, map[string]BuilderNode) error {
-	switch nodeType {
-	case "entrypoint":
-		return p.processEntrypointNode
-	case "result":
-		return p.processResultNode
-	case "chat-openai", "llm":
-		return p.processLLMNode
-	case "code-executor":
-		return p.processCodeExecutorNode
+func (p *Project) getNodeProcessor(nodeType string) (func(map[string]any, string, BuilderNode, []BuilderEdge, map[string]BuilderNode) error, error) {
+	switch {
+	case nodeType == "entrypoint":
+		return p.processEntrypointNode, nil
+	case nodeType == "result":
+		return p.processResultNode, nil
+	case LLMNodeType[nodeType]:
+		return p.processLLMNode, nil
+	case nodeType == "code-executor":
+		return p.processCodeExecutorNode, nil
 	default:
-		return nil
+		return nil, ErrInvalidNodeError
 	}
 }
 
@@ -323,46 +332,30 @@ func (p *Project) processCodeExecutorNode(nodes map[string]any, nodeID string, n
 	return nil
 }
 
-type LLMNodeData struct {
-	CredentialID        string          `json:"credentialId"`
-	ProviderType        string          `json:"providerType"`
-	Model               string          `json:"model"`
-	Temperature         float64         `json:"temperature"`
-	MaxCompletionTokens int             `json:"maxCompletionTokens"`
-	DeveloperMessage    string          `json:"developerMessage"`
-	ImageResolution     string          `json:"imageResolution"`
-	ResponseFormat      json.RawMessage `json:"responseFormat"`
-	OutputMode          string          `json:"outputMode"`
-	WithMemory          bool            `json:"withMemory"`
-}
-
 // processLLMNode processes an LLM node
 func (p *Project) processLLMNode(nodes map[string]any, nodeID string, node BuilderNode, edges []BuilderEdge, nodeMap map[string]BuilderNode) error {
-	var data LLMNodeData
-	if err := json.Unmarshal(node.Data, &data); err != nil {
+	var nodeConfig map[string]any
+	if err := json.Unmarshal(node.Data, &nodeConfig); err != nil {
 		return fmt.Errorf("unable to unmarshal LLM node data: %w", err)
 	}
 
-	credentialID, err := uuid.Parse(data.CredentialID)
-	if err != nil {
-		return fmt.Errorf("invalid credential ID: %w", err)
+	credId := nodeConfig["credentialId"]
+	if credId != nil {
+		credentialID, err := uuid.Parse(credId.(string))
+		if err != nil {
+			return fmt.Errorf("invalid credential ID: %w", err)
+		}
+
+		apiKey, err := p.getCredentialAPIKey(credentialID)
+		if err != nil {
+			return fmt.Errorf("unable to get credential API key: %w", err)
+		}
+
+		nodeConfig["apiKey"] = apiKey
 	}
 
-	apiKey, err := p.getCredentialAPIKey(credentialID)
-	if err != nil {
-		return fmt.Errorf("unable to get credential API key: %w", err)
-	}
-
-	nodeConfig := map[string]any{
-		"type":         "llm",
-		"model":        data.Model,
-		"apiKey":       apiKey,
-		"provider":     data.ProviderType,
-		"maxTokens":    data.MaxCompletionTokens,
-		"streaming":    data.OutputMode == "text-stream",
-		"temperature":  data.Temperature,
-		"systemPrompt": data.DeveloperMessage,
-	}
+	nodeConfig["type"] = node.Type
+	nodeConfig["streaming"] = nodeConfig["outputMode"].(string) == "text-stream"
 
 	// Build inputs from edges
 	inputs := p.buildNodeInputs(node.ID, edges)

@@ -5,7 +5,7 @@ import { useAppConfigStore } from "@/core/store/app-config";
 import { useCredentialStore } from "@/core/store/credentials";
 import { useListCredentials } from "@/hooks/use-list-credentials";
 import { PlusIcon } from "lucide-react";
-import { FC } from "react";
+import { FC, useMemo } from "react";
 import { AddCredentialDialog } from "./add-credential-dialog";
 import { Button } from "./ui/button";
 import { FormControl } from "./ui/form";
@@ -34,9 +34,11 @@ export const SelectCredentials: FC<{
   const { isLoading } = useListCredentials(currentProject.id);
   const { list: items } = useCredentialStore();
 
-  const filteredItems = items.filter(
-    (item) => item.providerType === providerType,
-  );
+  const filteredItems = useMemo(() => {
+    return items.filter((item) => {
+      return item.providerType === providerType;
+    });
+  }, [items, providerType]);
 
   return (
     <Select onValueChange={onValueChange} defaultValue={defaultValue}>
@@ -55,7 +57,11 @@ export const SelectCredentials: FC<{
         {!isLoading && !filteredItems?.length && (
           <div className="p-6 text-muted-foreground text-sm flex flex-col items-center gap-2 justify-center">
             No credentials found for this provider.{" "}
-            <AddCredentialDialog isOpen={false} onOpenChange={() => {}}>
+            <AddCredentialDialog
+              isOpen={false}
+              onOpenChange={() => {}}
+              initialProviderType={providerType}
+            >
               <Button
                 size="xs"
                 variant="outline"
@@ -68,7 +74,7 @@ export const SelectCredentials: FC<{
         )}
         {!isLoading && !!filteredItems?.length && (
           <>
-            {items.map((item) => (
+            {filteredItems.map((item) => (
               <SelectItem key={item.id} value={item.id}>
                 {item.name}
               </SelectItem>
