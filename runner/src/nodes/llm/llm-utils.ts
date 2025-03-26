@@ -65,15 +65,16 @@ export class LLMUtils {
       );
     }
 
-    if (!apiKey) {
-      return Result.error(new MissingAPIKeyError("API key is required"));
-    }
+    let decryptedApiKey: string = "";
+    if (apiKey) {
+      const [decryptedApiKeyResult, decryptedApiKeyError] = this.cryptoService
+        .decrypt(apiKey)
+        .toTuple();
+      if (decryptedApiKeyError) {
+        return Result.error(decryptedApiKeyError);
+      }
 
-    const [decryptedApiKey, decryptedApiKeyError] = this.cryptoService
-      .decrypt(apiKey)
-      .toTuple();
-    if (decryptedApiKeyError) {
-      return Result.error(decryptedApiKeyError);
+      decryptedApiKey = decryptedApiKeyResult;
     }
 
     return Result.ok({
@@ -172,6 +173,10 @@ export class LLMUtils {
         },
       });
     } catch (error) {
+      logger.error(
+        `non-streaming response error from ${model} provider`,
+        error,
+      );
       return Result.error(
         new ProviderAPIError(`non-streaming response error from ${model}`),
       );

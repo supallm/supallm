@@ -36,9 +36,9 @@ export class OpenAIProvider implements INode {
     return Result.ok({
       ...config,
       temperature: definition["temperature"],
-      maxTokens: definition["maxTokens"],
+      maxTokens: definition["maxCompletionTokens"],
       streaming: definition["streaming"],
-      systemPrompt: definition["systemPrompt"],
+      systemPrompt: definition["developerMessage"],
     });
   }
 

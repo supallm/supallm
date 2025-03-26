@@ -339,18 +339,22 @@ func (p *Project) processLLMNode(nodes map[string]any, nodeID string, node Build
 		return fmt.Errorf("unable to unmarshal LLM node data: %w", err)
 	}
 
-	credentialID, err := uuid.Parse(nodeConfig["credentialId"].(string))
-	if err != nil {
-		return fmt.Errorf("invalid credential ID: %w", err)
-	}
+	credId := nodeConfig["credentialId"]
+	if credId != nil {
+		credentialID, err := uuid.Parse(credId.(string))
+		if err != nil {
+			return fmt.Errorf("invalid credential ID: %w", err)
+		}
 
-	apiKey, err := p.getCredentialAPIKey(credentialID)
-	if err != nil {
-		return fmt.Errorf("unable to get credential API key: %w", err)
+		apiKey, err := p.getCredentialAPIKey(credentialID)
+		if err != nil {
+			return fmt.Errorf("unable to get credential API key: %w", err)
+		}
+
+		nodeConfig["apiKey"] = apiKey
 	}
 
 	nodeConfig["type"] = node.Type
-	nodeConfig["apiKey"] = apiKey
 	nodeConfig["streaming"] = nodeConfig["outputMode"].(string) == "text-stream"
 
 	// Build inputs from edges
