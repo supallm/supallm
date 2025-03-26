@@ -10,7 +10,7 @@ export const ProviderCardList: FC<{
   onSelected: (provider: ProviderType) => void;
 }> = ({ onSelected }) => {
   const ProviderInfoMap: Record<
-    ProviderType,
+    Exclude<ProviderType, "ollama">,
     Omit<CredentialChoiceCardProps, "onSelected">
   > = {
     openai: {
@@ -47,12 +47,6 @@ export const ProviderCardList: FC<{
       name: "E2B",
       description: "E2B is a powerful AI provider",
       logo: <ProviderLogo name="e2b" width={30} height={30} />,
-      commingSoon: true,
-    },
-    ollama: {
-      name: "Ollama",
-      description: "Ollama is a powerful AI provider",
-      logo: <ProviderLogo name="ollama" width={30} height={30} />,
       commingSoon: true,
     },
   };

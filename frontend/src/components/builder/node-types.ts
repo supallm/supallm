@@ -6,6 +6,7 @@ export type NodeType =
   | "chat-google"
   | "chat-azure"
   | "chat-mistral"
+  | "chat-ollama"
   | "e2b-interpreter"
   | "http-request"
   | "code-executor";

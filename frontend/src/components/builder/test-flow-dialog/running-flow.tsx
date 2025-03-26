@@ -233,6 +233,7 @@ export const RunningFlow: FC<{
       "chat-google": RunningFlowNode,
       "chat-azure": RunningFlowNode,
       "chat-mistral": RunningFlowNode,
+      "chat-ollama": RunningFlowNode,
     }),
     [],
   );

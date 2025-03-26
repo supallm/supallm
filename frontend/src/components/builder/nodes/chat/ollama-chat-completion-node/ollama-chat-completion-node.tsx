@@ -1,6 +1,4 @@
 import { AppSelect } from "@/components/app-select";
-import { SelectCredentials } from "@/components/select-credentials";
-import { SelectModel } from "@/components/select-model";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -10,10 +8,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  ChatMistralNodeData,
-  MistralModels,
-} from "@/core/entities/flow/flow-mistral";
+import { Input } from "@/components/ui/input";
+import { ChatOllamaNodeData } from "@/core/entities/flow/flow-ollama";
 import { generateHandleId } from "@/lib/handles";
 import { assertUnreachable } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,13 +20,13 @@ import { z } from "zod";
 import { ProviderLogo } from "../../../../logos/provider-logo";
 import BaseNode from "../../common/base-node";
 import { BaseNodeContent } from "../../common/base-node-content";
-import { MistralChatAdvancedSettingsDialog } from "./advanced-settings-dialog";
+import { OllamaChatAdvancedSettingsDialog } from "./advanced-settings-dialog";
 
-type MistralChatCompletionNodeProps = NodeProps & {
-  data: ChatMistralNodeData;
+type OllamaChatCompletionNodeProps = NodeProps & {
+  data: ChatOllamaNodeData;
 };
 
-const MistralChatCompletionNode: FC<MistralChatCompletionNodeProps> = ({
+const OllamaChatCompletionNode: FC<OllamaChatCompletionNodeProps> = ({
   data,
   id: nodeId,
 }) => {
@@ -38,8 +34,8 @@ const MistralChatCompletionNode: FC<MistralChatCompletionNodeProps> = ({
   const updateNodeInternals = useUpdateNodeInternals();
 
   const formSchema = z.object({
-    credentialId: z.string().min(2),
-    model: z.enum(MistralModels),
+    baseUrl: z.string().url().default("http://localhost:11434"),
+    model: z.string().min(1),
     outputMode: z.enum(["text", "text-stream"]),
     advancedSettings: z.object({
       temperature: z.number().nullable(),
@@ -54,15 +50,13 @@ const MistralChatCompletionNode: FC<MistralChatCompletionNodeProps> = ({
     resolver: zodResolver(formSchema),
     mode: "onChange",
     defaultValues: {
-      credentialId: data.credentialId ?? "",
+      baseUrl: data.baseUrl ?? "http://localhost:11434",
       model: data.model ?? "",
       outputMode: data.outputMode ?? "text",
       advancedSettings: {
         temperature: data.temperature ?? null,
         systemPrompt: data.systemPrompt ?? "",
-        responseFormat: {
-          type: data.responseFormat?.type ?? "text",
-        },
+        responseFormat: data.responseFormat ?? { type: "text" },
       },
     },
   });
@@ -70,16 +64,14 @@ const MistralChatCompletionNode: FC<MistralChatCompletionNodeProps> = ({
   form.watch(() => {
     const formValues = form.getValues();
 
-    const data: ChatMistralNodeData = {
-      credentialId: formValues.credentialId,
-      providerType: "mistral",
+    const data: ChatOllamaNodeData = {
+      baseUrl: formValues.baseUrl,
+      providerType: "ollama",
       model: formValues.model,
       outputMode: formValues.outputMode,
       temperature: formValues.advancedSettings.temperature,
       systemPrompt: formValues.advancedSettings.systemPrompt,
-      responseFormat: {
-        type: "text",
-      },
+      responseFormat: formValues.advancedSettings.responseFormat,
     };
     updateNodeData(nodeId, data);
   });
@@ -111,10 +103,6 @@ const MistralChatCompletionNode: FC<MistralChatCompletionNodeProps> = ({
   }, [outputMode]);
 
   useEffect(() => {
-    /**
-     * See:
-     * https://reactflow.dev/api-reference/hooks/use-update-node-internals
-     */
     updateNodeInternals(nodeId);
   }, [nodeId, outputHandles, updateNodeInternals]);
 
@@ -131,28 +119,25 @@ const MistralChatCompletionNode: FC<MistralChatCompletionNodeProps> = ({
       ]}
       header={
         <>
-          <ProviderLogo name="mistral" />
-          <span className="font-medium text-sm">Mistral Chat Completion</span>
+          <ProviderLogo name="ollama" />
+          <span className="font-medium text-sm">Ollama Chat Completion</span>
         </>
       }
     >
       <BaseNodeContent>
         <div className="flex flex-col gap-2">
           <Form {...form}>
-            <form
-              // onChange={form.handleSubmit(onSubmit, onInvalid)}
-              className="space-y-4"
-            >
+            <form className="space-y-4">
               <FormField
                 control={form.control}
-                name="credentialId"
+                name="baseUrl"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Credentials</FormLabel>
-                    <SelectCredentials
-                      onValueChange={field.onChange}
+                    <FormLabel>Base URL</FormLabel>
+                    <Input
+                      {...field}
+                      placeholder="Ollama instance base URL"
                       defaultValue={field.value}
-                      providerType={"mistral"}
                     />
                     <FormMessage />
                   </FormItem>
@@ -164,10 +149,10 @@ const MistralChatCompletionNode: FC<MistralChatCompletionNodeProps> = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Model</FormLabel>
-                    <SelectModel
-                      onValueChange={field.onChange}
+                    <Input
+                      {...field}
+                      placeholder="Enter model name"
                       defaultValue={field.value}
-                      providerType={"mistral"}
                     />
                     <FormMessage />
                   </FormItem>
@@ -206,7 +191,7 @@ const MistralChatCompletionNode: FC<MistralChatCompletionNodeProps> = ({
                 control={form.control}
                 name="advancedSettings"
                 render={({ field }) => (
-                  <MistralChatAdvancedSettingsDialog
+                  <OllamaChatAdvancedSettingsDialog
                     data={field.value}
                     onChange={(values) => {
                       field.onChange(values);
@@ -215,7 +200,7 @@ const MistralChatCompletionNode: FC<MistralChatCompletionNodeProps> = ({
                     <Button variant="outline" size="xs" type="button">
                       Advanced settings
                     </Button>
-                  </MistralChatAdvancedSettingsDialog>
+                  </OllamaChatAdvancedSettingsDialog>
                 )}
               />
             </form>
@@ -226,4 +211,4 @@ const MistralChatCompletionNode: FC<MistralChatCompletionNodeProps> = ({
   );
 };
 
-export default memo(MistralChatCompletionNode);
+export default memo(OllamaChatCompletionNode);

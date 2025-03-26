@@ -38,6 +38,14 @@ export const availableNodes: AvailableNode[] = [
     commingSoon: false,
   },
   {
+    type: "chat-ollama",
+    name: "Ollama Chat Completion",
+    description:
+      "Use this node to send a message to an Ollama Chat Completion model",
+    logo: <ProviderLogo name="ollama" width={30} height={30} />,
+    commingSoon: false,
+  },
+  {
     type: "code-executor",
     name: "Code executor",
     description: "Run custom TypeScript in our secure sandbox",

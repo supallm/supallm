@@ -56,6 +56,14 @@ const NodeHeader: FC<{ nodeType: NodeType }> = ({ nodeType }) => {
         </>
       );
 
+    case "chat-ollama":
+      return (
+        <>
+          <ProviderLogo name="ollama" />
+          <span className="font-medium text-sm">Chat Ollama</span>
+        </>
+      );
+
     case "result":
       return (
         <>

@@ -6,6 +6,7 @@ import { NODE_WIDTH } from "@/components/builder/constants";
 import { NodeType } from "@/components/builder/node-types";
 import anthropicChatCompletionNode from "@/components/builder/nodes/chat/anthropic-chat-completion-node/anthropic-chat-completion-node";
 import mistralChatCompletionNode from "@/components/builder/nodes/chat/mistral-chat-completion-node/mistral-chat-completion-node";
+import ollamaChatCompletionNode from "@/components/builder/nodes/chat/ollama-chat-completion-node/ollama-chat-completion-node";
 import { default as openAIChatCompletionNode } from "@/components/builder/nodes/chat/openai-chat-completion-node";
 import codeExecutorNode from "@/components/builder/nodes/code/code-executor/code-executor-node";
 import entrypointNode from "@/components/builder/nodes/fixed/entrypoint-node";
@@ -151,6 +152,7 @@ const ChatFlowPage = () => {
       "chat-mistral": mistralChatCompletionNode,
       "chat-google": () => null,
       "chat-azure": () => null,
+      "chat-ollama": ollamaChatCompletionNode,
     }),
     [],
   );

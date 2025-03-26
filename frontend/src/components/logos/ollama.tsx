@@ -11,7 +11,7 @@ export const Ollama: FC<{ width: number; height: number }> = ({
       alt="Ollama"
       width={width}
       height={height}
-      className="w-6 h-6"
+      className="h-6"
     />
   );
 };
