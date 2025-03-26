@@ -125,7 +125,7 @@ const AnthropicChatCompletionNode: FC<AnthropicChatCompletionNodeProps> = ({
       ]}
       header={
         <>
-          <ProviderLogo name="openai" />
+          <ProviderLogo name="anthropic" />
           <span className="font-medium text-sm">Anthropic Chat Completion</span>
         </>
       }
