@@ -64,8 +64,8 @@ jobs:
         if: env.NEW_RELEASE == 'true'
         run: echo "VERSION=$(cat .VERSION)" >> $GITHUB_ENV
 
-      - name: Build, tag and push
-        if: env.NEW_RELEASE == 'true'
+      - name: Build, tag and push (latest)
+        if: env.NEW_RELEASE == 'true' && github.ref_name == 'main'
         env:
           VERSION: ${{ env.VERSION }}
         uses: depot/build-push-action@v1
@@ -78,3 +78,17 @@ jobs:
           tags: | 
             ghcr.io/${{ github.repository }}:latest
             ghcr.io/${{ github.repository }}:${{ env.VERSION }}
+
+
+      - name: Build, tag and push (alpha)
+        if: env.NEW_RELEASE == 'true' && github.ref_name == 'next'
+        env:
+          VERSION: ${{ env.VERSION }}
+        uses: depot/build-push-action@v1
+        with:
+          project: '616gnrr5ss'
+          token: ${{ secrets.DEPOT_PROJECT_TOKEN }}
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ghcr.io/${{ github.repository }}:${{ env.VERSION }}
