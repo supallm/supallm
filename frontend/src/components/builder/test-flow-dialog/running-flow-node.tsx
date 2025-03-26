@@ -48,6 +48,14 @@ const NodeHeader: FC<{ nodeType: NodeType }> = ({ nodeType }) => {
         </>
       );
 
+    case "chat-mistral":
+      return (
+        <>
+          <ProviderLogo name="mistral" />
+          <span className="font-medium text-sm">Chat Mistral</span>
+        </>
+      );
+
     case "result":
       return (
         <>

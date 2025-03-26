@@ -2,6 +2,7 @@
 
 import { ProviderType } from "@/core/entities/credential";
 import { AnthropicModels } from "@/core/entities/flow/flow-anthropic";
+import { MistralModels } from "@/core/entities/flow/flow-mistral";
 import { OpenAIModels } from "@/core/entities/flow/flow-openai";
 import { FC, useMemo } from "react";
 import { FormControl } from "./ui/form";
@@ -18,8 +19,9 @@ export const ProviderModels: Record<ProviderType, Readonly<string[]>> = {
   anthropic: AnthropicModels,
   google: [],
   azure: [],
-  mistral: [],
+  mistral: MistralModels,
   e2b: [],
+  ollama: [],
 };
 
 export const SelectModel: FC<{

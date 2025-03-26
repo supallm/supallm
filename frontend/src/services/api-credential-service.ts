@@ -1,6 +1,9 @@
 import { Credential, ProviderType } from "@/core/entities/credential";
 import { CredentialService } from "@/core/interfaces";
-import { CredentialService as GenCredentialService } from "@/lib/services/gen-api";
+import {
+  ProviderType as ApiProviderType,
+  CredentialService as GenCredentialService,
+} from "@/lib/services/gen-api";
 
 export class ApiCredentialService implements CredentialService {
   constructor() {}
@@ -13,16 +16,12 @@ export class ApiCredentialService implements CredentialService {
   }): Promise<Credential> {
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    if (data.providerType !== "openai" && data.providerType !== "anthropic") {
-      throw new Error("Invalid provider type");
-    }
-
     const { id } = await GenCredentialService.createCredential({
       projectId: data.projectId,
       requestBody: {
         name: data.name,
         apiKey: data.apiKey,
-        provider: data.providerType as unknown as "openai" | "anthropic",
+        provider: data.providerType as ApiProviderType,
       },
     });
 
