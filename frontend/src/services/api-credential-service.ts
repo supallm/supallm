@@ -13,19 +13,23 @@ export class ApiCredentialService implements CredentialService {
   }): Promise<Credential> {
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
+    if (data.providerType !== "openai" && data.providerType !== "anthropic") {
+      throw new Error("Invalid provider type");
+    }
+
     const { id } = await GenCredentialService.createCredential({
       projectId: data.projectId,
       requestBody: {
         name: data.name,
         apiKey: data.apiKey,
-        provider: "openai",
+        provider: data.providerType as unknown as "openai" | "anthropic",
       },
     });
 
     return {
       id,
       name: data.name,
-      providerType: "openai",
+      providerType: data.providerType,
       apiKeyPreview: data.apiKey,
       projectId: data.projectId,
     };
