@@ -43,7 +43,6 @@ const MistralChatCompletionNode: FC<MistralChatCompletionNodeProps> = ({
     outputMode: z.enum(["text", "text-stream"]),
     advancedSettings: z.object({
       temperature: z.number().nullable(),
-      systemPrompt: z.string(),
       responseFormat: z.object({
         type: z.enum(["text", "json_object"]),
       }),
@@ -59,7 +58,6 @@ const MistralChatCompletionNode: FC<MistralChatCompletionNodeProps> = ({
       outputMode: data.outputMode ?? "text",
       advancedSettings: {
         temperature: data.temperature ?? null,
-        systemPrompt: data.systemPrompt ?? "",
         responseFormat: {
           type: data.responseFormat?.type ?? "text",
         },
@@ -76,7 +74,6 @@ const MistralChatCompletionNode: FC<MistralChatCompletionNodeProps> = ({
       model: formValues.model,
       outputMode: formValues.outputMode,
       temperature: formValues.advancedSettings.temperature,
-      systemPrompt: formValues.advancedSettings.systemPrompt,
       responseFormat: {
         type: "text",
       },

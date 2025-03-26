@@ -49,7 +49,6 @@ export type ChatMistralNodeData = {
   providerType: "mistral";
   model: MistralModel;
   temperature: number | null; // optional, default 0, between 0 and 1
-  systemPrompt: string;
   outputMode: "text" | "text-stream";
   responseFormat: MistralResponseFormat;
 };
