@@ -5,6 +5,7 @@ export const ProviderTypes = [
   "azure",
   "mistral",
   "e2b",
+  "ollama",
 ] as const;
 
 export type ProviderType = (typeof ProviderTypes)[number];
@@ -24,6 +25,7 @@ export const ProviderTypeLabelMap: Record<ProviderType, string> = {
   azure: "Azure",
   mistral: "Mistral",
   e2b: "E2B",
+  ollama: "Ollama",
 };
 
 export const CredentialLabel = (name: ProviderType) => {

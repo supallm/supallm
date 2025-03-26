@@ -60,7 +60,7 @@ export const SelectCredentials: FC<{
             <AddCredentialDialog
               isOpen={false}
               onOpenChange={() => {}}
-              initialProviderType={"anthropic"}
+              initialProviderType={providerType}
             >
               <Button
                 size="xs"

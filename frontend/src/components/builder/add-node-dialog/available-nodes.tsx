@@ -30,6 +30,14 @@ export const availableNodes: AvailableNode[] = [
     commingSoon: false,
   },
   {
+    type: "chat-mistral",
+    name: "Mistral Chat Completion",
+    description:
+      "Use this node to send a message to a Mistral Chat Completion model",
+    logo: <ProviderLogo name="mistral" width={30} height={30} />,
+    commingSoon: false,
+  },
+  {
     type: "code-executor",
     name: "Code executor",
     description: "Run custom TypeScript in our secure sandbox",
