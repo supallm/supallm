@@ -17,7 +17,12 @@ import {
 import { generateHandleId } from "@/lib/handles";
 import { assertUnreachable } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { NodeProps, useReactFlow, useUpdateNodeInternals } from "@xyflow/react";
+import {
+  NodeProps,
+  Position,
+  useReactFlow,
+  useUpdateNodeInternals,
+} from "@xyflow/react";
 import { FC, memo, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -131,6 +136,12 @@ const OpenAIChatCompletionNode: FC<OpenAIChatCompletionNodeProps> = ({
           label: "Prompt",
           id: generateHandleId("text", "prompt"),
           type: "text",
+        },
+        {
+          label: "User Feedback",
+          id: generateHandleId("text", "user-feedback"),
+          type: "text",
+          position: Position.Right,
         },
       ]}
       header={

@@ -9,4 +9,8 @@ export type NodeType =
   | "chat-ollama"
   | "e2b-interpreter"
   | "http-request"
-  | "code-executor";
+  | "code-executor"
+  | "user-feedback"
+  | "local-memory"
+  | "ai-agent"
+  | "model-openai";

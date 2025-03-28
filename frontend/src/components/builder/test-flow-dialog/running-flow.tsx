@@ -226,6 +226,7 @@ export const RunningFlow: FC<{
       "chat-openai": RunningFlowNode,
       result: RunningFlowNode,
       entrypoint: RunningFlowNode,
+      "user-feedback": RunningFlowNode,
       "code-executor": RunningFlowNode,
       "e2b-interpreter": RunningFlowNode,
       "http-request": RunningFlowNode,

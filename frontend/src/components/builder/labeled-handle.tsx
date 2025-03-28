@@ -4,7 +4,16 @@ import { FC, forwardRef, HTMLAttributes, ReactNode, useMemo } from "react";
 
 import { BaseHandle } from "@/components/base-handle";
 import { TooltipWraper } from "@/components/icon-tooltip";
-import { AlignJustify, Braces, ImageIcon } from "lucide-react";
+import {
+  AlignJustify,
+  Braces,
+  BrainCircuit,
+  Database,
+  HandHelping,
+  ImageIcon,
+  ShieldCheck,
+  Wrench,
+} from "lucide-react";
 
 const flexDirections = {
   top: "flex-col",
@@ -13,7 +22,15 @@ const flexDirections = {
   left: "flex-row",
 };
 
-export type LabeledHandleType = "image" | "text" | "any";
+export type LabeledHandleType =
+  | "image"
+  | "text"
+  | "any"
+  | "memory"
+  | "ai-model"
+  | "handoffs"
+  | "tools"
+  | "guardrails";
 
 const HandleTypeIcon: FC<{ type: LabeledHandleType }> = ({
   type,
@@ -25,6 +42,16 @@ const HandleTypeIcon: FC<{ type: LabeledHandleType }> = ({
       return <AlignJustify className="w-4 h-4" />;
     case "any":
       return <Braces className="w-4 h-4" />;
+    case "memory":
+      return <Database className="w-4 h-4" />;
+    case "ai-model":
+      return <BrainCircuit className="w-4 h-4" />;
+    case "handoffs":
+      return <HandHelping className="w-4 h-4" />;
+    case "tools":
+      return <Wrench className="w-4 h-4" />;
+    case "guardrails":
+      return <ShieldCheck className="w-4 h-4" />;
     default:
       assertUnreachable(type);
   }

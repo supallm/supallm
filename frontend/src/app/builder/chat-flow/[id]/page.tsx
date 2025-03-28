@@ -4,6 +4,7 @@ import { AddNodeDialog } from "@/components/builder/add-node-dialog/add-node-dia
 import { AvailableNode } from "@/components/builder/add-node-dialog/available-nodes";
 import { NODE_WIDTH } from "@/components/builder/constants";
 import { NodeType } from "@/components/builder/node-types";
+import aiAgentNode from "@/components/builder/nodes/agent/ai-agent-node/ai-agent-node";
 import anthropicChatCompletionNode from "@/components/builder/nodes/chat/anthropic-chat-completion-node/anthropic-chat-completion-node";
 import mistralChatCompletionNode from "@/components/builder/nodes/chat/mistral-chat-completion-node/mistral-chat-completion-node";
 import ollamaChatCompletionNode from "@/components/builder/nodes/chat/ollama-chat-completion-node/ollama-chat-completion-node";
@@ -11,6 +12,9 @@ import { default as openAIChatCompletionNode } from "@/components/builder/nodes/
 import codeExecutorNode from "@/components/builder/nodes/code/code-executor/code-executor-node";
 import entrypointNode from "@/components/builder/nodes/fixed/entrypoint-node";
 import resultNode from "@/components/builder/nodes/fixed/result-node";
+import userFeedbackNode from "@/components/builder/nodes/hitl/user-feedback-node";
+import localMemoryNode from "@/components/builder/nodes/memory/local-memory-node";
+import modelOpenai from "@/components/builder/nodes/model/model-openai/model-openai";
 import httpRequestNode from "@/components/builder/nodes/utilities/http-request-node/http-request-node";
 import { TestFlowDialog } from "@/components/builder/test-flow-dialog/test-flow-dialog";
 import { Button } from "@/components/ui/button";
@@ -153,6 +157,15 @@ const ChatFlowPage = () => {
       "chat-google": () => null,
       "chat-azure": () => null,
       "chat-ollama": ollamaChatCompletionNode,
+      "user-feedback": userFeedbackNode,
+      "local-memory": localMemoryNode,
+      "ai-agent": aiAgentNode,
+      "model-openai": modelOpenai,
+      "model-anthropic": () => null,
+      "model-google": () => null,
+      "model-azure": () => null,
+      "model-mistral": () => null,
+      "model-ollama": () => null,
     }),
     [],
   );

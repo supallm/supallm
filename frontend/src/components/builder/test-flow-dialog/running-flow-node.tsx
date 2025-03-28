@@ -3,7 +3,7 @@ import { OpenAI } from "@/components/logos/openai";
 import { ProviderLogo } from "@/components/logos/provider-logo";
 import { cn } from "@/lib/utils";
 import { NodeProps, Position } from "@xyflow/react";
-import { Code, Flag, FolderSymlink } from "lucide-react";
+import { Code, Flag, FolderSymlink, UserCheck } from "lucide-react";
 import { FC, memo } from "react";
 import { NodeType } from "../node-types";
 
@@ -69,6 +69,14 @@ const NodeHeader: FC<{ nodeType: NodeType }> = ({ nodeType }) => {
         <>
           <FolderSymlink className="w-4 h-4" />
           <span className="font-medium text-sm">Flow output</span>
+        </>
+      );
+
+    case "user-feedback":
+      return (
+        <>
+          <UserCheck className="w-4 h-4" />
+          <span className="font-medium text-sm">User feedback</span>
         </>
       );
 

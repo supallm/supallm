@@ -1,5 +1,5 @@
 import { E2B } from "@/components/logos/e2b";
-import { Code, Network } from "lucide-react";
+import { Bot, Code, Database, Network, UserCheck } from "lucide-react";
 import { ReactNode } from "react";
 import { ProviderLogo } from "../../logos/provider-logo";
 import { NodeType } from "../node-types";
@@ -46,10 +46,39 @@ export const availableNodes: AvailableNode[] = [
     commingSoon: false,
   },
   {
+    type: "ai-agent",
+    name: "AI Agent",
+    description:
+      "Use this node to create an autonomous AI agent that can perform tasks",
+    logo: <Bot width={30} height={30} />,
+    commingSoon: false,
+  },
+  {
+    type: "model-openai",
+    name: "OpenAI Model",
+    description: "Connect OpenAI models to your flow",
+    logo: <ProviderLogo name="openai" width={30} height={30} />,
+    commingSoon: false,
+  },
+  {
     type: "code-executor",
     name: "Code executor",
     description: "Run custom TypeScript in our secure sandbox",
     logo: <Code width={30} height={30} />,
+    commingSoon: false,
+  },
+  {
+    type: "user-feedback",
+    name: "User feedback",
+    description: "Ask for user feedback during the flow",
+    logo: <UserCheck width={20} height={20} />,
+    commingSoon: false,
+  },
+  {
+    type: "local-memory",
+    name: "Local memory",
+    description: "Store data in the local memory",
+    logo: <Database width={20} height={20} />,
     commingSoon: false,
   },
   {
