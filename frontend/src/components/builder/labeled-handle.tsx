@@ -4,6 +4,7 @@ import { FC, forwardRef, HTMLAttributes, ReactNode, useMemo } from "react";
 
 import { BaseHandle } from "@/components/base-handle";
 import { TooltipWraper } from "@/components/icon-tooltip";
+import { parseHandleId } from "@/lib/handles";
 import {
   AlignJustify,
   Braces,
@@ -84,7 +85,8 @@ export const LabeledHandle = forwardRef<
     const connections = useNodeConnections();
 
     /**
-     * If this handle is already used as a targetHandle it means we shouldn't connect it twice.
+     * If this handle is already used as a targetHandle it means we shouldn't connect it twice
+     * except for some special cases like the agent tools node.
      */
     const isConnectable = useMemo(() => {
       if (!connections) return true;
@@ -92,6 +94,15 @@ export const LabeledHandle = forwardRef<
       const targetHandle = connections.find((c) => c.sourceHandle === props.id);
 
       if (!targetHandle) return true;
+
+      const { type: sourceHandleType } = parseHandleId(
+        targetHandle.sourceHandle!,
+      );
+      const { type: targetHandleType } = parseHandleId(props.id!);
+
+      if (sourceHandleType === "tools" && targetHandleType === "tools") {
+        return true;
+      }
 
       return false;
     }, [connections, props.id]);
