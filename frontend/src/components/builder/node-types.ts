@@ -13,4 +13,5 @@ export type NodeType =
   | "user-feedback"
   | "local-memory"
   | "ai-agent"
-  | "model-openai";
+  | "model-openai"
+  | "chat-openai-as-tool";

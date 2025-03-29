@@ -97,25 +97,11 @@ const AIAgentChatCompletionNode: FC<AIAgentChatCompletionNodeProps> = ({
           type: "ai-model",
           position: Position.Left,
         },
-      ]}
-      capabilityHandles={[
-        {
-          label: "Handoffs",
-          id: generateHandleId("handoffs", "handoffs"),
-          type: "handoffs",
-          position: Position.Right,
-        },
         {
           label: "Tools",
           id: generateHandleId("tools", "tools"),
           type: "tools",
-          position: Position.Right,
-        },
-        {
-          label: "Guardrails",
-          id: generateHandleId("guardrails", "guardrails"),
-          type: "guardrails",
-          position: Position.Right,
+          position: Position.Left,
         },
       ]}
       header={

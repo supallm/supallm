@@ -94,6 +94,14 @@ export const availableNodes: AvailableNode[] = [
   },
   {
     category: "agent-tools",
+    type: "chat-openai-as-tool",
+    name: "OpenAI LLM as tool",
+    description: "Use an OpenAI LLM model as an agent tool",
+    logo: <ProviderLogo name="openai" width={30} height={30} />,
+    commingSoon: false,
+  },
+  {
+    category: "agent-tools",
     type: "user-feedback",
     name: "User feedback",
     description: "Ask for user feedback during the flow",
