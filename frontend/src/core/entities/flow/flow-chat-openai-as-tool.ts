@@ -45,6 +45,8 @@ export type OpenAIMessage = OpenAIUserMessage | OpenAIAIAssistantMessage;
 export type ChatOpenAIAsToolNodeData = {
   credentialId: string;
   providerType: "openai";
+  description: string;
+  name: string;
   model: OpenAIModel;
   temperature: number | null;
   maxCompletionTokens: number | null;

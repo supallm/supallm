@@ -7,7 +7,9 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormSubLabel,
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import {
   ChatOpenAIAsToolNodeData,
   OpenAIModels,
@@ -38,6 +40,8 @@ const ChatOpenAIAsToolNode: FC<ChatOpenAIAsToolNodeProps> = ({
     credentialId: z.string().min(2),
     model: z.enum(OpenAIModels),
     outputMode: z.enum(["text", "text-stream"]),
+    description: z.string(),
+    name: z.string(),
     advancedSettings: z.object({
       temperature: z.number().nullable(),
       maxCompletionTokens: z.number().nullable(),
@@ -55,7 +59,8 @@ const ChatOpenAIAsToolNode: FC<ChatOpenAIAsToolNodeProps> = ({
     defaultValues: {
       credentialId: data.credentialId ?? "",
       model: data.model ?? "",
-      outputMode: data.outputMode ?? "text",
+      description: data.description ?? "",
+      name: data.name ?? "",
       advancedSettings: {
         temperature: data.temperature ?? null,
         maxCompletionTokens: data.maxCompletionTokens ?? null,
@@ -72,6 +77,8 @@ const ChatOpenAIAsToolNode: FC<ChatOpenAIAsToolNodeProps> = ({
     const formValues = form.getValues();
 
     const data: ChatOpenAIAsToolNodeData = {
+      name: formValues.name,
+      description: formValues.description,
       credentialId: formValues.credentialId,
       providerType: "openai",
       model: formValues.model,
@@ -121,6 +128,35 @@ const ChatOpenAIAsToolNode: FC<ChatOpenAIAsToolNodeProps> = ({
               // onChange={form.handleSubmit(onSubmit, onInvalid)}
               className="space-y-4"
             >
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
+                    <Input placeholder="Text Summarizer" {...field} />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <Input
+                      placeholder="You can use this tool when..."
+                      {...field}
+                    />
+                    <FormSubLabel>
+                      Explain when this tool can be used and what it can
+                      achieve.
+                    </FormSubLabel>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="credentialId"
