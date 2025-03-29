@@ -114,7 +114,7 @@ export const availableNodes: AvailableNode[] = [
     name: "Code interpreter by E2B",
     description: "Use this node to run custom code",
     logo: <E2B width={10} height={10} />,
-    commingSoon: true,
+    commingSoon: false,
   },
   {
     category: "agent-tools",

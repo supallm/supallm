@@ -39,7 +39,7 @@ export const AddNodeDialog: FC<
   const filteredNodesByCategory = useMemo(() => {
     const byCategory = new Map<NodeCategory, AvailableNode[]>();
 
-    for (const node of availableNodes) {
+    for (const node of filteredNodes) {
       if (!byCategory.has(node.category)) {
         byCategory.set(node.category, []);
       }
@@ -62,7 +62,7 @@ export const AddNodeDialog: FC<
     });
 
     return byCategorySorted;
-  }, [search]);
+  }, [filteredNodes]);
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>

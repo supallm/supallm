@@ -79,7 +79,7 @@ const BaseNode: FC<PropsWithChildren<BaseNodeProps>> = ({
    */
   useEffect(() => {
     updateNodeInternals(nodeId);
-  }, [nodeId, updateNodeInternals, inputHandles, outputHandles]);
+  }, [nodeId, updateNodeInternals, inputHandles, outputHandles, configHandles]);
 
   useEffect(() => {
     updateNodeInternals(nodeId);
@@ -102,20 +102,31 @@ const BaseNode: FC<PropsWithChildren<BaseNodeProps>> = ({
 
     const ghostEdges: Edge[] = [];
 
+    // Important:
+    // We consider a config edge and an input edge as an ingoing edge.
     ingoingEdges.forEach((edge) => {
-      const isGhostEdge = !inputHandles.find(
-        (input) => input.id === edge.sourceHandle,
-      );
+      const isGhostEdge =
+        !inputHandles.find((input) => input.id === edge.sourceHandle) &&
+        !configHandles.find((config) => config.id === edge.sourceHandle) &&
+        !capabilityHandles.find(
+          (capability) => capability.id === edge.sourceHandle,
+        );
+
+      console.log("isGhostEdge", isGhostEdge, edge);
 
       if (isGhostEdge) {
         ghostEdges.push(edge);
       }
     });
 
+    // Important:
+    // We consider a capability edge and an output edge as an outgoing edge.
     outgoingEdges.forEach((edge) => {
-      const isGhostEdge = !outputHandles.find(
-        (output) => output.id === edge.targetHandle,
-      );
+      const isGhostEdge =
+        !outputHandles.find((output) => output.id === edge.targetHandle) &&
+        !capabilityHandles.find(
+          (capability) => capability.id === edge.targetHandle,
+        );
 
       if (isGhostEdge) {
         ghostEdges.push(edge);
