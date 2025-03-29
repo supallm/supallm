@@ -4,7 +4,25 @@ import { ReactNode } from "react";
 import { ProviderLogo } from "../../logos/provider-logo";
 import { NodeType } from "../node-types";
 
+export type NodeCategory =
+  | "chat"
+  | "code"
+  | "ai-agent"
+  | "agent-model"
+  | "agent-memory"
+  | "agent-tools";
+
+export const NodeCategoryLabels: Record<NodeCategory, string> = {
+  "ai-agent": "AI Agent",
+  "agent-model": "AI Agent Model",
+  "agent-memory": "AI Agent Memory",
+  "agent-tools": "AI Agent Tools",
+  chat: "Chat",
+  code: "Code",
+} as const;
+
 export type AvailableNode = {
+  category: NodeCategory;
   type: NodeType;
   name: string;
   description: string;
@@ -14,6 +32,7 @@ export type AvailableNode = {
 
 export const availableNodes: AvailableNode[] = [
   {
+    category: "chat",
     type: "chat-openai",
     name: "OpenAI Chat Completion",
     description:
@@ -22,6 +41,7 @@ export const availableNodes: AvailableNode[] = [
     commingSoon: false,
   },
   {
+    category: "chat",
     type: "chat-anthropic",
     name: "Anthropic Chat Completion",
     description:
@@ -30,6 +50,7 @@ export const availableNodes: AvailableNode[] = [
     commingSoon: false,
   },
   {
+    category: "chat",
     type: "chat-mistral",
     name: "Mistral Chat Completion",
     description:
@@ -38,6 +59,7 @@ export const availableNodes: AvailableNode[] = [
     commingSoon: false,
   },
   {
+    category: "chat",
     type: "chat-ollama",
     name: "Ollama Chat Completion",
     description:
@@ -46,6 +68,7 @@ export const availableNodes: AvailableNode[] = [
     commingSoon: false,
   },
   {
+    category: "ai-agent",
     type: "ai-agent",
     name: "AI Agent",
     description:
@@ -54,6 +77,7 @@ export const availableNodes: AvailableNode[] = [
     commingSoon: false,
   },
   {
+    category: "agent-model",
     type: "model-openai",
     name: "OpenAI Model",
     description: "Connect OpenAI models to your flow",
@@ -61,6 +85,7 @@ export const availableNodes: AvailableNode[] = [
     commingSoon: false,
   },
   {
+    category: "code",
     type: "code-executor",
     name: "Code executor",
     description: "Run custom TypeScript in our secure sandbox",
@@ -68,6 +93,7 @@ export const availableNodes: AvailableNode[] = [
     commingSoon: false,
   },
   {
+    category: "agent-tools",
     type: "user-feedback",
     name: "User feedback",
     description: "Ask for user feedback during the flow",
@@ -75,6 +101,7 @@ export const availableNodes: AvailableNode[] = [
     commingSoon: false,
   },
   {
+    category: "agent-memory",
     type: "local-memory",
     name: "Local memory",
     description: "Store data in the local memory",
@@ -82,6 +109,7 @@ export const availableNodes: AvailableNode[] = [
     commingSoon: false,
   },
   {
+    category: "agent-tools",
     type: "e2b-interpreter",
     name: "Code interpreter by E2B",
     description: "Use this node to run custom code",
@@ -89,6 +117,7 @@ export const availableNodes: AvailableNode[] = [
     commingSoon: true,
   },
   {
+    category: "agent-tools",
     type: "http-request",
     name: "HTTP Request",
     description: "Trigger an HTTP endpoint in your AI flow",
@@ -96,6 +125,7 @@ export const availableNodes: AvailableNode[] = [
     commingSoon: true,
   },
   {
+    category: "chat",
     type: "chat-google",
     name: "Google Chat Completion",
     description:
@@ -104,6 +134,7 @@ export const availableNodes: AvailableNode[] = [
     commingSoon: true,
   },
   {
+    category: "chat",
     type: "chat-azure",
     name: "Azure Chat Completion",
     description:

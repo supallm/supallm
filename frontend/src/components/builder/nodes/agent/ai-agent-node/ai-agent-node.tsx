@@ -57,7 +57,7 @@ const AIAgentChatCompletionNode: FC<AIAgentChatCompletionNodeProps> = ({
   const outputHandles = useMemo(() => {
     return [
       {
-        label: "Response stream",
+        label: "Response",
         id: generateHandleId("text", "response"),
         type: "text",
       } as const,
@@ -76,6 +76,7 @@ const AIAgentChatCompletionNode: FC<AIAgentChatCompletionNodeProps> = ({
     <BaseNode
       nodeId={nodeId}
       outputHandles={outputHandles}
+      outputLabel="Final Result"
       inputHandles={[
         {
           label: "Prompt",
