@@ -1,4 +1,5 @@
 import { Result } from "typescript-result";
+import { Agent } from "../../nodes/agent/agent";
 import { EntrypointNode } from "../../nodes/base/entrypoint-node";
 import { ResultNode } from "../../nodes/base/result-node";
 import { CodeExecutorNode } from "../../nodes/code-executors/code-executor-node";
@@ -17,9 +18,8 @@ import {
   NodeOutput,
   NodeType,
 } from "../../nodes/types";
-import { Tool } from "../../tools";
+import { logger } from "../../utils/logger";
 import { LLMMemoryService } from "../llm-memory/llm-memory.interface";
-
 export class NodeManager {
   private nodes: Map<NodeType, INode> = new Map();
 
@@ -35,9 +35,11 @@ export class NodeManager {
     this.registerNode(new EntrypointNode());
     this.registerNode(new ResultNode());
     this.registerNode(new CodeExecutorNode());
+    this.registerNode(new Agent());
   }
 
   private registerNode(node: INode): void {
+    logger.info(`registering node: ${node.type}`);
     this.nodes.set(node.type, node);
   }
 
@@ -53,7 +55,6 @@ export class NodeManager {
     nodeId: string,
     definition: NodeDefinition,
     inputs: NodeInput,
-    tools: Record<string, Tool>,
     options: NodeOptions,
   ): Promise<Result<NodeOutput, Error>> {
     const nodeType = definition.type;
@@ -63,12 +64,6 @@ export class NodeManager {
       return Result.error(new Error(`unsupported node type: ${nodeType}`));
     }
 
-    return nodeImplementation.execute(
-      nodeId,
-      definition,
-      inputs,
-      tools,
-      options,
-    );
+    return nodeImplementation.execute(nodeId, definition, inputs, options);
   }
 }

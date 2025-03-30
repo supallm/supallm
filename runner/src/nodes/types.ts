@@ -1,5 +1,5 @@
 import { Result } from "typescript-result";
-import { Tool } from "../tools";
+import { ToolConfig } from "../tools/tool.interface";
 
 type LLMProvider =
   | "chat-openai"
@@ -10,7 +10,14 @@ type LLMProvider =
   | "chat-deepseek"
   | "chat-ollama";
 
-export type NodeType = LLMProvider | "entrypoint" | "result" | "code-executor";
+export type NodeType =
+  | LLMProvider
+  | "entrypoint"
+  | "result"
+  | "code-executor"
+  | "agent";
+
+export type MemoryType = "redis" | "supallm";
 
 export type NodeIOType = "text" | "image" | "any";
 
@@ -28,11 +35,18 @@ export interface NodeOutputDef {
   result_key?: string;
 }
 
+export interface MemoryConfig {
+  type: MemoryType;
+  [key: string]: any;
+}
+
 export interface NodeDefinition {
   type: NodeType;
   inputs: Record<string, NodeInputDef>;
   outputs: Record<string, NodeOutputDef>;
-  [key: string]: any; // for properties specific to each node type
+  tools: ToolConfig[];
+  memory: MemoryConfig;
+  [key: string]: any;
 }
 
 export type NodeResultCallback = (
@@ -59,7 +73,6 @@ export interface INode {
     nodeId: string,
     definition: NodeDefinition,
     inputs: NodeInput,
-    tools: Record<string, Tool>,
     options: NodeOptions,
   ): Promise<Result<NodeOutput, Error>>;
 }

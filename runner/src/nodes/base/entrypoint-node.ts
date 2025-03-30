@@ -1,5 +1,4 @@
 import { Result } from "typescript-result";
-import { Tool } from "../../tools";
 import {
   INode,
   NodeDefinition,
@@ -19,7 +18,6 @@ export class EntrypointNode implements INode {
     _nodeId: string,
     _definition: NodeDefinition,
     inputs: NodeInput,
-    _tools: Record<string, Tool>,
     _options: NodeOptions,
   ): Promise<Result<NodeOutput, Error>> {
     // entrypoint node is the first node to be executed

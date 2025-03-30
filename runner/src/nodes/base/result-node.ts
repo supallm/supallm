@@ -1,5 +1,4 @@
 import { Result } from "typescript-result";
-import { Tool } from "../../tools";
 import {
   INode,
   NodeDefinition,
@@ -19,7 +18,6 @@ export class ResultNode implements INode {
     _nodeId: string,
     _definition: NodeDefinition,
     inputs: NodeInput,
-    _tools: Record<string, Tool>,
     _options: NodeOptions,
   ): Promise<Result<NodeOutput, Error>> {
     // result node is the last node to be executed

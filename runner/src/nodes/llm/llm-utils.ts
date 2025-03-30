@@ -1,12 +1,10 @@
 import {
-  AIMessage,
   BaseMessage,
   HumanMessage,
   SystemMessage,
 } from "@langchain/core/messages";
 import { Result } from "typescript-result";
 import { CryptoService } from "../../services/secret/crypto-service";
-import { ToolContext } from "../../tools";
 import { logger } from "../../utils/logger";
 import { NodeDefinition, NodeInput, NodeOutput, NodeOutputDef } from "../types";
 import {
@@ -88,41 +86,10 @@ export class LLMUtils {
   }
 
   async prepareMessages(
-    nodeId: string,
-    toolContext: ToolContext,
     systemPrompt: string | undefined,
     inputs: LLMNodeInputs,
-    sessionId: string,
   ): Promise<Result<BaseMessage[], LLMExecutionError>> {
-    const memoryResult = await toolContext.run<BaseMessage[]>(
-      "memory",
-      "load",
-      {
-        sessionId,
-        nodeId,
-      },
-    );
-    const [loadResult, _loadError] = memoryResult.toTuple();
-
-    return this.createMessagesFromInputs(
-      systemPrompt,
-      inputs,
-      loadResult ?? [],
-    );
-  }
-
-  async appendToMemory(
-    toolContext: ToolContext,
-    nodeId: string,
-    sessionId: string,
-    prompt: string,
-    response: string,
-  ): Promise<void> {
-    await toolContext.run("memory", "append", {
-      nodeId,
-      sessionId,
-      messages: [new HumanMessage(prompt), new AIMessage(response)],
-    });
+    return this.createMessagesFromInputs(systemPrompt, inputs);
   }
 
   static async handleStreamingResponse<T>(
@@ -245,16 +212,11 @@ export class LLMUtils {
   private createMessagesFromInputs(
     systemPrompt: string | undefined,
     inputs: LLMNodeInputs,
-    memoryMessages: BaseMessage[],
   ): Result<BaseMessage[], LLMExecutionError> {
     const messages: BaseMessage[] = [];
 
     if (systemPrompt) {
       messages.push(new SystemMessage(systemPrompt));
-    }
-
-    if (memoryMessages.length > 0) {
-      messages.push(...memoryMessages);
     }
 
     messages.push(new HumanMessage(inputs.prompt));

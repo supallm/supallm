@@ -1,5 +1,4 @@
 import { Result } from "typescript-result";
-import { Tool } from "../../tools";
 import {
   INode,
   NodeDefinition,
@@ -27,7 +26,6 @@ export class CodeExecutorNode implements INode {
     nodeId: string,
     definition: NodeDefinition,
     inputs: NodeInput,
-    _tools: Record<string, Tool>,
     options: NodeOptions,
   ): Promise<Result<NodeOutput, Error>> {
     try {

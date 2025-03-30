@@ -18,7 +18,7 @@ api:
 
 runner:
 	@echo [ starting runner... ]
-	@docker compose -f docker-compose.dev.yml up supallm_runner
+	@docker compose -f docker-compose.dev.yml up supallm_runner --build
 
 frontend:
 	@echo [ starting frontend... ]

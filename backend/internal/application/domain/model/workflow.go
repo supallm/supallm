@@ -251,7 +251,7 @@ func (p *Project) getNodeProcessor(nodeType string) (func(map[string]any, string
 	case nodeType == "code-executor":
 		return p.processCodeExecutorNode, nil
 	default:
-		return nil, ErrInvalidNodeError
+		return nil, nil
 	}
 }
 

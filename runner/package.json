@@ -24,6 +24,7 @@
     "@langchain/deepseek": "^0.0.1",
     "@langchain/google-genai": "^0.2.0",
     "@langchain/groq": "^0.2.0",
+    "@langchain/langgraph": "^0.2.61",
     "@langchain/mistralai": "^0.2.0",
     "@langchain/ollama": "^0.2.0",
     "@langchain/openai": "^0.4.4",
@@ -36,7 +37,7 @@
     "typescript-result": "^3.1.1",
     "uuid": "^11.1.0",
     "winston": "^3.8.2",
-    "zod": "^3.21.4"
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@types/jest": "^29.5.0",

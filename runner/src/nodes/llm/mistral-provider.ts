@@ -2,7 +2,6 @@ import { BaseMessage } from "@langchain/core/messages";
 import { ChatMistralAI } from "@langchain/mistralai";
 import { Result } from "typescript-result";
 import { CryptoService } from "../../services/secret/crypto-service";
-import { Tool, ToolContext } from "../../tools";
 import {
   INode,
   NodeDefinition,
@@ -44,10 +43,8 @@ export class MistralProvider implements INode {
     nodeId: string,
     definition: NodeDefinition,
     inputs: NodeInput,
-    tools: Record<string, Tool>,
     options: NodeOptions,
   ): Promise<Result<NodeOutput, Error>> {
-    const toolContext = new ToolContext(this.type, tools);
     const validateAndPrepare = await this.utils.validateAndPrepare(
       definition,
       inputs,
@@ -69,11 +66,8 @@ export class MistralProvider implements INode {
     }
 
     const prepareMessages = await this.utils.prepareMessages(
-      nodeId,
-      toolContext,
       undefined,
       resolvedInputs,
-      options.sessionId,
     );
     const [prepareMessagesResult, prepareMessagesError] =
       prepareMessages.toTuple();
@@ -107,16 +101,6 @@ export class MistralProvider implements INode {
         }
         fullResponse += chunkContent;
       }
-    }
-
-    if (fullResponse) {
-      await this.utils.appendToMemory(
-        toolContext,
-        nodeId,
-        options.sessionId,
-        resolvedInputs.prompt,
-        fullResponse,
-      );
     }
 
     return Result.ok({ response: fullResponse });
