@@ -2,7 +2,7 @@ import { BaseMessage } from "@langchain/core/messages";
 import { Result } from "typescript-result";
 import { z } from "zod";
 
-export type ToolType = "sentiment" | "discord_notifier";
+export type ToolType = "sentiment" | "discord_notifier" | "http_request";
 
 export type MemoryToolParams = {
   sessionId: string;
@@ -16,6 +16,13 @@ export type CalculatorToolParams = {
 
 export type SentimentToolParams = {
   input: string;
+};
+
+export type HttpToolParams = {
+  url: string;
+  method: string;
+  body?: string;
+  headers?: Record<string, string>;
 };
 
 export interface DiscordNotifierToolParams {
@@ -55,18 +62,20 @@ export type MemoryToolOutput = BaseMessage[] | null;
 export type CalculatorToolOutput = string;
 export type SentimentToolOutput = string;
 export type DiscordNotifierToolOutput = string;
-
+export type HttpToolOutput = string;
 export type Params =
   | MemoryToolParams
   | CalculatorToolParams
   | SentimentToolParams
-  | DiscordNotifierToolParams;
+  | DiscordNotifierToolParams
+  | HttpToolParams;
 
 export type RunOutput =
   | MemoryToolOutput
   | CalculatorToolOutput
   | SentimentToolOutput
-  | DiscordNotifierToolOutput;
+  | DiscordNotifierToolOutput
+  | HttpToolOutput;
 
 export interface ToolConfig {
   name: string;
