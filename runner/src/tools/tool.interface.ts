@@ -1,28 +1,18 @@
-import { BaseMessage } from "@langchain/core/messages";
 import { Result } from "typescript-result";
 import { z } from "zod";
 
-export type ToolType = "sentiment" | "discord_notifier" | "http_request";
+export type ToolType =
+  | "openai_completion"
+  | "discord_notifier"
+  | "http_request";
 
-export type MemoryToolParams = {
-  sessionId: string;
-  nodeId: string;
-  messages?: BaseMessage[];
-};
-
-export type CalculatorToolParams = {
-  input: string;
-};
-
-export type SentimentToolParams = {
+export type OpenAICompletionToolParams = {
   input: string;
 };
 
 export type HttpToolParams = {
-  url: string;
   method: string;
   body?: string;
-  headers?: Record<string, string>;
 };
 
 export interface DiscordNotifierToolParams {
@@ -58,40 +48,47 @@ export interface DiscordNotifierToolParams {
   }[];
 }
 
-export type MemoryToolOutput = BaseMessage[] | null;
-export type CalculatorToolOutput = string;
-export type SentimentToolOutput = string;
-export type DiscordNotifierToolOutput = string;
-export type HttpToolOutput = string;
-export type Params =
-  | MemoryToolParams
-  | CalculatorToolParams
-  | SentimentToolParams
-  | DiscordNotifierToolParams
-  | HttpToolParams;
-
-export type RunOutput =
-  | MemoryToolOutput
-  | CalculatorToolOutput
-  | SentimentToolOutput
-  | DiscordNotifierToolOutput
-  | HttpToolOutput;
-
-export interface ToolConfig {
+type BaseConfig = {
   name: string;
-  type: ToolType;
   description: string;
-  instructions?: string;
-  responseFormat?: {
-    type: string;
-  };
-  [key: string]: any;
+  responseFormat?: z.ZodSchema;
+  type: ToolType;
+};
+
+export interface DiscordConfig extends BaseConfig {
+  type: "discord_notifier";
+  webhookUrl: string;
 }
 
-export interface Tool<T = RunOutput> {
-  name: string;
-  type: ToolType;
-  description: string;
-  schema: z.ZodSchema;
-  run(params: Params): Promise<Result<T, Error>>;
+export interface HttpConfig extends BaseConfig {
+  type: "http_request";
+  headers: Record<string, string>;
+  url: string;
+}
+
+export interface OpenAICompletionConfig extends BaseConfig {
+  type: "openai_completion";
+  model: string;
+  apiKey: string;
+  temperature?: number;
+  maxTokens?: number;
+  systemPrompt?: string;
+}
+
+export type ToolConfig = DiscordConfig | HttpConfig | OpenAICompletionConfig;
+
+export type ToolParamsMap = {
+  discord_notifier: DiscordNotifierToolParams;
+  http_request: HttpToolParams;
+  openai_completion: OpenAICompletionToolParams;
+};
+
+export type ToolOutput = string;
+
+export interface Tool<T extends ToolType = ToolType> {
+  readonly type: T;
+  readonly name: string;
+  readonly description: string;
+  readonly schema: z.ZodSchema;
+  run(params: ToolParamsMap[T]): Promise<Result<ToolOutput, Error>>;
 }

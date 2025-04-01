@@ -1,23 +1,23 @@
 import { Result } from "typescript-result";
 import { z } from "zod";
 import {
-  DiscordNotifierToolOutput,
+  DiscordConfig,
   DiscordNotifierToolParams,
   Tool,
-  ToolConfig,
-  ToolType,
+  ToolOutput,
 } from "./tool.interface";
 
 const defaultDescription =
   "Send notifications to Discord using webhooks. You can send simple messages or rich embeds.";
 const defaultName = "discord_notifier";
 
-export class DiscordNotifierTool implements Tool<DiscordNotifierToolOutput> {
-  type: ToolType = "discord_notifier";
-  name: string;
-  description: string;
+export class DiscordNotifierTool implements Tool<"discord_notifier"> {
+  readonly type = "discord_notifier";
+  readonly name: string;
+  readonly description: string;
+  private webhookUrl: string;
 
-  schema = z.object({
+  readonly schema = z.object({
     content: z.string().optional().describe("Simple text message content"),
     username: z.string().optional().describe("Override the webhook's username"),
     avatar_url: z.string().optional().describe("Override the webhook's avatar"),
@@ -54,16 +54,17 @@ export class DiscordNotifierTool implements Tool<DiscordNotifierToolOutput> {
       .optional(),
   });
 
-  constructor(private config: ToolConfig) {
+  constructor(config: DiscordConfig) {
     this.name = config.name || defaultName;
     this.description = config.description || defaultDescription;
+    this.webhookUrl = config.webhookUrl;
   }
 
   async run(
     params: DiscordNotifierToolParams,
-  ): Promise<Result<DiscordNotifierToolOutput, Error>> {
+  ): Promise<Result<ToolOutput, Error>> {
     try {
-      const response = await fetch(this.config["webhookUrl"], {
+      const response = await fetch(this.webhookUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

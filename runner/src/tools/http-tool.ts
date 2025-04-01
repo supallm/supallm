@@ -1,52 +1,43 @@
 import { Result } from "typescript-result";
 import { z } from "zod";
-import {
-  HttpToolOutput,
-  HttpToolParams,
-  Tool,
-  ToolConfig,
-  ToolType,
-} from "./tool.interface";
+import { HttpConfig, HttpToolParams, Tool, ToolOutput } from "./tool.interface";
 
 const defaultDescription =
   "Execute HTTP requests. You can send GET, POST, PUT, DELETE, PATCH, etc. requests to any URL.";
 const defaultName = "http";
 
-export class HttpTool implements Tool<HttpToolOutput> {
-  type: ToolType = "http_request";
+export class HttpTool implements Tool<"http_request"> {
+  readonly type = "http_request";
+  readonly name: string;
+  readonly description: string;
   private url: string;
+  private headers: Record<string, string>;
 
-  name: string;
-  description: string;
-
-  schema = z.object({
-    url: z.string().describe("The URL to send the request to"),
+  readonly schema = z.object({
     method: z
       .enum(["GET", "POST", "PUT", "DELETE", "PATCH"])
       .describe("The HTTP method to use"),
-    headers: z
-      .record(z.string(), z.string())
-      .optional()
-      .describe("Additional headers to send with the request"),
     body: z.string().optional().describe("The body of the request"),
   });
 
-  constructor(config: ToolConfig) {
+  constructor(config: HttpConfig) {
     this.name = config.name || defaultName;
     this.description = config.description || defaultDescription;
-    this.url = config["url"];
+    this.url = config.url;
+    this.headers = config.headers;
+
     if (!this.url) {
       throw new Error("URL is required");
     }
   }
 
-  async run(params: HttpToolParams): Promise<Result<HttpToolOutput, Error>> {
+  async run(params: HttpToolParams): Promise<Result<ToolOutput, Error>> {
     try {
       const response = await fetch(this.url, {
         method: params.method,
         headers: {
           "Content-Type": "application/json",
-          ...params.headers,
+          ...this.headers,
         },
         body: params.body,
       });

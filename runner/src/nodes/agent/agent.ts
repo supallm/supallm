@@ -99,10 +99,7 @@ export class Agent implements INode {
     tools: ToolConfig[],
   ): DynamicStructuredTool<any>[] {
     return tools.map((toolConfig) => {
-      const [tool, toolError] = ToolRegistry.create(
-        toolConfig.type,
-        toolConfig,
-      ).toTuple();
+      const [tool, toolError] = ToolRegistry.create(toolConfig).toTuple();
       if (toolError) {
         throw toolError;
       }
