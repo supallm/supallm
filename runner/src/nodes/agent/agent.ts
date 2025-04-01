@@ -10,6 +10,7 @@ import { ToolNode } from "@langchain/langgraph/prebuilt";
 import { ChatOpenAI } from "@langchain/openai";
 import { Result } from "typescript-result";
 import { z } from "zod";
+import { MemoryRegistry } from "../../memory/memory-registry";
 import { CryptoService } from "../../services/secret/crypto-service";
 import { ToolConfig } from "../../tools";
 import { ToolRegistry } from "../../tools/tool-registry";
@@ -21,6 +22,8 @@ import {
   NodeOutput,
   NodeType,
 } from "../types";
+
+const defaultInstructions = "You are a helpful AI assistant.";
 
 export class Agent implements INode {
   type: NodeType = "agent";
@@ -43,10 +46,20 @@ export class Agent implements INode {
       }
 
       const langchainTools = this.convertToolsToLangChainFormat(
+        nodeId,
         definition.tools,
+        options,
       );
       const toolNode = new ToolNode(langchainTools);
       const model = llm.bindTools(langchainTools);
+
+      // Get memory instance from registry
+      const [memory, memoryError] = MemoryRegistry.getInstance()
+        .create(definition.memory || { type: "none" })
+        .toTuple();
+      if (memoryError) {
+        return Result.error(memoryError);
+      }
 
       function shouldContinue({ messages }: typeof MessagesAnnotation.State) {
         const lastMessage = messages[messages.length - 1] as AIMessage;
@@ -57,8 +70,27 @@ export class Agent implements INode {
       }
 
       async function callModel(state: typeof MessagesAnnotation.State) {
-        const response = await model.invoke(state.messages);
-        return { messages: [response] };
+        if (!memory) {
+          throw new Error("memory instance not initialized");
+        }
+
+        // Load messages from memory
+        const [messages, loadError] = (
+          await memory.getMessages(options.sessionId, nodeId)
+        ).toTuple();
+        if (loadError) {
+          throw loadError;
+        }
+
+        const allMessages = [...state.messages, ...messages];
+        const response = await model.invoke(allMessages);
+
+        // Save response to memory
+        await memory.addMessages(options.sessionId, nodeId, [response]);
+
+        return {
+          messages: [...state.messages, response],
+        };
       }
 
       const workflow = new StateGraph(MessagesAnnotation)
@@ -71,9 +103,7 @@ export class Agent implements INode {
       const app = workflow.compile();
       const finalState = await app.invoke({
         messages: [
-          new SystemMessage(
-            definition["instructions"] || "You are a helpful AI assistant.",
-          ),
+          new SystemMessage(definition["instructions"] || defaultInstructions),
           new HumanMessage(inputs["prompt"]),
         ],
       });
@@ -91,15 +121,21 @@ export class Agent implements INode {
       );
       return Result.ok({ response: finalResponse });
     } catch (error) {
-      return Result.error(new Error(`Agent execution failed: ${error}`));
+      return Result.error(new Error(`agent execution failed: ${error}`));
     }
   }
 
   private convertToolsToLangChainFormat(
+    nodeId: string,
     tools: ToolConfig[],
+    options: NodeOptions,
   ): DynamicStructuredTool<any>[] {
     return tools.map((toolConfig) => {
-      const [tool, toolError] = ToolRegistry.create(toolConfig).toTuple();
+      const [tool, toolError] = ToolRegistry.create(toolConfig, {
+        nodeId,
+        sessionId: options.sessionId,
+        onNodeResult: options.onNodeResult,
+      }).toTuple();
       if (toolError) {
         throw toolError;
       }
@@ -122,22 +158,23 @@ export class Agent implements INode {
   private createLLM(
     definition: NodeDefinition,
   ): Result<ChatOpenAI | ChatAnthropic, Error> {
-    let apiKey = definition["apiKey"];
-    if (apiKey) {
-      const [decryptedApiKeyResult, decryptedApiKeyError] = this.cryptoService
-        .decrypt(apiKey)
-        .toTuple();
-      if (decryptedApiKeyError) {
-        return Result.error(decryptedApiKeyError);
-      }
-      apiKey = decryptedApiKeyResult;
+    const [apiKey, decryptedApiKeyError] = this.cryptoService
+      .decrypt(definition["apiKey"])
+      .toTuple();
+    if (decryptedApiKeyError) {
+      return Result.error(decryptedApiKeyError);
+    }
+
+    let model = definition["model"];
+    if (!model) {
+      return Result.error(new Error("No model provided"));
     }
 
     switch (definition["provider"]) {
       case "openai":
         return Result.ok(
           new ChatOpenAI({
-            modelName: definition["model"],
+            modelName: model,
             temperature: 0,
             openAIApiKey: apiKey,
           }),
@@ -145,7 +182,7 @@ export class Agent implements INode {
       case "anthropic":
         return Result.ok(
           new ChatAnthropic({
-            modelName: definition["model"],
+            modelName: model,
             temperature: 0,
             anthropicApiKey: apiKey,
           }),

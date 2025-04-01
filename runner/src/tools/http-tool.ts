@@ -1,6 +1,6 @@
 import { Result } from "typescript-result";
 import { z } from "zod";
-import { HttpConfig, HttpToolParams, Tool, ToolOutput } from "./tool.interface";
+import { HttpConfig, Tool, ToolOutput } from "./tool.interface";
 
 const defaultDescription =
   "Execute HTTP requests. You can send GET, POST, PUT, DELETE, PATCH, etc. requests to any URL.";
@@ -31,7 +31,9 @@ export class HttpTool implements Tool<"http_request"> {
     }
   }
 
-  async run(params: HttpToolParams): Promise<Result<ToolOutput, Error>> {
+  async run(
+    params: z.infer<typeof this.schema>,
+  ): Promise<Result<ToolOutput, Error>> {
     try {
       const response = await fetch(this.url, {
         method: params.method,

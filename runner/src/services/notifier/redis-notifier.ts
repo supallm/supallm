@@ -1,5 +1,6 @@
 import Redis from "ioredis";
 import * as msgpack from "msgpack-lite";
+import { RedisConfig } from "../../utils/config";
 import { logger } from "../../utils/logger";
 import { INotifier, WorkflowEvent } from "./notifier.interface";
 
@@ -21,13 +22,13 @@ export class RedisNotifier implements INotifier {
   private redis: Redis;
   private readonly WORKFLOW_DISPATCH_STREAM = STREAMS.DISPATCH;
   private readonly NODE_RESULTS_STREAM = STREAMS.NODE_RESULTS;
-  constructor(redisUrl: string) {
-    this.redis = this.initializeRedisClient(redisUrl);
+  constructor(config: RedisConfig) {
+    this.redis = this.initializeRedisClient(config);
   }
 
-  private initializeRedisClient(redisUrl: string): Redis {
-    const redisOptions = { password: process.env["REDIS_PASSWORD"] };
-    const redis = new Redis(redisUrl, redisOptions);
+  private initializeRedisClient(config: RedisConfig): Redis {
+    const redisOptions = { password: config.password };
+    const redis = new Redis(config.url, redisOptions);
 
     redis.on("error", (err) => {
       logger.error(`redis error: ${err}`);

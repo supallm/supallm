@@ -1,5 +1,6 @@
 import Redis from "ioredis";
 import _ from "lodash";
+import { RedisConfig } from "../../utils/config";
 import { logger } from "../../utils/logger";
 import {
   WorkflowDefinition,
@@ -18,21 +19,21 @@ export class RedisContextService implements ContextService {
 
   // ttl is the time to live in seconds
   // default is 1 day
-  constructor(redisUrl: string, ttl: number = 86400) {
-    this.redis = this.initializeRedisClient(redisUrl);
+  constructor(config: RedisConfig, ttl: number = 86400) {
+    this.redis = this.initializeRedisClient(config);
     this.ttl = ttl;
   }
 
-  private initializeRedisClient(redisUrl: string): Redis {
+  private initializeRedisClient(config: RedisConfig): Redis {
     const redisOptions = {
       db: 1, // context db
-      password: process.env["REDIS_PASSWORD"],
+      password: config.password,
       retryStrategy: (times: number) => {
         return Math.min(times * 100, 3000); // retry with an increasing delay
       },
       maxRetriesPerRequest: 3,
     };
-    const redis = new Redis(redisUrl, redisOptions);
+    const redis = new Redis(config.url, redisOptions);
 
     redis.on("error", (err) => {
       logger.error(`redis error: ${err}`);

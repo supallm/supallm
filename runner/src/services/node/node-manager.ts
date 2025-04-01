@@ -19,11 +19,10 @@ import {
   NodeType,
 } from "../../nodes/types";
 import { logger } from "../../utils/logger";
-import { LLMMemoryService } from "../llm-memory/llm-memory.interface";
 export class NodeManager {
   private nodes: Map<NodeType, INode> = new Map();
 
-  constructor(_memoryService: LLMMemoryService) {
+  constructor() {
     // TODO: not proud of this, but it's a quick way to get the nodes working
     this.registerNode(new AnthropicProvider());
     this.registerNode(new OpenAIProvider());

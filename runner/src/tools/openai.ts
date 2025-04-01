@@ -2,12 +2,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { Result } from "typescript-result";
 import { z } from "zod";
 import { CryptoService } from "../services/secret/crypto-service";
-import {
-  OpenAICompletionConfig,
-  OpenAICompletionToolParams,
-  Tool,
-  ToolOutput,
-} from "./tool.interface";
+import { OpenAICompletionConfig, Tool, ToolOutput } from "./tool.interface";
 
 const defaultSystemPrompt =
   "You are an AI that performs a task based on the user's request. You must respond with the output of the task.";
@@ -56,7 +51,7 @@ export class OpenAICompletionTool implements Tool<"openai_completion"> {
   }
 
   async run(
-    params: OpenAICompletionToolParams,
+    params: z.infer<typeof this.schema>,
   ): Promise<Result<ToolOutput, Error>> {
     try {
       const response = await this.llm.invoke([

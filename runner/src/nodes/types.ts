@@ -1,4 +1,5 @@
 import { Result } from "typescript-result";
+import { MemoryConfig } from "../memory/memory.interface";
 import { ToolConfig } from "../tools/tool.interface";
 
 type LLMProvider =
@@ -17,8 +18,6 @@ export type NodeType =
   | "code-executor"
   | "agent";
 
-export type MemoryType = "redis" | "supallm";
-
 export type NodeIOType = "text" | "image" | "any";
 
 export type NodeInput = Record<string, any>;
@@ -33,11 +32,6 @@ export interface NodeInputDef {
 export interface NodeOutputDef {
   type: NodeIOType;
   result_key?: string;
-}
-
-export interface MemoryConfig {
-  type: MemoryType;
-  [key: string]: any;
 }
 
 export interface NodeDefinition {

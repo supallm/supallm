@@ -1,5 +1,4 @@
 import { IContextService, RedisContextService } from "./services/context";
-import { RedisMemoryService } from "./services/llm-memory/redis-llm-memory-service";
 import { NodeManager } from "./services/node/node-manager";
 import { INotifier, RedisNotifier, WorkflowEvents } from "./services/notifier";
 import {
@@ -19,13 +18,12 @@ export class RunnerServer {
   private readonly executor: WorkflowExecutor;
 
   constructor(config: RunnerConfig) {
-    this.queueConsumer = new RedisQueueConsumer(config.redisUrl, {
+    this.queueConsumer = new RedisQueueConsumer(config.redis, {
       maxParallelJobs: config.maxConcurrentJobs,
     });
-    const memoryService = new RedisMemoryService(config.redisUrl);
-    this.notifier = new RedisNotifier(config.redisUrl);
-    this.nodeManager = new NodeManager(memoryService);
-    this.contextService = new RedisContextService(config.redisUrl);
+    this.notifier = new RedisNotifier(config.redis);
+    this.nodeManager = new NodeManager();
+    this.contextService = new RedisContextService(config.redis);
     this.executor = new WorkflowExecutor(this.nodeManager, this.contextService);
 
     this.setupEventListeners();
