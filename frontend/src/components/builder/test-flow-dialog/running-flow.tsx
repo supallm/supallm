@@ -12,7 +12,7 @@ import {
 import dagre from "dagre";
 import { FC, useCallback, useEffect, useMemo } from "react";
 import { FlowSubscription } from "supallm/browser";
-import { NodeType } from "../node-types";
+import { isRunningFlowNodeType, RunningFlowNodeType } from "../node-types";
 import RunningFlowNode from "./running-flow-node";
 
 const nodeWidth = 180;
@@ -85,7 +85,13 @@ export const RunningFlow: FC<{
   flowSubscription: FlowSubscription | null;
 }> = ({ initialNodes, initialEdges, flowSubscription }) => {
   const { nodes: layoutedNodes, edges: layoutedEdges } =
-    layoutGraphWithStandardHandles(initialNodes, initialEdges, "TB");
+    layoutGraphWithStandardHandles(
+      initialNodes.filter((node) => {
+        return isRunningFlowNodeType(node.type);
+      }),
+      initialEdges,
+      "TB",
+    );
 
   const [nodes, setNodes, onNodesChange] = useNodesState(layoutedNodes);
 
@@ -221,7 +227,7 @@ export const RunningFlow: FC<{
   ]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const nodeTypes: Record<NodeType, any> = useMemo(
+  const nodeTypes: Record<RunningFlowNodeType, any> = useMemo(
     () => ({
       "chat-openai": RunningFlowNode,
       result: RunningFlowNode,
@@ -235,6 +241,8 @@ export const RunningFlow: FC<{
       "chat-azure": RunningFlowNode,
       "chat-mistral": RunningFlowNode,
       "chat-ollama": RunningFlowNode,
+      "ai-agent": RunningFlowNode,
+      "model-openai": RunningFlowNode,
     }),
     [],
   );

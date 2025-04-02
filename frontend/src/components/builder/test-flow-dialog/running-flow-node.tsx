@@ -3,7 +3,14 @@ import { OpenAI } from "@/components/logos/openai";
 import { ProviderLogo } from "@/components/logos/provider-logo";
 import { cn } from "@/lib/utils";
 import { NodeProps, Position } from "@xyflow/react";
-import { Code, Flag, FolderSymlink, UserCheck } from "lucide-react";
+import {
+  Bot,
+  Code,
+  Database,
+  Flag,
+  FolderSymlink,
+  UserCheck,
+} from "lucide-react";
 import { FC, memo } from "react";
 import { NodeType } from "../node-types";
 
@@ -69,6 +76,38 @@ const NodeHeader: FC<{ nodeType: NodeType }> = ({ nodeType }) => {
         <>
           <FolderSymlink className="w-4 h-4" />
           <span className="font-medium text-sm">Flow output</span>
+        </>
+      );
+
+    case "ai-agent":
+      return (
+        <>
+          <Bot className="w-4 h-4" />
+          <span className="font-medium text-sm">AI Agent</span>
+        </>
+      );
+
+    case "model-openai":
+      return (
+        <>
+          <OpenAI width={10} height={10} />
+          <span className="font-medium text-sm">OpenAI Model</span>
+        </>
+      );
+
+    case "chat-openai-as-tool":
+      return (
+        <>
+          <OpenAI width={10} height={10} />
+          <span className="font-medium text-sm">OpenAI LLM as tool</span>
+        </>
+      );
+
+    case "local-memory":
+      return (
+        <>
+          <Database className="w-4 h-4" />
+          <span className="font-medium text-sm">Local memory</span>
         </>
       );
 

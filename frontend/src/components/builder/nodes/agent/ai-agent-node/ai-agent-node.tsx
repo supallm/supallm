@@ -57,7 +57,7 @@ const AIAgentChatCompletionNode: FC<AIAgentChatCompletionNodeProps> = ({
   const outputHandles = useMemo(() => {
     return [
       {
-        label: "Response",
+        label: "Final result",
         id: generateHandleId("text", "response"),
         type: "text",
       } as const,

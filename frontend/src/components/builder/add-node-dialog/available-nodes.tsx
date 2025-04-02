@@ -102,6 +102,14 @@ export const availableNodes: AvailableNode[] = [
   },
   {
     category: "agent-tools",
+    type: "http-tool",
+    name: "HTTP Client",
+    description: "Allow the AI agent make HTTP requests",
+    logo: <Network width={20} height={20} />,
+    commingSoon: false,
+  },
+  {
+    category: "agent-tools",
     type: "user-feedback",
     name: "User feedback",
     description: "Ask for user feedback during the flow",

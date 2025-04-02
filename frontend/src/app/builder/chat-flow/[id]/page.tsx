@@ -5,6 +5,7 @@ import { AvailableNode } from "@/components/builder/add-node-dialog/available-no
 import { NODE_WIDTH } from "@/components/builder/constants";
 import { NodeType } from "@/components/builder/node-types";
 import chatOpenaiAsToolNode from "@/components/builder/nodes/agent-tools/chat-openai-as-tool-node/chat-openai-as-tool-node";
+import httpToolNode from "@/components/builder/nodes/agent-tools/http-tool-node/http-tool-node";
 import aiAgentNode from "@/components/builder/nodes/agent/ai-agent-node/ai-agent-node";
 import anthropicChatCompletionNode from "@/components/builder/nodes/chat/anthropic-chat-completion-node/anthropic-chat-completion-node";
 import mistralChatCompletionNode from "@/components/builder/nodes/chat/mistral-chat-completion-node/mistral-chat-completion-node";
@@ -168,6 +169,7 @@ const ChatFlowPage = () => {
       "model-mistral": () => null,
       "model-ollama": () => null,
       "chat-openai-as-tool": chatOpenaiAsToolNode,
+      "http-tool": httpToolNode,
     }),
     [],
   );

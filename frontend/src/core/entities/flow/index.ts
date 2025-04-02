@@ -24,6 +24,15 @@ export type FlowNode = {
   deletable: boolean;
 };
 
+export type RunFlowNode = {
+  id: string;
+  type: FlowNodeType;
+  data: FlowNodeData;
+  position: { x: number; y: number };
+  zIndex: number;
+  deletable: boolean;
+};
+
 export type FlowEdge = {
   id: string;
   source: string;
