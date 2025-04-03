@@ -3,6 +3,7 @@ export const ToolNodeTypes = [
   "chat-openai-as-tool",
   "sdk-notifier-tool",
   "e2b-interpreter-tool",
+  "e2b-code-interpreter-tool",
 ] as const;
 export const UtilityNodeTypes = ["local-memory", "model-openai"] as const;
 

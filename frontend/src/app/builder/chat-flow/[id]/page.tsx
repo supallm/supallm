@@ -5,6 +5,7 @@ import { AvailableNode } from "@/components/builder/add-node-dialog/available-no
 import { NODE_WIDTH } from "@/components/builder/constants";
 import { NodeType } from "@/components/builder/node-types";
 import chatOpenaiAsToolNode from "@/components/builder/nodes/agent-tools/chat-openai-as-tool-node/chat-openai-as-tool-node";
+import e2bCodeInterpreterTool from "@/components/builder/nodes/agent-tools/e2b-code-interpreter-tool/e2b-code-interpreter-tool";
 import httpToolNode from "@/components/builder/nodes/agent-tools/http-tool-node/http-tool-node";
 import sdkNotifierToolNode from "@/components/builder/nodes/agent-tools/sdk-notifier-tool-node/sdk-notifier-tool-node";
 import aiAgentNode from "@/components/builder/nodes/agent/ai-agent-node/ai-agent-node";
@@ -172,6 +173,7 @@ const ChatFlowPage = () => {
       "chat-openai-as-tool": chatOpenaiAsToolNode,
       "http-tool": httpToolNode,
       "sdk-notifier-tool": sdkNotifierToolNode,
+      "e2b-code-interpreter-tool": e2bCodeInterpreterTool,
     }),
     [],
   );

@@ -141,10 +141,11 @@ export const availableNodes: AvailableNode[] = [
   },
   {
     category: "agent-tools",
-    type: "e2b-interpreter-tool",
-    name: "Code interpreter by E2B",
-    description: "Use this node to run custom code",
-    logo: <E2B width={10} height={10} />,
+    type: "e2b-code-interpreter-tool",
+    name: "E2B Code Interpreter",
+    description:
+      "Give the AI agent the ability to execute code in a secure E2B sandbox",
+    logo: <E2B width={30} height={30} />,
     commingSoon: false,
   },
   {
