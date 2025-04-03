@@ -5,6 +5,7 @@ import { Azure } from "./azure";
 import { E2B } from "./e2b";
 import { Google } from "./google";
 import { Mistral } from "./mistral";
+import { Notion } from "./notion";
 import { Ollama } from "./ollama";
 import { OpenAI } from "./openai";
 
@@ -31,6 +32,8 @@ export const ProviderLogo: FC<{
       return <E2B width={w} height={h} />;
     case "ollama":
       return <Ollama width={w} height={h} />;
+    case "notion":
+      return <Notion width={w} height={h} />;
     default:
       return <div>No logo available</div>;
   }

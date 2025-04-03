@@ -51,6 +51,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import { PlayIcon, PlusIcon } from "lucide-react";
 
+import notionDatabaseTool from "@/components/builder/nodes/agent-tools/notion-database-tool/notion-database-tool";
 import { useCallback, useEffect, useMemo } from "react";
 
 const ChatFlowPage = () => {
@@ -174,6 +175,7 @@ const ChatFlowPage = () => {
       "http-tool": httpToolNode,
       "sdk-notifier-tool": sdkNotifierToolNode,
       "e2b-code-interpreter-tool": e2bCodeInterpreterTool,
+      "notion-database-tool": notionDatabaseTool,
     }),
     [],
   );

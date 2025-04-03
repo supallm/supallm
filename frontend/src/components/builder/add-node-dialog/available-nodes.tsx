@@ -1,4 +1,5 @@
 import { E2B } from "@/components/logos/e2b";
+import { Notion } from "@/components/logos/notion";
 import {
   Bot,
   Code,
@@ -165,5 +166,13 @@ export const availableNodes: AvailableNode[] = [
       "Use this node to send a message to an Azure Chat Completion model",
     logo: <ProviderLogo name="azure" width={30} height={30} />,
     commingSoon: true,
+  },
+  {
+    category: "agent-tools",
+    type: "notion-database-tool",
+    name: "Notion Database",
+    description: "Allow the AI agent to interact with Notion databases",
+    logo: <Notion width={20} height={20} />,
+    commingSoon: false,
   },
 ] as const;
