@@ -1,5 +1,6 @@
 import { E2B } from "@/components/logos/e2b";
 import { Notion } from "@/components/logos/notion";
+import { PostgresLogo } from "@/components/logos/postgres";
 import {
   Bot,
   Code,
@@ -170,9 +171,18 @@ export const availableNodes: AvailableNode[] = [
   {
     category: "agent-tools",
     type: "notion-database-tool",
-    name: "Notion Database",
+    name: "Notion Database tool",
     description: "Allow the AI agent to interact with Notion databases",
-    logo: <Notion width={20} height={20} />,
+    logo: <Notion width={25} height={25} />,
+    commingSoon: false,
+  },
+  {
+    category: "agent-tools",
+    type: "postgres-query-tool",
+    name: "Postgres Query tool",
+    description:
+      "Provide pre-defined SQL queries that the AI agent can use securely",
+    logo: <PostgresLogo className="w-8 h-8" />,
     commingSoon: false,
   },
 ] as const;

@@ -5,6 +5,7 @@ export const ToolNodeTypes = [
   "e2b-interpreter-tool",
   "e2b-code-interpreter-tool",
   "notion-database-tool",
+  "postgres-query-tool",
 ] as const;
 export const UtilityNodeTypes = ["local-memory", "model-openai"] as const;
 

@@ -52,6 +52,7 @@ import "@xyflow/react/dist/style.css";
 import { PlayIcon, PlusIcon } from "lucide-react";
 
 import notionDatabaseTool from "@/components/builder/nodes/agent-tools/notion-database-tool/notion-database-tool";
+import postgresQueryTool from "@/components/builder/nodes/agent-tools/postgres-query-tool/postgres-query-tool";
 import { useCallback, useEffect, useMemo } from "react";
 
 const ChatFlowPage = () => {
@@ -146,7 +147,7 @@ const ChatFlowPage = () => {
 
   useEffect(() => {
     onSave(edges, nodes);
-  }, [edges, nodes, onSave]);
+  }, [edges, nodes]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const nodeTypes: Record<NodeType, any> = useMemo(
@@ -176,6 +177,7 @@ const ChatFlowPage = () => {
       "sdk-notifier-tool": sdkNotifierToolNode,
       "e2b-code-interpreter-tool": e2bCodeInterpreterTool,
       "notion-database-tool": notionDatabaseTool,
+      "postgres-query-tool": postgresQueryTool,
     }),
     [],
   );
