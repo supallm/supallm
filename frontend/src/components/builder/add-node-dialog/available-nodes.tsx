@@ -1,5 +1,12 @@
 import { E2B } from "@/components/logos/e2b";
-import { Bot, Code, Database, Network, UserCheck } from "lucide-react";
+import {
+  Bot,
+  Code,
+  Database,
+  MessageCircle,
+  Network,
+  UserCheck,
+} from "lucide-react";
 import { ReactNode } from "react";
 import { ProviderLogo } from "../../logos/provider-logo";
 import { NodeType } from "../node-types";
@@ -102,6 +109,14 @@ export const availableNodes: AvailableNode[] = [
   },
   {
     category: "agent-tools",
+    type: "sdk-notifier-tool",
+    name: "SDK Notifier",
+    description: "Allow the AI agent to output information to the SDK",
+    logo: <MessageCircle width={20} height={20} />,
+    commingSoon: false,
+  },
+  {
+    category: "agent-tools",
     type: "http-tool",
     name: "HTTP Client",
     description: "Allow the AI agent make HTTP requests",
@@ -126,19 +141,11 @@ export const availableNodes: AvailableNode[] = [
   },
   {
     category: "agent-tools",
-    type: "e2b-interpreter",
+    type: "e2b-interpreter-tool",
     name: "Code interpreter by E2B",
     description: "Use this node to run custom code",
     logo: <E2B width={10} height={10} />,
     commingSoon: false,
-  },
-  {
-    category: "agent-tools",
-    type: "http-request",
-    name: "HTTP Request",
-    description: "Trigger an HTTP endpoint in your AI flow",
-    logo: <Network width={20} height={20} />,
-    commingSoon: true,
   },
   {
     category: "chat",
@@ -158,4 +165,4 @@ export const availableNodes: AvailableNode[] = [
     logo: <ProviderLogo name="azure" width={30} height={30} />,
     commingSoon: true,
   },
-];
+] as const;

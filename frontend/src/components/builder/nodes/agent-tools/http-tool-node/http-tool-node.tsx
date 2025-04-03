@@ -17,11 +17,11 @@ export type HttpToolNodeData = {
   }[];
 };
 
-type ChatOpenAIAsToolNodeProps = NodeProps & {
+type CustomNodeProps = NodeProps & {
   data: HttpToolNodeData;
 };
 
-const HttpToolNode: FC<ChatOpenAIAsToolNodeProps> = ({ data, id: nodeId }) => {
+const HttpToolNode: FC<CustomNodeProps> = ({ data, id: nodeId }) => {
   const { updateNodeData } = useReactFlow();
   const updateNodeInternals = useUpdateNodeInternals();
 

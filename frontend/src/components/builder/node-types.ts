@@ -1,4 +1,9 @@
-export const ToolNodeTypes = ["http-tool", "chat-openai-as-tool"] as const;
+export const ToolNodeTypes = [
+  "http-tool",
+  "chat-openai-as-tool",
+  "sdk-notifier-tool",
+  "e2b-interpreter-tool",
+] as const;
 export const UtilityNodeTypes = ["local-memory", "model-openai"] as const;
 
 export type ToolNodeType = (typeof ToolNodeTypes)[number];
@@ -27,4 +32,4 @@ export const isRunningFlowNodeType = (
 
 export type RunningFlowNodeType = (typeof RunningFlowNodeTypes)[number];
 
-export type NodeType = RunningFlowNodeType & ToolNodeType & UtilityNodeType;
+export type NodeType = RunningFlowNodeType | ToolNodeType | UtilityNodeType;

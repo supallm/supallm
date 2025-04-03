@@ -49,14 +49,15 @@ const CodeExecutorNode: FC<CustomCodeNodeProps> = ({ data, id: nodeId }) => {
     code: z.string().min(1, "Code cannot be empty"),
     inputs: z.array(
       z.object({
-        type: z.enum(["text", "image", "any"]),
+        // Todo: the code executor should probably support less types.
+        type: z.enum(["text", "image", "any", "memory", "ai-model", "tools"]),
         id: z.string(),
         label: z.string(),
       }),
     ),
     outputs: z.array(
       z.object({
-        type: z.enum(["text", "image", "any"]),
+        type: z.enum(["text", "image", "any", "memory", "ai-model", "tools"]),
         id: z.string(),
         label: z.string(),
       }),

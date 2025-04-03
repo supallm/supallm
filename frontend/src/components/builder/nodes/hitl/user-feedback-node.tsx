@@ -34,7 +34,7 @@ const outputHandles: BaseNodeHandle[] = [
   },
 ];
 
-const UserFeedbackNode: FC<Props> = ({ data, id: nodeId }) => {
+const UserFeedbackNode: FC<Props> = ({ id: nodeId }) => {
   return (
     <BaseNode
       nodeId={nodeId}

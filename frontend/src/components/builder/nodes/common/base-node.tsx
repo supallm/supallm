@@ -23,9 +23,7 @@ export type BaseNodeHandleType =
   | "any"
   | "memory"
   | "ai-model"
-  | "handoffs"
-  | "tools"
-  | "guardrails";
+  | "tools";
 
 export type BaseNodeHandle = {
   /**

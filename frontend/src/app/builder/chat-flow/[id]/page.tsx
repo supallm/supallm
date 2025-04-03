@@ -6,6 +6,7 @@ import { NODE_WIDTH } from "@/components/builder/constants";
 import { NodeType } from "@/components/builder/node-types";
 import chatOpenaiAsToolNode from "@/components/builder/nodes/agent-tools/chat-openai-as-tool-node/chat-openai-as-tool-node";
 import httpToolNode from "@/components/builder/nodes/agent-tools/http-tool-node/http-tool-node";
+import sdkNotifierToolNode from "@/components/builder/nodes/agent-tools/sdk-notifier-tool-node/sdk-notifier-tool-node";
 import aiAgentNode from "@/components/builder/nodes/agent/ai-agent-node/ai-agent-node";
 import anthropicChatCompletionNode from "@/components/builder/nodes/chat/anthropic-chat-completion-node/anthropic-chat-completion-node";
 import mistralChatCompletionNode from "@/components/builder/nodes/chat/mistral-chat-completion-node/mistral-chat-completion-node";
@@ -143,7 +144,7 @@ const ChatFlowPage = () => {
 
   useEffect(() => {
     onSave(edges, nodes);
-  }, [edges, nodes]);
+  }, [edges, nodes, onSave]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const nodeTypes: Record<NodeType, any> = useMemo(
@@ -152,7 +153,7 @@ const ChatFlowPage = () => {
       result: resultNode,
       entrypoint: entrypointNode,
       "code-executor": codeExecutorNode,
-      "e2b-interpreter": () => null,
+      "e2b-interpreter-tool": () => null,
       "http-request": httpRequestNode,
       "chat-anthropic": anthropicChatCompletionNode,
       "chat-mistral": mistralChatCompletionNode,
@@ -170,6 +171,7 @@ const ChatFlowPage = () => {
       "model-ollama": () => null,
       "chat-openai-as-tool": chatOpenaiAsToolNode,
       "http-tool": httpToolNode,
+      "sdk-notifier-tool": sdkNotifierToolNode,
     }),
     [],
   );

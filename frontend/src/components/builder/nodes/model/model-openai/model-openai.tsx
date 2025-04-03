@@ -8,7 +8,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { OpenAIModels } from "@/core/entities/flow/flow-openai";
-import { OpenAIModelNodeData } from "@/core/entities/flow/flow-openai-model";
 import { generateHandleId } from "@/lib/handles";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { NodeProps, useReactFlow, useUpdateNodeInternals } from "@xyflow/react";
@@ -18,6 +17,12 @@ import { z } from "zod";
 import { ProviderLogo } from "../../../../logos/provider-logo";
 import BaseNode from "../../common/base-node";
 import { BaseNodeContent } from "../../common/base-node-content";
+
+type OpenAIModelNodeData = {
+  credentialId: string;
+  model: "gpt-4o" | "gpt-4o-mini";
+  temperature: number;
+};
 
 type OpenAIModelNodeProps = NodeProps & {
   data: OpenAIModelNodeData;
@@ -33,7 +38,6 @@ const OpenAIChatCompletionNode: FC<OpenAIModelNodeProps> = ({
   const formSchema = z.object({
     credentialId: z.string().min(2),
     model: z.enum(OpenAIModels),
-    outputMode: z.enum(["text", "text-stream"]),
     advancedSettings: z.object({
       temperature: z.number().nullable(),
     }),
@@ -57,12 +61,10 @@ const OpenAIChatCompletionNode: FC<OpenAIModelNodeProps> = ({
     const data: OpenAIModelNodeData = {
       credentialId: formValues.credentialId,
       model: formValues.model,
-      outputMode: formValues.outputMode,
+      temperature: formValues.advancedSettings.temperature ?? 1,
     };
     updateNodeData(nodeId, data);
   });
-
-  const outputMode = form.watch("outputMode");
 
   const outputHandles = [
     {

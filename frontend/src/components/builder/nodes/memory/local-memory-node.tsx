@@ -23,7 +23,7 @@ const outputHandles: BaseNodeHandle[] = [
   },
 ];
 
-const LocalMemoryNode: FC<Props> = ({ data, id: nodeId }) => {
+const LocalMemoryNode: FC<Props> = ({ id: nodeId }) => {
   return (
     <BaseNode
       nodeId={nodeId}
