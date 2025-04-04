@@ -1,22 +1,12 @@
 volumes:
   supallm_data:
   supallm_redis_data:
-  shared_init:
 
 networks:
   supallm-network:
     driver: bridge
 
 services:
-  supallm_setup:
-    image: ghcr.io/supallm/supallm:latest
-    container_name: supallm-setup
-    volumes:
-      - shared_init:/shared_init
-    entrypoint: >
-      sh -c "cp /app/db/init.sql /shared_init/init.sql"
-    restart: "no"
-
   supallm_frontend:
     image: "ghcr.io/supallm/supallm:latest"
     container_name: supallm-frontend
@@ -40,12 +30,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_PORT: ${POSTGRES_PORT}
-    depends_on:
-      supallm_setup:
-        condition: service_completed_successfully
     volumes:
       - supallm_data:/var/lib/postgresql/data
-      - shared_init:/docker-entrypoint-initdb.d
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     networks:
