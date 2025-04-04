@@ -132,7 +132,9 @@ export const AddCredentialDialog: FC<
                 <CardHeader className="flex flex-row items-center justify-between">
                   <div className="flex flex-row gap-2 items-center">
                     <ProviderLogo name={selectedProvider} />
-                    <h2 className="text-lg font-medium">{selectedProvider}</h2>
+                    <h2 className="text-lg font-medium">
+                      {selectedProviderConfig?.name}
+                    </h2>
                   </div>
                   {!initialProviderType && (
                     <div>
@@ -181,7 +183,10 @@ export const AddCredentialDialog: FC<
                               </FormLabel>
                               <FormControl>
                                 <Input
-                                  placeholder="Enter your Key"
+                                  placeholder={
+                                    selectedProviderConfig?.apiKeyPlaceholder ??
+                                    "Enter your Key"
+                                  }
                                   type="password"
                                   {...field}
                                 />

@@ -1,4 +1,5 @@
 import { PostgresLogo } from "@/components/logos/postgres";
+import { SelectCredentials } from "@/components/select-credentials";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -31,6 +32,7 @@ type PostgresQueryToolProps = NodeProps & {
     query: string;
     name: string;
     description: string;
+    credentialId: string;
   };
 };
 
@@ -49,6 +51,7 @@ const PostgresQueryTool: FC<PostgresQueryToolProps> = ({
     query: z.string().min(1, "Query cannot be empty"),
     name: z.string().min(1, "Name is required"),
     description: z.string(),
+    credentialId: z.string().min(1, "Credential is required"),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -58,6 +61,7 @@ const PostgresQueryTool: FC<PostgresQueryToolProps> = ({
       query: data.query ?? defaultQuery,
       name: data.name ?? "",
       description: data.description ?? "",
+      credentialId: data.credentialId ?? "",
     },
   });
 
@@ -77,7 +81,8 @@ const PostgresQueryTool: FC<PostgresQueryToolProps> = ({
       name: formValues.name,
       description: formValues.description,
       query: formValues.query,
-    });
+      credentialId: formValues.credentialId,
+    } satisfies PostgresQueryToolProps["data"]);
   });
 
   // Define fixed input/output handles
@@ -105,6 +110,21 @@ const PostgresQueryTool: FC<PostgresQueryToolProps> = ({
         <div className="flex flex-col gap-4">
           <Form {...form}>
             <form className="space-y-4">
+              <FormField
+                control={form.control}
+                name="credentialId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Credentials</FormLabel>
+                    <SelectCredentials
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      providerType={"postgres"}
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="name"

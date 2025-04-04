@@ -10,6 +10,7 @@ export type CredentialChoiceCardProps = {
   commingSoon: boolean;
   apiKeyHint?: ReactNode;
   apiKeyLabel?: string;
+  apiKeyPlaceholder?: string;
   onSelected: () => void;
 };
 

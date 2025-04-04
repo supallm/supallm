@@ -1,5 +1,4 @@
 import { ProviderType } from "@/core/entities/credential";
-import Link from "next/link";
 import { FC } from "react";
 import { ProviderLogo } from "../logos/provider-logo";
 import { FormDescription } from "../ui/form";
@@ -9,7 +8,7 @@ import {
 } from "./credential-choice-card";
 
 export const ProviderInfoMap: Record<
-  Exclude<ProviderType, "ollama">,
+  ProviderType,
   Omit<CredentialChoiceCardProps, "onSelected">
 > = {
   openai: {
@@ -30,31 +29,6 @@ export const ProviderInfoMap: Record<
     logo: <ProviderLogo name="mistral" width={30} height={30} />,
     commingSoon: false,
   },
-  e2b: {
-    name: "E2B",
-    description: "E2B is a powerful AI provider",
-    logo: <ProviderLogo name="e2b" width={30} height={30} />,
-    commingSoon: false,
-  },
-  notion: {
-    name: "Notion",
-    description: "Notion is a powerful knowledge base provider",
-    logo: <ProviderLogo name="notion" width={30} height={30} />,
-    commingSoon: false,
-    apiKeyLabel: "Notion Integration Token",
-    apiKeyHint: (
-      <FormDescription>
-        Check out the{" "}
-        <Link
-          href="https://developers.notion.com/docs/create-a-notion-integration#step-1-create-an-integration"
-          className="text-blue-500"
-        >
-          Notion documentation{" "}
-        </Link>
-        to know how to get this token{" "}
-      </FormDescription>
-    ),
-  },
   google: {
     name: "Google",
     description: "Google is a powerful AI provider",
@@ -67,7 +41,33 @@ export const ProviderInfoMap: Record<
     logo: <ProviderLogo name="azure" width={30} height={30} />,
     commingSoon: true,
   },
-};
+  e2b: {
+    name: "E2B",
+    description: "E2B is a powerful code execution provider",
+    logo: <ProviderLogo name="e2b" width={30} height={30} />,
+    commingSoon: false,
+  },
+  notion: {
+    name: "Notion",
+    description: "Connect to your Notion workspace",
+    logo: <ProviderLogo name="notion" width={30} height={30} />,
+    commingSoon: false,
+  },
+  postgres: {
+    name: "Postgres",
+    description: "Connect to your PostgreSQL databases securely",
+    logo: <ProviderLogo name="postgres" width={30} height={30} />,
+    commingSoon: false,
+    apiKeyLabel: "Database URL",
+    apiKeyHint: (
+      <FormDescription>
+        Your database URL is encrypted and stored safely.
+      </FormDescription>
+    ),
+    apiKeyPlaceholder:
+      "postgres://username:password@hostname:port/database_name",
+  },
+} as const;
 
 export const ProviderCardList: FC<{
   onSelected: (provider: ProviderType) => void;

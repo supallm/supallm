@@ -8,6 +8,7 @@ import { Mistral } from "./mistral";
 import { Notion } from "./notion";
 import { Ollama } from "./ollama";
 import { OpenAI } from "./openai";
+import { PostgresLogo } from "./postgres";
 
 export const ProviderLogo: FC<{
   name: ProviderType;
@@ -34,6 +35,8 @@ export const ProviderLogo: FC<{
       return <Ollama width={w} height={h} />;
     case "notion":
       return <Notion width={w} height={h} />;
+    case "postgres":
+      return <PostgresLogo width={w} height={h} />;
     default:
       return <div>No logo available</div>;
   }

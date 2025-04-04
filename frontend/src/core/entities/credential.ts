@@ -2,16 +2,11 @@ export const AIProviderTypes = [
   "openai",
   "anthropic",
   "mistral",
-  "ollama",
   "google",
   "azure",
 ] as const;
 
-export type AIProviderType = (typeof AIProviderTypes)[number];
-
-export const UtilityProviderTypes = ["e2b", "notion"] as const;
-
-export type UtilityProviderType = (typeof UtilityProviderTypes)[number];
+export const UtilityProviderTypes = ["e2b", "notion", "postgres"] as const;
 
 export const ProviderTypes = [
   ...AIProviderTypes,
@@ -31,13 +26,13 @@ export type Credential = {
 export const ProviderTypeLabelMap: Record<ProviderType, string> = {
   openai: "OpenAI",
   anthropic: "Anthropic",
+  mistral: "Mistral",
   google: "Google",
   azure: "Azure",
-  mistral: "Mistral",
   e2b: "E2B",
-  ollama: "Ollama",
   notion: "Notion",
-};
+  postgres: "Postgres",
+} as const;
 
 export const CredentialLabel = (name: ProviderType) => {
   return ProviderTypeLabelMap[name];
