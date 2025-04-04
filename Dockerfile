@@ -6,13 +6,6 @@ WORKDIR /app
 # Install required dependencies for all services
 RUN apk add --no-cache nodejs npm git
 
-# Setup step
-# We copy the schemas.sql file to the db directory
-# This will be used in the setup container to initialize the database
-
-WORKDIR /app/db
-COPY backend/sql/schemas.sql /app/db/init.sql
-
 # _                _                  _ 
 # | |__   __ _  ___| | _____ _ __   __| |
 # | '_ \ / _` |/ __| |/ / _ \ '_ \ / _` |
@@ -130,9 +123,6 @@ COPY --from=runner-builder /app/runner/dist /app/runner/dist
 COPY --from=runner-builder /app/runner/package.json  /app/runner/package.json
 COPY --from=runner-builder /app/runner/node_modules /app/runner/node_modules
 COPY --from=runner-builder /usr/local/bin/nsjail /usr/local/bin/nsjail
-
-# Setup
-COPY --from=base /app/db/init.sql /app/db/init.sql
 
 # Expose necessary ports
 EXPOSE 80 3000

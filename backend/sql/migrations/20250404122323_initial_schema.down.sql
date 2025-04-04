@@ -1,0 +1,2 @@
+-- This is the initial schema.
+-- To reset completely, just drop and recreate the database.
