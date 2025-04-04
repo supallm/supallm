@@ -3,6 +3,7 @@ import { Confluence } from "@/components/logos/confluence";
 import { E2B } from "@/components/logos/e2b";
 import { Notion } from "@/components/logos/notion";
 import { PostgresLogo } from "@/components/logos/postgres";
+import { Slack } from "@/components/logos/slack";
 import {
   Bot,
   Code,
@@ -201,6 +202,15 @@ export const availableNodes: AvailableNode[] = [
     name: "Airtable",
     description: "Interact with Airtable bases and tables",
     logo: <Airtable width={20} height={20} />,
+    commingSoon: false,
+  },
+  {
+    category: "agent-tools",
+    type: "slack-tool",
+    name: "Slack",
+    description:
+      "Send messages to Slack channels and interact with Slack workspaces",
+    logo: <Slack width={40} height={40} />,
     commingSoon: false,
   },
 ] as const;

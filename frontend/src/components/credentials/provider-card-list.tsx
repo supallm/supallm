@@ -2,6 +2,7 @@ import { ProviderType } from "@/core/entities/credential";
 import Link from "next/link";
 import { FC } from "react";
 import { ProviderLogo } from "../logos/provider-logo";
+import { Slack } from "../logos/slack";
 import { FormDescription } from "../ui/form";
 import {
   CredentialChoiceCard,
@@ -108,6 +109,26 @@ export const ProviderInfoMap: Record<
       </FormDescription>
     ),
     apiKeyPlaceholder: "Your personal access token",
+  },
+  slack: {
+    name: "Slack",
+    description: "Connect to Slack workspaces and send messages",
+    logo: <Slack width={30} height={30} />,
+    commingSoon: false,
+    apiKeyLabel: "Slack Token",
+    apiKeyHint: (
+      <FormDescription>
+        Enter your Slack User Token. You can find more information{" "}
+        <Link
+          className="text-blue-500"
+          target="_blank"
+          href="https://api.slack.com/docs/token-types"
+        >
+          in their documentation.
+        </Link>
+      </FormDescription>
+    ),
+    apiKeyPlaceholder: "Your slack token",
   },
 } as const;
 

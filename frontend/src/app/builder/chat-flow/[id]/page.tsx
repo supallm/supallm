@@ -55,6 +55,7 @@ import AirtableTool from "@/components/builder/nodes/agent-tools/airtable-tool/a
 import ConfluenceTool from "@/components/builder/nodes/agent-tools/confluence-tool/confluence-tool";
 import notionDatabaseTool from "@/components/builder/nodes/agent-tools/notion-database-tool/notion-database-tool";
 import postgresQueryTool from "@/components/builder/nodes/agent-tools/postgres-query-tool/postgres-query-tool";
+import SlackTool from "@/components/builder/nodes/agent-tools/slack-tool/slack-tool";
 import { useCallback, useEffect, useMemo } from "react";
 
 const ChatFlowPage = () => {
@@ -184,6 +185,7 @@ const ChatFlowPage = () => {
       "postgres-query-tool": postgresQueryTool,
       "confluence-tool": ConfluenceTool,
       "airtable-tool": AirtableTool,
+      "slack-tool": SlackTool,
     }),
     [],
   );

@@ -20,6 +20,7 @@ export const UtilityProviderTypes = [
 export const ProviderTypes = [
   ...AIProviderTypes,
   ...UtilityProviderTypes,
+  "slack",
 ] as const;
 
 export type ProviderType = (typeof ProviderTypes)[number];
@@ -44,6 +45,7 @@ export const ProviderTypeLabelMap: Record<ProviderType, string> = {
   postgres: "Postgres",
   confluence: "Confluence",
   airtable: "Airtable",
+  slack: "Slack",
 } as const;
 
 export const CredentialLabel = (name: ProviderType) => {

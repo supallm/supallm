@@ -11,6 +11,7 @@ import { Notion } from "./notion";
 import { Ollama } from "./ollama";
 import { OpenAI } from "./openai";
 import { PostgresLogo } from "./postgres";
+import { Slack } from "./slack";
 
 export const ProviderLogo: FC<{
   name: ProviderType;
@@ -43,6 +44,8 @@ export const ProviderLogo: FC<{
       return <Confluence width={w} height={h} />;
     case "airtable":
       return <Airtable width={w} height={h} />;
+    case "slack":
+      return <Slack width={w} height={h} />;
     default:
       return <div>No logo available</div>;
   }

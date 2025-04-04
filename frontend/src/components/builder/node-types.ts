@@ -8,6 +8,7 @@ export const ToolNodeTypes = [
   "postgres-query-tool",
   "confluence-tool",
   "airtable-tool",
+  "slack-tool",
 ] as const;
 export const UtilityNodeTypes = ["local-memory", "model-openai"] as const;
 
