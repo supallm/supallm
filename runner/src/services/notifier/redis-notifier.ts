@@ -4,24 +4,20 @@ import { RedisConfig } from "../../utils/config";
 import { logger } from "../../utils/logger";
 import { INotifier, WorkflowEvent } from "./notifier.interface";
 
-const DEFAULT_MAX_EVENTS_LENGTH = 500;
-const DEFAULT_MAX_RESULTS_LENGTH = 1000;
+const DEFAULT_MAX_EVENTS_LENGTH = 1000;
 const HEADER_MESSAGE_ID = "_watermill_message_uuid";
 
 const STREAMS = {
-  STORE: "workflows:upstream:events:store",
   DISPATCH: "workflows:upstream:events:dispatch",
-  NODE_RESULTS: "workflows:upstream:nodes:results",
 } as const;
 
 type RedisStreamId = string;
 type StreamName = (typeof STREAMS)[keyof typeof STREAMS];
-type EventContext = "dispatch workflow event" | "node result" | "node log";
+type EventContext = "dispatch_workflow_event" | "node_event";
 
 export class RedisNotifier implements INotifier {
   private redis: Redis;
   private readonly WORKFLOW_DISPATCH_STREAM = STREAMS.DISPATCH;
-  private readonly NODE_RESULTS_STREAM = STREAMS.NODE_RESULTS;
   constructor(config: RedisConfig) {
     this.redis = this.initializeRedisClient(config);
   }
@@ -48,16 +44,14 @@ export class RedisNotifier implements INotifier {
   }
 
   private async publish(
-    stream: StreamName,
-    maxStreamLength: number,
     event: WorkflowEvent,
     context: EventContext,
   ): Promise<RedisStreamId> {
     try {
       const metadata = this.encodeMetadata(event);
       return await this.publishToStream(
-        stream,
-        maxStreamLength,
+        this.WORKFLOW_DISPATCH_STREAM,
+        DEFAULT_MAX_EVENTS_LENGTH,
         event,
         metadata,
       );
@@ -103,21 +97,11 @@ export class RedisNotifier implements INotifier {
     // listenning by the backend without consumer group
     // only the instance who has a client subscribed
     // will dispatch the event to the SDK
-    return this.publish(
-      this.WORKFLOW_DISPATCH_STREAM,
-      DEFAULT_MAX_EVENTS_LENGTH,
-      event,
-      "dispatch workflow event",
-    );
+    return this.publish(event, "dispatch_workflow_event");
   }
 
-  async publishNodeLog(event: WorkflowEvent): Promise<RedisStreamId> {
-    return this.publish(
-      this.NODE_RESULTS_STREAM,
-      DEFAULT_MAX_RESULTS_LENGTH,
-      event,
-      "node log",
-    );
+  async publishNodeEvent(event: WorkflowEvent): Promise<RedisStreamId> {
+    return this.publish(event, "node_event");
   }
   async close(): Promise<void> {
     await this.redis.quit();

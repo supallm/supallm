@@ -2,16 +2,17 @@ import { ChatOpenAI } from "@langchain/openai";
 import { Result } from "typescript-result";
 import { z } from "zod";
 import { CryptoService } from "../services/secret/crypto-service";
-import { OpenAICompletionConfig, Tool, ToolOutput } from "./tool.interface";
+import { logger } from "../utils/logger";
+import { OpenAICompletion, Tool, ToolOutput } from "./tool.interface";
 
 const defaultSystemPrompt =
   "You are an AI that performs a task based on the user's request. You must respond with the output of the task.";
 
-export class OpenAICompletionTool implements Tool<"openai_completion"> {
+export class OpenAICompletionTool implements Tool<"chat-openai-as-tool"> {
   private llm: ChatOpenAI;
   private cryptoService: CryptoService;
   private systemPrompt: string;
-  readonly type = "openai_completion";
+  readonly type = "chat-openai-as-tool";
 
   readonly name: string;
   readonly description: string;
@@ -20,32 +21,32 @@ export class OpenAICompletionTool implements Tool<"openai_completion"> {
     input: z.string().describe("The input for the tool"),
   });
 
-  constructor(config: OpenAICompletionConfig) {
+  constructor(definition: OpenAICompletion) {
     this.cryptoService = new CryptoService();
 
-    if (!config.model) {
+    if (!definition.config.model) {
       throw new Error("model is required");
     }
 
-    if (!config.apiKey) {
+    if (!definition.config.apiKey) {
       throw new Error("apiKey is required");
     }
 
     const [decryptedApiKeyResult, decryptedApiKeyError] = this.cryptoService
-      .decrypt(config.apiKey)
+      .decrypt(definition.config.apiKey)
       .toTuple();
     if (decryptedApiKeyError) {
       throw decryptedApiKeyError;
     }
 
     const apiKey = decryptedApiKeyResult;
-    this.name = config.name;
-    this.description = config.description;
-    this.systemPrompt = config.systemPrompt || defaultSystemPrompt;
+    this.name = definition.name;
+    this.description = definition.description;
+    this.systemPrompt = definition.config.systemPrompt || defaultSystemPrompt;
     this.llm = new ChatOpenAI({
-      modelName: config.model,
-      temperature: config.temperature,
-      maxTokens: config.maxTokens,
+      modelName: definition.config.model,
+      temperature: definition.config.temperature,
+      maxTokens: definition.config.maxTokens,
       openAIApiKey: apiKey,
     });
   }
@@ -54,6 +55,9 @@ export class OpenAICompletionTool implements Tool<"openai_completion"> {
     params: z.infer<typeof this.schema>,
   ): Promise<Result<ToolOutput, Error>> {
     try {
+      logger.debug(
+        `running ${this.name} OpenAICompletionTool: ${JSON.stringify(params)}`,
+      );
       const response = await this.llm.invoke([
         {
           role: "system",

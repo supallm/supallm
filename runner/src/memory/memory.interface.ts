@@ -1,7 +1,7 @@
 import { BaseMessage } from "@langchain/core/messages";
 import { Result } from "typescript-result";
 
-export type MemoryType = "redis" | "supallm" | "none";
+export type MemoryType = "local-memory" | "none";
 
 export interface MemoryConfig {
   type: MemoryType;

@@ -35,10 +35,10 @@ export class AnthropicProvider implements INode {
   ): Result<AnthropicOptions, Error> {
     return Result.ok({
       ...config,
-      temperature: definition["temperature"],
-      maxTokenToSample: definition["maxTokenToSample"],
-      streaming: definition["streaming"],
-      systemPrompt: definition["systemPrompt"],
+      temperature: definition.config["temperature"],
+      maxTokenToSample: definition.config["maxTokenToSample"],
+      streaming: definition.config["streaming"],
+      systemPrompt: definition.config["systemPrompt"],
     });
   }
 

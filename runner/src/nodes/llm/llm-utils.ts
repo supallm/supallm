@@ -56,7 +56,7 @@ export class LLMUtils {
       return Result.error(outputError);
     }
 
-    const { model, apiKey } = definition;
+    const { model, apiKey } = definition.config;
     if (!model) {
       return Result.error(
         new MissingAPIKeyError("model parameter is required"),

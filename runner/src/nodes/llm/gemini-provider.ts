@@ -34,10 +34,10 @@ export class GeminiProvider implements INode {
   ): Result<GeminiOptions, Error> {
     return Result.ok({
       ...config,
-      temperature: definition["temperature"],
-      maxTokens: definition["maxTokens"],
-      streaming: definition["streaming"],
-      systemPrompt: definition["systemPrompt"],
+      temperature: definition.config["temperature"],
+      maxTokens: definition.config["maxTokens"],
+      streaming: definition.config["streaming"],
+      systemPrompt: definition.config["systemPrompt"],
     });
   }
 

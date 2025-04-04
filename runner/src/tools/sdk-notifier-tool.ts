@@ -1,13 +1,14 @@
 import { Result } from "typescript-result";
 import { z } from "zod";
-import { SDKNotifierConfig, Tool, ToolOptions } from "./tool.interface";
+import { logger } from "../utils/logger";
+import { SDKNotifier, Tool, ToolOptions } from "./tool.interface";
 
-const defaultName = "sdk_notifier";
+const defaultName = "sdk-notifier-tool";
 const defaultDescription =
   "Use this tool to send notifications or insights to the SDK. This allows real-time communication with the user interface.";
 
-export class SDKNotifierTool implements Tool<"sdk_notifier"> {
-  readonly type = "sdk_notifier";
+export class SDKNotifierTool implements Tool<"sdk-notifier-tool"> {
+  readonly type = "sdk-notifier-tool";
   private outputField: string;
   private options: ToolOptions;
 
@@ -15,11 +16,13 @@ export class SDKNotifierTool implements Tool<"sdk_notifier"> {
   readonly description: string;
   readonly schema: z.ZodSchema;
 
-  constructor(config: SDKNotifierConfig, options: ToolOptions) {
-    this.name = config.name || defaultName;
-    this.description = config.description || defaultDescription;
-    this.schema = config.schema;
-    this.outputField = config.output_field;
+  constructor(defintion: SDKNotifier, options: ToolOptions) {
+    this.name = defintion.name || defaultName;
+    this.description = defintion.description || defaultDescription;
+    this.schema = z.object({
+      input: z.any().describe(defintion.config.outputDescription),
+    });
+    this.outputField = defintion.config.outputFieldName;
     this.options = options;
   }
 
@@ -27,14 +30,17 @@ export class SDKNotifierTool implements Tool<"sdk_notifier"> {
     params: z.infer<typeof this.schema>,
   ): Promise<Result<string, Error>> {
     try {
-      if (!this.options.onNodeResult) {
+      logger.debug(
+        `running ${this.name} SDKNotifierTool: ${JSON.stringify(params)}`,
+      );
+      if (!this.options.onAgentNotification) {
         return Result.ok("No emiter provided for SDKNotifierTool");
       }
 
-      await this.options.onNodeResult(
+      await this.options.onAgentNotification(
         this.options.nodeId,
         this.outputField,
-        params,
+        params.input,
         "any",
       );
       return Result.ok(`Successfully sent notification to SDK`);

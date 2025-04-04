@@ -82,6 +82,9 @@ export class RunnerServer {
       WorkflowEvents.NODE_STARTED,
       WorkflowEvents.NODE_COMPLETED,
       WorkflowEvents.NODE_FAILED,
+      WorkflowEvents.NODE_LOG,
+      WorkflowEvents.NODE_RESULT,
+      WorkflowEvents.AGENT_NOTIFICATION,
     ] as const;
 
     for (const eventType of workflowEvents) {
@@ -90,12 +93,17 @@ export class RunnerServer {
       );
     }
 
-    this.executor.on(
+    const nodeEvents = [
+      WorkflowEvents.NODE_LOG,
       WorkflowEvents.NODE_RESULT,
-      this.handleNodeResult.bind(this),
-    );
+      WorkflowEvents.AGENT_NOTIFICATION,
+    ] as const;
 
-    this.executor.on(WorkflowEvents.NODE_LOG, this.handleNodeLog.bind(this));
+    for (const eventType of nodeEvents) {
+      this.executor.on(eventType, (data: any) =>
+        this.handleNodeEvent(eventType, data),
+      );
+    }
   }
 
   private async handleWorkflowEvent(
@@ -103,6 +111,19 @@ export class RunnerServer {
     data: any,
   ): Promise<void> {
     await this.notifier.publishWorkflowEvent({
+      type: eventType,
+      workflowId: data.workflowId,
+      triggerId: data.triggerId,
+      sessionId: data.sessionId,
+      data: this.extractEventData(eventType, data),
+    });
+  }
+
+  private async handleNodeEvent(
+    eventType: (typeof WorkflowEvents)[keyof typeof WorkflowEvents],
+    data: any,
+  ): Promise<void> {
+    await this.notifier.publishNodeEvent({
       type: eventType,
       workflowId: data.workflowId,
       triggerId: data.triggerId,
@@ -140,38 +161,28 @@ export class RunnerServer {
           nodeType: data.nodeType,
           error: data.error,
         };
-      default:
-        return data;
+      case WorkflowEvents.NODE_LOG:
+        return {
+          nodeId: data.nodeId,
+          nodeType: data.nodeType,
+          message: data.message,
+        };
+      case WorkflowEvents.NODE_RESULT:
+        return {
+          nodeId: data.nodeId,
+          nodeType: data.nodeType,
+          outputField: data.outputField,
+          data: data.data,
+          type: data.type,
+        };
+      case WorkflowEvents.AGENT_NOTIFICATION:
+        return {
+          nodeId: data.nodeId,
+          nodeType: data.nodeType,
+          outputField: data.outputField,
+          data: data.data,
+          type: data.type,
+        };
     }
-  }
-
-  private async handleNodeResult(data: any): Promise<void> {
-    await this.notifier.publishWorkflowEvent({
-      type: WorkflowEvents.NODE_RESULT,
-      workflowId: data.workflowId,
-      triggerId: data.triggerId,
-      sessionId: data.sessionId,
-      data: {
-        nodeId: data.nodeId,
-        nodeType: data.nodeType,
-        outputField: data.outputField,
-        data: data.data,
-        type: data.type,
-      },
-    });
-  }
-
-  private async handleNodeLog(data: any): Promise<void> {
-    await this.notifier.publishNodeLog({
-      type: WorkflowEvents.NODE_LOG,
-      workflowId: data.workflowId,
-      triggerId: data.triggerId,
-      sessionId: data.sessionId,
-      data: {
-        nodeId: data.nodeId,
-        nodeType: data.nodeType,
-        message: data.message,
-      },
-    });
   }
 }

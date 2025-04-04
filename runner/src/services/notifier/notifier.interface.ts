@@ -11,6 +11,7 @@ export const WorkflowEvents = {
 
   NODE_RESULT: "NODE_RESULT",
   NODE_LOG: "NODE_LOG",
+  AGENT_NOTIFICATION: "AGENT_NOTIFICATION",
 } as const;
 
 export interface WorkflowEvent {
@@ -24,7 +25,7 @@ export interface WorkflowEvent {
 export interface INotifier {
   initialize(): Promise<void>;
   publishWorkflowEvent(event: WorkflowEvent): Promise<string>;
-  publishNodeLog(event: WorkflowEvent): Promise<string>;
+  publishNodeEvent(event: WorkflowEvent): Promise<string>;
   close(): Promise<void>;
 }
 
@@ -39,37 +40,43 @@ interface BaseNodeEvent extends BaseEventData {
   nodeType: string;
 }
 
-interface WorkflowStartedEvent extends BaseEventData {
+export interface WorkflowStartedEvent extends BaseEventData {
   inputs: NodeInput;
 }
 
-interface WorkflowCompletedEvent extends BaseEventData {
+export interface WorkflowCompletedEvent extends BaseEventData {
   result: Record<string, any> | null;
 }
 
-interface WorkflowFailedEvent extends BaseEventData {
+export interface WorkflowFailedEvent extends BaseEventData {
   error: string;
 }
 
-interface NodeStartedEvent extends BaseNodeEvent {
+export interface NodeStartedEvent extends BaseNodeEvent {
   inputs: NodeInput;
 }
 
-interface NodeCompletedEvent extends BaseNodeEvent {
+export interface NodeCompletedEvent extends BaseNodeEvent {
   output: NodeOutput;
 }
 
-interface NodeFailedEvent extends BaseNodeEvent {
+export interface NodeFailedEvent extends BaseNodeEvent {
   error: string;
 }
 
-interface NodeResultEvent extends BaseNodeEvent {
+export interface NodeResultEvent extends BaseNodeEvent {
   outputField: string;
   type: NodeIOType;
   data: string;
 }
 
-interface NodeLogEvent extends BaseNodeEvent {
+export interface AgentNotificationEvent extends BaseNodeEvent {
+  outputField: string;
+  type: NodeIOType;
+  data: string;
+}
+
+export interface NodeLogEvent extends BaseNodeEvent {
   message: string;
 }
 
@@ -82,4 +89,5 @@ export interface WorkflowExecutorEvents {
   [WorkflowEvents.NODE_COMPLETED]: (event: NodeCompletedEvent) => void;
   [WorkflowEvents.NODE_FAILED]: (event: NodeFailedEvent) => void;
   [WorkflowEvents.NODE_LOG]: (event: NodeLogEvent) => void;
+  [WorkflowEvents.AGENT_NOTIFICATION]: (event: AgentNotificationEvent) => void;
 }

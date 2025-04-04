@@ -1,56 +1,61 @@
 import { Result } from "typescript-result";
 import { z } from "zod";
-import { NodeResultCallback } from "../nodes/types";
+import { AgentNotificationCallback } from "../nodes/types";
 
 export type ToolOptions = {
   nodeId: string;
   sessionId: string;
-  onNodeResult: NodeResultCallback;
+  onAgentNotification: AgentNotificationCallback;
 };
 
 export type ToolType =
-  | "openai_completion"
+  | "chat-openai-as-tool"
   | "discord_notifier"
   | "http_request"
-  | "sdk_notifier";
+  | "sdk-notifier-tool";
 
-type BaseConfig = {
+type Base = {
   name: string;
   description: string;
   type: ToolType;
+  config: Record<string, any>;
 };
 
-export interface DiscordConfig extends BaseConfig {
+export interface Discord extends Base {
   type: "discord_notifier";
-  webhookUrl: string;
+  config: {
+    webhookUrl: string;
+  };
 }
 
-export interface HttpConfig extends BaseConfig {
+export interface Http extends Base {
   type: "http_request";
-  headers: Record<string, string>;
-  url: string;
+  config: {
+    headers: Record<string, string>;
+    url: string;
+  };
 }
 
-export interface OpenAICompletionConfig extends BaseConfig {
-  type: "openai_completion";
-  model: string;
-  apiKey: string;
-  temperature?: number;
-  maxTokens?: number;
-  systemPrompt?: string;
+export interface OpenAICompletion extends Base {
+  type: "chat-openai-as-tool";
+  config: {
+    model: string;
+    apiKey: string;
+    temperature?: number;
+    maxTokens?: number;
+    systemPrompt?: string;
+  };
 }
 
-export interface SDKNotifierConfig extends BaseConfig {
-  type: "sdk_notifier";
-  output_field: string;
-  schema: z.ZodSchema;
+export interface SDKNotifier extends Base {
+  type: "sdk-notifier-tool";
+  config: {
+    outputFieldName: string;
+    outputDescription: string;
+  };
 }
 
-export type ToolConfig =
-  | DiscordConfig
-  | HttpConfig
-  | OpenAICompletionConfig
-  | SDKNotifierConfig;
+export type ToolConfig = Discord | Http | OpenAICompletion | SDKNotifier;
 
 export type ToolOutput = string;
 

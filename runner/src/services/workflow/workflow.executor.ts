@@ -200,6 +200,21 @@ export class WorkflowExecutor extends EventEmitter {
             managedContext,
           );
         },
+        onAgentNotification: async (
+          nodeId: string,
+          outputField: string,
+          data: string,
+          type: NodeIOType,
+        ) => {
+          this.emitAgentNotification(
+            nodeId,
+            node,
+            outputField,
+            data,
+            type,
+            managedContext,
+          );
+        },
         onNodeLog: async (nodeId: string, message: string) => {
           this.emitNodeLog(nodeId, node.type, message, managedContext);
         },
@@ -355,6 +370,24 @@ export class WorkflowExecutor extends EventEmitter {
     context: ManagedExecutionContext,
   ): void {
     this.emit(WorkflowEvents.NODE_RESULT, {
+      ...this.createBaseEventData(context.get),
+      nodeId,
+      nodeType: node.type,
+      outputField,
+      data,
+      type,
+    });
+  }
+
+  private emitAgentNotification(
+    nodeId: string,
+    node: NodeDefinition,
+    outputField: string,
+    data: string,
+    type: NodeIOType,
+    context: ManagedExecutionContext,
+  ): void {
+    this.emit(WorkflowEvents.AGENT_NOTIFICATION, {
       ...this.createBaseEventData(context.get),
       nodeId,
       nodeType: node.type,

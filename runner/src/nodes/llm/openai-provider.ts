@@ -34,10 +34,10 @@ export class OpenAIProvider implements INode {
   ): Result<OpenAIOptions, Error> {
     return Result.ok({
       ...config,
-      temperature: definition["temperature"],
-      maxTokens: definition["maxCompletionTokens"],
-      streaming: definition["streaming"],
-      systemPrompt: definition["developerMessage"],
+      temperature: definition.config["temperature"],
+      maxTokens: definition.config["maxCompletionTokens"],
+      streaming: definition.config["streaming"],
+      systemPrompt: definition.config["developerMessage"],
     });
   }
 

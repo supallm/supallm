@@ -1,6 +1,7 @@
 import { Result } from "typescript-result";
 import { z } from "zod";
-import { DiscordConfig, Tool, ToolOutput } from "./tool.interface";
+import { logger } from "../utils/logger";
+import { Discord, Tool, ToolOutput } from "./tool.interface";
 
 const defaultDescription =
   "Send notifications to Discord using webhooks. You can send simple messages or rich embeds.";
@@ -49,16 +50,19 @@ export class DiscordNotifierTool implements Tool<"discord_notifier"> {
       .optional(),
   });
 
-  constructor(config: DiscordConfig) {
-    this.name = config.name || defaultName;
-    this.description = config.description || defaultDescription;
-    this.webhookUrl = config.webhookUrl;
+  constructor(definition: Discord) {
+    this.name = definition.name || defaultName;
+    this.description = definition.description || defaultDescription;
+    this.webhookUrl = definition.config.webhookUrl;
   }
 
   async run(
     params: z.infer<typeof this.schema>,
   ): Promise<Result<ToolOutput, Error>> {
     try {
+      logger.debug(
+        `running ${this.name} DiscordNotifierTool: ${JSON.stringify(params)}`,
+      );
       const response = await fetch(this.webhookUrl, {
         method: "POST",
         headers: {

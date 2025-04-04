@@ -137,6 +137,12 @@ type RunnerMemory struct {
 	Config map[string]any `json:"config,omitempty"`
 }
 
+type RunnerAgentModel struct {
+	Provider     string `json:"provider"`
+	Model        string `json:"model"`
+	CredentialID string `json:"credentialId"`
+}
+
 // RunnerInput represents an input connection in the runner flow
 type RunnerInput struct {
 	Type   string `json:"type"`
@@ -265,7 +271,10 @@ func (p *Project) convertBuilderToRunnerFlow(builderFlow BuilderFlow) (*RunnerFl
 
 		slog.Info("node", "id", node.ID, "type", node.Type)
 		// Get connected tools and memory for the node
-		tools := p.getConnectedTools(node.ID, builderFlow.Edges, nodeMap)
+		tools, err := p.getConnectedTools(node.ID, builderFlow.Edges, nodeMap)
+		if err != nil {
+			return nil, fmt.Errorf("unable to get connected tools: %w", err)
+		}
 		memory := p.getConnectedMemory(node.ID, builderFlow.Edges, nodeMap)
 
 		// Process the node with its tools and memory
@@ -281,7 +290,7 @@ func (p *Project) convertBuilderToRunnerFlow(builderFlow BuilderFlow) (*RunnerFl
 }
 
 // getConnectedTools returns all tools connected to a node
-func (p *Project) getConnectedTools(nodeID string, edges []BuilderEdge, nodeMap map[string]BuilderNode) []RunnerTool {
+func (p *Project) getConnectedTools(nodeID string, edges []BuilderEdge, nodeMap map[string]BuilderNode) ([]RunnerTool, error) {
 	var tools []RunnerTool
 
 	for _, edge := range edges {
@@ -292,6 +301,18 @@ func (p *Project) getConnectedTools(nodeID string, edges []BuilderEdge, nodeMap 
 					tool := RunnerTool{
 						Type:   targetNode.Type,
 						Config: toolConfig,
+					}
+
+					if toolConfig["credentialId"] != nil {
+						credentialID, err := uuid.Parse(toolConfig["credentialId"].(string))
+						if err != nil {
+							return nil, fmt.Errorf("invalid credential ID: %w", err)
+						}
+						apiKey, err := p.getCredentialAPIKey(credentialID)
+						if err != nil {
+							return nil, fmt.Errorf("unable to get credential API key: %w", err)
+						}
+						toolConfig["apiKey"] = apiKey
 					}
 
 					// Add optional name and description if they exist
@@ -308,16 +329,12 @@ func (p *Project) getConnectedTools(nodeID string, edges []BuilderEdge, nodeMap 
 		}
 	}
 
-	return tools
+	return tools, nil
 }
 
 // getConnectedMemory returns the memory configuration connected to a node
 func (p *Project) getConnectedMemory(nodeID string, edges []BuilderEdge, nodeMap map[string]BuilderNode) *RunnerMemory {
 	for _, edge := range edges {
-		if edge.Source == nodeID {
-			slog.Info("memory edge", "source", edge.Source, "sourceHandle", edge.SourceHandle, "target", edge.Target)
-		}
-
 		if edge.Source == nodeID && strings.HasPrefix(edge.SourceHandle, MemoryPrefix) {
 			if memoryNode, exists := nodeMap[edge.Target]; exists {
 				var memoryConfig map[string]any
@@ -331,6 +348,46 @@ func (p *Project) getConnectedMemory(nodeID string, edges []BuilderEdge, nodeMap
 		}
 	}
 	return nil
+}
+
+// getConnectedMemory returns the memory configuration connected to a node
+func (p *Project) getAgentModel(nodeID string, edges []BuilderEdge, nodeMap map[string]BuilderNode) (*RunnerAgentModel, error) {
+	for _, edge := range edges {
+		if edge.Source == nodeID && strings.HasPrefix(edge.SourceHandle, AITypePrefix) {
+			if agentModel, exists := nodeMap[edge.Target]; exists {
+				var agentModelConfig map[string]any
+				if err := json.Unmarshal(agentModel.Data, &agentModelConfig); err != nil {
+					return nil, fmt.Errorf("unable to unmarshal agent model config: %w", err)
+				}
+
+				var provider string
+				if agentModel.Type == "model-openai" {
+					provider = "openai"
+				} else if agentModel.Type == "model-anthropic" {
+					provider = "anthropic"
+				} else {
+					return nil, fmt.Errorf("unsupported agent model type: %s", agentModel.Type)
+				}
+
+				model, ok := agentModelConfig["model"].(string)
+				if !ok || model == "" {
+					return nil, fmt.Errorf("model is required for agent model")
+				}
+
+				credentialID, ok := agentModelConfig["credentialId"].(string)
+				if !ok {
+					return nil, fmt.Errorf("credentialId is required for agent model")
+				}
+
+				return &RunnerAgentModel{
+					Provider:     provider,
+					Model:        model,
+					CredentialID: credentialID,
+				}, nil
+			}
+		}
+	}
+	return nil, fmt.Errorf("no agent model found for node %s", nodeID)
 }
 
 // getNodeProcessor returns the appropriate processor function for a given node type
@@ -347,7 +404,6 @@ func (p *Project) getNodeProcessor(nodeType string) (func(BuilderNode, []Builder
 	case nodeType == "code-executor":
 		return p.processCodeExecutorNode, nil
 	default:
-		slog.Info("unknown node type", "type", nodeType)
 		return nil, nil
 	}
 }
@@ -471,6 +527,20 @@ func (p *Project) processAIAgentNode(node BuilderNode, edges []BuilderEdge, node
 	if err := json.Unmarshal(node.Data, &nodeConfig); err != nil {
 		return nil, fmt.Errorf("unable to unmarshal AI agent node data: %w", err)
 	}
+
+	agentModel, err := p.getAgentModel(node.ID, edges, nodeMap)
+	if err != nil {
+		return nil, err
+	}
+
+	apiKey, err := p.getCredentialAPIKey(uuid.MustParse(agentModel.CredentialID))
+	if err != nil {
+		return nil, fmt.Errorf("unable to get credential API key: %w", err)
+	}
+
+	nodeConfig["provider"] = agentModel.Provider
+	nodeConfig["model"] = agentModel.Model
+	nodeConfig["apiKey"] = apiKey
 
 	// Build inputs and outputs
 	inputs := p.buildNodeInputs(node.ID, edges)

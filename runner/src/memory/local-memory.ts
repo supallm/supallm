@@ -9,9 +9,9 @@ import config from "../utils/config";
 import { logger } from "../utils/logger";
 import { IMemory } from "./memory.interface";
 
-const SUPALLM_MEMORY_DB = 3;
+const LOCAL_MEMORY_DB = 3;
 
-export class SupallmMemory implements IMemory {
+export class LocalMemory implements IMemory {
   private readonly redis: Redis;
   private readonly ttl: number;
   private readonly keyPrefix = "memory"; // memory:<sessionId>:<nodeId>
@@ -23,7 +23,7 @@ export class SupallmMemory implements IMemory {
 
   private initializeRedisClient(): Redis {
     const redisOptions = {
-      db: SUPALLM_MEMORY_DB,
+      db: LOCAL_MEMORY_DB,
       password: config.redis.password,
       retryStrategy: (times: number) => {
         return Math.min(times * 100, 3000); // retry with an increasing delay

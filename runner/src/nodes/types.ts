@@ -16,7 +16,7 @@ export type NodeType =
   | "entrypoint"
   | "result"
   | "code-executor"
-  | "agent";
+  | "ai-agent";
 
 export type NodeIOType = "text" | "image" | "any";
 
@@ -40,10 +40,17 @@ export interface NodeDefinition {
   outputs: Record<string, NodeOutputDef>;
   tools: ToolConfig[];
   memory: MemoryConfig;
-  [key: string]: any;
+  config: Record<string, any>;
 }
 
 export type NodeResultCallback = (
+  nodeId: string,
+  outputField: string,
+  data: string,
+  type: NodeIOType,
+) => Promise<void>;
+
+export type AgentNotificationCallback = (
   nodeId: string,
   outputField: string,
   data: string,
@@ -58,6 +65,7 @@ export type NodeLogCallback = (
 export type NodeOptions = {
   sessionId: string;
   onNodeResult: NodeResultCallback;
+  onAgentNotification: AgentNotificationCallback;
   onNodeLog: NodeLogCallback;
 };
 

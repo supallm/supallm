@@ -1,6 +1,7 @@
 import { Result } from "typescript-result";
 import { z } from "zod";
-import { HttpConfig, Tool, ToolOutput } from "./tool.interface";
+import { logger } from "../utils/logger";
+import { Http, Tool, ToolOutput } from "./tool.interface";
 
 const defaultDescription =
   "Execute HTTP requests. You can send GET, POST, PUT, DELETE, PATCH, etc. requests to any URL.";
@@ -20,11 +21,11 @@ export class HttpTool implements Tool<"http_request"> {
     body: z.string().optional().describe("The body of the request"),
   });
 
-  constructor(config: HttpConfig) {
-    this.name = config.name || defaultName;
-    this.description = config.description || defaultDescription;
-    this.url = config.url;
-    this.headers = config.headers;
+  constructor(definition: Http) {
+    this.name = definition.name || defaultName;
+    this.description = definition.description || defaultDescription;
+    this.url = definition.config.url;
+    this.headers = definition.config.headers;
 
     if (!this.url) {
       throw new Error("URL is required");
@@ -35,6 +36,7 @@ export class HttpTool implements Tool<"http_request"> {
     params: z.infer<typeof this.schema>,
   ): Promise<Result<ToolOutput, Error>> {
     try {
+      logger.debug(`running ${this.name} HttpTool: ${JSON.stringify(params)}`);
       const response = await fetch(this.url, {
         method: params.method,
         headers: {

@@ -1,7 +1,7 @@
 import { BaseMessage } from "@langchain/core/messages";
 import { Result } from "typescript-result";
+import { LocalMemory } from "./local-memory";
 import { IMemory, MemoryConfig } from "./memory.interface";
-import { SupallmMemory } from "./supallm-memory";
 
 class NoMemory implements IMemory {
   async getMessages(): Promise<Result<BaseMessage[], Error>> {
@@ -34,7 +34,7 @@ export class MemoryRegistry {
   }
 
   private registerDefaultMemories(): void {
-    this.register("supallm", new SupallmMemory());
+    this.register("local-memory", new LocalMemory());
     this.register("none", new NoMemory());
   }
 

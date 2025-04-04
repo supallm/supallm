@@ -34,16 +34,16 @@ export class OllamaProvider implements INode {
     config: LLMOptions,
     definition: NodeDefinition,
   ): Result<OllamaOptions, Error> {
-    if (!definition["baseUrl"]) {
+    if (!definition.config["baseUrl"]) {
       return Result.error(new Error("baseUrl is required"));
     }
 
     return Result.ok({
       ...config,
-      baseUrl: definition["baseUrl"],
-      temperature: definition["temperature"],
-      maxTokens: definition["maxTokens"],
-      streaming: definition["streaming"],
+      baseUrl: definition.config["baseUrl"],
+      temperature: definition.config["temperature"],
+      maxTokens: definition.config["maxTokens"],
+      streaming: definition.config["streaming"],
     });
   }
 

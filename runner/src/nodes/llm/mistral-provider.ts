@@ -33,9 +33,9 @@ export class MistralProvider implements INode {
   ): Result<MistralOptions, Error> {
     return Result.ok({
       ...config,
-      temperature: definition["temperature"],
-      maxTokens: definition["maxTokens"],
-      streaming: definition["streaming"],
+      temperature: definition.config["temperature"],
+      maxTokens: definition.config["maxTokens"],
+      streaming: definition.config["streaming"],
     });
   }
 

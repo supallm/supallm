@@ -77,6 +77,8 @@ func (j workflowSSEMarshaller) Marshal(_ context.Context, payload any) (watermil
 			eventType = "log"
 		case msg.Type.IsNodeError():
 			eventType = "error"
+		case msg.Type.IsAgentNotification():
+			eventType = "agent"
 		}
 	}
 
