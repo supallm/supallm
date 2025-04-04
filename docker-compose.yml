@@ -103,6 +103,7 @@ services:
       - REDIS_HOST=${REDIS_HOST}
       - REDIS_PORT=${REDIS_PORT}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - NSJAIL_CLONE_NEW_USER=${NSJAIL_CLONE_NEW_USER:-true}
     networks:
       - supallm-network
     depends_on:

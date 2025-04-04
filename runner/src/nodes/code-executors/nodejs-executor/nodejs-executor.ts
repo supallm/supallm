@@ -3,6 +3,7 @@ import crypto from "crypto";
 import fs from "fs";
 import path from "path";
 import { Result } from "typescript-result";
+import config from "../../../utils/config";
 import {
   parseCodeForRequiredModules,
   validateMainFunctionExists,
@@ -102,7 +103,12 @@ export class NodejsExecutor {
     // 3. Generate a temporary `.proto` file with the sandbox ID
     const protoFilePath = path.join(sandboxPath, "sandbox.proto");
     const protoTemplate = fs.readFileSync(NSJAIL_TEMPLATE, "utf8");
-    const protoContent = protoTemplate.replace(/{SANDBOX_ID}/g, sandboxId);
+    const cloneNewUser = config.nsJailCloneNewUser;
+
+    const protoContent = protoTemplate
+      .replace(/{SANDBOX_ID}/g, sandboxId)
+      .replace(/{CLONE_NEW_USER}/g, cloneNewUser);
+
     fs.writeFileSync(protoFilePath, protoContent);
     console.log("Wrote njail proto to:", protoFilePath);
 
@@ -110,7 +116,7 @@ export class NodejsExecutor {
       fs.rmSync(sandboxPath, { recursive: true, force: true });
     };
 
-    console.log("New version 2.");
+    console.log("NSJAIL_CLONE_NEW_USER", cloneNewUser);
 
     if (modulesToInstall.length > 0) {
       try {

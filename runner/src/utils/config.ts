@@ -6,6 +6,7 @@ export interface RunnerConfig {
   maxConcurrentJobs: number;
   redisUrl: string;
   secretKey: string;
+  nsJailCloneNewUser: "true" | "false";
 }
 
 const getNumberEnv = (key: string, defaultValue: number): number => {
@@ -36,6 +37,8 @@ export const config: RunnerConfig = {
   maxConcurrentJobs: getNumberEnv("RUNNER_MAX_CONCURRENT_JOBS", 5),
   redisUrl: getRedisUrl(),
   secretKey: getKey("SECRET_KEY"),
+  nsJailCloneNewUser:
+    getStringEnv("NSJAIL_CLONE_NEW_USER", "true") !== "true" ? "false" : "true",
 };
 
 export function validateConfig(config: RunnerConfig): void {
