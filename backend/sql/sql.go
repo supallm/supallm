@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"strings"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
@@ -23,8 +24,13 @@ func RunMigrations(conf config.Postgres) error {
 		return fmt.Errorf("failed to create source: %w", err)
 	}
 
+	dbURL := conf.URL
+	if !strings.Contains(dbURL, "sslmode=") {
+		dbURL += "?sslmode=disable"
+	}
+
 	//nolint:all
-	db, err := sql.Open("postgres", conf.URL+"?sslmode=disable")
+	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
 		return fmt.Errorf("failed to create database: %w", err)
 	}
