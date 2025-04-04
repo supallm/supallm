@@ -4,6 +4,10 @@ up:
 	@echo [ starting all services... ]
 	@docker compose -f docker-compose.dev.yml up
 
+upb:
+	@echo [ starting all services... ]
+	@docker compose -f docker-compose.dev.yml up --build
+
 backend:
 	@echo [ starting backend... ]
 	@docker compose -f docker-compose.dev.yml up supallm_api supallm_runner

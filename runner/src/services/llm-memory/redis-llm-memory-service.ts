@@ -19,6 +19,7 @@ export class RedisMemoryService {
 
   private initializeRedisClient(redisUrl: string): Redis {
     const redisOptions = {
+      family: 0,
       db: 2, // memory db
       password: process.env["REDIS_PASSWORD"],
       retryStrategy: (times: number) => {

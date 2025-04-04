@@ -26,7 +26,10 @@ export class RedisNotifier implements INotifier {
   }
 
   private initializeRedisClient(redisUrl: string): Redis {
-    const redisOptions = { password: process.env["REDIS_PASSWORD"] };
+    const redisOptions = {
+      family: 0,
+      password: process.env["REDIS_PASSWORD"],
+    };
     const redis = new Redis(redisUrl, redisOptions);
 
     redis.on("error", (err) => {
