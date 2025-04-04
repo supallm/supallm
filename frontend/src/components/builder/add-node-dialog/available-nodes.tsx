@@ -1,3 +1,4 @@
+import { Airtable } from "@/components/logos/airtable";
 import { Confluence } from "@/components/logos/confluence";
 import { E2B } from "@/components/logos/e2b";
 import { Notion } from "@/components/logos/notion";
@@ -192,6 +193,14 @@ export const availableNodes: AvailableNode[] = [
     name: "Confluence",
     description: "Search and retrieve information from Confluence",
     logo: <Confluence width={20} height={20} />,
+    commingSoon: false,
+  },
+  {
+    category: "agent-tools",
+    type: "airtable-tool",
+    name: "Airtable",
+    description: "Interact with Airtable bases and tables",
+    logo: <Airtable width={20} height={20} />,
     commingSoon: false,
   },
 ] as const;

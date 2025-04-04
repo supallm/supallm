@@ -9,7 +9,7 @@ import {
 } from "./credential-choice-card";
 
 export const ProviderInfoMap: Record<
-  ProviderType,
+  Exclude<ProviderType, "ollama">,
   Omit<CredentialChoiceCardProps, "onSelected">
 > = {
   openai: {
@@ -88,11 +88,26 @@ export const ProviderInfoMap: Record<
     ),
     apiKeyPlaceholder: "Enter your Confluence API token",
   },
-  ollama: {
-    name: "Ollama",
-    description: "Ollama is a powerful AI provider",
-    logo: <ProviderLogo name="ollama" width={30} height={30} />,
+  airtable: {
+    name: "Airtable",
+    description: "Connect and interact with your Airtable bases",
+    logo: <ProviderLogo name="airtable" width={30} height={30} />,
     commingSoon: false,
+    apiKeyLabel: "Personal Access Token",
+    apiKeyHint: (
+      <FormDescription>
+        You can find your Personal Access Token in your{" "}
+        <Link
+          className="text-blue-500"
+          target="_blank"
+          href="https://support.airtable.com/docs/creating-personal-access-tokens"
+        >
+          Airtable account settings
+        </Link>
+        . The token will be encrypted and stored securely.
+      </FormDescription>
+    ),
+    apiKeyPlaceholder: "Your personal access token",
   },
 } as const;
 

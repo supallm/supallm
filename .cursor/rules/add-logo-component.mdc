@@ -1,0 +1,41 @@
+---
+description: This rule is helpful when the user requests to create a new logo component in the frontend
+globs: 
+alwaysApply: false
+---
+
+# Add logo component
+
+When you are asked to create a new logo in the frontend use these rules.
+
+IMPORTANT: 
+
+1. ask the user to provide the logo raw svg content and the logo name if not provided
+
+2. create a logo file with the lowercased name in the logos directory at frontend/src/components/logos/<name>.tsx
+
+3. Use the following template and make sure to :
+- Update the component name with the actual Logo name 
+- Adapt the raw svg so it's compatible with a React Component
+- Keep the viewbox of the raw svg but expose the width and height as props
+
+```tsx
+import { FC } from "react";
+
+export const LogoName: FC<{ width: number; height: number }> = ({
+  width,
+  height,
+}) => {
+  return (
+    <svg
+      width={width}
+      height={height}
+      
+     ... the reste of the SVG
+    </svg>
+  );
+};
+```
+
+
+

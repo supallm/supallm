@@ -1,5 +1,6 @@
 import { ProviderType } from "@/core/entities/credential";
 import { FC } from "react";
+import { Airtable } from "./airtable";
 import { Anthropic } from "./anthropic";
 import { Azure } from "./azure";
 import { Confluence } from "./confluence";
@@ -40,6 +41,8 @@ export const ProviderLogo: FC<{
       return <PostgresLogo width={w} height={h} />;
     case "confluence":
       return <Confluence width={w} height={h} />;
+    case "airtable":
+      return <Airtable width={w} height={h} />;
     default:
       return <div>No logo available</div>;
   }

@@ -14,6 +14,7 @@ export const UtilityProviderTypes = [
   "notion",
   "postgres",
   "confluence",
+  "airtable",
 ] as const;
 
 export const ProviderTypes = [
@@ -42,6 +43,7 @@ export const ProviderTypeLabelMap: Record<ProviderType, string> = {
   notion: "Notion",
   postgres: "Postgres",
   confluence: "Confluence",
+  airtable: "Airtable",
 } as const;
 
 export const CredentialLabel = (name: ProviderType) => {

@@ -7,6 +7,7 @@ export const ToolNodeTypes = [
   "notion-database-tool",
   "postgres-query-tool",
   "confluence-tool",
+  "airtable-tool",
 ] as const;
 export const UtilityNodeTypes = ["local-memory", "model-openai"] as const;
 
