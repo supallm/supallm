@@ -82,9 +82,6 @@ export class RunnerServer {
       WorkflowEvents.NODE_STARTED,
       WorkflowEvents.NODE_COMPLETED,
       WorkflowEvents.NODE_FAILED,
-      WorkflowEvents.NODE_LOG,
-      WorkflowEvents.NODE_RESULT,
-      WorkflowEvents.AGENT_NOTIFICATION,
     ] as const;
 
     for (const eventType of workflowEvents) {
