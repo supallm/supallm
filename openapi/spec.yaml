@@ -721,6 +721,8 @@ components:
       properties:
         triggerId:
           $ref: "#/components/schemas/UUID"
+        sessionId:
+          $ref: "#/components/schemas/UUID"
         inputs:
           type: object
       required:

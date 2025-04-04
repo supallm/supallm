@@ -24,13 +24,14 @@ func NewService(_ context.Context, publisher message.Publisher) *Service {
 func (s *Service) QueueWorkflow(
 	ctx context.Context,
 	triggerID uuid.UUID,
+	sessionID uuid.UUID,
 	workflow *model.Workflow,
 	inputs map[string]any,
 ) error {
 	queueMsg := workflowQueueMessage{
 		WorkflowID: workflow.ID,
 		TriggerID:  triggerID,
-		SessionID:  uuid.New(),
+		SessionID:  sessionID,
 		ProjectID:  workflow.ProjectID,
 		Definition: workflow.RunnerFlow,
 		Inputs:     inputs,

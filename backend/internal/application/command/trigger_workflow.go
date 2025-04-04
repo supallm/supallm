@@ -16,6 +16,7 @@ type TriggerWorkflowCommand struct {
 	WorkflowID model.WorkflowID
 	ProjectID  uuid.UUID
 	TriggerID  uuid.UUID
+	SessionID  uuid.UUID
 	Inputs     map[string]any
 }
 
@@ -61,7 +62,7 @@ func (h TriggerWorkflowHandler) Handle(ctx context.Context, cmd TriggerWorkflowC
 		return errs.InvalidError{Reason: "unable to compute workflow", Err: err}
 	}
 
-	err = h.runnerService.QueueWorkflow(ctx, cmd.TriggerID, workflow, cmd.Inputs)
+	err = h.runnerService.QueueWorkflow(ctx, cmd.TriggerID, cmd.SessionID, workflow, cmd.Inputs)
 	if err != nil {
 		return errs.InternalError{Err: err}
 	}

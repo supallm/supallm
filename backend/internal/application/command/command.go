@@ -18,7 +18,13 @@ const (
 
 type (
 	runnerService interface {
-		QueueWorkflow(ctx context.Context, triggerID uuid.UUID, workflow *model.Workflow, inputs map[string]any) error
+		QueueWorkflow(
+			ctx context.Context,
+			triggerID uuid.UUID,
+			sessionID uuid.UUID,
+			workflow *model.Workflow,
+			inputs map[string]any,
+		) error
 	}
 
 	retryConfig struct {
