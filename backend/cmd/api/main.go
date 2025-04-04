@@ -14,6 +14,7 @@ import (
 	"github.com/supallm/core/internal/pkg/config"
 	"github.com/supallm/core/internal/pkg/logger"
 	"github.com/supallm/core/internal/pkg/server"
+	"github.com/supallm/core/sql"
 )
 
 const (
@@ -34,6 +35,11 @@ func run() error {
 	defer stop()
 
 	conf := config.Load(ctx)
+
+	if err := sql.RunMigrations(conf.Postgres); err != nil {
+		return fmt.Errorf("failed to run database migrations: %w", err)
+	}
+
 	server := server.New(conf)
 
 	app, err := application.New(ctx, conf)

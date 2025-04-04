@@ -33,7 +33,6 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - supallm_data:/var/lib/postgresql/data
-      - ./backend/sql/schemas.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     networks:
