@@ -10,6 +10,7 @@ import { ToolNode } from "@langchain/langgraph/prebuilt";
 import { ChatOpenAI } from "@langchain/openai";
 import { Result } from "typescript-result";
 import { z } from "zod";
+import { MemoryRegistry } from "../../memory/memory-registry";
 import { CryptoService } from "../../services/secret/crypto-service";
 import { ToolConfig } from "../../tools";
 import { ToolRegistry } from "../../tools/tool-registry";
@@ -53,12 +54,12 @@ export class Agent implements INode {
       const model = llm.bindTools(langchainTools);
 
       // Get memory instance from registry
-      // const [memory, memoryError] = MemoryRegistry.getInstance()
-      //   .create(definition.memory || { type: "none" })
-      //   .toTuple();
-      // if (memoryError) {
-      //   return Result.error(memoryError);
-      // }
+      const [memory, memoryError] = MemoryRegistry.getInstance()
+        .create(definition.memory || { type: "none" })
+        .toTuple();
+      if (memoryError) {
+        return Result.error(memoryError);
+      }
 
       function shouldContinue({ messages }: typeof MessagesAnnotation.State) {
         const lastMessage = messages[messages.length - 1] as AIMessage;
@@ -69,27 +70,32 @@ export class Agent implements INode {
       }
 
       async function callModel(state: typeof MessagesAnnotation.State) {
-        // if (!memory) {
-        //   throw new Error("memory instance not initialized");
-        // }
+        if (!memory) {
+          throw new Error("memory instance not initialized");
+        }
 
-        // // Load messages from memory
-        // const [messages, loadError] = (
-        //   await memory.getMessages(options.sessionId, nodeId)
-        // ).toTuple();
-        // if (loadError) {
-        //   throw loadError;
-        // }
+        const lastMessage = state.messages[state.messages.length - 1];
+        const hasToolCalls =
+          lastMessage &&
+          "tool_calls" in lastMessage &&
+          Array.isArray(lastMessage.tool_calls) &&
+          lastMessage.tool_calls.length > 0;
 
-        // const allMessages = [...messages, ...state.messages];
-        const response = await model.invoke(state.messages);
+        if (hasToolCalls) {
+          const response = await model.invoke(state.messages);
+          return { messages: [...state.messages, response] };
+        }
 
-        // Save response to memory
-        // await memory.addMessages(options.sessionId, nodeId, [response]);
+        const [messages, loadError] = (
+          await memory.getMessages(options.sessionId, nodeId)
+        ).toTuple();
+        if (loadError) {
+          throw loadError;
+        }
 
-        return {
-          messages: [...state.messages, response],
-        };
+        const response = await model.invoke([...messages, ...state.messages]);
+        await memory.addMessages(options.sessionId, nodeId, [response]);
+        return { messages: [...state.messages, response] };
       }
 
       const workflow = new StateGraph(MessagesAnnotation)
@@ -100,13 +106,25 @@ export class Agent implements INode {
         .addConditionalEdges("agent", shouldContinue);
 
       const app = workflow.compile();
+
+      const initialMessages = [
+        new SystemMessage(
+          definition.config["instructions"] || defaultInstructions,
+        ),
+        new HumanMessage(inputs["prompt"]),
+      ];
+
+      if (memory) {
+        const [saveError] = (
+          await memory.addMessages(options.sessionId, nodeId, initialMessages)
+        ).toTuple();
+        if (saveError) {
+          return Result.error(saveError);
+        }
+      }
+
       const finalState = await app.invoke({
-        messages: [
-          new SystemMessage(
-            definition.config["instructions"] || defaultInstructions,
-          ),
-          new HumanMessage(inputs["prompt"]),
-        ],
+        messages: initialMessages,
       });
 
       const finalResponse = finalState.messages?.length

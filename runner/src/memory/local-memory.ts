@@ -2,6 +2,7 @@ import {
   BaseMessage,
   mapChatMessagesToStoredMessages,
   mapStoredMessagesToChatMessages,
+  SystemMessage,
 } from "@langchain/core/messages";
 import Redis from "ioredis";
 import { Result } from "typescript-result";
@@ -54,7 +55,15 @@ export class LocalMemory implements IMemory {
       const parsed = JSON.parse(raw);
 
       const messages = mapStoredMessagesToChatMessages(parsed);
-      return Result.ok(messages);
+      // On s'assure qu'il n'y a qu'un seul message système, le premier
+      const systemMessage = messages.find((m) => m instanceof SystemMessage);
+      const nonSystemMessages = messages.filter(
+        (m) => !(m instanceof SystemMessage),
+      );
+
+      return Result.ok(
+        systemMessage ? [systemMessage, ...nonSystemMessages] : messages,
+      );
     } catch (e: any) {
       return Result.error(new Error(`failed to get messages: ${e.message}`));
     }
@@ -70,13 +79,47 @@ export class LocalMemory implements IMemory {
       const raw = await this.redis.get(key);
       const current = raw ? JSON.parse(raw) : [];
 
-      const filtered = messages.filter(
-        (m) => !["tool", "function"].includes(m.getType()),
-      );
-      const stored = mapChatMessagesToStoredMessages(filtered);
-      const updated = [...current, ...stored];
+      const filtered = messages.filter((m) => {
+        if (m instanceof SystemMessage || m.getType() === "human") {
+          return true;
+        }
 
-      await this.redis.set(key, JSON.stringify(updated), "EX", this.ttl);
+        if (
+          "tool_calls" in m &&
+          Array.isArray(m.tool_calls) &&
+          m.tool_calls.length > 0
+        ) {
+          return false;
+        }
+        return !["tool", "function"].includes(m.getType());
+      });
+
+      if (filtered.length === 0) {
+        return Result.ok();
+      }
+
+      const currentMessages = mapStoredMessagesToChatMessages(current);
+      const hasExistingSystem = currentMessages.some(
+        (m) => m instanceof SystemMessage,
+      );
+      const newSystemMessage = filtered.find((m) => m instanceof SystemMessage);
+
+      let updatedMessages;
+      if (hasExistingSystem && newSystemMessage) {
+        const existingNonSystem = currentMessages.filter(
+          (m) => !(m instanceof SystemMessage),
+        );
+        updatedMessages = [
+          newSystemMessage,
+          ...existingNonSystem,
+          ...filtered.filter((m) => !(m instanceof SystemMessage)),
+        ];
+      } else {
+        updatedMessages = [...currentMessages, ...filtered];
+      }
+
+      const stored = mapChatMessagesToStoredMessages(updatedMessages);
+      await this.redis.set(key, JSON.stringify(stored), "EX", this.ttl);
       return Result.ok();
     } catch (e: any) {
       return Result.error(new Error(`failed to add messages: ${e.message}`));
