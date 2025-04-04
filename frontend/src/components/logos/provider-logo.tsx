@@ -2,6 +2,7 @@ import { ProviderType } from "@/core/entities/credential";
 import { FC } from "react";
 import { Anthropic } from "./anthropic";
 import { Azure } from "./azure";
+import { Confluence } from "./confluence";
 import { E2B } from "./e2b";
 import { Google } from "./google";
 import { Mistral } from "./mistral";
@@ -37,6 +38,8 @@ export const ProviderLogo: FC<{
       return <Notion width={w} height={h} />;
     case "postgres":
       return <PostgresLogo width={w} height={h} />;
+    case "confluence":
+      return <Confluence width={w} height={h} />;
     default:
       return <div>No logo available</div>;
   }

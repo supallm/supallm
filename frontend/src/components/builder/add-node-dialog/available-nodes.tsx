@@ -1,3 +1,4 @@
+import { Confluence } from "@/components/logos/confluence";
 import { E2B } from "@/components/logos/e2b";
 import { Notion } from "@/components/logos/notion";
 import { PostgresLogo } from "@/components/logos/postgres";
@@ -183,6 +184,14 @@ export const availableNodes: AvailableNode[] = [
     description:
       "Provide pre-defined SQL queries that the AI agent can use securely",
     logo: <PostgresLogo className="w-8 h-8" />,
+    commingSoon: false,
+  },
+  {
+    category: "agent-tools",
+    type: "confluence-tool",
+    name: "Confluence",
+    description: "Search and retrieve information from Confluence",
+    logo: <Confluence width={20} height={20} />,
     commingSoon: false,
   },
 ] as const;

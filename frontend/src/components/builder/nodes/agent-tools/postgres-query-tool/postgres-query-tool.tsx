@@ -128,7 +128,7 @@ const PostgresQueryTool: FC<PostgresQueryToolProps> = ({
               <FormField
                 control={form.control}
                 name="name"
-                render={({ field }) => (
+                render={() => (
                   <FormItem>
                     <FormLabel>Name of the tool</FormLabel>
                     <FormControl>
@@ -145,7 +145,7 @@ const PostgresQueryTool: FC<PostgresQueryToolProps> = ({
               <FormField
                 control={form.control}
                 name="description"
-                render={({ field }) => (
+                render={() => (
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>

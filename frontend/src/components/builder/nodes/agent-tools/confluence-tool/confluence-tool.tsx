@@ -1,4 +1,4 @@
-import { Notion } from "@/components/logos/notion";
+import { Confluence } from "@/components/logos/confluence";
 import { SelectCredentials } from "@/components/select-credentials";
 import {
   Form,
@@ -9,30 +9,24 @@ import {
 } from "@/components/ui/form";
 import { generateHandleId } from "@/lib/handles";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { NodeProps, useReactFlow, useUpdateNodeInternals } from "@xyflow/react";
-import { FC, memo, useEffect, useMemo } from "react";
+import { NodeProps, useReactFlow } from "@xyflow/react";
+import { FC, memo } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import BaseNode from "../../common/base-node";
 import { BaseNodeContent } from "../../common/base-node-content";
 
-type NotionDatabaseToolData = {
-  credentialId: string;
+type ConfluenceToolProps = NodeProps & {
+  data: {
+    credentialId: string;
+  };
 };
 
-type NotionDatabaseToolProps = NodeProps & {
-  data: NotionDatabaseToolData;
-};
-
-const NotionDatabaseTool: FC<NotionDatabaseToolProps> = ({
-  data,
-  id: nodeId,
-}) => {
+const ConfluenceTool: FC<ConfluenceToolProps> = ({ data, id: nodeId }) => {
   const { updateNodeData } = useReactFlow();
-  const updateNodeInternals = useUpdateNodeInternals();
 
   const formSchema = z.object({
-    credentialId: z.string().min(2),
+    credentialId: z.string().min(1, "Credential is required"),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -45,40 +39,34 @@ const NotionDatabaseTool: FC<NotionDatabaseToolProps> = ({
 
   form.watch(() => {
     const formValues = form.getValues();
-    const data: NotionDatabaseToolData = {
+    updateNodeData(nodeId, {
       credentialId: formValues.credentialId,
-    };
-    updateNodeData(nodeId, data);
+    } satisfies ConfluenceToolProps["data"]);
   });
 
-  const outputHandles = useMemo(() => {
-    return [
-      {
-        label: "AI Agent",
-        id: generateHandleId("tools", "notion-database"),
-        type: "tools",
-      } as const,
-    ];
-  }, []);
-
-  useEffect(() => {
-    updateNodeInternals(nodeId);
-  }, [nodeId, outputHandles, updateNodeInternals]);
+  // Define fixed input/output handles
+  const outputHandles = [
+    {
+      type: "tools" as const,
+      id: generateHandleId("tools", "ai-agent"),
+      label: "AI Agent",
+    },
+  ];
 
   return (
     <BaseNode
       nodeId={nodeId}
-      outputHandles={outputHandles}
       inputHandles={[]}
+      outputHandles={outputHandles}
       header={
         <>
-          <Notion width={20} height={20} />
-          <span className="font-medium text-sm">Notion Database</span>
+          <Confluence width={20} height={20} />
+          <span className="font-medium text-sm">Confluence Tool</span>
         </>
       }
     >
       <BaseNodeContent>
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-4">
           <Form {...form}>
             <form className="space-y-4">
               <FormField
@@ -90,7 +78,7 @@ const NotionDatabaseTool: FC<NotionDatabaseToolProps> = ({
                     <SelectCredentials
                       onValueChange={field.onChange}
                       defaultValue={field.value}
-                      providerType={"notion"}
+                      providerType="confluence"
                     />
                     <FormMessage />
                   </FormItem>
@@ -104,4 +92,4 @@ const NotionDatabaseTool: FC<NotionDatabaseToolProps> = ({
   );
 };
 
-export default memo(NotionDatabaseTool);
+export default memo(ConfluenceTool);

@@ -51,6 +51,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import { PlayIcon, PlusIcon } from "lucide-react";
 
+import ConfluenceTool from "@/components/builder/nodes/agent-tools/confluence-tool/confluence-tool";
 import notionDatabaseTool from "@/components/builder/nodes/agent-tools/notion-database-tool/notion-database-tool";
 import postgresQueryTool from "@/components/builder/nodes/agent-tools/postgres-query-tool/postgres-query-tool";
 import { useCallback, useEffect, useMemo } from "react";
@@ -147,6 +148,8 @@ const ChatFlowPage = () => {
 
   useEffect(() => {
     onSave(edges, nodes);
+    // Important: do not add onSave as a dependency, it will cause an infinite loop
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [edges, nodes]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -178,6 +181,7 @@ const ChatFlowPage = () => {
       "e2b-code-interpreter-tool": e2bCodeInterpreterTool,
       "notion-database-tool": notionDatabaseTool,
       "postgres-query-tool": postgresQueryTool,
+      "confluence-tool": ConfluenceTool,
     }),
     [],
   );
