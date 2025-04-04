@@ -1,6 +1,6 @@
 import Redis from "ioredis";
-import { IQueueConsumer, WorkflowMessage } from "./queuer.interface";
 import { logger } from "../../utils/logger";
+import { IQueueConsumer, WorkflowMessage } from "./queuer.interface";
 import { PendingMessageInfo } from "./types";
 
 interface RedisStreamMessage {
@@ -15,7 +15,7 @@ interface RedisStreamResult {
 
 type RedisStreamResponse = [
   streamName: string,
-  messages: [messageId: string, fields: string[]][]
+  messages: [messageId: string, fields: string[]][],
 ][];
 
 const DEFAULT_MAX_PARALLEL_JOBS = 10;
@@ -46,6 +46,7 @@ export class RedisQueueConsumer implements IQueueConsumer {
 
   private initializeRedisClient(redisUrl: string): Redis {
     const redisOptions = {
+      family: 0,
       db: 0,
       password: process.env["REDIS_PASSWORD"],
       retryStrategy: (times: number) => {
@@ -92,10 +93,10 @@ export class RedisQueueConsumer implements IQueueConsumer {
         this.QUEUE_TOPIC,
         this.CONSUMER_GROUP,
         "0",
-        "MKSTREAM"
+        "MKSTREAM",
       );
       logger.info(
-        `created consumer group ${this.CONSUMER_GROUP} for ${this.QUEUE_TOPIC}`
+        `created consumer group ${this.CONSUMER_GROUP} for ${this.QUEUE_TOPIC}`,
       );
     } catch (err) {
       if (!(err instanceof Error) || !err.message.includes("BUSYGROUP")) {
@@ -105,13 +106,13 @@ export class RedisQueueConsumer implements IQueueConsumer {
   }
 
   async consumeWorkflowQueue(
-    handler: (message: WorkflowMessage) => Promise<void>
+    handler: (message: WorkflowMessage) => Promise<void>,
   ): Promise<void> {
     try {
       logger.info(
         `consuming topic ${
           this.QUEUE_TOPIC
-        } - remaining slots: ${this.getRemainingSlots()}`
+        } - remaining slots: ${this.getRemainingSlots()}`,
       );
       while (this.isRunning) {
         await this.waitForAvailableSlot();
@@ -128,7 +129,7 @@ export class RedisQueueConsumer implements IQueueConsumer {
   private async waitForAvailableSlot(): Promise<void> {
     if (this.activeJobs >= this.MAX_PARALLEL_JOBS) {
       logger.info(
-        `waiting for available slot, all the ${this.MAX_PARALLEL_JOBS} slots are taken`
+        `waiting for available slot, all the ${this.MAX_PARALLEL_JOBS} slots are taken`,
       );
     }
     while (this.activeJobs >= this.MAX_PARALLEL_JOBS) {
@@ -147,7 +148,7 @@ export class RedisQueueConsumer implements IQueueConsumer {
       BLOCK_TIMEOUT,
       "STREAMS",
       this.QUEUE_TOPIC,
-      ">"
+      ">",
     )) as RedisStreamResponse;
 
     if (!result) return null;
@@ -160,7 +161,7 @@ export class RedisQueueConsumer implements IQueueConsumer {
 
   private processMessages(
     result: RedisStreamResult[],
-    handler: (message: WorkflowMessage) => Promise<void>
+    handler: (message: WorkflowMessage) => Promise<void>,
   ): void {
     const streamResults = result;
 
@@ -168,12 +169,12 @@ export class RedisQueueConsumer implements IQueueConsumer {
       for (const { id: messageId, fields } of messages) {
         this.activeJobs++;
         logger.info(
-          `processing new job ${messageId} - remaining slots: ${this.getRemainingSlots()}`
+          `processing new job ${messageId} - remaining slots: ${this.getRemainingSlots()}`,
         );
         this.processMessage(messageId, fields, handler).then(() => {
           this.activeJobs--;
           logger.info(
-            `completed job ${messageId} - remaining slots: ${this.getRemainingSlots()}`
+            `completed job ${messageId} - remaining slots: ${this.getRemainingSlots()}`,
           );
         });
       }
@@ -183,7 +184,7 @@ export class RedisQueueConsumer implements IQueueConsumer {
   private async processMessage(
     messageId: string,
     fields: string[],
-    handler: (message: WorkflowMessage) => Promise<void>
+    handler: (message: WorkflowMessage) => Promise<void>,
   ): Promise<void> {
     try {
       const message = this.extractMessage(fields);
@@ -192,7 +193,7 @@ export class RedisQueueConsumer implements IQueueConsumer {
         return;
       }
       logger.info(
-        `processing workflow ${message.workflow_id} - triggerId: ${message.trigger_id}`
+        `processing workflow ${message.workflow_id} - triggerId: ${message.trigger_id}`,
       );
       await handler(message);
     } catch (err) {
@@ -215,7 +216,7 @@ export class RedisQueueConsumer implements IQueueConsumer {
     await this.redisNonBlocking.xack(
       this.QUEUE_TOPIC,
       this.CONSUMER_GROUP,
-      messageId
+      messageId,
     );
   }
 
@@ -233,13 +234,13 @@ export class RedisQueueConsumer implements IQueueConsumer {
   // idleThresholdMs: the time in ms after which a consumer is considered inactive
   // default: 300000ms = 5min
   async cleanupInactiveConsumers(
-    idleThresholdMs: number = 3000
+    idleThresholdMs: number = 3000,
   ): Promise<void> {
     try {
       const consumersInfo = await this.redisNonBlocking.xinfo(
         "CONSUMERS",
         this.QUEUE_TOPIC,
-        this.CONSUMER_GROUP
+        this.CONSUMER_GROUP,
       );
 
       if (!consumersInfo || !Array.isArray(consumersInfo)) {
@@ -248,7 +249,7 @@ export class RedisQueueConsumer implements IQueueConsumer {
       }
 
       logger.info(
-        `joining ${consumersInfo.length} consumers in group ${this.CONSUMER_GROUP}`
+        `joining ${consumersInfo.length} consumers in group ${this.CONSUMER_GROUP}`,
       );
 
       // Format: ["name","runner-xyz","pending",0,"idle",12345,"inactive",-1]
@@ -263,7 +264,7 @@ export class RedisQueueConsumer implements IQueueConsumer {
 
         if (idleTimeMs > idleThresholdMs) {
           logger.info(
-            `found inactive consumer ${consumerName} (idle for ${idleTimeMs}ms)`
+            `found inactive consumer ${consumerName} (idle for ${idleTimeMs}ms)`,
           );
 
           if (pendingMessages > 0) {
@@ -274,7 +275,7 @@ export class RedisQueueConsumer implements IQueueConsumer {
               "-", // minimum id
               "+", // maximum id
               pendingMessages,
-              consumerName
+              consumerName,
             )) as PendingMessageInfo[];
 
             if (pendingMessagesInfo && pendingMessagesInfo.length > 0) {
@@ -285,19 +286,19 @@ export class RedisQueueConsumer implements IQueueConsumer {
                 this.CONSUMER_GROUP,
                 this.CONSUMER_NAME,
                 0, // no idle time
-                ...messageIds
+                ...messageIds,
               );
 
               for (const messageId of messageIds) {
                 await this.redisNonBlocking.xack(
                   this.QUEUE_TOPIC,
                   this.CONSUMER_GROUP,
-                  messageId
+                  messageId,
                 );
               }
 
               logger.info(
-                `successfully cleaned up ${messageIds.length} pending messages from ${consumerName}`
+                `successfully cleaned up ${messageIds.length} pending messages from ${consumerName}`,
               );
             }
           }
@@ -306,7 +307,7 @@ export class RedisQueueConsumer implements IQueueConsumer {
             "DELCONSUMER",
             this.QUEUE_TOPIC,
             this.CONSUMER_GROUP,
-            consumerName
+            consumerName,
           );
           logger.info(`successfully removed inactive consumer ${consumerName}`);
         }
