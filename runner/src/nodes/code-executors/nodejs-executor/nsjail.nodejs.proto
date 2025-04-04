@@ -13,6 +13,9 @@ rlimit_as: 4096         # Max memory usage
 disable_no_new_privs: true
 
 clone_newnet: false # Disable network isolation to enable internet for npm install
+clone_newcgroup: false
+
+keep_caps: false
 
 envar: "HOME=/home"
 envar: "TMP=/tmp"
