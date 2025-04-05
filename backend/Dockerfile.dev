@@ -10,5 +10,5 @@ COPY go.sum .
 COPY scripts/start.sh .
 RUN go mod download
 
-EXPOSE 80
+EXPOSE 8080
 ENTRYPOINT ["reflex", "-r", "(\\.go$|go\\.mod)", "-s", "--", "sh", "./scripts/start.sh"]

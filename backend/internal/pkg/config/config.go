@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	httpPort = "80"
+	httpPort = "8080"
 )
 
 type (

@@ -74,7 +74,7 @@ services:
     env_file:
       - .env
     ports:
-      - "${BACKEND_PORT:-3001}:80"
+      - "${BACKEND_PORT:-3001}:8080"
     volumes:
       - ./backend:/src
     depends_on:

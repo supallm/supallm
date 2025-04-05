@@ -68,7 +68,7 @@ services:
     image: "ghcr.io/supallm/supallm:latest"
     container_name: supallm-api
     ports:
-      - "${BACKEND_PORT:-3001}:80"
+      - "${BACKEND_PORT:-3001}:8080"
     environment:
       MODE: api
       REDIS_HOST: ${REDIS_HOST}

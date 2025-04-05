@@ -125,7 +125,7 @@ COPY --from=runner-builder /app/runner/node_modules /app/runner/node_modules
 COPY --from=runner-builder /usr/local/bin/nsjail /usr/local/bin/nsjail
 
 # Expose necessary ports
-EXPOSE 80 3000
+EXPOSE 8080 3000
 
 # Copy entrypoint script and make it executable
 COPY entrypoint.sh /entrypoint.sh
