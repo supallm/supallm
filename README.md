@@ -59,8 +59,13 @@ We integrate with all the major authentication providers to securely run your fl
 
 ![main-concept-3](https://github.com/user-attachments/assets/d7a9b12d-2a67-4e7d-83e0-07df3a2694b2)
 
-
 ## ⚡ Quick Start
+
+### Option 1: One-click deployment
+
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/template/48SIfr?referralCode=fi61XF)
+
+### Option 2: Host locally
 
 Prerequisites:
 - Node.js 20+
