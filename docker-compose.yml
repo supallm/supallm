@@ -104,6 +104,7 @@ services:
       - REDIS_PORT=${REDIS_PORT}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - NSJAIL_CLONE_NEW_USER=${NSJAIL_CLONE_NEW_USER:-true}
+      - DISABLE_NSJAIL=${DISABLE_NSJAIL:-false}
     networks:
       - supallm-network
     depends_on:
