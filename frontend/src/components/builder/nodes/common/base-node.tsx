@@ -110,8 +110,6 @@ const BaseNode: FC<PropsWithChildren<BaseNodeProps>> = ({
           (capability) => capability.id === edge.sourceHandle,
         );
 
-      console.log("isGhostEdge", isGhostEdge, edge);
-
       if (isGhostEdge) {
         ghostEdges.push(edge);
       }

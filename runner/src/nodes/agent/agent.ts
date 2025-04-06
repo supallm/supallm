@@ -47,7 +47,7 @@ export class Agent implements INode {
 
       const langchainTools = this.convertToolsToLangChainFormat(
         nodeId,
-        definition.tools,
+        definition.tools || [],
         options,
       );
       const toolNode = new ToolNode(langchainTools);

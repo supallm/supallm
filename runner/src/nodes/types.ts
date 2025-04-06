@@ -38,7 +38,7 @@ export interface NodeDefinition {
   type: NodeType;
   inputs: Record<string, NodeInputDef>;
   outputs: Record<string, NodeOutputDef>;
-  tools: ToolConfig[];
+  tools: ToolConfig[] | undefined;
   memory: MemoryConfig;
   config: Record<string, any>;
 }
