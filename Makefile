@@ -1,8 +1,12 @@
-.PHONY: gen oapi sqlc api runner clean backend frontend
+.PHONY: gen oapi sqlc api runner clean backend frontend new-migration
 
 up:
 	@echo [ starting all services... ]
 	@docker compose -f docker-compose.dev.yml up
+
+upb:
+	@echo [ starting all services... ]
+	@docker compose -f docker-compose.dev.yml up --build
 
 backend:
 	@echo [ starting backend... ]
@@ -38,7 +42,15 @@ oapi-frontend:
 ## Generate golang source go from sqlc spec
 sqlc:
 	@echo [ generating sqlc code... ]
-	@docker run --rm -v $$(pwd)/backend:/src -w /src/sql/sqlc kjconroy/sqlc:latest generate
+	@docker run --rm -v $$(pwd)/backend:/src -w /src/sql kjconroy/sqlc:latest generate
+
+## Generate a new migration
+.PHONY: new-migration
+new-migration:
+	@read -p "Enter migration name: " name; \
+	docker run --rm -v $$(pwd)/backend:/src -w /src/sql \
+		migrate/migrate create -ext sql -dir migrations "$$name" && \
+	echo "Migration '$$name' created in backend/sql/migrations/"
 
 clean:
 	@echo [ cleaning all services... ]

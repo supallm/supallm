@@ -11,6 +11,8 @@ export interface RunnerConfig {
   maxConcurrentJobs: number;
   redis: RedisConfig;
   secretKey: string;
+  nsJailCloneNewUser: "true" | "false";
+  disableNsJail: boolean;
 }
 
 const getNumberEnv = (key: string, defaultValue: number): number => {
@@ -22,6 +24,10 @@ const getNumberEnv = (key: string, defaultValue: number): number => {
 
 const getStringEnv = (key: string, defaultValue: string): string => {
   return process.env[key] || defaultValue;
+};
+
+const getBoolEnv = (key: string, defaultValue: boolean): boolean => {
+  return process.env[key] === "true" || defaultValue;
 };
 
 const getKey = (key: string): string => {
@@ -44,6 +50,9 @@ export const config: RunnerConfig = {
     password: getKey("REDIS_PASSWORD"),
   },
   secretKey: getKey("SECRET_KEY"),
+  nsJailCloneNewUser:
+    getStringEnv("NSJAIL_CLONE_NEW_USER", "true") !== "true" ? "false" : "true",
+  disableNsJail: getBoolEnv("DISABLE_NSJAIL", false),
 };
 
 export function validateConfig(config: RunnerConfig): void {

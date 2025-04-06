@@ -47,6 +47,7 @@ export class RedisQueueConsumer implements IQueueConsumer {
 
   private initializeRedisClient(config: RedisConfig): Redis {
     const redisOptions = {
+      family: 0,
       db: 0,
       password: config.password,
       retryStrategy: (times: number) => {

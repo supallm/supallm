@@ -22,7 +22,8 @@ services:
     networks:
       - supallm-network
     environment:
-      - NEXT_PUBLIC_SUPALLM_API_URL=${SUPALLM_API_URL}
+      - SUPALLM_PUBLIC_API_URL=${SUPALLM_PUBLIC_API_URL}
+      - SUPALLM_INTERNAL_API_URL=${SUPALLM_INTERNAL_API_URL}
 
   supallm_postgres:
     image: postgres:16
@@ -33,7 +34,6 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - supallm_data:/var/lib/postgresql/data
-      - ./backend/sql/schemas.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     networks:
@@ -74,7 +74,7 @@ services:
     env_file:
       - .env
     ports:
-      - "${BACKEND_PORT:-3001}:80"
+      - "${BACKEND_PORT:-3001}:8080"
     volumes:
       - ./backend:/src
     depends_on:

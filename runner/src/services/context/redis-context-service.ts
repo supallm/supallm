@@ -26,6 +26,7 @@ export class RedisContextService implements ContextService {
 
   private initializeRedisClient(config: RedisConfig): Redis {
     const redisOptions = {
+      family: 0,
       db: 1, // context db
       password: config.password,
       retryStrategy: (times: number) => {

@@ -3,7 +3,7 @@
 import { parse, serialize } from "cookie";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { AuthService } from "./lib/services/gen-api";
+import { AuthService, OpenAPI } from "./lib/services/gen-api";
 import { LoginRoute } from "./routes";
 
 export async function loginWithEmailAndPassword(
@@ -11,6 +11,16 @@ export async function loginWithEmailAndPassword(
   password: string,
 ) {
   await new Promise((resolve) => setTimeout(resolve, 500));
+
+  if (!process.env.SUPALLM_INTERNAL_API_URL) {
+    throw new Error(
+      "SUPALLM_INTERNAL_API_URL is not set but required for the frontend server to communicate with the API.",
+    );
+  }
+
+  OpenAPI.BASE = process.env.SUPALLM_INTERNAL_API_URL;
+
+  console.log("OpenAPI.BASE", OpenAPI.BASE);
 
   const authState = await AuthService.login({
     requestBody: {

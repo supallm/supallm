@@ -15,4 +15,3 @@ export const getToken = async () => {
 };
 
 OpenAPI.TOKEN = getToken;
-OpenAPI.BASE = "http://supallm_api:80";

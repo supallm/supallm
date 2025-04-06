@@ -3,6 +3,7 @@ import crypto from "crypto";
 import fs from "fs";
 import path from "path";
 import { Result } from "typescript-result";
+import config from "../../../utils/config";
 import {
   parseCodeForRequiredModules,
   validateMainFunctionExists,
@@ -63,21 +64,15 @@ export class NodejsExecutor {
     return Result.ok();
   }
 
-  async runTypeScript(
+  private async runTypeScriptJailed(
     code: string,
     args: Argument[],
     onLog: (data: string) => void,
     onError: (data: string) => void,
   ): Promise<Result<Record<string, any>, NodejsExecutorError>> {
-    const validateScript = this.validateScript(code);
-
-    if (validateScript.isError()) {
-      return Result.error(validateScript.error);
-    }
-
     const callableScript = this.wrapMainFunctionIntoCallable(code, args);
 
-    console.log("CALLABLE SCRIPT", callableScript);
+    console.log("Running jailed script.");
     const modulesToInstall = [
       ...parseCodeForRequiredModules(callableScript),
       "@types/node",
@@ -102,7 +97,12 @@ export class NodejsExecutor {
     // 3. Generate a temporary `.proto` file with the sandbox ID
     const protoFilePath = path.join(sandboxPath, "sandbox.proto");
     const protoTemplate = fs.readFileSync(NSJAIL_TEMPLATE, "utf8");
-    const protoContent = protoTemplate.replace(/{SANDBOX_ID}/g, sandboxId);
+    const cloneNewUser = config.nsJailCloneNewUser;
+
+    const protoContent = protoTemplate
+      .replace(/{SANDBOX_ID}/g, sandboxId)
+      .replace(/{CLONE_NEW_USER}/g, cloneNewUser);
+
     fs.writeFileSync(protoFilePath, protoContent);
     console.log("Wrote njail proto to:", protoFilePath);
 
@@ -110,7 +110,7 @@ export class NodejsExecutor {
       fs.rmSync(sandboxPath, { recursive: true, force: true });
     };
 
-    console.log("New version 2.");
+    console.log("");
 
     if (modulesToInstall.length > 0) {
       try {
@@ -211,5 +211,136 @@ export class NodejsExecutor {
       cleanSandbox();
       return Result.error(new ParseResultError(error.message));
     }
+  }
+
+  private async runTypeScriptNoJail(
+    code: string,
+    args: Argument[],
+    onLog: (data: string) => void,
+    onError: (data: string) => void,
+  ): Promise<Result<Record<string, any>, NodejsExecutorError>> {
+    console.log("Running no-jailed script.");
+    const callableScript = this.wrapMainFunctionIntoCallable(code, args);
+
+    const modulesToInstall = [
+      ...parseCodeForRequiredModules(callableScript),
+      "@types/node",
+    ];
+
+    // 1. Generate a unique sandbox ID
+    const sandboxId = crypto.randomBytes(4).toString("hex");
+    const sandboxPath = path.join(SANDBOX_ROOT, sandboxId);
+    fs.mkdirSync(sandboxPath, { recursive: true });
+    console.log("Created directory:", sandboxPath);
+
+    // 2. Write the TypeScript file inside the unique sandbox
+    const tsFilePath = path.join(sandboxPath, "script.ts");
+    fs.writeFileSync(tsFilePath, callableScript);
+    console.log("Wrote script to:", tsFilePath);
+
+    const tsConfigFilePath = path.join(sandboxPath, "tsconfig.json");
+    const tsConfig = fs.readFileSync(TS_CONFIG, "utf8");
+    fs.writeFileSync(tsConfigFilePath, tsConfig);
+    console.log("Wrote tsconfig to:", tsConfigFilePath);
+
+    const cleanSandbox = () => {
+      fs.rmSync(sandboxPath, { recursive: true, force: true });
+    };
+
+    if (modulesToInstall.length > 0) {
+      try {
+        onLog(`Installing dependencies...`);
+        const npmiSpawnFunc = () => {
+          return spawn(
+            NPM_PATH,
+            ["install", modulesToInstall.join(" "), "--loglevel=verbose"],
+            { cwd: sandboxPath, shell: true },
+          );
+        };
+
+        await spawnProcessAsync(npmiSpawnFunc, onLog, onError);
+
+        onLog(`Dependencies installed successfully`);
+      } catch (error: any) {
+        onError(`Dependencies installation failed: ${error.message}`);
+        cleanSandbox();
+        return Result.error(new NpmInstallError(error.message));
+      }
+    }
+
+    try {
+      onLog(`Compiling TypeScript...`);
+      const ccSpawnFunc = () => {
+        return spawn(
+          `sh`,
+          [
+            "-c",
+            `"ls -la && cat script.ts && tsc --project tsconfig.json && tsc --showConfig script.ts"`,
+          ],
+          { cwd: sandboxPath, shell: true },
+        );
+      };
+
+      await spawnProcessAsync(ccSpawnFunc, onLog, onError);
+
+      onLog(`TypeScript compiled successfully`);
+    } catch (error: any) {
+      onError(`TypeScript compilation failed: ${error.message}`);
+      cleanSandbox();
+      return Result.error(new TypeScriptCompilationError(error.message));
+    }
+
+    let result: string = "";
+    try {
+      const spawnFunc = () =>
+        spawn("/bin/node", [`dist/script.js`], {
+          shell: true,
+          cwd: sandboxPath,
+        });
+
+      result = await spawnWrappedFunctionProcessAsync(
+        spawnFunc,
+        onLog,
+        onError,
+      );
+    } catch (error: any) {
+      onError(`Execution failed: ${error.message}`);
+      cleanSandbox();
+      return Result.error(new CodeExecutionError(error.message));
+    }
+
+    try {
+      const parseResult = JSON.parse(result);
+
+      cleanSandbox();
+      return Result.ok(parseResult);
+    } catch (error: any) {
+      cleanSandbox();
+      return Result.error(new ParseResultError(error.message));
+    }
+  }
+
+  async runTypeScript(
+    code: string,
+    args: Argument[],
+    onLog: (data: string) => void,
+    onError: (data: string) => void,
+  ): Promise<Result<Record<string, any>, NodejsExecutorError>> {
+    const validateScript = this.validateScript(code);
+
+    if (validateScript.isError()) {
+      return Result.error(validateScript.error);
+    }
+
+    if (config.disableNsJail) {
+      /**
+       * This method is less secure than the normal one.
+       * Although some systems does not give enough permissions to run nsjail.
+       * So we provide this opt-in feature if you know what you are doing.
+       */
+      return this.runTypeScriptNoJail(code, args, onLog, onError);
+    }
+
+    return this.runTypeScriptJailed(code, args, onLog, onError);
   }
 }

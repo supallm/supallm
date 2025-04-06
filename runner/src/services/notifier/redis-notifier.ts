@@ -23,7 +23,7 @@ export class RedisNotifier implements INotifier {
   }
 
   private initializeRedisClient(config: RedisConfig): Redis {
-    const redisOptions = { password: config.password };
+    const redisOptions = { password: config.password, family: 0 };
     const redis = new Redis(config.url, redisOptions);
 
     redis.on("error", (err) => {
