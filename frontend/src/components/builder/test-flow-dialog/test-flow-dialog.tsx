@@ -161,8 +161,8 @@ export const TestFlowDialog: FC<
               <div className="w-2/3">
                 <Chip variant="outline" size="sm">
                   <div className="flex justify-between items-center gap-2">
-                    <div className="text-xs">
-                      Session ID: {sessionId?.slice(0, 16)}...
+                    <div className="text-xs truncate">
+                      Session ID: {sessionId}
                     </div>
                     <Button
                       variant={"outline"}
