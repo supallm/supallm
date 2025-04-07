@@ -43,7 +43,7 @@ export interface OpenAICompletion extends Base {
     apiKey: string;
     temperature?: number;
     maxTokens?: number;
-    systemPrompt?: string;
+    developerMessage?: string;
   };
 }
 

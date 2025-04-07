@@ -42,7 +42,8 @@ export class OpenAICompletionTool implements Tool<"chat-openai-as-tool"> {
     const apiKey = decryptedApiKeyResult;
     this.name = definition.name;
     this.description = definition.description;
-    this.systemPrompt = definition.config.systemPrompt || defaultSystemPrompt;
+    this.systemPrompt =
+      definition.config.developerMessage || defaultSystemPrompt;
     this.llm = new ChatOpenAI({
       modelName: definition.config.model,
       temperature: definition.config.temperature,
