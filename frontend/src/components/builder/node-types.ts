@@ -16,7 +16,7 @@ export type ToolNodeType = (typeof ToolNodeTypes)[number];
 
 export type UtilityNodeType = (typeof UtilityNodeTypes)[number];
 
-export const RunningFlowNodeTypes = [
+export const MainNodeTypes = [
   "entrypoint",
   "result",
   "chat-openai",
@@ -30,16 +30,22 @@ export const RunningFlowNodeTypes = [
   "ai-agent",
 ] as const;
 
-export const isRunningFlowNodeType = (
-  nodeType: string,
-): nodeType is RunningFlowNodeType => {
-  return RunningFlowNodeTypes.includes(nodeType as RunningFlowNodeType);
+type MainNodeType = (typeof MainNodeTypes)[number];
+
+export const isMainNodeType = (nodeType: string): nodeType is MainNodeType => {
+  return MainNodeTypes.includes(nodeType as MainNodeType);
 };
 
 export const isToolNodeType = (nodeType: string): nodeType is ToolNodeType => {
   return ToolNodeTypes.includes(nodeType as ToolNodeType);
 };
 
-export type RunningFlowNodeType = (typeof RunningFlowNodeTypes)[number];
+export const isRunningFlowNodeType = (
+  nodeType: string,
+): nodeType is RunningFlowNodeType => {
+  return isMainNodeType(nodeType) || isToolNodeType(nodeType);
+};
+
+export type RunningFlowNodeType = MainNodeType | ToolNodeType;
 
 export type NodeType = RunningFlowNodeType | ToolNodeType | UtilityNodeType;

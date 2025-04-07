@@ -1,4 +1,5 @@
 import { FlowNode } from "@/core/entities/flow";
+import { parseHandleId } from "@/lib/handles";
 import {
   Background,
   BackgroundVariant,
@@ -41,11 +42,29 @@ export function layoutGraphWithStandardHandles(
   const dedupedEdges: Edge[] = [];
 
   rawEdges.forEach((edge) => {
+    const { type: targetType } = parseHandleId(edge.targetHandle ?? "");
+
     const key = `${edge.source}->${edge.target}`;
     if (!seen.has(key)) {
       seen.add(key);
-      dedupedEdges.push(edge);
-      dagreGraph.setEdge(edge.target, edge.source);
+      if (targetType === "tools") {
+        console.log("setting edge", edge.source, edge.target);
+        const edgeCpy = { ...edge };
+        const reversedEdge: Edge = {
+          id: edgeCpy.id,
+          source: edge.target,
+          target: edge.source,
+          sourceHandle: edge.targetHandle,
+          targetHandle: edge.sourceHandle,
+        };
+
+        dedupedEdges.push(reversedEdge);
+        dagreGraph.setEdge(reversedEdge.target, reversedEdge.source);
+      } else {
+        console.log("setting edge", edge.source, edge.target);
+        dedupedEdges.push(edge);
+        dagreGraph.setEdge(edge.target, edge.source);
+      }
     }
   });
 
@@ -93,7 +112,16 @@ export const RunningFlow: FC<{
       initialNodes.filter((node) => {
         return isRunningFlowNodeType(node.type) || isToolNodeType(node.type);
       }),
-      initialEdges,
+      initialEdges.filter((edge) => {
+        const { type: targetType } = parseHandleId(edge.targetHandle ?? "");
+        const { type: sourceType } = parseHandleId(edge.sourceHandle ?? "");
+
+        const edgesToAvoid = ["ai-model", "memory"];
+
+        return !(
+          edgesToAvoid.includes(targetType) && edgesToAvoid.includes(sourceType)
+        );
+      }),
       "TB",
     );
 
@@ -247,6 +275,16 @@ export const RunningFlow: FC<{
       "chat-ollama": RunningFlowNode,
       "ai-agent": RunningFlowNode,
       "model-openai": RunningFlowNode,
+      "http-tool": RunningFlowNode,
+      "chat-openai-as-tool": RunningFlowNode,
+      "sdk-notifier-tool": RunningFlowNode,
+      "e2b-interpreter-tool": RunningFlowNode,
+      "confluence-tool": RunningFlowNode,
+      "airtable-tool": RunningFlowNode,
+      "notion-database-tool": RunningFlowNode,
+      "postgres-query-tool": RunningFlowNode,
+      "slack-tool": RunningFlowNode,
+      "e2b-code-interpreter-tool": RunningFlowNode,
     }),
     [],
   );
