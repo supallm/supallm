@@ -36,6 +36,10 @@ export const isRunningFlowNodeType = (
   return RunningFlowNodeTypes.includes(nodeType as RunningFlowNodeType);
 };
 
+export const isToolNodeType = (nodeType: string): nodeType is ToolNodeType => {
+  return ToolNodeTypes.includes(nodeType as ToolNodeType);
+};
+
 export type RunningFlowNodeType = (typeof RunningFlowNodeTypes)[number];
 
 export type NodeType = RunningFlowNodeType | ToolNodeType | UtilityNodeType;

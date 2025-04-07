@@ -3,6 +3,7 @@ import { EntrypointNodeData } from "@/core/entities/flow/flow-entrypoint";
 import { useCurrentProjectOrThrow } from "@/hooks/use-current-project-or-throw";
 
 import { getAuthToken } from "@/actions";
+import { Chip } from "@/components/chip";
 import { useValidatedEnv } from "@/context/env/use-env";
 import { FlowNode } from "@/core/entities/flow";
 import { Label } from "@radix-ui/react-dropdown-menu";
@@ -44,6 +45,10 @@ export const TestFlowDialog: FC<
   const [flowError, setFlowError] = useState<string | null>(null);
 
   const [runId, setRunId] = useState<string>(crypto.randomUUID());
+
+  const [sessionId, setSessionId] = useState<string | null>(
+    crypto.randomUUID(),
+  );
 
   const [flowSubscription, setFlowSubscription] =
     useState<FlowSubscription | null>(null);
@@ -89,9 +94,10 @@ export const TestFlowDialog: FC<
     supallm.setUserToken(token);
 
     const subscription = supallm
-      .runFlow({
+      .run({
         flowId,
         inputs: inputs,
+        sessionId: sessionId ?? undefined,
       })
       .subscribe();
 
@@ -118,6 +124,10 @@ export const TestFlowDialog: FC<
   const handlePause = () => {
     setIsRunning(false);
     unsubscribes.forEach((unsubscribe) => unsubscribe());
+  };
+
+  const handleResetSession = () => {
+    setSessionId(crypto.randomUUID());
   };
 
   return (
@@ -148,6 +158,23 @@ export const TestFlowDialog: FC<
                   ></EmptyState>
                 </>
               )}
+              <div className="w-2/3">
+                <Chip variant="outline" size="sm">
+                  <div className="flex justify-between items-center gap-2">
+                    <div className="text-xs">
+                      Session ID: {sessionId?.slice(0, 16)}...
+                    </div>
+                    <Button
+                      variant={"outline"}
+                      size={"xs"}
+                      onClick={handleResetSession}
+                    >
+                      Reset session
+                    </Button>
+                  </div>
+                </Chip>
+              </div>
+
               {!!data?.handles?.length && (
                 <>
                   {data.handles?.map((handle) => {

@@ -12,7 +12,11 @@ import {
 import dagre from "dagre";
 import { FC, useCallback, useEffect, useMemo } from "react";
 import { FlowSubscription } from "supallm/browser";
-import { isRunningFlowNodeType, RunningFlowNodeType } from "../node-types";
+import {
+  isRunningFlowNodeType,
+  isToolNodeType,
+  RunningFlowNodeType,
+} from "../node-types";
 import RunningFlowNode from "./running-flow-node";
 
 const nodeWidth = 180;
@@ -87,7 +91,7 @@ export const RunningFlow: FC<{
   const { nodes: layoutedNodes, edges: layoutedEdges } =
     layoutGraphWithStandardHandles(
       initialNodes.filter((node) => {
-        return isRunningFlowNodeType(node.type);
+        return isRunningFlowNodeType(node.type) || isToolNodeType(node.type);
       }),
       initialEdges,
       "TB",

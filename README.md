@@ -111,7 +111,7 @@ const supallm = initSupallm({
     projectId: 'your-project-id',
 });
 
-const sub = await supallm.runFlow({
+const sub = await supallm.run({
     flowId: 'your-flow-id',
     inputs: {
         yourCustomInput: 'What is the capital of France?',
@@ -147,7 +147,7 @@ sub.on('nodeFail', (event) => {
 Or you can use wait for the flow to complete and get the full result:
 
 ```typescript
-const response = await supallm.runFlow({
+const response = await supallm.run({
     flowId: 'your-flow-id',
     inputs: {
         yourCustomInput: 'What is the capital of France?',
