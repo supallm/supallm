@@ -6,6 +6,7 @@ import { getAuthToken } from "@/actions";
 import { Chip } from "@/components/chip";
 import { useValidatedEnv } from "@/context/env/use-env";
 import { FlowNode } from "@/core/entities/flow";
+import { clearInspectingNode } from "@/core/store/flow";
 import { Label } from "@radix-ui/react-dropdown-menu";
 import { Edge } from "@xyflow/react";
 import { Pause, PlayIcon } from "lucide-react";
@@ -78,6 +79,7 @@ export const TestFlowDialog: FC<
 
     setResults([]);
     setFlowError(null);
+    clearInspectingNode();
 
     const supallm = initSupallm(
       {

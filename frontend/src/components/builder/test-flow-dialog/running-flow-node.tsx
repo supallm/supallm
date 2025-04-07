@@ -1,6 +1,7 @@
 import { BaseHandle } from "@/components/base-handle";
 import { OpenAI } from "@/components/logos/openai";
 import { ProviderLogo } from "@/components/logos/provider-logo";
+import { setInspectingNode } from "@/core/store/flow";
 import { cn } from "@/lib/utils";
 import { NodeProps, Position } from "@xyflow/react";
 import {
@@ -9,6 +10,7 @@ import {
   Database,
   Flag,
   FolderSymlink,
+  Inspect,
   UserCheck,
 } from "lucide-react";
 import { FC, memo } from "react";
@@ -17,6 +19,9 @@ import { NodeType } from "../node-types";
 export type RunningFlowNodeProps = NodeProps & {
   data: {
     status: "idle" | "active" | "ended" | "failed";
+    input: any;
+    output: any;
+    logs: any[];
   };
   type: NodeType;
 };
@@ -50,7 +55,9 @@ const NodeHeader: FC<{ nodeType: NodeType }> = ({ nodeType }) => {
     case "chat-anthropic":
       return (
         <>
-          <ProviderLogo name="anthropic" />
+          <div className="shrink-0">
+            <ProviderLogo name="anthropic" />
+          </div>
           <span className="font-medium text-sm">Chat Anthropic</span>
         </>
       );
@@ -58,7 +65,9 @@ const NodeHeader: FC<{ nodeType: NodeType }> = ({ nodeType }) => {
     case "chat-mistral":
       return (
         <>
-          <ProviderLogo name="mistral" />
+          <div className="shrink-0">
+            <ProviderLogo name="mistral" />
+          </div>
           <span className="font-medium text-sm">Chat Mistral</span>
         </>
       );
@@ -66,7 +75,9 @@ const NodeHeader: FC<{ nodeType: NodeType }> = ({ nodeType }) => {
     case "chat-ollama":
       return (
         <>
-          <ProviderLogo name="ollama" />
+          <div className="shrink-0">
+            <ProviderLogo name="ollama" />
+          </div>
           <span className="font-medium text-sm">Chat Ollama</span>
         </>
       );
@@ -90,7 +101,9 @@ const NodeHeader: FC<{ nodeType: NodeType }> = ({ nodeType }) => {
     case "model-openai":
       return (
         <>
-          <OpenAI width={10} height={10} />
+          <div className="shrink-0">
+            <OpenAI width={10} height={10} />
+          </div>
           <span className="font-medium text-sm">OpenAI Model</span>
         </>
       );
@@ -98,7 +111,9 @@ const NodeHeader: FC<{ nodeType: NodeType }> = ({ nodeType }) => {
     case "chat-openai-as-tool":
       return (
         <>
-          <OpenAI width={10} height={10} />
+          <div className="shrink-0">
+            <OpenAI width={10} height={10} />
+          </div>
           <span className="font-medium text-sm">OpenAI LLM as tool</span>
         </>
       );
@@ -136,22 +151,43 @@ export const RunningFlowNode: FC<RunningFlowNodeProps> = ({
       idle: "border-gray-300",
       active:
         "border-indigo-300 shadow shadow-indigo-300 animate-shadow-pulse-indigo",
-      ended: "border-green-500 shadow shadow-green-500",
-      failed: "border-red-500 shadow shadow-red-500",
+      ended: "border-green-500 shadow shadow-green-500 cursor-pointer",
+      failed: "border-red-500 shadow shadow-red-500 cursor-pointer",
     };
 
   const statusClass = statusClasses[data.status];
 
+  const isCompleted = data.status === "ended" || data.status === "failed";
+
+  const handleInspectNode = () => {
+    if (!isCompleted) return;
+    setInspectingNode({
+      nodeId,
+      nodeInput: data.input,
+      nodeOutput: data.output,
+      nodeLogs: [],
+    });
+  };
+
   return (
-    <div
+    <button
+      onClick={handleInspectNode}
       className={cn(
-        "rounded-xl p-0 gap-0 bg-white border transition-colors duration-500",
+        "group rounded-xl p-0 gap-0 bg-white border transition-colors duration-500",
         statusClass,
       )}
       style={{ width: `${NODE_WIDTH}px` }}
     >
-      <div className="flex flex-row items-center gap-2 py-2 px-3">
-        <NodeHeader nodeType={type} />
+      <div className="flex flex-row items-center gap-2 py-2 px-3 justify-between">
+        <div className="flex gap-2 items-center text-left">
+          <NodeHeader nodeType={type} />
+        </div>
+        {isCompleted && (
+          <div className="flex gap-1 text-xs group-hover:visible invisible">
+            inspect
+            <Inspect className="w-4 h-4 text-gray-500" />
+          </div>
+        )}
       </div>
 
       <BaseHandle
@@ -167,7 +203,7 @@ export const RunningFlowNode: FC<RunningFlowNodeProps> = ({
         type="target"
         id={`${nodeId}-bottom`}
       />
-    </div>
+    </button>
   );
 };
 

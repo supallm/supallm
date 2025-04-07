@@ -4,9 +4,13 @@ import { Spacer } from "@/components/spacer";
 import { Spinner } from "@/components/spinner";
 import { EntrypointNodeData } from "@/core/entities/flow/flow-entrypoint";
 import { ResultNodeData } from "@/core/entities/flow/flow-result";
+import {
+  getInspectingNode,
+  useCurrentFlowInspectorStore,
+} from "@/core/store/flow";
 import { useCurrentProjectOrThrow } from "@/hooks/use-current-project-or-throw";
 import { cn } from "@/lib/utils";
-import { BookCheck, BracesIcon, LogsIcon } from "lucide-react";
+import { BookCheck, BracesIcon, Inspect, LogsIcon } from "lucide-react";
 import { FC, useEffect, useMemo, useRef, useState } from "react";
 import { JsonView, allExpanded, defaultStyles } from "react-json-view-lite";
 import "react-json-view-lite/dist/index.css";
@@ -128,6 +132,48 @@ const FinalResult: FC<{ events: FlowResultStreamEvent[] }> = ({ events }) => {
   );
 };
 
+const NodeInspector: FC = () => {
+  const inspectingNode = getInspectingNode();
+
+  if (!inspectingNode) {
+    return (
+      <p className="text-muted-foreground text-sm">
+        Select a node to inspect once the flow is completed.
+      </p>
+    );
+  }
+
+  return (
+    <div className="h-full w-full">
+      {inspectingNode && (
+        <div>
+          <h1>Node input</h1>
+          <JsonView
+            data={inspectingNode.nodeInput}
+            shouldExpandNode={allExpanded}
+            style={{
+              ...defaultStyles,
+              container: "rounded-md bg-gray-300/30 mt-2 py-2",
+              label: "text-gray-800 font-medium",
+            }}
+          />
+          <Spacer size="sm" />
+          <h1>Node output</h1>
+          <JsonView
+            data={inspectingNode.nodeOutput}
+            shouldExpandNode={allExpanded}
+            style={{
+              ...defaultStyles,
+              container: "rounded-md bg-gray-300/30 mt-2 py-2",
+              label: "text-gray-800 font-medium",
+            }}
+          />
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const TestFlowBottomPanel: FC<LogsPaneProps> = ({
   events,
   isRunning,
@@ -136,10 +182,12 @@ export const TestFlowBottomPanel: FC<LogsPaneProps> = ({
   flowError,
 }) => {
   const [activePane, setActivePane] = useState<
-    "full-result" | "source-code" | "logs"
+    "full-result" | "source-code" | "logs" | "node-inspector"
   >("full-result");
 
   const { id: projectId } = useCurrentProjectOrThrow();
+
+  const flowInspectorStore = useCurrentFlowInspectorStore();
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isAutoScroll, setIsAutoScroll] = useState(true);
@@ -177,6 +225,12 @@ export const TestFlowBottomPanel: FC<LogsPaneProps> = ({
     }
   }, [events, activePane, flowError, isRunning, isAutoScroll]);
 
+  useEffect(() => {
+    if (flowInspectorStore.inspectingNode) {
+      setActivePane("node-inspector");
+    }
+  }, [flowInspectorStore]);
+
   return (
     <div className="bg-muted border-t flex flex-col max-h-full justify-start">
       <div className="pane-controls w-full flex justify-start gap-0 border-b items-center bg-gray-100 sticky top-0 z-10 shrink-0">
@@ -200,6 +254,13 @@ export const TestFlowBottomPanel: FC<LogsPaneProps> = ({
           startContent={<BracesIcon className="w-4 h-4" />}
         >
           Integrate
+        </PaneButton>
+        <PaneButton
+          active={activePane === "node-inspector"}
+          onClick={() => setActivePane("node-inspector")}
+          startContent={<Inspect className="w-4 h-4" />}
+        >
+          Inspect
         </PaneButton>
       </div>
 
@@ -230,6 +291,12 @@ export const TestFlowBottomPanel: FC<LogsPaneProps> = ({
               inputs={inputs}
               showInitSdk={false}
             ></SdkCodeExample>
+          </div>
+        )}
+
+        {activePane === "node-inspector" && (
+          <div className="p-4">
+            <NodeInspector></NodeInspector>
           </div>
         )}
       </div>

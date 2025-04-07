@@ -4,6 +4,47 @@ import { Flow } from "../entities/flow";
 import { createCrudStore } from "./crud-store";
 
 /**
+ * Current flow inspector store
+ */
+interface CurrentFlowInspectorStoreState {
+  inspectingNode: {
+    nodeId: string;
+    nodeInput: any;
+    nodeOutput: any;
+    nodeLogs: string[];
+  } | null;
+  setInspectingNode: (
+    data: CurrentFlowInspectorStoreState["inspectingNode"],
+  ) => void;
+  clearInspectingNode: () => void;
+}
+
+export const useCurrentFlowInspectorStore =
+  create<CurrentFlowInspectorStoreState>()(
+    devtools((set) => ({
+      inspectingNode: null,
+      setInspectingNode: (
+        data: CurrentFlowInspectorStoreState["inspectingNode"],
+      ) => set({ inspectingNode: data }),
+      clearInspectingNode: () => set({ inspectingNode: null }),
+    })),
+  );
+
+export const setInspectingNode = (
+  data: CurrentFlowInspectorStoreState["inspectingNode"],
+) => {
+  useCurrentFlowInspectorStore.getState().setInspectingNode(data);
+};
+
+export const clearInspectingNode = () => {
+  useCurrentFlowInspectorStore.getState().clearInspectingNode();
+};
+
+export const getInspectingNode = () => {
+  return useCurrentFlowInspectorStore.getState().inspectingNode;
+};
+
+/**
  * Current flow store
  */
 interface CurrentFlowStoreState {

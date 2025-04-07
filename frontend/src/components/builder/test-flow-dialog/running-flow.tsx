@@ -128,15 +128,18 @@ export const RunningFlow: FC<{
   const [nodes, setNodes, onNodesChange] = useNodesState(layoutedNodes);
 
   const setActiveNode = useCallback(
-    (nodeId: string) => {
+    (data: { nodeId: string; nodeInput: any; nodeLogs: any[] }) => {
       setNodes((nds) => {
         return nds.map((node) => {
-          if (node.id === nodeId) {
+          if (node.id === data.nodeId) {
             return {
               ...node,
               data: {
                 ...node.data,
                 status: "active",
+                input: data.nodeInput,
+                output: null,
+                logs: data.nodeLogs,
               },
             };
           }
@@ -149,15 +152,16 @@ export const RunningFlow: FC<{
   );
 
   const setEndedNode = useCallback(
-    (nodeId: string) => {
+    (data: { nodeId: string; nodeOutput: any }) => {
       setNodes((nds) => {
         return nds.map((node) => {
-          if (node.id === nodeId) {
+          if (node.id === data.nodeId) {
             return {
               ...node,
               data: {
                 ...node.data,
                 status: "ended",
+                output: data.nodeOutput,
               },
             };
           }
@@ -170,15 +174,17 @@ export const RunningFlow: FC<{
   );
 
   const setFailedNode = useCallback(
-    (nodeId: string) => {
+    (data: { nodeId: string; nodeLogs: any[] }) => {
       setNodes((nds) => {
         return nds.map((node) => {
-          if (node.id === nodeId) {
+          if (node.id === data.nodeId) {
             return {
               ...node,
               data: {
                 ...node.data,
                 status: "failed",
+                output: null,
+                logs: data.nodeLogs,
               },
             };
           }
@@ -226,39 +232,48 @@ export const RunningFlow: FC<{
 
     const unsubscribeNodeStart = flowSubscription.on(
       "nodeStart",
-      ({ nodeId }) => {
-        setActiveNode(nodeId);
+      ({ nodeId, input }) => {
+        setActiveNode({ nodeId, nodeInput: input, nodeLogs: [] });
       },
     );
 
-    const unsubscribeNodeEnd = flowSubscription.on("nodeEnd", ({ nodeId }) => {
-      setEndedNode(nodeId);
-    });
+    const unsubscribeNodeEnd = flowSubscription.on(
+      "nodeEnd",
+      ({ nodeId, output }) => {
+        setEndedNode({
+          nodeId,
+          nodeOutput: output,
+        });
+      },
+    );
 
     const unsubscribeNodeFail = flowSubscription.on(
       "nodeFail",
       ({ nodeId }) => {
         console.log("nodeFail", nodeId);
-        setFailedNode(nodeId);
+        setFailedNode({ nodeId, nodeLogs: [] });
       },
     );
 
     const unsubscribeToolStart = flowSubscription.on("toolStart", (tool) => {
       const nodeId = tool.nodeId;
-      console.log("toolStart", nodeId);
-      setActiveNode(nodeId);
+      setActiveNode({ nodeId, nodeInput: tool.input, nodeLogs: [] });
     });
 
     const unsubscribeToolEnd = flowSubscription.on("toolEnd", (tool) => {
       const nodeId = tool.nodeId;
-      console.log("toolEnd", nodeId);
-      setEndedNode(nodeId);
+      setEndedNode({
+        nodeId,
+        nodeOutput: tool.output,
+      });
     });
 
     const unsubscribeToolFail = flowSubscription.on("toolFail", (tool) => {
       const nodeId = tool.nodeId;
-      console.log("toolFail", nodeId);
-      setFailedNode(nodeId);
+      setFailedNode({
+        nodeId,
+        nodeLogs: [],
+      });
     });
 
     return () => {
