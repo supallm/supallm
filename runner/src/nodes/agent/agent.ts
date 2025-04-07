@@ -14,6 +14,7 @@ import { MemoryRegistry } from "../../memory/memory-registry";
 import { CryptoService } from "../../services/secret/crypto-service";
 import { ToolConfig } from "../../tools";
 import { ToolRegistry } from "../../tools/tool-registry";
+import { logger } from "../../utils/logger";
 import {
   INode,
   NodeDefinition,
@@ -122,12 +123,14 @@ export class Agent implements INode {
 
       let finalResponse = "";
       for await (const event of stream) {
+        logger.debug(`Agent response: ${event.event}`);
         switch (event.event) {
-          case "on_llm_stream":
+          case "on_chat_model_stream":
             const content =
               typeof event.data.chunk.text === "string"
                 ? event.data.chunk.text
                 : JSON.stringify(event.data.chunk.text);
+
             options.onNodeResult(nodeId, "response", content, "text");
             finalResponse += content;
             break;
