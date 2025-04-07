@@ -61,14 +61,6 @@ export class Agent implements INode {
         return Result.error(memoryError);
       }
 
-      function shouldContinue({ messages }: typeof MessagesAnnotation.State) {
-        const lastMessage = messages[messages.length - 1] as AIMessage;
-        if (lastMessage.tool_calls?.length) {
-          return "tools";
-        }
-        return "__end__";
-      }
-
       async function callModel(state: typeof MessagesAnnotation.State) {
         if (!memory) {
           throw new Error("memory instance not initialized");
@@ -103,7 +95,7 @@ export class Agent implements INode {
         .addNode("tools", toolNode)
         .addEdge("tools", "agent")
         .addEdge("__start__", "agent")
-        .addConditionalEdges("agent", shouldContinue);
+        .addConditionalEdges("agent", this.shouldContinue);
 
       const app = workflow.compile();
 
@@ -123,25 +115,74 @@ export class Agent implements INode {
         }
       }
 
-      const finalState = await app.invoke({
-        messages: initialMessages,
-      });
-
-      const finalResponse = finalState.messages?.length
-        ? (finalState.messages[finalState.messages.length - 1]?.content ??
-          "No response generated")
-        : "No response generated";
-
-      options.onNodeResult(
-        nodeId,
-        "response",
-        finalResponse.toString(),
-        "text",
+      const stream = app.streamEvents(
+        { messages: initialMessages },
+        { version: "v2" },
       );
+
+      let finalResponse = "";
+      for await (const event of stream) {
+        switch (event.event) {
+          case "on_llm_stream":
+            const content =
+              typeof event.data.chunk.text === "string"
+                ? event.data.chunk.text
+                : JSON.stringify(event.data.chunk.text);
+            options.onNodeResult(nodeId, "response", content, "text");
+            finalResponse += content;
+            break;
+
+          case "on_tool_start":
+          // const toolName = event.name || "unknown_tool";
+          // const toolInput = event.data || {};
+          // options.onNodeResult(
+          //   nodeId,
+          //   "status",
+          //   `Starting tool: ${toolName}`,
+          //   "text",
+          // );
+          // options.onNodeResult(
+          //   nodeId,
+          //   "tool",
+          //   JSON.stringify({
+          //     name: toolName,
+          //     input: toolInput,
+          //     status: "started",
+          //   }),
+          //   "text",
+          // );
+          // break;
+
+          case "on_tool_end":
+          // const toolOutput = event.data || {};
+          // options.onNodeResult(
+          //   nodeId,
+          //   "tool",
+          //   JSON.stringify({
+          //     name: event.name,
+          //     output: toolOutput,
+          //     status: "completed",
+          //   }),
+          //   "text",
+          // );
+          // break;
+
+          case "on_error":
+        }
+      }
+
       return Result.ok({ response: finalResponse });
     } catch (error) {
       return Result.error(new Error(`agent execution failed: ${error}`));
     }
+  }
+
+  private shouldContinue({ messages }: typeof MessagesAnnotation.State) {
+    const lastMessage = messages[messages.length - 1] as AIMessage;
+    if (lastMessage.tool_calls?.length) {
+      return "tools";
+    }
+    return "__end__";
   }
 
   private convertToolsToLangChainFormat(

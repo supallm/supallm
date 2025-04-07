@@ -20,33 +20,6 @@ const (
 	WorkflowAgentNotification WorkflowEventType = "AGENT_NOTIFICATION"
 )
 
-func (e WorkflowEventType) IsWorkflowEvent() bool {
-	return e == WorkflowStarted ||
-		e == WorkflowNodeStarted ||
-		e == WorkflowNodeCompleted
-}
-
-func (e WorkflowEventType) IsWorkflowCompleted() bool {
-	return e == WorkflowCompleted ||
-		e == WorkflowFailed
-}
-
-func (e WorkflowEventType) IsNodeEvent() bool {
-	return e == WorkflowEventNodeResult
-}
-
-func (e WorkflowEventType) IsNodeLog() bool {
-	return e == WorkflowEventNodeLog
-}
-
-func (e WorkflowEventType) IsNodeError() bool {
-	return e == WorkflowNodeFailed
-}
-
-func (e WorkflowEventType) IsAgentNotification() bool {
-	return e == WorkflowAgentNotification
-}
-
 type WorkflowEvent struct {
 	ID         uuid.UUID
 	ProjectID  uuid.UUID

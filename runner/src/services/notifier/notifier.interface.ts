@@ -9,6 +9,10 @@ export const WorkflowEvents = {
   NODE_COMPLETED: "NODE_COMPLETED",
   NODE_FAILED: "NODE_FAILED",
 
+  TOOL_STARTED: "TOOL_STARTED",
+  TOOL_COMPLETED: "TOOL_COMPLETED",
+  TOOL_FAILED: "TOOL_FAILED",
+
   NODE_RESULT: "NODE_RESULT",
   NODE_LOG: "NODE_LOG",
   AGENT_NOTIFICATION: "AGENT_NOTIFICATION",
@@ -29,13 +33,13 @@ export interface INotifier {
   close(): Promise<void>;
 }
 
-interface BaseEventData {
+export interface BaseEventData {
   workflowId: string;
   sessionId: string;
   triggerId: string;
 }
 
-interface BaseNodeEvent extends BaseEventData {
+export interface BaseNodeEvent extends BaseEventData {
   nodeId: string;
   nodeType: string;
 }
@@ -64,6 +68,21 @@ export interface NodeFailedEvent extends BaseNodeEvent {
   error: string;
 }
 
+export interface ToolStartedEvent extends BaseNodeEvent {
+  toolName: string;
+  toolInput: Record<string, any>;
+}
+
+export interface ToolCompletedEvent extends BaseNodeEvent {
+  toolName: string;
+  toolOutput: Record<string, any>;
+}
+
+export interface ToolFailedEvent extends BaseNodeEvent {
+  toolName: string;
+  error: string;
+}
+
 export interface NodeResultEvent extends BaseNodeEvent {
   outputField: string;
   type: NodeIOType;
@@ -87,6 +106,9 @@ export interface WorkflowExecutorEvents {
   [WorkflowEvents.NODE_STARTED]: (event: NodeStartedEvent) => void;
   [WorkflowEvents.NODE_RESULT]: (event: NodeResultEvent) => void;
   [WorkflowEvents.NODE_COMPLETED]: (event: NodeCompletedEvent) => void;
+  [WorkflowEvents.TOOL_STARTED]: (event: ToolStartedEvent) => void;
+  [WorkflowEvents.TOOL_COMPLETED]: (event: ToolCompletedEvent) => void;
+  [WorkflowEvents.TOOL_FAILED]: (event: ToolFailedEvent) => void;
   [WorkflowEvents.NODE_FAILED]: (event: NodeFailedEvent) => void;
   [WorkflowEvents.NODE_LOG]: (event: NodeLogEvent) => void;
   [WorkflowEvents.AGENT_NOTIFICATION]: (event: AgentNotificationEvent) => void;
