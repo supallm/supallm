@@ -1,14 +1,12 @@
-import { AppSelect } from "@/components/app-select";
 import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormField,
+  FormDescription,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { NumberInput } from "@/components/ui/number-input";
 import {
   Sheet,
   SheetContent,
@@ -19,81 +17,42 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
-import { OpenAIResponseFormat } from "@/core/entities/flow/flow-openai";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FC, PropsWithChildren, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-const fewShotExampleSentimentAnalysis = `You are an AI that performs sentiment analysis on text inputs. Given a sentence, you must classify it as Positive, Negative, or Neutral.
+const triageAgentExample = `You are an issue triage agent. You will be given a user query and your job will be to handle it.
 
-Here are a few examples:
+Before getting started, you will need to use the following tools to get the necessary information:
 
-Input: "I absolutely love this product! It's amazing."
-Output: Positive
+1. Use the summary-tool to summarize the user query.
+2. Use the issue-type-classifier tool to determine the type of issue the user is experiencing.
+3. Use the priority-tool to determine the best way to handle the issue.
 
-Input: "This is the worst service I have ever experienced."
-Output: Negative
+Once you have these pieces of information, use the slack-tool to notify our support team.
 
-Input: "The movie was okay, nothing special."
-Output: Neutral
+Always send the notification in the following format:
+\`\`\`
+<summary>
+<issue-type>
+<priority>
+\`\`\`
 
-Input: "The support team was very helpful and resolved my issue quickly."
-Output: Positive
+`;
 
-Input: "I waited for an hour, and no one came to assist me."
-Output: Negative
+const placeholder = triageAgentExample;
 
-Input: "The food was neither great nor terrible, just average."
-Output: Neutral
-
-Now, classify the sentiment of the following sentences:`;
-
-const fewShotExampleJsonAnalysis = `You are an AI that converts YAML into JSON format. Given a YAML input, return the correctly formatted JSON output.
-
-Here are a few examples:
-
-Input: "name: John Doe"
-Output: {"name": "John Doe"}
-
-Input: "age: 30"
-Output: {"age": 30}
-
-Input: "is_active: true"
-Output: {"is_active": true}
-
-Now, convert the following Yaml to Json:`;
-
-const exampleImageAnalyst = `You are an image analyst. Given an image, you must answer the question sent by the user.
-
-Here are a few examples:
-
-Input Prompt: "What is the image about?"
-Output: "The image is a beautiful sunset over a calm ocean with a clear sky and a few clouds."
-
-Input: "What is the image about?"
-Output: "The image is a close-up of a red apple with a few specks of dust on the surface."
-
-Now, answer the user's questions.`;
+const hint = `Explain the role and mission of the agent. Describe the tools available and when to use them. If needed, provide examples of how the agent should behave in different situations.`;
 
 const formSchema = z.object({
-  developerMessage: z.string().min(0),
-  temperature: z.number().min(0).max(2).nullable(),
-  maxCompletionTokens: z.number().nullable(),
-  imageResolution: z.enum(["low", "high", "auto"]),
-  responseFormat: z.object({
-    type: z.enum(["text", "json_object"]),
-  }),
+  instructions: z.string().min(2),
 });
 
 export const AIAgentAdvancedSettingsDialog: FC<
   PropsWithChildren<{
     data: {
-      temperature: number | null;
-      maxCompletionTokens: number | null;
-      developerMessage: string;
-      imageResolution: "low" | "high" | "auto";
-      responseFormat: OpenAIResponseFormat;
+      instructions: string;
     };
     onChange: (values: z.infer<typeof formSchema>) => void;
   }>
@@ -103,13 +62,7 @@ export const AIAgentAdvancedSettingsDialog: FC<
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      temperature: data.temperature ?? null,
-      maxCompletionTokens: data.maxCompletionTokens ?? null,
-      developerMessage: data.developerMessage ?? "",
-      imageResolution: data.imageResolution ?? "auto",
-      responseFormat: {
-        type: "text",
-      },
+      instructions: data.instructions ?? "",
     },
   });
 
@@ -130,29 +83,34 @@ export const AIAgentAdvancedSettingsDialog: FC<
     setOpen(false);
   }
 
+  async function handleConfirm() {
+    await onSubmit(form.getValues());
+  }
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>{children}</SheetTrigger>
-      <SheetContent className="sm:max-w-[900px]">
+      <SheetContent className="sm:max-w-[900px] w-[900px]">
         <SheetHeader className="border-b">
-          <SheetTitle>Advanced settings</SheetTitle>
+          <SheetTitle>AI Agent Settings</SheetTitle>
           <SheetDescription>
-            Customize the model behavior according to your needs.
+            Control the behavior of the AI Agent.
           </SheetDescription>
         </SheetHeader>
         <div className="p-4 overflow-y-auto space-y-4">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
               <FormItem>
-                <FormLabel>Developer Message</FormLabel>
+                <FormLabel>Instructions</FormLabel>
                 <FormControl>
                   <Textarea
-                    {...form.register("developerMessage")}
-                    placeholder="e.g. Respond in Spanish. Keep answers short and focus."
-                    className="h-50"
+                    {...form.register("instructions")}
+                    placeholder={placeholder}
+                    className="min-h-[400px]"
                   />
                 </FormControl>
                 <FormMessage />
+                <FormDescription>{hint}</FormDescription>
               </FormItem>
               <FormItem>
                 <FormLabel>Examples</FormLabel>
@@ -162,134 +120,24 @@ export const AIAgentAdvancedSettingsDialog: FC<
                     className="rounded-lg"
                     variant={"outline"}
                     onClick={() =>
-                      form.setValue(
-                        "developerMessage",
-                        fewShotExampleSentimentAnalysis,
-                      )
+                      form.setValue("instructions", triageAgentExample)
                     }
                   >
-                    Sentiment Analyser
-                  </Button>
-                  <Button
-                    type="button"
-                    className="rounded-lg"
-                    variant={"outline"}
-                    onClick={() =>
-                      form.setValue(
-                        "developerMessage",
-                        fewShotExampleJsonAnalysis,
-                      )
-                    }
-                  >
-                    Yaml to Json Converter
-                  </Button>
-                  <Button
-                    type="button"
-                    className="rounded-lg"
-                    variant={"outline"}
-                    onClick={() =>
-                      form.setValue("developerMessage", exampleImageAnalyst)
-                    }
-                  >
-                    Image analyst
+                    Triage Agent Example
                   </Button>
                 </div>
               </FormItem>
-              <FormField
-                control={form.control}
-                name="temperature"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Temperature</FormLabel>
-                    <FormControl>
-                      <NumberInput
-                        placeholder="Default"
-                        onChange={(value) => {
-                          field.onChange(value);
-                        }}
-                        value={field.value ?? undefined}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="maxCompletionTokens"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Max completion tokens</FormLabel>
-                    <FormControl>
-                      <NumberInput
-                        placeholder="Default"
-                        value={field.value ?? undefined}
-                        onChange={(value) => field.onChange(value)}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="imageResolution"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Image Resolution</FormLabel>
-                    <FormControl>
-                      <AppSelect
-                        onValueChange={(value) => field.onChange(value)}
-                        defaultValue={field.value}
-                        choices={[
-                          { value: "low", label: "Low" },
-                          { value: "high", label: "High" },
-                          { value: "auto", label: "Auto" },
-                        ]}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="responseFormat"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Response Format</FormLabel>
-                    <FormControl>
-                      <AppSelect
-                        onValueChange={(value) => {
-                          field.onChange({ type: value });
-                        }}
-                        defaultValue={field.value.type}
-                        choices={[
-                          {
-                            value: "text",
-                            label: "Text",
-                          },
-                          {
-                            value: "json_object",
-                            label: "JSON",
-                          },
-                        ]}
-                      ></AppSelect>
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <SheetFooter>
-                <div className="flex justify-end gap-2">
-                  <Button onClick={handleCancel} variant={"outline"}>
-                    Cancel
-                  </Button>
-                  <Button type="submit">Confirm</Button>
-                </div>
-              </SheetFooter>
             </form>
           </Form>
         </div>
+        <SheetFooter>
+          <div className="flex justify-end gap-2">
+            <Button onClick={handleCancel} variant={"outline"}>
+              Cancel
+            </Button>
+            <Button onClick={handleConfirm}>Confirm</Button>
+          </div>
+        </SheetFooter>
       </SheetContent>
     </Sheet>
   );

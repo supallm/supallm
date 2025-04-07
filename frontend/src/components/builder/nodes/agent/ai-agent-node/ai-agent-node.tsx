@@ -1,11 +1,5 @@
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-} from "@/components/ui/form";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Form, FormField } from "@/components/ui/form";
 import { AIAgentNodeData } from "@/core/entities/flow/flow-ai-agent";
 import { generateHandleId } from "@/lib/handles";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,6 +15,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import BaseNode from "../../common/base-node";
 import { BaseNodeContent } from "../../common/base-node-content";
+import { AIAgentAdvancedSettingsDialog } from "./advanced-settings-dialog";
 
 type AIAgentChatCompletionNodeProps = NodeProps & {
   data: AIAgentNodeData;
@@ -34,14 +29,18 @@ const AIAgentChatCompletionNode: FC<AIAgentChatCompletionNodeProps> = ({
   const updateNodeInternals = useUpdateNodeInternals();
 
   const formSchema = z.object({
-    instructions: z.string().min(2),
+    advancedSettings: z.object({
+      instructions: z.string().min(2),
+    }),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     mode: "onChange",
     defaultValues: {
-      instructions: data.instructions,
+      advancedSettings: {
+        instructions: data.instructions ?? "",
+      },
     },
   });
 
@@ -49,7 +48,7 @@ const AIAgentChatCompletionNode: FC<AIAgentChatCompletionNodeProps> = ({
     const formValues = form.getValues();
 
     const data: AIAgentNodeData = {
-      instructions: formValues.instructions,
+      instructions: formValues.advancedSettings.instructions,
     };
     updateNodeData(nodeId, data);
   });
@@ -120,17 +119,18 @@ const AIAgentChatCompletionNode: FC<AIAgentChatCompletionNodeProps> = ({
             >
               <FormField
                 control={form.control}
-                name="instructions"
+                name="advancedSettings"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Instructions</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="You are a triage agent. You will be given a user query and you will need to determine the best way to handle it."
-                        {...field}
-                      />
-                    </FormControl>
-                  </FormItem>
+                  <AIAgentAdvancedSettingsDialog
+                    data={field.value}
+                    onChange={(values) => {
+                      field.onChange(values);
+                    }}
+                  >
+                    <Button variant="outline" size="xs" type="button">
+                      Configure instructions
+                    </Button>
+                  </AIAgentAdvancedSettingsDialog>
                 )}
               />
             </form>
