@@ -243,12 +243,33 @@ export const RunningFlow: FC<{
       },
     );
 
+    const unsubscribeToolStart = flowSubscription.on("toolStart", (tool) => {
+      const nodeId = tool.nodeId;
+      console.log("toolStart", nodeId);
+      setActiveNode(nodeId);
+    });
+
+    const unsubscribeToolEnd = flowSubscription.on("toolEnd", (tool) => {
+      const nodeId = tool.nodeId;
+      console.log("toolEnd", nodeId);
+      setEndedNode(nodeId);
+    });
+
+    const unsubscribeToolFail = flowSubscription.on("toolFail", (tool) => {
+      const nodeId = tool.nodeId;
+      console.log("toolFail", nodeId);
+      setFailedNode(nodeId);
+    });
+
     return () => {
       unsubscribeNodeStart();
       unsubscribeNodeEnd();
       unsubscribeNodeFail();
       unsubscribeFlowEnd();
       unsubscribeFlowFail();
+      unsubscribeToolStart();
+      unsubscribeToolEnd();
+      unsubscribeToolFail();
     };
   }, [
     flowSubscription,
