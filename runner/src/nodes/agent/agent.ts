@@ -67,18 +67,6 @@ export class Agent implements INode {
           throw new Error("memory instance not initialized");
         }
 
-        const lastMessage = state.messages[state.messages.length - 1];
-        const hasToolCalls =
-          lastMessage &&
-          "tool_calls" in lastMessage &&
-          Array.isArray(lastMessage.tool_calls) &&
-          lastMessage.tool_calls.length > 0;
-
-        if (hasToolCalls) {
-          const response = await model.invoke(state.messages);
-          return { messages: [...state.messages, response] };
-        }
-
         const [messages, loadError] = (
           await memory.getMessages(options.sessionId, nodeId)
         ).toTuple();
@@ -86,8 +74,22 @@ export class Agent implements INode {
           throw loadError;
         }
 
-        const response = await model.invoke([...messages, ...state.messages]);
+        // Combine memory messages with current state messages
+        const allMessages = [...messages];
+
+        // Only add new messages that aren't already in memory
+        for (const msg of state.messages) {
+          const isDuplicate = allMessages.some(
+            (m) => JSON.stringify(m) === JSON.stringify(msg),
+          );
+          if (!isDuplicate) {
+            allMessages.push(msg);
+          }
+        }
+
+        const response = await model.invoke(allMessages);
         await memory.addMessages(options.sessionId, nodeId, [response]);
+
         return { messages: [...state.messages, response] };
       }
 
