@@ -10,6 +10,7 @@ const defaultSystemPrompt =
 
 export class OpenAICompletionTool implements Tool<"chat-openai-as-tool"> {
   private llm: ChatOpenAI;
+  readonly id: string;
   private cryptoService: CryptoService;
   private systemPrompt: string;
   readonly type = "chat-openai-as-tool";
@@ -23,7 +24,7 @@ export class OpenAICompletionTool implements Tool<"chat-openai-as-tool"> {
 
   constructor(definition: OpenAICompletion) {
     this.cryptoService = new CryptoService();
-
+    this.id = definition.id;
     if (!definition.config.model) {
       throw new Error("model is required");
     }

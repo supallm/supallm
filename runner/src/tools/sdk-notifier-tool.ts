@@ -9,6 +9,7 @@ const defaultDescription =
 
 export class SDKNotifierTool implements Tool<"sdk-notifier-tool"> {
   readonly type = "sdk-notifier-tool";
+  readonly id: string;
   private outputField: string;
   private options: ToolOptions;
 
@@ -17,6 +18,7 @@ export class SDKNotifierTool implements Tool<"sdk-notifier-tool"> {
   readonly schema: z.ZodSchema;
 
   constructor(defintion: SDKNotifier, options: ToolOptions) {
+    this.id = defintion.id;
     this.name = defintion.name || defaultName;
     this.description = defintion.description || defaultDescription;
     this.schema = z.object({

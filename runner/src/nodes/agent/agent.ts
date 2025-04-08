@@ -123,6 +123,7 @@ export class Agent implements INode {
 
       let finalResponse = "";
       for await (const event of stream) {
+        const { name, id } = this.parseToolName(event.name);
         switch (event.event) {
           case "on_chat_model_stream":
             const content =
@@ -154,10 +155,12 @@ export class Agent implements INode {
                 );
               }
             }
+
             options.onEvent("TOOL_STARTED", {
               agentName: "default",
-              toolName: event.name,
+              toolName: name,
               inputs: parsedStartInput?.input || parsedStartInput,
+              nodeId: id,
             });
             break;
           case "on_tool_end":
@@ -176,11 +179,13 @@ export class Agent implements INode {
                 );
               }
             }
+
             options.onEvent("TOOL_COMPLETED", {
               agentName: "default",
-              toolName: event.name,
+              toolName: name,
               output: event.data.output?.content,
               inputs: parsedEndInput?.input || parsedEndInput,
+              nodeId: id,
             });
             break;
           case "on_error":
@@ -217,7 +222,7 @@ export class Agent implements INode {
       }
 
       return new DynamicStructuredTool({
-        name: tool.name,
+        name: `${tool.name}____${tool.id}`,
         description: tool.description,
         schema: tool.schema,
         func: async (params: z.infer<typeof tool.schema>) => {
@@ -229,6 +234,20 @@ export class Agent implements INode {
         },
       });
     });
+  }
+
+  private parseToolName(toolName: string): { name: string; id: string } {
+    const [name, id] = toolName.split("____");
+    if (!name || !id) {
+      return {
+        name: toolName,
+        id: "unknown",
+      };
+    }
+    return {
+      name,
+      id,
+    };
   }
 
   private createLLM(

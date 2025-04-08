@@ -15,6 +15,7 @@ export type ToolType =
   | "sdk-notifier-tool";
 
 type Base = {
+  id: string;
   name: string;
   description: string;
   type: ToolType;
@@ -60,6 +61,7 @@ export type ToolConfig = Discord | Http | OpenAICompletion | SDKNotifier;
 export type ToolOutput = string;
 
 export interface Tool<T extends ToolType = ToolType> {
+  readonly id: string;
   readonly type: T;
   readonly name: string;
   readonly description: string;

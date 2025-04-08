@@ -319,10 +319,6 @@ export class WorkflowExecutor extends EventEmitter {
       },
     } as unknown as WorkflowEvent<T>;
 
-    logger.debug(
-      `emitting event: ${eventType}, event: ${JSON.stringify(event)}`,
-    );
-
     this.emit(eventType, event);
   }
 

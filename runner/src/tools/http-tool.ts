@@ -9,6 +9,7 @@ const defaultName = "http";
 
 export class HttpTool implements Tool<"http_request"> {
   readonly type = "http_request";
+  readonly id: string;
   readonly name: string;
   readonly description: string;
   private url: string;
@@ -22,6 +23,7 @@ export class HttpTool implements Tool<"http_request"> {
   });
 
   constructor(definition: Http) {
+    this.id = definition.id;
     this.name = definition.name || defaultName;
     this.description = definition.description || defaultDescription;
     this.url = definition.config.url;

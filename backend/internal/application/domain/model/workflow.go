@@ -124,6 +124,7 @@ type RunnerNode struct {
 
 // RunnerTool represents a tool in the runner flow
 type RunnerTool struct {
+	ID          string         `json:"id"`
 	Type        string         `json:"type"`
 	Name        string         `json:"name,omitempty"`
 	Description string         `json:"description,omitempty"`
@@ -250,31 +251,26 @@ func (p *Project) convertBuilderToRunnerFlow(builderFlow BuilderFlow) (*RunnerFl
 		Nodes: make(map[string]RunnerNode),
 	}
 
-	// Create a map of nodeID -> builderNode for easier lookup
 	nodeMap := make(map[string]BuilderNode)
 	for _, node := range builderFlow.Nodes {
 		nodeMap[node.ID] = node
 	}
 
-	// First pass: Add all nodes to the result map with their basic info
 	for _, node := range builderFlow.Nodes {
 		processor, err := p.getNodeProcessor(node.Type)
 		if err != nil {
 			return nil, fmt.Errorf("unable to get node processor: %w", err)
 		}
 		if processor == nil {
-			// Skip unknown node types
 			continue
 		}
 
-		// Get connected tools and memory for the node
 		tools, err := p.getConnectedTools(node.ID, builderFlow.Edges, nodeMap)
 		if err != nil {
 			return nil, fmt.Errorf("unable to get connected tools: %w", err)
 		}
 		memory := p.getConnectedMemory(node.ID, builderFlow.Edges, nodeMap)
 
-		// Process the node with its tools and memory
 		runnerNode, err := processor(node, builderFlow.Edges, nodeMap, tools, memory)
 		if err != nil {
 			return nil, fmt.Errorf("unable to process node: %w", err)
@@ -296,6 +292,7 @@ func (p *Project) getConnectedTools(nodeID string, edges []BuilderEdge, nodeMap 
 				var toolConfig map[string]any
 				if err := json.Unmarshal(targetNode.Data, &toolConfig); err == nil {
 					tool := RunnerTool{
+						ID:     targetNode.ID,
 						Type:   targetNode.Type,
 						Config: toolConfig,
 					}
@@ -312,7 +309,6 @@ func (p *Project) getConnectedTools(nodeID string, edges []BuilderEdge, nodeMap 
 						toolConfig["apiKey"] = apiKey
 					}
 
-					// Add optional name and description if they exist
 					if name, ok := toolConfig["name"].(string); ok {
 						tool.Name = name
 					}

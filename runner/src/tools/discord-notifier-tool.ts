@@ -9,6 +9,7 @@ const defaultName = "discord_notifier";
 
 export class DiscordNotifierTool implements Tool<"discord_notifier"> {
   readonly type = "discord_notifier";
+  readonly id: string;
   readonly name: string;
   readonly description: string;
   private webhookUrl: string;
@@ -51,6 +52,7 @@ export class DiscordNotifierTool implements Tool<"discord_notifier"> {
   });
 
   constructor(definition: Discord) {
+    this.id = definition.id;
     this.name = definition.name || defaultName;
     this.description = definition.description || defaultDescription;
     this.webhookUrl = definition.config.webhookUrl;
