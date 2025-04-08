@@ -1,3 +1,4 @@
+import { strictToolNameRule } from "@/components/builder/utils";
 import { Button } from "@/components/ui/button";
 import { Form, FormField } from "@/components/ui/form";
 import {
@@ -32,15 +33,7 @@ const ChatOpenAIAsToolNode: FC<ChatOpenAIAsToolNodeProps> = ({
       model: z.enum(OpenAIModels),
       outputMode: z.enum(["text", "text-stream"]),
       description: z.string(),
-      name: z
-        .string()
-        .regex(/^[a-zA-Z0-9_-]+$/, {
-          message:
-            "Only alphanumeric characters, underscores, and hyphens are allowed.",
-        })
-        .refine((value) => !/___/.test(value), {
-          message: "Cannot contain more than two consecutive underscores.",
-        }),
+      name: strictToolNameRule,
       temperature: z.number().nullable(),
       maxCompletionTokens: z.number().nullable(),
       developerMessage: z.string(),

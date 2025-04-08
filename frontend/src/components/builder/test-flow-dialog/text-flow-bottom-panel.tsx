@@ -10,7 +10,7 @@ import {
 } from "@/core/store/flow";
 import { useCurrentProjectOrThrow } from "@/hooks/use-current-project-or-throw";
 import { cn } from "@/lib/utils";
-import { BookCheck, BracesIcon, Inspect, LogsIcon } from "lucide-react";
+import { BookCheck, Inspect, LogsIcon, MessageCircle } from "lucide-react";
 import { FC, useEffect, useMemo, useRef, useState } from "react";
 import { JsonView, allExpanded, defaultStyles } from "react-json-view-lite";
 import "react-json-view-lite/dist/index.css";
@@ -24,6 +24,12 @@ interface LogsPaneProps {
   flowId: string;
   inputs: { label: string; value: string }[];
   flowError: string | null;
+  agentNotifications: {
+    data: string;
+    nodeId: string;
+    nodeType: string;
+    outputField: string;
+  }[];
 }
 
 const PaneButton: FC<{
@@ -174,15 +180,73 @@ const NodeInspector: FC = () => {
   );
 };
 
+const AgentNotifications: FC<{
+  agentNotifications: {
+    data: string;
+    nodeId: string;
+    nodeType: string;
+    outputField: string;
+  }[];
+}> = ({ agentNotifications }) => {
+  const numberOfLatestEvents = 10;
+  const reversedEvents = useMemo(() => {
+    return agentNotifications.reverse().slice(0, numberOfLatestEvents);
+  }, [agentNotifications]);
+
+  return (
+    <>
+      {reversedEvents.length === 0 ? (
+        <p className="text-muted-foreground text-sm">
+          No agent notifications available. Use the SDK notifier tool to allow
+          your AI Agent send notifications to the SDK.
+        </p>
+      ) : (
+        <>
+          <ul>
+            {reversedEvents.map((event, index) => (
+              <li
+                key={index}
+                className="text-muted-foreground space-y-2 flex flex-col gap-2"
+              >
+                <JsonView
+                  data={event}
+                  shouldExpandNode={allExpanded}
+                  style={{
+                    ...defaultStyles,
+                    container: "rounded-md bg-gray-300/30 mt-2 py-2",
+                    label: "text-gray-800 font-medium",
+                  }}
+                />
+              </li>
+            ))}
+          </ul>
+          <Spacer size="sm" />
+          <AlertMessage
+            variant="info"
+            size="sm"
+            message={`We only display the ${numberOfLatestEvents} latest notifications for performance reasons`}
+          />
+          <Spacer size="sm" />
+        </>
+      )}
+    </>
+  );
+};
+
 export const TestFlowBottomPanel: FC<LogsPaneProps> = ({
   events,
   isRunning,
   flowId,
   inputs,
   flowError,
+  agentNotifications,
 }) => {
   const [activePane, setActivePane] = useState<
-    "full-result" | "source-code" | "logs" | "node-inspector"
+    | "full-result"
+    | "source-code"
+    | "logs"
+    | "node-inspector"
+    | "agent-notifications"
   >("full-result");
 
   const { id: projectId } = useCurrentProjectOrThrow();
@@ -239,7 +303,7 @@ export const TestFlowBottomPanel: FC<LogsPaneProps> = ({
           onClick={() => setActivePane("full-result")}
           startContent={<BookCheck className="w-4 h-4" />}
         >
-          Full result
+          Flow result
         </PaneButton>
         <PaneButton
           active={activePane === "logs"}
@@ -248,12 +312,19 @@ export const TestFlowBottomPanel: FC<LogsPaneProps> = ({
         >
           Event streams
         </PaneButton>
-        <PaneButton
+        {/* <PaneButton
           active={activePane === "source-code"}
           onClick={() => setActivePane("source-code")}
           startContent={<BracesIcon className="w-4 h-4" />}
         >
           Integrate
+        </PaneButton> */}
+        <PaneButton
+          active={activePane === "agent-notifications"}
+          onClick={() => setActivePane("agent-notifications")}
+          startContent={<MessageCircle className="w-4 h-4" />}
+        >
+          Notifications
         </PaneButton>
         <PaneButton
           active={activePane === "node-inspector"}
@@ -279,6 +350,12 @@ export const TestFlowBottomPanel: FC<LogsPaneProps> = ({
           <div className="p-4">
             {isRunning && <Spinner />}
             <LogList events={events} />
+          </div>
+        )}
+
+        {activePane === "agent-notifications" && (
+          <div className="p-4">
+            <AgentNotifications agentNotifications={agentNotifications} />
           </div>
         )}
 

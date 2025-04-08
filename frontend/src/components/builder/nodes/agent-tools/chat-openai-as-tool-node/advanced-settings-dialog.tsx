@@ -1,4 +1,5 @@
 import { AppSelect } from "@/components/app-select";
+import { strictToolNameRule } from "@/components/builder/utils";
 import { SelectCredentials } from "@/components/select-credentials";
 import { SelectModel } from "@/components/select-model";
 import { Button } from "@/components/ui/button";
@@ -81,15 +82,7 @@ Output: "The image is a close-up of a red apple with a few specks of dust on the
 Now, answer the user's questions.`;
 
 const formSchema = z.object({
-  name: z
-    .string()
-    .regex(/^[a-zA-Z0-9_-]+$/, {
-      message:
-        "Only alphanumeric characters, underscores, and hyphens are allowed.",
-    })
-    .refine((value) => !/___/.test(value), {
-      message: "Cannot contain more than two consecutive underscores.",
-    }),
+  name: strictToolNameRule,
   description: z.string().min(2),
   credentialId: z.string().min(2),
   model: z.string().min(2),
@@ -152,6 +145,10 @@ export const OpenAIChatAdvancedSettingsDialog: FC<
   async function onSubmit(values: z.infer<typeof formSchema>) {
     onChange(values);
     setOpen(false);
+  }
+
+  async function handleSubmit() {
+    form.handleSubmit(onSubmit)();
   }
 
   return (
@@ -362,17 +359,17 @@ export const OpenAIChatAdvancedSettingsDialog: FC<
                   </FormItem>
                 )}
               />
-              <SheetFooter>
-                <div className="flex justify-end gap-2">
-                  <Button onClick={handleCancel} variant={"outline"}>
-                    Cancel
-                  </Button>
-                  <Button type="submit">Confirm</Button>
-                </div>
-              </SheetFooter>
             </form>
           </Form>
         </div>
+        <SheetFooter>
+          <div className="flex justify-end gap-2">
+            <Button onClick={handleCancel} variant={"outline"}>
+              Cancel
+            </Button>
+            <Button onClick={handleSubmit}>Confirm</Button>
+          </div>
+        </SheetFooter>
       </SheetContent>
     </Sheet>
   );

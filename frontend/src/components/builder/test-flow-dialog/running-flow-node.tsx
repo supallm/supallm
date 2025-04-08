@@ -11,6 +11,8 @@ import {
   Flag,
   FolderSymlink,
   Inspect,
+  MessageCircle,
+  Network,
   UserCheck,
 } from "lucide-react";
 import { FC, memo } from "react";
@@ -131,6 +133,22 @@ const NodeHeader: FC<{ nodeType: NodeType }> = ({ nodeType }) => {
         <>
           <UserCheck className="w-4 h-4" />
           <span className="font-medium text-sm">User feedback</span>
+        </>
+      );
+
+    case "http-tool":
+      return (
+        <>
+          <Network className="w-4 h-4" />
+          <span className="font-medium text-sm">HTTP tool</span>
+        </>
+      );
+
+    case "sdk-notifier-tool":
+      return (
+        <>
+          <MessageCircle className="w-4 h-4" />
+          <span className="font-medium text-sm">SDK notifier tool</span>
         </>
       );
 

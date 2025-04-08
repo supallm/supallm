@@ -1,4 +1,9 @@
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { EntrypointNodeData } from "@/core/entities/flow/flow-entrypoint";
 import { useCurrentProjectOrThrow } from "@/hooks/use-current-project-or-throw";
 
@@ -40,6 +45,15 @@ export const TestFlowDialog: FC<
   const [results, setResults] = useState<FlowResultStreamEvent[]>([]);
 
   const [inputs, setInputs] = useState<Record<string, string>>({});
+
+  const [agentNotifications, setAgentNotifications] = useState<
+    {
+      data: string;
+      nodeId: string;
+      nodeType: string;
+      outputField: string;
+    }[]
+  >([]);
 
   const [unsubscribes, setUnsubscribes] = useState<Unsubscribe[]>([]);
 
@@ -120,7 +134,27 @@ export const TestFlowDialog: FC<
       setIsRunning(false);
     });
 
-    setUnsubscribes([unsubscribeResult, unsubscribeFail, unsubscribeEnd]);
+    const unsubscribeAgentNotification = subscription.on(
+      "agentNotification",
+      (event) => {
+        setAgentNotifications((prev) => [
+          ...prev,
+          {
+            data: event.data,
+            nodeId: event.nodeId,
+            nodeType: event.nodeType,
+            outputField: event.outputField,
+          },
+        ]);
+      },
+    );
+
+    setUnsubscribes([
+      unsubscribeResult,
+      unsubscribeFail,
+      unsubscribeEnd,
+      unsubscribeAgentNotification,
+    ]);
   };
 
   const handlePause = () => {
@@ -135,6 +169,7 @@ export const TestFlowDialog: FC<
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>{children}</SheetTrigger>
+      <SheetTitle className="hidden">Test flow</SheetTitle>
       <SheetContent className="w-full gap-0">
         {/* Content */}
         <div className="flex justify-between h-full">
@@ -219,6 +254,7 @@ export const TestFlowDialog: FC<
             <div className="grow overflow-hidden">
               <TestFlowBottomPanel
                 events={results}
+                agentNotifications={agentNotifications}
                 isRunning={isRunning}
                 entrypointNodeData={data}
                 resultNodeData={data}

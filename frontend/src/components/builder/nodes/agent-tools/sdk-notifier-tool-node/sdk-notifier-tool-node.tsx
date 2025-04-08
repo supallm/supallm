@@ -1,13 +1,5 @@
-import {
-  Form,
-  FormControl,
-  FormItem,
-  FormLabel,
-  FormMessage,
-  FormSubLabel,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Form, FormField } from "@/components/ui/form";
 import { generateHandleId } from "@/lib/handles";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { NodeProps, useReactFlow, useUpdateNodeInternals } from "@xyflow/react";
@@ -17,6 +9,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import BaseNode from "../../common/base-node";
 import { BaseNodeContent } from "../../common/base-node-content";
+import { SDKNotifierToolAdvancedSettingsDialog } from "./advanced-settings-dialog";
 
 type NodeData = {
   outputFieldName: string;
@@ -32,16 +25,20 @@ const AgentToolNode: FC<CustomNodeProps> = ({ data, id: nodeId }) => {
   const updateNodeInternals = useUpdateNodeInternals();
 
   const formSchema = z.object({
-    outputFieldName: z.string(),
-    outputDescription: z.string(),
+    settings: z.object({
+      outputFieldName: z.string(),
+      outputDescription: z.string(),
+    }),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     mode: "onChange",
     defaultValues: {
-      outputFieldName: data?.outputFieldName ?? "",
-      outputDescription: data?.outputDescription ?? "",
+      settings: {
+        outputFieldName: data?.outputFieldName ?? "",
+        outputDescription: data?.outputDescription ?? "",
+      },
     },
   });
 
@@ -49,8 +46,8 @@ const AgentToolNode: FC<CustomNodeProps> = ({ data, id: nodeId }) => {
     const formValues = form.getValues();
 
     const data: NodeData = {
-      outputFieldName: formValues.outputFieldName,
-      outputDescription: formValues.outputDescription,
+      outputFieldName: formValues.settings.outputFieldName,
+      outputDescription: formValues.settings.outputDescription,
     };
     updateNodeData(nodeId, data);
   });
@@ -79,44 +76,42 @@ const AgentToolNode: FC<CustomNodeProps> = ({ data, id: nodeId }) => {
       outputHandles={outputHandles}
       inputHandles={[]}
       header={
-        <>
-          <MessageCircle className="w-4 h-4" />
-          <span className="font-medium text-sm">SDK Notifier tool</span>
-        </>
+        <div>
+          <div className="flex items-center gap-2">
+            <MessageCircle className="w-4 h-4" />
+            <span className="font-medium text-sm">SDK Notifier tool</span>
+          </div>
+          <div className="text-sm text-muted-foreground">
+            {data.outputFieldName}
+          </div>
+        </div>
       }
     >
       <BaseNodeContent>
         <div className="flex flex-col gap-2">
           <Form {...form}>
             <form className="space-y-4">
-              <FormItem>
-                <FormLabel>Output field name</FormLabel>
-                <FormControl>
-                  <Input
-                    {...form.register("outputFieldName")}
-                    placeholder="e.g. status"
-                  />
-                </FormControl>
-                <FormSubLabel>
-                  This is the field name that you will have to watch in the SDK.
-                </FormSubLabel>
-                <FormMessage />
-              </FormItem>
-              <FormItem>
-                <FormLabel>Output description</FormLabel>
-                <FormControl>
-                  <Textarea
-                    {...form.register("outputDescription")}
-                    placeholder="e.g. Return your current status between: thinking, running, completed, failed"
-                    className="h-30"
-                  />
-                </FormControl>
-                <FormSubLabel>
-                  This is the instructions we will provide to the Agent to
-                  format the value of the field.
-                </FormSubLabel>
-                <FormMessage />
-              </FormItem>
+              <FormField
+                control={form.control}
+                name="settings"
+                render={({ field }) => (
+                  <SDKNotifierToolAdvancedSettingsDialog
+                    data={field.value}
+                    onChange={(values) => {
+                      field.onChange(values);
+                    }}
+                  >
+                    <Button
+                      variant="outline"
+                      size="xs"
+                      type="button"
+                      className="w-full"
+                    >
+                      Configure
+                    </Button>
+                  </SDKNotifierToolAdvancedSettingsDialog>
+                )}
+              />
             </form>
           </Form>
         </div>
