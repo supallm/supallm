@@ -134,7 +134,7 @@ export const availableNodes: AvailableNode[] = [
     name: "User feedback",
     description: "Ask for user feedback during the flow",
     logo: <UserCheck width={20} height={20} />,
-    commingSoon: false,
+    commingSoon: true,
   },
   {
     category: "agent-memory",
@@ -151,7 +151,7 @@ export const availableNodes: AvailableNode[] = [
     description:
       "Give the AI agent the ability to execute code in a secure E2B sandbox",
     logo: <E2B width={30} height={30} />,
-    commingSoon: false,
+    commingSoon: true,
   },
   {
     category: "chat",
@@ -177,7 +177,7 @@ export const availableNodes: AvailableNode[] = [
     name: "Notion Database tool",
     description: "Allow the AI agent to interact with Notion databases",
     logo: <Notion width={25} height={25} />,
-    commingSoon: false,
+    commingSoon: true,
   },
   {
     category: "agent-tools",
@@ -186,7 +186,7 @@ export const availableNodes: AvailableNode[] = [
     description:
       "Provide pre-defined SQL queries that the AI agent can use securely",
     logo: <PostgresLogo className="w-8 h-8" />,
-    commingSoon: false,
+    commingSoon: true,
   },
   {
     category: "agent-tools",
@@ -194,7 +194,7 @@ export const availableNodes: AvailableNode[] = [
     name: "Confluence",
     description: "Search and retrieve information from Confluence",
     logo: <Confluence width={20} height={20} />,
-    commingSoon: false,
+    commingSoon: true,
   },
   {
     category: "agent-tools",
@@ -202,7 +202,7 @@ export const availableNodes: AvailableNode[] = [
     name: "Airtable",
     description: "Interact with Airtable bases and tables",
     logo: <Airtable width={20} height={20} />,
-    commingSoon: false,
+    commingSoon: true,
   },
   {
     category: "agent-tools",
@@ -211,6 +211,6 @@ export const availableNodes: AvailableNode[] = [
     description:
       "Send messages to Slack channels and interact with Slack workspaces",
     logo: <Slack width={40} height={40} />,
-    commingSoon: false,
+    commingSoon: true,
   },
 ] as const;
