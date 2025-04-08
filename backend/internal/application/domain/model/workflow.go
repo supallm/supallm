@@ -462,6 +462,7 @@ func (p *Project) processCodeExecutorNode(node BuilderNode, edges []BuilderEdge,
 	config := map[string]any{
 		"code":              data.Code,
 		"expectedArguments": data.Inputs,
+		"expectedOutputs":   data.Outputs,
 	}
 
 	// Build inputs and outputs

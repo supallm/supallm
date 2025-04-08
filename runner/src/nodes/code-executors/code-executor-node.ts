@@ -1,4 +1,5 @@
 import { Result } from "typescript-result";
+import { logger } from "../../utils/logger";
 import {
   INode,
   NodeDefinition,
@@ -12,11 +13,14 @@ import { MissingArgumentError } from "./nodejs-executor/executor.errors";
 import { Argument, NodejsExecutor } from "./nodejs-executor/nodejs-executor";
 
 interface CodeExecutorNodeDefinition {
-  code: string;
-  language: "typescript";
-  inputs: Record<string, string>;
-  expectedArguments: { id: string; label: string; type: string }[];
-  expectedOutputs: { id: string; label: string; type: string }[];
+  type: string;
+  config: {
+    code: string;
+    language?: "typescript";
+    inputs?: Record<string, string>;
+    expectedArguments: { id: string; label: string; type: string }[];
+    expectedOutputs: { id: string; label: string; type: string }[];
+  };
 }
 
 export class CodeExecutorNode implements INode {
@@ -29,8 +33,10 @@ export class CodeExecutorNode implements INode {
     options: NodeOptions,
   ): Promise<Result<NodeOutput, Error>> {
     try {
-      const { code, expectedArguments } =
-        definition as unknown as CodeExecutorNodeDefinition;
+      const { config } = definition as unknown as CodeExecutorNodeDefinition;
+      const { code, expectedArguments } = config;
+
+      logger.debug(`expectedArguments: ${JSON.stringify(expectedArguments)}`);
 
       const sortedExpectedArgumentLabels = expectedArguments.map(
         (arg) => arg.label,
