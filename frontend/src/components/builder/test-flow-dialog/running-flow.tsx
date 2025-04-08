@@ -48,7 +48,6 @@ export function layoutGraphWithStandardHandles(
     if (!seen.has(key)) {
       seen.add(key);
       if (targetType === "tools") {
-        console.log("setting edge", edge.source, edge.target);
         const edgeCpy = { ...edge };
         const reversedEdge: Edge = {
           id: edgeCpy.id,
@@ -61,7 +60,6 @@ export function layoutGraphWithStandardHandles(
         dedupedEdges.push(reversedEdge);
         dagreGraph.setEdge(reversedEdge.target, reversedEdge.source);
       } else {
-        console.log("setting edge", edge.source, edge.target);
         dedupedEdges.push(edge);
         dagreGraph.setEdge(edge.target, edge.source);
       }
@@ -221,12 +219,10 @@ export const RunningFlow: FC<{
     if (!flowSubscription) return;
 
     const unsubscribeFlowEnd = flowSubscription.on("flowEnd", () => {
-      console.log("flowEnd");
       setWorkflowOutputStatus("ended");
     });
 
     const unsubscribeFlowFail = flowSubscription.on("flowFail", () => {
-      console.log("flowFail");
       setWorkflowOutputStatus("failed");
     });
 
@@ -250,7 +246,6 @@ export const RunningFlow: FC<{
     const unsubscribeNodeFail = flowSubscription.on(
       "nodeFail",
       ({ nodeId }) => {
-        console.log("nodeFail", nodeId);
         setFailedNode({ nodeId, nodeLogs: [] });
       },
     );

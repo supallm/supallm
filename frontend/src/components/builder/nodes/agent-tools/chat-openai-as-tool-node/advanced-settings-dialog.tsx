@@ -1,13 +1,17 @@
 import { AppSelect } from "@/components/app-select";
+import { SelectCredentials } from "@/components/select-credentials";
+import { SelectModel } from "@/components/select-model";
 import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { NumberInput } from "@/components/ui/number-input";
 import {
   Sheet,
@@ -77,6 +81,13 @@ Output: "The image is a close-up of a red apple with a few specks of dust on the
 Now, answer the user's questions.`;
 
 const formSchema = z.object({
+  name: z.string().regex(/^[a-zA-Z0-9_-]+$/, {
+    message:
+      "Name can only contain letters, numbers, underscores, and hyphens.",
+  }),
+  description: z.string().min(2),
+  credentialId: z.string().min(2),
+  model: z.string().min(2),
   developerMessage: z.string().min(0),
   temperature: z.number().min(0).max(2).nullable(),
   maxCompletionTokens: z.number().nullable(),
@@ -89,6 +100,10 @@ const formSchema = z.object({
 export const OpenAIChatAdvancedSettingsDialog: FC<
   PropsWithChildren<{
     data: {
+      name: string;
+      description: string;
+      credentialId: string;
+      model: string;
       temperature: number | null;
       maxCompletionTokens: number | null;
       developerMessage: string;
@@ -103,6 +118,10 @@ export const OpenAIChatAdvancedSettingsDialog: FC<
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      name: data.name ?? "",
+      description: data.description ?? "",
+      credentialId: data.credentialId ?? "",
+      model: data.model ?? "",
       temperature: data.temperature ?? null,
       maxCompletionTokens: data.maxCompletionTokens ?? null,
       developerMessage: data.developerMessage ?? "",
@@ -143,6 +162,65 @@ export const OpenAIChatAdvancedSettingsDialog: FC<
         <div className="p-4 overflow-y-auto space-y-4">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
+                    <Input placeholder="text-summarizer" {...field} />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <Input
+                      placeholder="You can use this tool when..."
+                      {...field}
+                    />
+                    <FormDescription>
+                      Explain when this tool can be used and what it can
+                      achieve.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="credentialId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Credentials</FormLabel>
+                    <SelectCredentials
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      providerType={"openai"}
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="model"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Model</FormLabel>
+                    <SelectModel
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      providerType={"openai"}
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormItem>
                 <FormLabel>Developer Message</FormLabel>
                 <FormControl>

@@ -25,8 +25,8 @@ export const Confluence: FC<{ width: number; height: number }> = ({
           y2="37.7549606%"
           id="linearGradient-1"
         >
-          <stop stop-color="#0052CC" offset="18%"></stop>
-          <stop stop-color="#2684FF" offset="100%"></stop>
+          <stop stopColor="#0052CC" offset="18%"></stop>
+          <stop stopColor="#2684FF" offset="100%"></stop>
         </linearGradient>
         <linearGradient
           x1="0.92569163%"
@@ -35,8 +35,8 @@ export const Confluence: FC<{ width: number; height: number }> = ({
           y2="62.3057471%"
           id="linearGradient-2"
         >
-          <stop stop-color="#0052CC" offset="18%"></stop>
-          <stop stop-color="#2684FF" offset="100%"></stop>
+          <stop stopColor="#0052CC" offset="18%"></stop>
+          <stop stopColor="#2684FF" offset="100%"></stop>
         </linearGradient>
       </defs>
       <g>

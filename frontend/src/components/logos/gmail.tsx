@@ -29,8 +29,8 @@ export const Gmail: FC<{ width: number; height: number }> = ({
         y2="737.107"
         gradientTransform="matrix(.0283 0 0 -.0283 248.36 225.244)"
       >
-        <stop offset="0" stop-color="#f8f6ef" />
-        <stop offset="1" stop-color="#e7e4d6" />
+        <stop offset="0" stopColor="#f8f6ef" />
+        <stop offset="1" stopColor="#e7e4d6" />
       </linearGradient>
       <path fill="url(#a)" d="M111.713 7.087l532.12 394.525L1179.439 7.087z" />
       <path
@@ -58,8 +58,8 @@ export const Gmail: FC<{ width: number; height: number }> = ({
         y2="737.107"
         gradientTransform="matrix(.0283 0 0 -.0283 248.36 225.244)"
       >
-        <stop offset="0" stop-color="#f8f6ef" />
-        <stop offset="1" stop-color="#e7e4d6" />
+        <stop offset="0" stopColor="#f8f6ef" />
+        <stop offset="1" stopColor="#e7e4d6" />
       </linearGradient>
       <path fill="url(#b)" d="M111.713 7.087l532.12 394.525L1179.439 7.087z" />
       <linearGradient
@@ -71,8 +71,8 @@ export const Gmail: FC<{ width: number; height: number }> = ({
         y2="737.107"
         gradientTransform="matrix(.0283 0 0 -.0283 248.36 225.244)"
       >
-        <stop offset="0" stop-color="#f8f6ef" />
-        <stop offset="1" stop-color="#e7e4d6" />
+        <stop offset="0" stopColor="#f8f6ef" />
+        <stop offset="1" stopColor="#e7e4d6" />
       </linearGradient>
       <path fill="url(#c)" d="M111.713 7.087l532.12 394.525L1179.439 7.087z" />
       <linearGradient
@@ -84,8 +84,8 @@ export const Gmail: FC<{ width: number; height: number }> = ({
         y2="737.107"
         gradientTransform="matrix(.0283 0 0 -.0283 248.36 225.244)"
       >
-        <stop offset="0" stop-color="#f8f6ef" />
-        <stop offset="1" stop-color="#e7e4d6" />
+        <stop offset="0" stopColor="#f8f6ef" />
+        <stop offset="1" stopColor="#e7e4d6" />
       </linearGradient>
       <path fill="url(#d)" d="M111.713 7.087l532.12 394.525L1179.439 7.087z" />
       <linearGradient
@@ -97,8 +97,8 @@ export const Gmail: FC<{ width: number; height: number }> = ({
         y2="737.107"
         gradientTransform="matrix(.0283 0 0 -.0283 248.36 225.244)"
       >
-        <stop offset="0" stop-color="#f8f6ef" />
-        <stop offset="1" stop-color="#e7e4d6" />
+        <stop offset="0" stopColor="#f8f6ef" />
+        <stop offset="1" stopColor="#e7e4d6" />
       </linearGradient>
       <path fill="url(#e)" d="M111.713 7.087l532.12 394.525L1179.439 7.087z" />
       <linearGradient
@@ -110,8 +110,8 @@ export const Gmail: FC<{ width: number; height: number }> = ({
         y2="737.107"
         gradientTransform="matrix(.0283 0 0 -.0283 248.36 225.244)"
       >
-        <stop offset="0" stop-color="#f8f6ef" />
-        <stop offset="1" stop-color="#e7e4d6" />
+        <stop offset="0" stopColor="#f8f6ef" />
+        <stop offset="1" stopColor="#e7e4d6" />
       </linearGradient>
       <path fill="url(#f)" d="M111.713 7.087l532.12 394.525L1179.439 7.087z" />
       <linearGradient
@@ -123,8 +123,8 @@ export const Gmail: FC<{ width: number; height: number }> = ({
         y2="737.107"
         gradientTransform="matrix(.0283 0 0 -.0283 248.36 225.244)"
       >
-        <stop offset="0" stop-color="#f8f6ef" />
-        <stop offset="1" stop-color="#e7e4d6" />
+        <stop offset="0" stopColor="#f8f6ef" />
+        <stop offset="1" stopColor="#e7e4d6" />
       </linearGradient>
       <path fill="url(#g)" d="M111.713 7.087l532.12 394.525L1179.439 7.087z" />
       <linearGradient
@@ -136,8 +136,8 @@ export const Gmail: FC<{ width: number; height: number }> = ({
         y2="737.107"
         gradientTransform="matrix(.0283 0 0 -.0283 248.36 225.244)"
       >
-        <stop offset="0" stop-color="#f8f6ef" />
-        <stop offset="1" stop-color="#e7e4d6" />
+        <stop offset="0" stopColor="#f8f6ef" />
+        <stop offset="1" stopColor="#e7e4d6" />
       </linearGradient>
       <path fill="url(#h)" d="M111.713 7.087l532.12 394.525L1179.439 7.087z" />
       <path fill="#f7f5ed" d="M111.713 7.087l532.12 394.525L1179.439 7.087z" />

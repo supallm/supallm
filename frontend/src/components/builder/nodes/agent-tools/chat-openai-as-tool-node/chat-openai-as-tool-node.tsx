@@ -1,15 +1,5 @@
-import { SelectCredentials } from "@/components/select-credentials";
-import { SelectModel } from "@/components/select-model";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-  FormSubLabel,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Form, FormField } from "@/components/ui/form";
 import {
   ChatOpenAIAsToolNodeData,
   OpenAIModels,
@@ -37,12 +27,12 @@ const ChatOpenAIAsToolNode: FC<ChatOpenAIAsToolNodeProps> = ({
   const updateNodeInternals = useUpdateNodeInternals();
 
   const formSchema = z.object({
-    credentialId: z.string().min(2),
-    model: z.enum(OpenAIModels),
-    outputMode: z.enum(["text", "text-stream"]),
-    description: z.string(),
-    name: z.string(),
     advancedSettings: z.object({
+      credentialId: z.string().min(2),
+      model: z.enum(OpenAIModels),
+      outputMode: z.enum(["text", "text-stream"]),
+      description: z.string(),
+      name: z.string().regex(/^[a-zA-Z0-9_-]+$/),
       temperature: z.number().nullable(),
       maxCompletionTokens: z.number().nullable(),
       developerMessage: z.string(),
@@ -57,11 +47,11 @@ const ChatOpenAIAsToolNode: FC<ChatOpenAIAsToolNodeProps> = ({
     resolver: zodResolver(formSchema),
     mode: "onChange",
     defaultValues: {
-      credentialId: data.credentialId ?? "",
-      model: data.model ?? "",
-      description: data.description ?? "",
-      name: data.name ?? "",
       advancedSettings: {
+        credentialId: data.credentialId ?? "",
+        model: data.model ?? "",
+        description: data.description ?? "",
+        name: data.name ?? "",
         temperature: data.temperature ?? null,
         maxCompletionTokens: data.maxCompletionTokens ?? null,
         developerMessage: data.developerMessage ?? "",
@@ -77,11 +67,11 @@ const ChatOpenAIAsToolNode: FC<ChatOpenAIAsToolNodeProps> = ({
     const formValues = form.getValues();
 
     const data: ChatOpenAIAsToolNodeData = {
-      name: formValues.name,
-      description: formValues.description,
-      credentialId: formValues.credentialId,
+      name: formValues.advancedSettings.name,
+      description: formValues.advancedSettings.description,
+      credentialId: formValues.advancedSettings.credentialId,
       providerType: "openai",
-      model: formValues.model,
+      model: formValues.advancedSettings.model,
       temperature: formValues.advancedSettings.temperature,
       maxCompletionTokens: formValues.advancedSettings.maxCompletionTokens,
       developerMessage: formValues.advancedSettings.developerMessage,
@@ -115,10 +105,13 @@ const ChatOpenAIAsToolNode: FC<ChatOpenAIAsToolNodeProps> = ({
       outputHandles={outputHandles}
       inputHandles={[]}
       header={
-        <>
-          <ProviderLogo name="openai" />
-          <span className="font-medium text-sm">OpenAI LLM as tool</span>
-        </>
+        <div className="">
+          <div className="flex items-center gap-2">
+            <ProviderLogo name="openai" />
+            <span className="font-medium text-sm">OpenAI LLM as tool</span>
+          </div>
+          <div className="text-sm text-muted-foreground">{data.name}</div>
+        </div>
       }
     >
       <BaseNodeContent>
@@ -130,65 +123,6 @@ const ChatOpenAIAsToolNode: FC<ChatOpenAIAsToolNodeProps> = ({
             >
               <FormField
                 control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Name</FormLabel>
-                    <Input placeholder="Text Summarizer" {...field} />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <Input
-                      placeholder="You can use this tool when..."
-                      {...field}
-                    />
-                    <FormSubLabel>
-                      Explain when this tool can be used and what it can
-                      achieve.
-                    </FormSubLabel>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="credentialId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Credentials</FormLabel>
-                    <SelectCredentials
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      providerType={"openai"}
-                    />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="model"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Model</FormLabel>
-                    <SelectModel
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      providerType={"openai"}
-                    />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
                 name="advancedSettings"
                 render={({ field }) => (
                   <OpenAIChatAdvancedSettingsDialog
@@ -197,8 +131,13 @@ const ChatOpenAIAsToolNode: FC<ChatOpenAIAsToolNodeProps> = ({
                       field.onChange(values);
                     }}
                   >
-                    <Button variant="outline" size="xs" type="button">
-                      Advanced settings
+                    <Button
+                      variant="outline"
+                      size="xs"
+                      type="button"
+                      className="w-full"
+                    >
+                      Configure
                     </Button>
                   </OpenAIChatAdvancedSettingsDialog>
                 )}

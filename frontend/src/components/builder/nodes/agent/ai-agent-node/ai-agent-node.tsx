@@ -107,7 +107,7 @@ const AIAgentChatCompletionNode: FC<AIAgentChatCompletionNodeProps> = ({
         },
       ]}
       header={
-        <div className="flex items-center gap-2 justify-between w-full">
+        <div className="">
           <div className="flex items-center gap-2">
             <Bot width={20} height={20} />
             <span className="font-medium text-sm">AI Agent</span>

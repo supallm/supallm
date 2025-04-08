@@ -58,11 +58,6 @@ export class CodeExecutorNode implements INode {
 
       const language = "typescript";
 
-      console.log("CALLING EXECUTION NODE WITH:", {
-        code,
-        args,
-      });
-
       switch (language) {
         case "typescript":
           const executor = new NodejsExecutor();
