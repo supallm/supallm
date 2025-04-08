@@ -58,12 +58,12 @@ export type EventPayloadMap = {
   [WorkflowEvents.TOOL_STARTED]: {
     agentName: string;
     toolName: string;
-    input: Record<string, any>;
+    inputs: Record<string, any>;
   };
   [WorkflowEvents.TOOL_COMPLETED]: {
     agentName: string;
     toolName: string;
-    input: Record<string, any>;
+    inputs: Record<string, any>;
     output: Record<string, any>;
   };
   [WorkflowEvents.TOOL_FAILED]: {

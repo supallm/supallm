@@ -154,28 +154,10 @@ export class Agent implements INode {
                 );
               }
             }
-            // Handle nested JSON string in input
-            if (
-              parsedStartInput?.input &&
-              typeof parsedStartInput.input === "string"
-            ) {
-              try {
-                parsedStartInput.input = JSON.parse(parsedStartInput.input);
-              } catch (e: unknown) {
-                const error = e as Error;
-                logger.error(
-                  `Failed to parse nested tool start input: ${error.message}`,
-                  {
-                    input: parsedStartInput.input,
-                    error,
-                  },
-                );
-              }
-            }
             options.onEvent("TOOL_STARTED", {
               agentName: "default",
               toolName: event.name,
-              input: parsedStartInput,
+              inputs: parsedStartInput?.input || parsedStartInput,
             });
             break;
           case "on_tool_end":
@@ -194,29 +176,11 @@ export class Agent implements INode {
                 );
               }
             }
-            // Handle nested JSON string in input
-            if (
-              parsedEndInput?.input &&
-              typeof parsedEndInput.input === "string"
-            ) {
-              try {
-                parsedEndInput.input = JSON.parse(parsedEndInput.input);
-              } catch (e: unknown) {
-                const error = e as Error;
-                logger.error(
-                  `Failed to parse nested tool end input: ${error.message}`,
-                  {
-                    input: parsedEndInput.input,
-                    error,
-                  },
-                );
-              }
-            }
             options.onEvent("TOOL_COMPLETED", {
               agentName: "default",
               toolName: event.name,
               output: event.data.output?.content,
-              input: parsedEndInput,
+              inputs: parsedEndInput?.input || parsedEndInput,
             });
             break;
           case "on_error":
