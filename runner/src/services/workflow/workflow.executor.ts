@@ -296,14 +296,32 @@ export class WorkflowExecutor extends EventEmitter {
       ...this.createBaseEventData(context.get),
     };
 
+    const isNodeEvent =
+      eventType === WorkflowEvents.NODE_STARTED ||
+      eventType === WorkflowEvents.NODE_COMPLETED ||
+      eventType === WorkflowEvents.NODE_FAILED ||
+      eventType === WorkflowEvents.TOOL_STARTED ||
+      eventType === WorkflowEvents.TOOL_COMPLETED ||
+      eventType === WorkflowEvents.TOOL_FAILED ||
+      eventType === WorkflowEvents.NODE_RESULT ||
+      eventType === WorkflowEvents.NODE_LOG ||
+      eventType === WorkflowEvents.AGENT_NOTIFICATION;
+
     // Extract common fields
     const { nodeId, nodeType, ...specificData } = eventData as any;
 
+    // For local event emission and backend publication
     const event = {
       ...baseEvent,
-      ...(nodeId ? { nodeId, nodeType } : {}),
-      data: specificData,
+      data: {
+        ...(isNodeEvent ? { nodeId, nodeType } : {}),
+        ...specificData,
+      },
     } as unknown as WorkflowEvent<T>;
+
+    logger.debug(
+      `emitting event: ${eventType}, event: ${JSON.stringify(event)}`,
+    );
 
     this.emit(eventType, event);
   }
