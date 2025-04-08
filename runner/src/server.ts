@@ -32,6 +32,7 @@ export class RunnerServer {
     this.contextService = new RedisContextService(config.redis);
     this.executor = new WorkflowExecutor(this.nodeManager, this.contextService);
 
+    this.executor.setMaxListeners(20);
     this.setupEventListeners();
   }
 
@@ -51,6 +52,7 @@ export class RunnerServer {
   }
 
   async stop(): Promise<void> {
+    this.executor.removeAllListeners();
     await this.queueConsumer.close();
     await this.notifier.close();
     logger.info("runner server stopped");
