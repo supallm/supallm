@@ -4,7 +4,6 @@ package model
 import (
 	"encoding/json"
 	"fmt"
-	"log/slog"
 	"strings"
 
 	"github.com/google/uuid"
@@ -257,7 +256,6 @@ func (p *Project) convertBuilderToRunnerFlow(builderFlow BuilderFlow) (*RunnerFl
 		nodeMap[node.ID] = node
 	}
 
-	slog.Info("builderFlow", "edges", builderFlow.Edges)
 	// First pass: Add all nodes to the result map with their basic info
 	for _, node := range builderFlow.Nodes {
 		processor, err := p.getNodeProcessor(node.Type)
@@ -269,7 +267,6 @@ func (p *Project) convertBuilderToRunnerFlow(builderFlow BuilderFlow) (*RunnerFl
 			continue
 		}
 
-		slog.Info("node", "id", node.ID, "type", node.Type)
 		// Get connected tools and memory for the node
 		tools, err := p.getConnectedTools(node.ID, builderFlow.Edges, nodeMap)
 		if err != nil {

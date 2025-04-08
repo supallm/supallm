@@ -18,98 +18,101 @@ export const WorkflowEvents = {
   AGENT_NOTIFICATION: "AGENT_NOTIFICATION",
 } as const;
 
-export interface WorkflowEvent {
-  type: (typeof WorkflowEvents)[keyof typeof WorkflowEvents];
-  workflowId: string;
-  triggerId: string;
-  sessionId: string;
-  data: Record<string, any>;
-}
+// Type helper pour extraire le type littéral des événements
+export type WorkflowEventType =
+  (typeof WorkflowEvents)[keyof typeof WorkflowEvents];
 
-export interface INotifier {
-  initialize(): Promise<void>;
-  publishWorkflowEvent(event: WorkflowEvent): Promise<string>;
-  publishNodeEvent(event: WorkflowEvent): Promise<string>;
-  close(): Promise<void>;
-}
-
-export interface BaseEventData {
+// Base commune pour tous les événements
+interface BaseEventData {
   workflowId: string;
   sessionId: string;
   triggerId: string;
 }
 
-export interface BaseNodeEvent extends BaseEventData {
+interface BaseNodeEventData extends BaseEventData {
   nodeId: string;
   nodeType: string;
 }
 
-export interface WorkflowStartedEvent extends BaseEventData {
-  inputs: NodeInput;
+// Type map qui associe chaque type d'événement à son payload
+export type EventPayloadMap = {
+  [WorkflowEvents.WORKFLOW_STARTED]: {
+    inputs: NodeInput;
+  };
+  [WorkflowEvents.WORKFLOW_COMPLETED]: {
+    result: Record<string, any> | null;
+  };
+  [WorkflowEvents.WORKFLOW_FAILED]: {
+    error: string;
+  };
+  [WorkflowEvents.NODE_STARTED]: {
+    inputs: NodeInput;
+  };
+  [WorkflowEvents.NODE_COMPLETED]: {
+    inputs: NodeInput;
+    output: NodeOutput;
+  };
+  [WorkflowEvents.NODE_FAILED]: {
+    error: string;
+  };
+  [WorkflowEvents.TOOL_STARTED]: {
+    agentName: string;
+    toolName: string;
+    input: Record<string, any>;
+  };
+  [WorkflowEvents.TOOL_COMPLETED]: {
+    agentName: string;
+    toolName: string;
+    input: Record<string, any>;
+    output: Record<string, any>;
+  };
+  [WorkflowEvents.TOOL_FAILED]: {
+    agentName: string;
+    toolName: string;
+    error: string;
+  };
+  [WorkflowEvents.NODE_RESULT]: {
+    outputField: string;
+    ioType: NodeIOType;
+    data: string;
+  };
+  [WorkflowEvents.NODE_LOG]: {
+    message: string;
+  };
+  [WorkflowEvents.AGENT_NOTIFICATION]: {
+    outputField: string;
+    ioType: NodeIOType;
+    data: string;
+  };
+};
+
+// Type qui combine le type d'événement avec son payload correspondant
+export type WorkflowEvent<T extends WorkflowEventType = WorkflowEventType> = {
+  type: T;
+} & (T extends keyof EventPayloadMap
+  ? T extends
+      | typeof WorkflowEvents.NODE_STARTED
+      | typeof WorkflowEvents.NODE_COMPLETED
+      | typeof WorkflowEvents.NODE_FAILED
+      | typeof WorkflowEvents.TOOL_STARTED
+      | typeof WorkflowEvents.TOOL_COMPLETED
+      | typeof WorkflowEvents.TOOL_FAILED
+      | typeof WorkflowEvents.NODE_RESULT
+      | typeof WorkflowEvents.NODE_LOG
+      | typeof WorkflowEvents.AGENT_NOTIFICATION
+    ? BaseNodeEventData & EventPayloadMap[T]
+    : BaseEventData & EventPayloadMap[T]
+  : never);
+
+export interface INotifier {
+  initialize(): Promise<void>;
+  publish<T extends WorkflowEventType>(
+    event: WorkflowEvent<T>,
+  ): Promise<string>;
+  close(): Promise<void>;
 }
 
-export interface WorkflowCompletedEvent extends BaseEventData {
-  result: Record<string, any> | null;
-}
-
-export interface WorkflowFailedEvent extends BaseEventData {
-  error: string;
-}
-
-export interface NodeStartedEvent extends BaseNodeEvent {
-  inputs: NodeInput;
-}
-
-export interface NodeCompletedEvent extends BaseNodeEvent {
-  output: NodeOutput;
-}
-
-export interface NodeFailedEvent extends BaseNodeEvent {
-  error: string;
-}
-
-export interface ToolStartedEvent extends BaseNodeEvent {
-  toolName: string;
-  toolInput: Record<string, any>;
-}
-
-export interface ToolCompletedEvent extends BaseNodeEvent {
-  toolName: string;
-  toolOutput: Record<string, any>;
-}
-
-export interface ToolFailedEvent extends BaseNodeEvent {
-  toolName: string;
-  error: string;
-}
-
-export interface NodeResultEvent extends BaseNodeEvent {
-  outputField: string;
-  type: NodeIOType;
-  data: string;
-}
-
-export interface AgentNotificationEvent extends BaseNodeEvent {
-  outputField: string;
-  type: NodeIOType;
-  data: string;
-}
-
-export interface NodeLogEvent extends BaseNodeEvent {
-  message: string;
-}
-
-export interface WorkflowExecutorEvents {
-  [WorkflowEvents.WORKFLOW_STARTED]: (event: WorkflowStartedEvent) => void;
-  [WorkflowEvents.WORKFLOW_COMPLETED]: (event: WorkflowCompletedEvent) => void;
-  [WorkflowEvents.WORKFLOW_FAILED]: (event: WorkflowFailedEvent) => void;
-  [WorkflowEvents.NODE_STARTED]: (event: NodeStartedEvent) => void;
-  [WorkflowEvents.NODE_RESULT]: (event: NodeResultEvent) => void;
-  [WorkflowEvents.NODE_COMPLETED]: (event: NodeCompletedEvent) => void;
-  [WorkflowEvents.TOOL_STARTED]: (event: ToolStartedEvent) => void;
-  [WorkflowEvents.TOOL_COMPLETED]: (event: ToolCompletedEvent) => void;
-  [WorkflowEvents.TOOL_FAILED]: (event: ToolFailedEvent) => void;
-  [WorkflowEvents.NODE_FAILED]: (event: NodeFailedEvent) => void;
-  [WorkflowEvents.NODE_LOG]: (event: NodeLogEvent) => void;
-  [WorkflowEvents.AGENT_NOTIFICATION]: (event: AgentNotificationEvent) => void;
-}
+// Type helper pour le handler d'événements
+export type WorkflowEventHandler = <T extends WorkflowEventType>(
+  event: WorkflowEvent<T>,
+) => void | Promise<void>;

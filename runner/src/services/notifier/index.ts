@@ -1,7 +1,7 @@
 export {
   INotifier,
   WorkflowEvent,
+  WorkflowEventType,
   WorkflowEvents,
-  WorkflowExecutorEvents,
 } from "./notifier.interface";
 export { RedisNotifier } from "./redis-notifier";

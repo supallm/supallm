@@ -33,16 +33,16 @@ export class SDKNotifierTool implements Tool<"sdk-notifier-tool"> {
       logger.debug(
         `running ${this.name} SDKNotifierTool: ${JSON.stringify(params)}`,
       );
-      if (!this.options.onAgentNotification) {
+      if (!this.options.nodeOptions) {
         return Result.ok("No emiter provided for SDKNotifierTool");
       }
 
-      await this.options.onAgentNotification(
-        this.options.nodeId,
-        this.outputField,
-        params.input,
-        "any",
-      );
+      await this.options.nodeOptions.onEvent("AGENT_NOTIFICATION", {
+        nodeId: this.options.nodeId,
+        outputField: this.outputField,
+        data: params.input,
+        ioType: "any",
+      });
       return Result.ok(`Successfully sent notification to SDK`);
     } catch (error) {
       return Result.error(

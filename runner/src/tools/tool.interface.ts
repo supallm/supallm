@@ -1,11 +1,11 @@
 import { Result } from "typescript-result";
 import { z } from "zod";
-import { AgentNotificationCallback } from "../nodes/types";
+import { NodeOptions } from "../nodes/types";
 
 export type ToolOptions = {
   nodeId: string;
   sessionId: string;
-  onAgentNotification: AgentNotificationCallback;
+  nodeOptions: NodeOptions;
 };
 
 export type ToolType =

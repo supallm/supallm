@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 	"net/http"
 
 	watermillHTTP "github.com/ThreeDotsLabs/watermill-http/v2/pkg/http"
@@ -47,6 +48,7 @@ func (p workflowSSEAdapter) NextStreamResponse(r *http.Request, msg *watermillMs
 	var messageHandled event.WorkflowEventMessage
 	err := json.Unmarshal(msg.Payload, &messageHandled)
 	if err != nil {
+		slog.Error("error unmarshalling workflow event message", "error", err)
 		return nil, false
 	}
 

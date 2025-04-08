@@ -42,7 +42,10 @@ export class CodeExecutorNode implements INode {
         // TODO @val: you can add your error handling here
         if (!matchingInput) {
           const errorMessage = `Missing argument named ${label}. This is likely a mistake in your flow.`;
-          options.onNodeLog(nodeId, errorMessage);
+          options.onEvent("NODE_LOG", {
+            nodeId,
+            message: errorMessage,
+          });
           throw new MissingArgumentError(errorMessage);
         }
 
@@ -67,10 +70,16 @@ export class CodeExecutorNode implements INode {
             code,
             args,
             (data) => {
-              options.onNodeLog(nodeId, data);
+              options.onEvent("NODE_LOG", {
+                nodeId,
+                message: data,
+              });
             },
             (data) => {
-              options.onNodeLog(nodeId, data);
+              options.onEvent("NODE_LOG", {
+                nodeId,
+                message: data,
+              });
             },
           );
 
@@ -83,7 +92,12 @@ export class CodeExecutorNode implements INode {
           Object.entries(parsedResult).forEach(([key, value]) => {
             const outputKey = this.getOutputKey(key, definition.outputs);
             if (outputKey) {
-              options.onNodeResult(nodeId, outputKey, value, "any");
+              options.onEvent("NODE_RESULT", {
+                nodeId,
+                outputField: outputKey,
+                data: value,
+                ioType: "any",
+              });
             }
           });
           return Result.ok(parsedResult);

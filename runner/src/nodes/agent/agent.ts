@@ -123,7 +123,6 @@ export class Agent implements INode {
 
       let finalResponse = "";
       for await (const event of stream) {
-        logger.debug(`Agent response: ${event.event}`);
         switch (event.event) {
           case "on_chat_model_stream":
             const content =
@@ -131,45 +130,95 @@ export class Agent implements INode {
                 ? event.data.chunk.text
                 : JSON.stringify(event.data.chunk.text);
 
-            options.onNodeResult(nodeId, "response", content, "text");
+            options.onEvent("NODE_RESULT", {
+              outputField: "response",
+              ioType: "text",
+              data: content,
+            });
             finalResponse += content;
             break;
 
           case "on_tool_start":
-          // const toolName = event.name || "unknown_tool";
-          // const toolInput = event.data || {};
-          // options.onNodeResult(
-          //   nodeId,
-          //   "status",
-          //   `Starting tool: ${toolName}`,
-          //   "text",
-          // );
-          // options.onNodeResult(
-          //   nodeId,
-          //   "tool",
-          //   JSON.stringify({
-          //     name: toolName,
-          //     input: toolInput,
-          //     status: "started",
-          //   }),
-          //   "text",
-          // );
-          // break;
-
+            let parsedStartInput = event.data.input;
+            if (typeof parsedStartInput === "string") {
+              try {
+                parsedStartInput = JSON.parse(parsedStartInput);
+              } catch (e: unknown) {
+                const error = e as Error;
+                logger.error(
+                  `Failed to parse tool start input: ${error.message}`,
+                  {
+                    input: parsedStartInput,
+                    error,
+                  },
+                );
+              }
+            }
+            // Handle nested JSON string in input
+            if (
+              parsedStartInput?.input &&
+              typeof parsedStartInput.input === "string"
+            ) {
+              try {
+                parsedStartInput.input = JSON.parse(parsedStartInput.input);
+              } catch (e: unknown) {
+                const error = e as Error;
+                logger.error(
+                  `Failed to parse nested tool start input: ${error.message}`,
+                  {
+                    input: parsedStartInput.input,
+                    error,
+                  },
+                );
+              }
+            }
+            options.onEvent("TOOL_STARTED", {
+              agentName: "default",
+              toolName: event.name,
+              input: parsedStartInput,
+            });
+            break;
           case "on_tool_end":
-          // const toolOutput = event.data || {};
-          // options.onNodeResult(
-          //   nodeId,
-          //   "tool",
-          //   JSON.stringify({
-          //     name: event.name,
-          //     output: toolOutput,
-          //     status: "completed",
-          //   }),
-          //   "text",
-          // );
-          // break;
-
+            let parsedEndInput = event.data.input;
+            if (typeof parsedEndInput === "string") {
+              try {
+                parsedEndInput = JSON.parse(parsedEndInput);
+              } catch (e: unknown) {
+                const error = e as Error;
+                logger.error(
+                  `Failed to parse tool end input: ${error.message}`,
+                  {
+                    input: parsedEndInput,
+                    error,
+                  },
+                );
+              }
+            }
+            // Handle nested JSON string in input
+            if (
+              parsedEndInput?.input &&
+              typeof parsedEndInput.input === "string"
+            ) {
+              try {
+                parsedEndInput.input = JSON.parse(parsedEndInput.input);
+              } catch (e: unknown) {
+                const error = e as Error;
+                logger.error(
+                  `Failed to parse nested tool end input: ${error.message}`,
+                  {
+                    input: parsedEndInput.input,
+                    error,
+                  },
+                );
+              }
+            }
+            options.onEvent("TOOL_COMPLETED", {
+              agentName: "default",
+              toolName: event.name,
+              output: event.data.output?.content,
+              input: parsedEndInput,
+            });
+            break;
           case "on_error":
         }
       }
@@ -197,7 +246,7 @@ export class Agent implements INode {
       const [tool, toolError] = ToolRegistry.create(toolConfig, {
         nodeId,
         sessionId: options.sessionId,
-        onAgentNotification: options.onAgentNotification,
+        nodeOptions: options,
       }).toTuple();
       if (toolError) {
         throw toolError;

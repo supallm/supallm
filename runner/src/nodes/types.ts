@@ -1,5 +1,10 @@
 import { Result } from "typescript-result";
 import { MemoryConfig } from "../memory/memory.interface";
+import {
+  WorkflowEvent,
+  WorkflowEvents,
+  WorkflowEventType,
+} from "../services/notifier";
 import { ToolConfig } from "../tools/tool.interface";
 
 type LLMProvider =
@@ -43,30 +48,31 @@ export interface NodeDefinition {
   config: Record<string, any>;
 }
 
-export type NodeResultCallback = (
-  nodeId: string,
-  outputField: string,
-  data: string,
-  type: NodeIOType,
-) => Promise<void>;
+// Type des événements que les nodes peuvent émettre
+export type NodeEventType = Extract<
+  WorkflowEventType,
+  | typeof WorkflowEvents.NODE_RESULT
+  | typeof WorkflowEvents.AGENT_NOTIFICATION
+  | typeof WorkflowEvents.NODE_LOG
+  | typeof WorkflowEvents.TOOL_STARTED
+  | typeof WorkflowEvents.TOOL_COMPLETED
+  | typeof WorkflowEvents.TOOL_FAILED
+>;
 
-export type AgentNotificationCallback = (
-  nodeId: string,
-  outputField: string,
-  data: string,
-  type: NodeIOType,
-) => Promise<void>;
-
-export type NodeLogCallback = (
-  nodeId: string,
-  message: string,
-) => Promise<void>;
+// Type pour les événements de node sans workflowId et triggerId
+export type NodeEvent<T extends NodeEventType> = Omit<
+  WorkflowEvent<T>,
+  "workflowId" | "triggerId"
+>;
 
 export type NodeOptions = {
   sessionId: string;
-  onNodeResult: NodeResultCallback;
-  onAgentNotification: AgentNotificationCallback;
-  onNodeLog: NodeLogCallback;
+  onEvent: <T extends NodeEventType>(
+    type: T,
+    data: Omit<NodeEvent<T>, "type" | "sessionId" | "nodeType" | "nodeId"> & {
+      nodeId?: string;
+    },
+  ) => Promise<void>;
 };
 
 export interface INode {

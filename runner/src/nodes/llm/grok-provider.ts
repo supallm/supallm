@@ -94,12 +94,12 @@ export class GrokProvider implements INode {
 
       if (chunkContent) {
         if (outputField) {
-          await options.onNodeResult(
+          await options.onEvent("NODE_RESULT", {
             nodeId,
             outputField,
-            chunkContent,
-            resolvedOutputs.type,
-          );
+            data: chunkContent,
+            ioType: resolvedOutputs.type,
+          });
         }
         fullResponse += chunkContent;
       }
