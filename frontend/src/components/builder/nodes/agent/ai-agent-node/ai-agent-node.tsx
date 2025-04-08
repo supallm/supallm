@@ -31,6 +31,7 @@ const AIAgentChatCompletionNode: FC<AIAgentChatCompletionNodeProps> = ({
   const formSchema = z.object({
     advancedSettings: z.object({
       instructions: z.string().min(2),
+      name: z.string().min(2),
     }),
   });
 
@@ -40,6 +41,7 @@ const AIAgentChatCompletionNode: FC<AIAgentChatCompletionNodeProps> = ({
     defaultValues: {
       advancedSettings: {
         instructions: data.instructions ?? "",
+        name: data.name ?? "",
       },
     },
   });
@@ -49,6 +51,7 @@ const AIAgentChatCompletionNode: FC<AIAgentChatCompletionNodeProps> = ({
 
     const data: AIAgentNodeData = {
       instructions: formValues.advancedSettings.instructions,
+      name: formValues.advancedSettings.name,
     };
     updateNodeData(nodeId, data);
   });
@@ -104,10 +107,16 @@ const AIAgentChatCompletionNode: FC<AIAgentChatCompletionNodeProps> = ({
         },
       ]}
       header={
-        <>
-          <Bot width={20} height={20} />
-          <span className="font-medium text-sm">AI Agent</span>
-        </>
+        <div className="flex items-center gap-2 justify-between w-full">
+          <div className="flex items-center gap-2">
+            <Bot width={20} height={20} />
+            <span className="font-medium text-sm">AI Agent</span>
+          </div>
+
+          {data.name?.length > 0 && (
+            <span className="text-sm text-muted-foreground">{data.name}</span>
+          )}
+        </div>
       }
     >
       <BaseNodeContent>
@@ -127,8 +136,13 @@ const AIAgentChatCompletionNode: FC<AIAgentChatCompletionNodeProps> = ({
                       field.onChange(values);
                     }}
                   >
-                    <Button variant="outline" size="xs" type="button">
-                      Configure instructions
+                    <Button
+                      variant="outline"
+                      size="xs"
+                      type="button"
+                      className="w-full"
+                    >
+                      Configure agent
                     </Button>
                   </AIAgentAdvancedSettingsDialog>
                 )}

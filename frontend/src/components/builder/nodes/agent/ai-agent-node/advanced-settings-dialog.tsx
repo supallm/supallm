@@ -7,6 +7,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import {
   Sheet,
   SheetContent,
@@ -47,12 +48,14 @@ const hint = `Explain the role and mission of the agent. Describe the tools avai
 
 const formSchema = z.object({
   instructions: z.string().min(2),
+  name: z.string().min(2),
 });
 
 export const AIAgentAdvancedSettingsDialog: FC<
   PropsWithChildren<{
     data: {
       instructions: string;
+      name: string;
     };
     onChange: (values: z.infer<typeof formSchema>) => void;
   }>
@@ -63,6 +66,7 @@ export const AIAgentAdvancedSettingsDialog: FC<
     resolver: zodResolver(formSchema),
     defaultValues: {
       instructions: data.instructions ?? "",
+      name: data.name ?? "",
     },
   });
 
@@ -100,6 +104,21 @@ export const AIAgentAdvancedSettingsDialog: FC<
         <div className="p-4 overflow-y-auto space-y-4">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              <FormItem>
+                <FormLabel>Name</FormLabel>
+                <FormControl>
+                  <Input
+                    type="text"
+                    placeholder="Bob"
+                    {...form.register("name")}
+                  />
+                </FormControl>
+                <FormMessage />
+                <FormDescription>
+                  The name of the agent. This will be used to identify the agent
+                  in the flow.
+                </FormDescription>
+              </FormItem>
               <FormItem>
                 <FormLabel>Instructions</FormLabel>
                 <FormControl>
