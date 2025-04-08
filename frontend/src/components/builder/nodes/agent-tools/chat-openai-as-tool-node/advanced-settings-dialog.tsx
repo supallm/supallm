@@ -81,10 +81,15 @@ Output: "The image is a close-up of a red apple with a few specks of dust on the
 Now, answer the user's questions.`;
 
 const formSchema = z.object({
-  name: z.string().regex(/^[a-zA-Z0-9_-]+$/, {
-    message:
-      "Name can only contain letters, numbers, underscores, and hyphens.",
-  }),
+  name: z
+    .string()
+    .regex(/^[a-zA-Z0-9_-]+$/, {
+      message:
+        "Only alphanumeric characters, underscores, and hyphens are allowed.",
+    })
+    .refine((value) => !/___/.test(value), {
+      message: "Cannot contain more than two consecutive underscores.",
+    }),
   description: z.string().min(2),
   credentialId: z.string().min(2),
   model: z.string().min(2),

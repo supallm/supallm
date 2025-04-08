@@ -32,7 +32,15 @@ const ChatOpenAIAsToolNode: FC<ChatOpenAIAsToolNodeProps> = ({
       model: z.enum(OpenAIModels),
       outputMode: z.enum(["text", "text-stream"]),
       description: z.string(),
-      name: z.string().regex(/^[a-zA-Z0-9_-]+$/),
+      name: z
+        .string()
+        .regex(/^[a-zA-Z0-9_-]+$/, {
+          message:
+            "Only alphanumeric characters, underscores, and hyphens are allowed.",
+        })
+        .refine((value) => !/___/.test(value), {
+          message: "Cannot contain more than two consecutive underscores.",
+        }),
       temperature: z.number().nullable(),
       maxCompletionTokens: z.number().nullable(),
       developerMessage: z.string(),
