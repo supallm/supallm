@@ -17,7 +17,7 @@ import { ModelNotFoundError, ProviderAPIError } from "./llm.errors";
 interface AnthropicOptions extends LLMOptions {
   temperature: number;
   maxTokenToSample?: number;
-  streaming: boolean;
+  outputMode: "text-stream" | "text";
   systemPrompt?: string;
 }
 
@@ -37,7 +37,7 @@ export class AnthropicProvider implements INode {
       ...config,
       temperature: definition.config["temperature"],
       maxTokenToSample: definition.config["maxTokenToSample"],
-      streaming: definition.config["streaming"],
+      outputMode: definition.config["outputMode"],
       systemPrompt: definition.config["systemPrompt"],
     });
   }
@@ -117,7 +117,7 @@ export class AnthropicProvider implements INode {
         return Result.error(modelError);
       }
 
-      if (options.streaming) {
+      if (options.outputMode === "text-stream") {
         return LLMUtils.handleStreamingResponse(model, messages, (m, msgs) =>
           m.stream(msgs),
         );
@@ -142,7 +142,7 @@ export class AnthropicProvider implements INode {
           temperature: options.temperature,
           maxTokens: options.maxTokenToSample,
           anthropicApiKey: options.decryptedApiKey,
-          streaming: options.streaming,
+          streaming: options.outputMode === "text-stream",
         }),
       );
     } catch (error) {

@@ -16,7 +16,7 @@ import { ModelNotFoundError, ProviderAPIError } from "./llm.errors";
 interface MistralOptions extends LLMOptions {
   temperature: number;
   maxTokens?: number;
-  streaming: boolean;
+  outputMode: "text-stream" | "text";
 }
 
 export class MistralProvider implements INode {
@@ -35,7 +35,7 @@ export class MistralProvider implements INode {
       ...config,
       temperature: definition.config["temperature"],
       maxTokens: definition.config["maxTokens"],
-      streaming: definition.config["streaming"],
+      outputMode: definition.config["outputMode"],
     });
   }
 
@@ -116,7 +116,7 @@ export class MistralProvider implements INode {
         return Result.error(modelError);
       }
 
-      if (options.streaming) {
+      if (options.outputMode === "text-stream") {
         return LLMUtils.handleStreamingResponse(model, messages, (m, msgs) =>
           m.stream(msgs),
         );
@@ -140,7 +140,7 @@ export class MistralProvider implements INode {
           temperature: options.temperature,
           maxTokens: options.maxTokens,
           apiKey: options.decryptedApiKey,
-          streaming: options.streaming,
+          streaming: options.outputMode === "text-stream",
         }),
       );
     } catch (error) {

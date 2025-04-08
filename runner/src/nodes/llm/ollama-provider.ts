@@ -16,7 +16,7 @@ import { ModelNotFoundError, ProviderAPIError } from "./llm.errors";
 interface OllamaOptions extends LLMOptions {
   temperature: number;
   maxTokens?: number;
-  streaming: boolean;
+  outputMode: "text-stream" | "text";
   systemPrompt?: string;
   baseUrl: string;
   format?: "json";
@@ -43,7 +43,7 @@ export class OllamaProvider implements INode {
       baseUrl: definition.config["baseUrl"],
       temperature: definition.config["temperature"],
       maxTokens: definition.config["maxTokens"],
-      streaming: definition.config["streaming"],
+      outputMode: definition.config["outputMode"],
     });
   }
 
@@ -124,7 +124,7 @@ export class OllamaProvider implements INode {
         return Result.error(modelError);
       }
 
-      if (options.streaming) {
+      if (options.outputMode === "text-stream") {
         return LLMUtils.handleStreamingResponse(model, messages, (m, msgs) =>
           m.stream(msgs),
         );
@@ -147,7 +147,7 @@ export class OllamaProvider implements INode {
           model: options.model,
           temperature: options.temperature,
           baseUrl: options.baseUrl,
-          streaming: options.streaming,
+          streaming: options.outputMode === "text-stream",
         }),
       );
     } catch (error) {

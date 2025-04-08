@@ -2,6 +2,7 @@ import { BaseMessage } from "@langchain/core/messages";
 import { ChatOpenAI, OpenAI } from "@langchain/openai";
 import { Result } from "typescript-result";
 import { CryptoService } from "../../services/secret/crypto-service";
+import { logger } from "../../utils/logger";
 import {
   INode,
   NodeDefinition,
@@ -12,11 +13,10 @@ import {
 } from "../types";
 import { GenerateResult, LLMOptions, LLMUtils } from "./llm-utils";
 import { ModelNotFoundError, ProviderAPIError } from "./llm.errors";
-
 interface OpenAIOptions extends LLMOptions {
   temperature: number;
   maxTokens?: number;
-  streaming: boolean;
+  outputMode: "text-stream" | "text";
   systemPrompt?: string;
 }
 
@@ -36,7 +36,7 @@ export class OpenAIProvider implements INode {
       ...config,
       temperature: definition.config["temperature"],
       maxTokens: definition.config["maxCompletionTokens"],
-      streaming: definition.config["streaming"],
+      outputMode: definition.config["outputMode"],
       systemPrompt: definition.config["developerMessage"],
     });
   }
@@ -113,12 +113,13 @@ export class OpenAIProvider implements INode {
     options: OpenAIOptions,
   ): Promise<GenerateResult> {
     try {
+      logger.info(`options ${JSON.stringify(options)}`);
       const [model, modelError] = this.createModel(options).toTuple();
       if (modelError) {
         return Result.error(modelError);
       }
 
-      if (model instanceof ChatOpenAI && options.streaming) {
+      if (model instanceof ChatOpenAI && options.outputMode === "text-stream") {
         return LLMUtils.handleStreamingResponse(model, messages, (m, msgs) =>
           m.stream(msgs),
         );
@@ -144,7 +145,7 @@ export class OpenAIProvider implements INode {
             temperature: options.temperature,
             maxTokens: options.maxTokens,
             openAIApiKey: options.decryptedApiKey,
-            streaming: options.streaming,
+            streaming: options.outputMode === "text-stream",
           }),
         );
       } else {
@@ -154,7 +155,7 @@ export class OpenAIProvider implements INode {
             temperature: options.temperature,
             maxTokens: options.maxTokens,
             openAIApiKey: options.decryptedApiKey,
-            streaming: options.streaming,
+            streaming: options.outputMode === "text-stream",
           }),
         );
       }
