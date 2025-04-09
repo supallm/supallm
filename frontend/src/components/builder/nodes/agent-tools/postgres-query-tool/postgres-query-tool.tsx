@@ -22,14 +22,12 @@ import { z } from "zod";
 import { CodePreview } from "../../code/code-executor/code-preview";
 import BaseNode from "../../common/base-node";
 import { BaseNodeContent } from "../../common/base-node-content";
-import {
-  CodeEditorDialog,
-  CodeEditorOnChangeParams,
-} from "../../common/code-editor-dialog";
+import { SqlEditorDialog, SqlEditorOnChangeParams } from "./sql-editor-dialog";
 
 type PostgresQueryToolProps = NodeProps & {
   data: {
     query: string;
+    variables: { name: string; description: string }[];
     name: string;
     description: string;
     credentialId: string;
@@ -49,6 +47,12 @@ const PostgresQueryTool: FC<PostgresQueryToolProps> = ({
 
   const formSchema = z.object({
     query: z.string().min(1, "Query cannot be empty"),
+    variables: z.array(
+      z.object({
+        name: z.string(),
+        description: z.string(),
+      }),
+    ),
     name: z.string().min(1, "Name is required"),
     description: z.string(),
     credentialId: z.string().min(1, "Credential is required"),
@@ -59,26 +63,30 @@ const PostgresQueryTool: FC<PostgresQueryToolProps> = ({
     mode: "onChange",
     defaultValues: {
       query: data.query ?? defaultQuery,
+      variables: data.variables ?? [],
       name: data.name ?? "",
       description: data.description ?? "",
       credentialId: data.credentialId ?? "",
     },
   });
 
-  const handleCodeChange = (values: CodeEditorOnChangeParams) => {
+  const handleCodeChange = (values: SqlEditorOnChangeParams) => {
     form.setValue("query", values.code);
+    form.setValue("variables", values.variables);
+
     updateNodeData(nodeId, {
       ...data,
       query: values.code,
+      variables: values.variables,
     });
   };
 
   form.watch(() => {
     const formValues = form.getValues();
-    console.log("formValues", formValues);
 
     updateNodeData(nodeId, {
       name: formValues.name,
+      variables: formValues.variables,
       description: formValues.description,
       query: formValues.query,
       credentialId: formValues.credentialId,
@@ -181,12 +189,13 @@ const PostgresQueryTool: FC<PostgresQueryToolProps> = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <CodeEditorDialog
+                      <SqlEditorDialog
                         language="pgsql"
                         title="Query Editor"
                         description="Edit the SQL query to be executed by the AI Agent"
                         data={{
                           code: field.value,
+                          variables: form.watch("variables"),
                         }}
                         onChange={handleCodeChange}
                       >
@@ -197,7 +206,7 @@ const PostgresQueryTool: FC<PostgresQueryToolProps> = ({
                         >
                           Query Editor
                         </Button>
-                      </CodeEditorDialog>
+                      </SqlEditorDialog>
                     </FormControl>
                     <FormMessage />
                   </FormItem>

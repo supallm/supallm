@@ -1,26 +1,38 @@
 import { Result } from "typescript-result";
+import { assertUnreachable } from "../utils/type-safety";
 import { DiscordNotifierTool } from "./discord-notifier-tool";
 import { HttpTool } from "./http-tool";
 import { OpenAICompletionTool } from "./openai";
+import { PostgresQueryTool } from "./postgres-query-tool";
 import { SDKNotifierTool } from "./sdk-notifier-tool";
-import { Tool, ToolConfig, ToolOptions } from "./tool.interface";
+import {
+  Discord,
+  Http,
+  OpenAICompletion,
+  PostgresQuery,
+  SDKNotifier,
+  Tool,
+  ToolConfig,
+  ToolOptions,
+} from "./tool.interface";
 
 export class ToolRegistry {
-  static create<T extends ToolConfig>(
-    config: T,
-    options: ToolOptions,
-  ): Result<Tool, Error> {
+  static create(config: ToolConfig, options: ToolOptions): Result<Tool, Error> {
     switch (config.type) {
       case "chat-openai-as-tool":
-        return Result.ok(new OpenAICompletionTool(config));
+        return Result.ok(new OpenAICompletionTool(config as OpenAICompletion));
       case "discord_notifier":
-        return Result.ok(new DiscordNotifierTool(config));
+        return Result.ok(new DiscordNotifierTool(config as Discord));
       case "http_request":
-        return Result.ok(new HttpTool(config));
+        return Result.ok(new HttpTool(config as Http));
       case "sdk-notifier-tool":
-        return Result.ok(new SDKNotifierTool(config, options));
+        return Result.ok(new SDKNotifierTool(config as SDKNotifier, options));
+      case "postgres-query-tool":
+        return Result.ok(
+          new PostgresQueryTool(config as PostgresQuery, options),
+        );
       default:
-        return Result.error(new Error(`tool type ${config} not found`));
+        return assertUnreachable(config);
     }
   }
 }

@@ -1,5 +1,6 @@
 import { BaseHandle } from "@/components/base-handle";
 import { OpenAI } from "@/components/logos/openai";
+import { PostgresLogo } from "@/components/logos/postgres";
 import { ProviderLogo } from "@/components/logos/provider-logo";
 import { setInspectingNode } from "@/core/store/flow";
 import { cn } from "@/lib/utils";
@@ -149,6 +150,14 @@ const NodeHeader: FC<{ nodeType: NodeType }> = ({ nodeType }) => {
         <>
           <MessageCircle className="w-4 h-4" />
           <span className="font-medium text-sm">SDK notifier tool</span>
+        </>
+      );
+
+    case "postgres-query-tool":
+      return (
+        <>
+          <PostgresLogo className="w-4 h-4" />
+          <span className="font-medium text-sm">Postgres query tool</span>
         </>
       );
 

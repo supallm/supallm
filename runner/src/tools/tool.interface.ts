@@ -12,7 +12,8 @@ export type ToolType =
   | "chat-openai-as-tool"
   | "discord_notifier"
   | "http_request"
-  | "sdk-notifier-tool";
+  | "sdk-notifier-tool"
+  | "postgres-query-tool";
 
 type Base = {
   id: string;
@@ -56,7 +57,21 @@ export interface SDKNotifier extends Base {
   };
 }
 
-export type ToolConfig = Discord | Http | OpenAICompletion | SDKNotifier;
+export interface PostgresQuery extends Base {
+  type: "postgres-query-tool";
+  config: {
+    query: string;
+    apiKey: string;
+    variables: { name: string; description: string }[];
+  };
+}
+
+export type ToolConfig =
+  | Discord
+  | Http
+  | OpenAICompletion
+  | SDKNotifier
+  | PostgresQuery;
 
 export type ToolOutput = string;
 
