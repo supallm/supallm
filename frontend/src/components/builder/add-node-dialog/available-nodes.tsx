@@ -186,7 +186,7 @@ export const availableNodes: AvailableNode[] = [
     description:
       "Provide pre-defined SQL queries that the AI agent can use securely",
     logo: <PostgresLogo className="w-8 h-8" />,
-    commingSoon: true,
+    commingSoon: false,
   },
   {
     category: "agent-tools",
