@@ -109,11 +109,6 @@ export class PostgresQueryTool implements Tool<"postgres-query-tool"> {
         `running ${this.name} PostgresQueryTool: ${JSON.stringify(params)}`,
       );
 
-      logger.debug("DATABASE URL", this.databaseUrl);
-      console.log("DB URL", this.databaseUrl);
-
-      console.log("PARAMS", params);
-
       const client = new Client({
         connectionString: this.databaseUrl,
         ssl: false,
