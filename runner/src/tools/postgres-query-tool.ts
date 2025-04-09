@@ -9,7 +9,7 @@ const defaultName = "postgres-query-tool";
 
 function toSafePgQuery(
   template: string,
-  variables: { name: string; value: string }[],
+  variables: { [name: string]: string },
 ): {
   query: string;
   values: string[];
@@ -29,11 +29,13 @@ function toSafePgQuery(
 
   // Create values array in order
   const values = paramOrder.map((name) => {
-    const found = variables.find((v) => v.name === name);
-    if (!found) {
+    const found = variables[name];
+
+    if (found === undefined) {
       throw new Error(`Missing value for variable "${name}"`);
     }
-    return found.value;
+
+    return found;
   });
 
   return { query, values };
@@ -42,7 +44,6 @@ function toSafePgQuery(
 export class PostgresQueryTool implements Tool<"postgres-query-tool"> {
   readonly type = "postgres-query-tool";
   readonly id: string;
-  private options: ToolOptions;
   private cryptoService: CryptoService;
   private databaseUrl: string;
 
@@ -52,13 +53,13 @@ export class PostgresQueryTool implements Tool<"postgres-query-tool"> {
 
   constructor(
     private definition: PostgresQuery,
-    options: ToolOptions,
+    private options: ToolOptions,
   ) {
     const baseDescription = `This tool allows to query a postgres database. 
     The user already wrote a SQL query for you and you only have to execute the tool.
     It is possible that the tool does or does not need variables values to be replaced in the query.
     
-    Here are the expected parameters:
+    Here are the expected variables:
 
     ---
     ${definition.config.variables.map((v) => `${v.name}: ${v.description}`).join("\n")}
@@ -74,15 +75,15 @@ export class PostgresQueryTool implements Tool<"postgres-query-tool"> {
     this.description = baseDescription;
 
     this.schema = z.object({
-      variables: z.array(
-        z.object({
-          name: z.string(),
-          value: z.string(),
-        }),
-      ),
+      variables: z.object({
+        ...Object.fromEntries(
+          definition.config.variables.map((v) => [
+            v.name,
+            z.string().describe(v.description),
+          ]),
+        ),
+      }),
     });
-
-    this.options = options;
 
     this.cryptoService = new CryptoService();
 
