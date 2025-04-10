@@ -172,7 +172,7 @@ export const RunningFlow: FC<{
   );
 
   const setFailedNode = useCallback(
-    (data: { nodeId: string; nodeLogs: unknown[] }) => {
+    (data: { nodeId: string; nodeLogs: unknown[]; nodeOutput: unknown }) => {
       setNodes((nds) => {
         return nds.map((node) => {
           if (node.id === data.nodeId) {
@@ -181,7 +181,7 @@ export const RunningFlow: FC<{
               data: {
                 ...node.data,
                 status: "failed",
-                output: null,
+                output: data.nodeOutput,
                 logs: data.nodeLogs,
               },
             };
@@ -245,8 +245,9 @@ export const RunningFlow: FC<{
 
     const unsubscribeNodeFail = flowSubscription.on(
       "nodeFail",
-      ({ nodeId }) => {
-        setFailedNode({ nodeId, nodeLogs: [] });
+      ({ nodeId, message }) => {
+        console.log("nodeFailed!", nodeId, message);
+        setFailedNode({ nodeId, nodeLogs: [], nodeOutput: message });
       },
     );
 
@@ -268,6 +269,7 @@ export const RunningFlow: FC<{
       setFailedNode({
         nodeId,
         nodeLogs: [],
+        nodeOutput: tool.error,
       });
     });
 

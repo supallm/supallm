@@ -127,9 +127,11 @@ export class PostgresQueryTool implements Tool<"postgres-query-tool"> {
 
       try {
         await client.connect();
-      } catch (error) {
+      } catch (error: any) {
         return Result.error(
-          new Error(`Failed to connect to database: ${error}`),
+          new Error(
+            `We failed to connect to the database. If you are running Supallm inside docker-compose, make sure to replace "localhost" by "host.docker.internal" in the database URL. Here is the error: ${error?.message ?? error}`,
+          ),
         );
       }
 
@@ -139,11 +141,7 @@ export class PostgresQueryTool implements Tool<"postgres-query-tool"> {
           params.variables,
         );
 
-        console.log("safeQuery", safeQuery);
-        console.log("safeValues", safeValues);
-
         const result = await client.query(safeQuery, safeValues);
-        console.log("RESULT", result);
 
         await client.end();
 
@@ -161,19 +159,17 @@ export class PostgresQueryTool implements Tool<"postgres-query-tool"> {
             rowCount: result.rowCount,
           }),
         );
-      } catch (error) {
-        console.error("ERROR", error);
-
+      } catch (error: any) {
         await client.end();
         options.onEvent("TOOL_FAILED", {
           agentName: "default",
           nodeId: this.id,
           toolName: this.name,
-          error: error as string,
+          error: `The SQL query failed with the following error: ${error?.message ?? error}`,
         });
         return Result.error(new Error(`Failed to query database: ${error}`));
       }
-    } catch (error) {
+    } catch (error: any) {
       options.onEvent("TOOL_FAILED", {
         agentName: "default",
         nodeId: this.id,
@@ -181,7 +177,9 @@ export class PostgresQueryTool implements Tool<"postgres-query-tool"> {
         error: error as string,
       });
       return Result.error(
-        new Error(`Failed to run PostgresQueryTool: ${error}`),
+        new Error(
+          `Unknown error while running PostgresQueryTool: ${error?.message ?? error}`,
+        ),
       );
     }
   }
