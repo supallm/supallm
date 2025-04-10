@@ -128,7 +128,11 @@ export class PostgresQueryTool implements Tool<"postgres-query-tool"> {
           params.variables,
         );
 
+        console.log("safeQuery", safeQuery);
+        console.log("safeValues", safeValues);
+
         const result = await client.query(safeQuery, safeValues);
+        console.log("RESULT", result);
 
         await client.end();
         return Result.ok(
@@ -138,6 +142,8 @@ export class PostgresQueryTool implements Tool<"postgres-query-tool"> {
           }),
         );
       } catch (error) {
+        console.error("ERROR", error);
+
         await client.end();
         return Result.error(new Error(`Failed to query database: ${error}`));
       }

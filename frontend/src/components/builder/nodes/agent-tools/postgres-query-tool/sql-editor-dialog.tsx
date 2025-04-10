@@ -181,27 +181,24 @@ export const SqlEditorDialog: FC<
 
   const variables = form.watch("variables");
 
-  const parseCodeForVariables = useCallback(
-    (code: string) => {
-      // here we extract all variables matching the pattern {{variable_name}}
+  const parseCodeForVariables = useCallback((code: string) => {
+    // here we extract all variables matching the pattern {{variable_name}}
 
-      const vars = code.match(/{{(\w+)}}/g);
+    const vars = code.match(/{{(\w+)}}/g);
 
-      return (
-        vars?.map((variable) => {
-          const name = variable.slice(2, -2);
-          const description =
-            variables.find((v) => v.name === name)?.description ?? "";
+    return (
+      vars?.map((variable) => {
+        const name = variable.slice(2, -2);
+        const description =
+          variables.find((v) => v.name === name)?.description ?? "";
 
-          return {
-            name,
-            description,
-          };
-        }) ?? []
-      );
-    },
-    [variables],
-  );
+        return {
+          name,
+          description,
+        };
+      }) ?? []
+    );
+  }, []);
 
   const code = form.watch("code");
 
