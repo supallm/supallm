@@ -12,7 +12,6 @@ const defaultEndpoint = "https://api.search.brave.com/res/v1/web/search";
 
 export class BraveSearchTool implements Tool<"brave-search-tool"> {
   readonly type = "brave-search-tool";
-  private cryptoService: CryptoService;
   readonly id: string;
   readonly name: string;
   readonly description: string;
@@ -29,13 +28,13 @@ export class BraveSearchTool implements Tool<"brave-search-tool"> {
   });
 
   constructor(definition: BraveSearch) {
-    this.cryptoService = new CryptoService();
+    const cryptoService = new CryptoService();
 
     if (!definition.config.apiKey) {
       throw new Error("Brave Search API key is required");
     }
 
-    const [decryptedApiKeyResult, decryptedApiKeyError] = this.cryptoService
+    const [decryptedApiKeyResult, decryptedApiKeyError] = cryptoService
       .decrypt(definition.config.apiKey)
       .toTuple();
     if (decryptedApiKeyError) {

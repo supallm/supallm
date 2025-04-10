@@ -6,6 +6,7 @@ import { HttpTool } from "./http-tool";
 import { OpenAICompletionTool } from "./openai";
 import { PostgresQueryTool } from "./postgres-query-tool";
 import { SDKNotifierTool } from "./sdk-notifier-tool";
+import { SonarSearchTool } from "./sonar-chat-tool";
 import {
   BraveSearch,
   Discord,
@@ -13,6 +14,7 @@ import {
   OpenAICompletion,
   PostgresQuery,
   SDKNotifier,
+  SonarSearch,
   Tool,
   ToolConfig,
 } from "./tool.interface";
@@ -32,6 +34,8 @@ export class ToolRegistry {
         return Result.ok(new PostgresQueryTool(config as PostgresQuery));
       case "brave-search-tool":
         return Result.ok(new BraveSearchTool(config as BraveSearch));
+      case "sonar-search-tool":
+        return Result.ok(new SonarSearchTool(config as SonarSearch));
       default:
         return assertUnreachable(config);
     }
