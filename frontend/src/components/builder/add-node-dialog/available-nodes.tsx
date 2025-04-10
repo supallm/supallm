@@ -122,18 +122,19 @@ export const availableNodes: AvailableNode[] = [
   },
   {
     category: "agent-tools",
-    type: "http-tool",
-    name: "HTTP Client",
-    description: "Allow the AI agent make HTTP requests",
-    logo: <Network width={20} height={20} />,
+    type: "postgres-query-tool",
+    name: "Postgres Query tool",
+    description:
+      "Provide pre-defined SQL queries that the AI agent can use securely",
+    logo: <PostgresLogo className="w-8 h-8" />,
     commingSoon: false,
   },
   {
     category: "agent-tools",
-    type: "user-feedback",
-    name: "User feedback",
-    description: "Ask for user feedback during the flow",
-    logo: <UserCheck width={20} height={20} />,
+    type: "http-tool",
+    name: "HTTP Client",
+    description: "Allow the AI agent make HTTP requests",
+    logo: <Network width={20} height={20} />,
     commingSoon: true,
   },
   {
@@ -143,6 +144,14 @@ export const availableNodes: AvailableNode[] = [
     description: "Store data in the local memory",
     logo: <Database width={20} height={20} />,
     commingSoon: false,
+  },
+  {
+    category: "agent-tools",
+    type: "user-feedback",
+    name: "User feedback",
+    description: "Ask for user feedback during the flow",
+    logo: <UserCheck width={20} height={20} />,
+    commingSoon: true,
   },
   {
     category: "agent-tools",
@@ -178,15 +187,6 @@ export const availableNodes: AvailableNode[] = [
     description: "Allow the AI agent to interact with Notion databases",
     logo: <Notion width={25} height={25} />,
     commingSoon: true,
-  },
-  {
-    category: "agent-tools",
-    type: "postgres-query-tool",
-    name: "Postgres Query tool",
-    description:
-      "Provide pre-defined SQL queries that the AI agent can use securely",
-    logo: <PostgresLogo className="w-8 h-8" />,
-    commingSoon: false,
   },
   {
     category: "agent-tools",

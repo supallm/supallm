@@ -84,7 +84,7 @@ const HttpToolNode: FC<CustomNodeProps> = ({ data, id: nodeId }) => {
       <BaseNodeContent>
         <div className="flex flex-col gap-2">
           <HttpToolAdvancedSettingsDialog
-            headers={data.headers}
+            headers={data.headers ?? []}
             onChange={(values) => {
               form.setValue("headers", values);
             }}
