@@ -158,7 +158,7 @@ const NodeHeader: FC<{
     case "postgres-query-tool":
       return (
         <BaseNodeHeader
-          title="Postgres query toor"
+          title="Postgres query tool"
           logo={<PostgresLogo className="w-4 h-4" />}
         />
       );
