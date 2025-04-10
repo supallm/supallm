@@ -320,6 +320,8 @@ export const RunningFlow: FC<{
       "postgres-query-tool": RunningFlowNode,
       "slack-tool": RunningFlowNode,
       "e2b-code-interpreter-tool": RunningFlowNode,
+      "brave-search-tool": RunningFlowNode,
+      "firecrawl-tool": RunningFlowNode,
     }),
     [],
   );

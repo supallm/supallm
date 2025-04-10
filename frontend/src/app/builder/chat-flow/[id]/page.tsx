@@ -52,7 +52,9 @@ import "@xyflow/react/dist/style.css";
 import { PlayIcon, PlusIcon } from "lucide-react";
 
 import AirtableTool from "@/components/builder/nodes/agent-tools/airtable-tool/airtable-tool";
+import BraveSearchTool from "@/components/builder/nodes/agent-tools/brave-search/brave-search-tool";
 import ConfluenceTool from "@/components/builder/nodes/agent-tools/confluence-tool/confluence-tool";
+import FirecrawlNode from "@/components/builder/nodes/agent-tools/firecrawl-tool/firecrawl-tool-node";
 import notionDatabaseTool from "@/components/builder/nodes/agent-tools/notion-database-tool/notion-database-tool";
 import postgresQueryTool from "@/components/builder/nodes/agent-tools/postgres-query-tool/postgres-query-tool";
 import SlackTool from "@/components/builder/nodes/agent-tools/slack-tool/slack-tool";
@@ -186,6 +188,8 @@ const ChatFlowPage = () => {
       "confluence-tool": ConfluenceTool,
       "airtable-tool": AirtableTool,
       "slack-tool": SlackTool,
+      "firecrawl-tool": FirecrawlNode,
+      "brave-search-tool": BraveSearchTool,
     }),
     [],
   );

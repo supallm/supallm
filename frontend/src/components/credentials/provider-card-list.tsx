@@ -1,6 +1,8 @@
 import { ProviderType } from "@/core/entities/credential";
 import Link from "next/link";
 import { FC } from "react";
+import { Brave } from "../logos/brave";
+import { Firecrawl } from "../logos/firecrawl";
 import { ProviderLogo } from "../logos/provider-logo";
 import { Slack } from "../logos/slack";
 import { FormDescription } from "../ui/form";
@@ -129,6 +131,36 @@ export const ProviderInfoMap: Record<
       </FormDescription>
     ),
     apiKeyPlaceholder: "Your slack token",
+  },
+  firecrawl: {
+    name: "Firecrawl",
+    description: "Web crawling and scraping provider",
+    logo: <Firecrawl width={30} height={30} />,
+    commingSoon: false,
+  },
+  brave: {
+    name: "Brave Search",
+    description:
+      "Independent search engine API with high-quality data, perfect for building search and AI applications",
+    logo: <Brave width={30} height={30} />,
+    commingSoon: false,
+    apiKeyLabel: "Brave Search API Key",
+    apiKeyHint: (
+      <FormDescription>
+        Visit{" "}
+        <Link
+          className="text-blue-500"
+          target="_blank"
+          href={
+            "https://api-dashboard.search.brave.com/app/documentation/web-search/get-started"
+          }
+        >
+          Brave Documentation
+        </Link>{" "}
+        to learn more.
+      </FormDescription>
+    ),
+    apiKeyPlaceholder: "Enter your Brave Search API key",
   },
 } as const;
 

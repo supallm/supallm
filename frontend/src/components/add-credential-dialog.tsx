@@ -110,7 +110,7 @@ export const AddCredentialDialog: FC<
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       {!!children && <DialogTrigger asChild>{children}</DialogTrigger>}
-      <DialogContent className="sm:max-w-3xl">
+      <DialogContent className="min-w-[800px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add Credential</DialogTitle>
           <DialogDescription>
