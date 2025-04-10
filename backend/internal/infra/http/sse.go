@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"sync"
 
 	watermillHTTP "github.com/ThreeDotsLabs/watermill-http/v2/pkg/http"
 	watermillMsg "github.com/ThreeDotsLabs/watermill/message"
@@ -30,21 +31,33 @@ func (s *Server) listenWorkflowEvents(next http.Handler) http.HandlerFunc {
 	}
 }
 
-type workflowSSEAdapter struct{}
+type connectionParams struct {
+	triggerID  string
+	workflowID string
+	projectID  string
+}
 
-func (p workflowSSEAdapter) InitialStreamResponse(w http.ResponseWriter, r *http.Request) (response any, ok bool) {
-	triggerID := chi.URLParam(r, "triggerId")
-	workflowID := chi.URLParam(r, "workflowId")
-	projectID := chi.URLParam(r, "projectId")
+type workflowSSEAdapter struct {
+	connections sync.Map // map[*http.Request]*connectionParams
+}
+
+func (p *workflowSSEAdapter) InitialStreamResponse(w http.ResponseWriter, r *http.Request) (response any, ok bool) {
+	params := &connectionParams{
+		triggerID:  chi.URLParam(r, "triggerId"),
+		workflowID: chi.URLParam(r, "workflowId"),
+		projectID:  chi.URLParam(r, "projectId"),
+	}
+
+	p.connections.Store(r, params)
 
 	return map[string]any{
-		"trigger_id":  triggerID,
-		"workflow_id": workflowID,
-		"project_id":  projectID,
+		"trigger_id":  params.triggerID,
+		"workflow_id": params.workflowID,
+		"project_id":  params.projectID,
 	}, true
 }
 
-func (p workflowSSEAdapter) NextStreamResponse(r *http.Request, msg *watermillMsg.Message) (response any, ok bool) {
+func (p *workflowSSEAdapter) NextStreamResponse(r *http.Request, msg *watermillMsg.Message) (response any, ok bool) {
 	var messageHandled event.WorkflowEventMessage
 	err := json.Unmarshal(msg.Payload, &messageHandled)
 	if err != nil {
@@ -52,8 +65,19 @@ func (p workflowSSEAdapter) NextStreamResponse(r *http.Request, msg *watermillMs
 		return nil, false
 	}
 
-	triggerID := chi.URLParam(r, "triggerId")
-	if messageHandled.TriggerID.String() != triggerID {
+	params, ok := p.connections.Load(r)
+	if !ok {
+		slog.Error("connection parameters not found")
+		return nil, false
+	}
+
+	connParams, ok := params.(*connectionParams)
+	if !ok {
+		slog.Error("connection parameters not found")
+		return nil, false
+	}
+
+	if messageHandled.TriggerID.String() != connParams.triggerID {
 		return nil, false
 	}
 
