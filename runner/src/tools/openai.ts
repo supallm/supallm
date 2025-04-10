@@ -1,6 +1,7 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { Result } from "typescript-result";
 import { z } from "zod";
+import { NodeOptions } from "../nodes/types";
 import { CryptoService } from "../services/secret/crypto-service";
 import { logger } from "../utils/logger";
 import { OpenAICompletion, Tool, ToolOutput } from "./tool.interface";
@@ -55,11 +56,20 @@ export class OpenAICompletionTool implements Tool<"chat-openai-as-tool"> {
 
   async run(
     params: z.infer<typeof this.schema>,
+    options: NodeOptions,
   ): Promise<Result<ToolOutput, Error>> {
     try {
       logger.debug(
         `running ${this.name} OpenAICompletionTool: ${JSON.stringify(params)}`,
       );
+
+      options.onEvent("TOOL_STARTED", {
+        toolName: this.name,
+        inputs: params,
+        agentName: "default",
+        nodeId: this.id,
+      });
+
       const response = await this.llm.invoke([
         {
           role: "system",
@@ -70,8 +80,25 @@ export class OpenAICompletionTool implements Tool<"chat-openai-as-tool"> {
           content: params.input,
         },
       ]);
+
+      options.onEvent("TOOL_COMPLETED", {
+        agentName: "default",
+        nodeId: this.id,
+        toolName: this.name,
+        inputs: params,
+        output: {
+          content: String(response.content),
+        },
+      });
+
       return Result.ok(String(response.content));
     } catch (error) {
+      options.onEvent("TOOL_FAILED", {
+        agentName: "default",
+        nodeId: this.id,
+        toolName: this.name,
+        error: error as string,
+      });
       return Result.error(new Error(`OpenAI completion failed: ${error}`));
     }
   }

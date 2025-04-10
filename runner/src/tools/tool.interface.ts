@@ -81,5 +81,5 @@ export interface Tool<T extends ToolType = ToolType> {
   readonly name: string;
   readonly description: string;
   readonly schema: z.ZodSchema;
-  run(params: any): Promise<Result<ToolOutput, Error>>;
+  run(params: any, options: NodeOptions): Promise<Result<ToolOutput, Error>>;
 }

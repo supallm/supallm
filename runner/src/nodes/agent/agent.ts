@@ -3,6 +3,7 @@ import {
   AIMessage,
   HumanMessage,
   SystemMessage,
+  ToolMessage,
 } from "@langchain/core/messages";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import { MessagesAnnotation, StateGraph } from "@langchain/langgraph";
@@ -24,7 +25,14 @@ import {
   NodeType,
 } from "../types";
 
-const defaultInstructions = "You are a helpful AI assistant.";
+const defaultInstructions = `You are a helpful AI assistant that can analyze the sentiment of text.
+
+When a user provides text for sentiment analysis, you should:
+1. Use the available sentiment analysis tool to analyze the text
+2. Return the result (Positive, Negative, or Neutral)
+3. If you need more context, ask for it politely
+
+Do not mention anything about "missing tools" or "tool configuration" to the user - if you have access to the sentiment analysis tool, just use it.`;
 
 export class Agent implements INode {
   type: NodeType = "ai-agent";
@@ -41,20 +49,6 @@ export class Agent implements INode {
     options: NodeOptions,
   ): Promise<Result<NodeOutput, Error>> {
     try {
-      const [llm, llmError] = this.createLLM(definition).toTuple();
-      if (llmError) {
-        return Result.error(llmError);
-      }
-
-      const langchainTools = this.convertToolsToLangChainFormat(
-        nodeId,
-        definition.tools || [],
-        options,
-      );
-      const toolNode = new ToolNode(langchainTools);
-      const model = llm.bindTools(langchainTools);
-
-      // Get memory instance from registry
       const [memory, memoryError] = MemoryRegistry.getInstance()
         .create(definition.memory || { type: "none" })
         .toTuple();
@@ -62,35 +56,60 @@ export class Agent implements INode {
         return Result.error(memoryError);
       }
 
+      const [llm, llmError] = this.createLLM(definition).toTuple();
+      if (llmError) {
+        return Result.error(llmError);
+      }
+
+      const langchainTools = this.convertToolsToLangChainFormat(
+        definition.tools || [],
+        options,
+      );
+      const toolNode = new ToolNode(langchainTools);
+      const model = llm.bindTools(langchainTools);
+
+      // Function to handle model calls
       async function callModel(state: typeof MessagesAnnotation.State) {
-        if (!memory) {
-          throw new Error("memory instance not initialized");
-        }
+        // Create system message
+        const systemMsg = new SystemMessage(
+          definition.config["instructions"] || defaultInstructions,
+        );
 
-        const [messages, loadError] = (
-          await memory.getMessages(options.sessionId, nodeId)
-        ).toTuple();
-        if (loadError) {
-          throw loadError;
-        }
+        // Check if the last message has tool_calls
+        const lastMessage = state.messages[state.messages.length - 1];
 
-        // Combine memory messages with current state messages
-        const allMessages = [...messages];
-
-        // Only add new messages that aren't already in memory
-        for (const msg of state.messages) {
-          const isDuplicate = allMessages.some(
-            (m) => JSON.stringify(m) === JSON.stringify(msg),
+        // Only process tool calls from the most recent AI message
+        const toolCalls =
+          lastMessage instanceof AIMessage ? lastMessage.tool_calls : undefined;
+        if (toolCalls && toolCalls.length > 0) {
+          const toolResponses = state.messages.filter(
+            (msg): msg is ToolMessage => msg instanceof ToolMessage,
           );
-          if (!isDuplicate) {
-            allMessages.push(msg);
+
+          // Check if we have responses for all tool calls in the LAST message
+          const missingToolCalls = toolCalls.filter(
+            (toolCall) =>
+              !toolResponses.some(
+                (response) => response.tool_call_id === toolCall.id,
+              ),
+          );
+
+          if (missingToolCalls.length > 0) {
+            // Still waiting for some tool responses from the last message
+            return { messages: state.messages };
           }
         }
 
-        const response = await model.invoke(allMessages);
-        await memory.addMessages(options.sessionId, nodeId, [response]);
+        // All tool calls from the last message have been processed
+        // Combine all messages, ensuring system message is first
+        const allMessages = state.messages.some(
+          (msg) => msg instanceof SystemMessage,
+        )
+          ? state.messages
+          : [systemMsg, ...state.messages];
 
-        return { messages: [...state.messages, response] };
+        const response = await model.invoke(allMessages);
+        return { messages: allMessages.concat([response]) };
       }
 
       const workflow = new StateGraph(MessagesAnnotation)
@@ -102,99 +121,67 @@ export class Agent implements INode {
 
       const app = workflow.compile();
 
+      // Get conversation history
+      const [historyMessages, historyError] = (
+        await memory.getMessages(options.sessionId, nodeId)
+      ).toTuple();
+      if (historyError) {
+        logger.error(
+          `Failed to get conversation history: ${historyError.message}`,
+        );
+      }
+
+      // Create system message
+      const systemMsg = new SystemMessage(
+        definition.config["instructions"] || defaultInstructions,
+      );
+
+      // Combine history with system message and new input
       const initialMessages = [
-        new SystemMessage(
-          definition.config["instructions"] || defaultInstructions,
-        ),
+        systemMsg,
+        ...(historyMessages || []),
         new HumanMessage(inputs["prompt"]),
       ];
 
-      if (memory) {
-        const [saveError] = (
-          await memory.addMessages(options.sessionId, nodeId, initialMessages)
-        ).toTuple();
-        if (saveError) {
-          return Result.error(saveError);
-        }
-      }
+      try {
+        const stream = await app.streamEvents(
+          { messages: initialMessages },
+          {
+            version: "v2",
+            configurable: {
+              sessionId: options.sessionId,
+              nodeId: nodeId,
+            },
+            streamMode: ["messages"],
+          },
+        );
 
-      const stream = app.streamEvents(
-        { messages: initialMessages },
-        { version: "v2" },
-      );
+        let finalResponse = "";
 
-      let finalResponse = "";
-      for await (const event of stream) {
-        const { name, id } = this.parseToolName(event.name);
-        switch (event.event) {
-          case "on_chat_model_stream":
-            const content =
-              typeof event.data.chunk.text === "string"
-                ? event.data.chunk.text
-                : JSON.stringify(event.data.chunk.text);
-
-            options.onEvent("NODE_RESULT", {
-              outputField: "response",
-              ioType: "text",
-              data: content,
-            });
-            finalResponse += content;
-            break;
-
-          case "on_tool_start":
-            let parsedStartInput = event.data.input;
-            if (typeof parsedStartInput === "string") {
-              try {
-                parsedStartInput = JSON.parse(parsedStartInput);
-              } catch (e: unknown) {
-                const error = e as Error;
-                logger.error(
-                  `Failed to parse tool start input: ${error.message}`,
-                  {
-                    input: parsedStartInput,
-                    error,
-                  },
-                );
-              }
+        for await (const event of stream) {
+          if (event.event === "on_chat_model_stream") {
+            const content = event.data.chunk.text;
+            if (typeof content === "string") {
+              options.onEvent("NODE_RESULT", {
+                outputField: "response",
+                ioType: "text",
+                data: content,
+              });
+              finalResponse += content;
             }
-
-            options.onEvent("TOOL_STARTED", {
-              agentName: "default",
-              toolName: name,
-              inputs: parsedStartInput?.input || parsedStartInput,
-              nodeId: id,
-            });
-            break;
-          case "on_tool_end":
-            let parsedEndInput = event.data.input;
-            if (typeof parsedEndInput === "string") {
-              try {
-                parsedEndInput = JSON.parse(parsedEndInput);
-              } catch (e: unknown) {
-                const error = e as Error;
-                logger.error(
-                  `Failed to parse tool end input: ${error.message}`,
-                  {
-                    input: parsedEndInput,
-                    error,
-                  },
-                );
-              }
-            }
-
-            options.onEvent("TOOL_COMPLETED", {
-              agentName: "default",
-              toolName: name,
-              output: event.data.output?.content,
-              inputs: parsedEndInput?.input || parsedEndInput,
-              nodeId: id,
-            });
-            break;
-          case "on_error":
+          }
         }
-      }
 
-      return Result.ok({ response: finalResponse });
+        // Save the final conversation turn to memory
+        await memory.addMessages(options.sessionId, nodeId, [
+          new HumanMessage(inputs["prompt"]),
+          new AIMessage(finalResponse),
+        ]);
+
+        return Result.ok({ response: finalResponse });
+      } catch (error) {
+        return Result.error(new Error(`agent execution failed: ${error}`));
+      }
     } catch (error) {
       return Result.error(new Error(`agent execution failed: ${error}`));
     }
@@ -209,26 +196,23 @@ export class Agent implements INode {
   }
 
   private convertToolsToLangChainFormat(
-    nodeId: string,
     tools: ToolConfig[],
     options: NodeOptions,
   ): DynamicStructuredTool<any>[] {
     return tools.map((toolConfig) => {
-      const [tool, toolError] = ToolRegistry.create(toolConfig, {
-        nodeId,
-        sessionId: options.sessionId,
-        nodeOptions: options,
-      }).toTuple();
+      const [tool, toolError] = ToolRegistry.create(toolConfig).toTuple();
       if (toolError) {
         throw toolError;
       }
 
       return new DynamicStructuredTool({
-        name: `${tool.name}____${tool.id}`,
+        name: `${tool.name}`,
         description: tool.description,
         schema: tool.schema,
         func: async (params: z.infer<typeof tool.schema>) => {
-          const [result, resultError] = (await tool.run(params)).toTuple();
+          const [result, resultError] = (
+            await tool.run(params, options)
+          ).toTuple();
           if (resultError) {
             throw resultError;
           }
@@ -236,20 +220,6 @@ export class Agent implements INode {
         },
       });
     });
-  }
-
-  private parseToolName(toolName: string): { name: string; id: string } {
-    const [name, id] = toolName.split("____");
-    if (!name || !id) {
-      return {
-        name: toolName,
-        id: "unknown",
-      };
-    }
-    return {
-      name,
-      id,
-    };
   }
 
   private createLLM(

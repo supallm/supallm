@@ -5,11 +5,9 @@ export type MemoryType = "local-memory" | "none";
 
 export interface MemoryConfig {
   type: MemoryType;
-  options?: {
-    ttl?: number;
-    maxMessages?: number;
-    [key: string]: any;
-  };
+  maxMessages?: number;
+  keepSystemMessage?: boolean;
+  ttl?: number;
 }
 
 export interface IMemory {

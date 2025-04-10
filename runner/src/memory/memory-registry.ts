@@ -19,12 +19,7 @@ class NoMemory implements IMemory {
 
 export class MemoryRegistry {
   private static instance: MemoryRegistry;
-  private memories: Map<string, IMemory>;
-
-  private constructor() {
-    this.memories = new Map();
-    this.registerDefaultMemories();
-  }
+  private constructor() {}
 
   static getInstance(): MemoryRegistry {
     if (!MemoryRegistry.instance) {
@@ -33,20 +28,20 @@ export class MemoryRegistry {
     return MemoryRegistry.instance;
   }
 
-  private registerDefaultMemories(): void {
-    this.register("local-memory", new LocalMemory());
-    this.register("none", new NoMemory());
-  }
-
-  register(type: string, memory: IMemory): void {
-    this.memories.set(type, memory);
-  }
-
   create(config: MemoryConfig): Result<IMemory, Error> {
-    const memory = this.memories.get(config.type);
-    if (!memory) {
-      return Result.error(new Error(`Memory type ${config.type} not found`));
+    try {
+      switch (config.type) {
+        case "local-memory":
+          return Result.ok(new LocalMemory());
+        case "none":
+          return Result.ok(new NoMemory());
+        default:
+          return Result.error(new Error(`Unknown memory type: ${config.type}`));
+      }
+    } catch (error) {
+      return Result.error(
+        new Error(`Failed to create memory: ${(error as Error).message}`),
+      );
     }
-    return Result.ok(memory);
   }
 }

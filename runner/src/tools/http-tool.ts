@@ -1,5 +1,6 @@
 import { Result } from "typescript-result";
 import { z } from "zod";
+import { NodeOptions } from "../nodes/types";
 import { logger } from "../utils/logger";
 import { Http, Tool, ToolOutput } from "./tool.interface";
 
@@ -36,9 +37,18 @@ export class HttpTool implements Tool<"http_request"> {
 
   async run(
     params: z.infer<typeof this.schema>,
+    options: NodeOptions,
   ): Promise<Result<ToolOutput, Error>> {
     try {
       logger.debug(`running ${this.name} HttpTool: ${JSON.stringify(params)}`);
+
+      options.onEvent("TOOL_STARTED", {
+        toolName: this.name,
+        inputs: params,
+        agentName: "default",
+        nodeId: this.id,
+      });
+
       const response = await fetch(this.url, {
         method: params.method,
         headers: {
@@ -52,8 +62,25 @@ export class HttpTool implements Tool<"http_request"> {
         throw new Error(`HTTP request failed: ${response.statusText}`);
       }
 
+      options.onEvent("TOOL_COMPLETED", {
+        agentName: "default",
+        nodeId: this.id,
+        toolName: this.name,
+        inputs: params,
+        output: {
+          status: response.status,
+          body: await response.text(),
+        },
+      });
+
       return Result.ok(await response.text());
     } catch (error) {
+      options.onEvent("TOOL_FAILED", {
+        agentName: "default",
+        nodeId: this.id,
+        toolName: this.name,
+        error: error as string,
+      });
       return Result.error(new Error(`Failed to send HTTP request: ${error}`));
     }
   }

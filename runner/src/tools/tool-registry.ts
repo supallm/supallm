@@ -13,11 +13,10 @@ import {
   SDKNotifier,
   Tool,
   ToolConfig,
-  ToolOptions,
 } from "./tool.interface";
 
 export class ToolRegistry {
-  static create(config: ToolConfig, options: ToolOptions): Result<Tool, Error> {
+  static create(config: ToolConfig): Result<Tool, Error> {
     switch (config.type) {
       case "chat-openai-as-tool":
         return Result.ok(new OpenAICompletionTool(config as OpenAICompletion));
@@ -26,11 +25,9 @@ export class ToolRegistry {
       case "http_request":
         return Result.ok(new HttpTool(config as Http));
       case "sdk-notifier-tool":
-        return Result.ok(new SDKNotifierTool(config as SDKNotifier, options));
+        return Result.ok(new SDKNotifierTool(config as SDKNotifier));
       case "postgres-query-tool":
-        return Result.ok(
-          new PostgresQueryTool(config as PostgresQuery, options),
-        );
+        return Result.ok(new PostgresQueryTool(config as PostgresQuery));
       default:
         return assertUnreachable(config);
     }

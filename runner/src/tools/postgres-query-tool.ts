@@ -1,9 +1,10 @@
 import { Client } from "pg";
 import { Result } from "typescript-result";
 import { z } from "zod";
+import { NodeOptions } from "../nodes/types";
 import { CryptoService } from "../services/secret/crypto-service";
 import { logger } from "../utils/logger";
-import { PostgresQuery, Tool, ToolOptions } from "./tool.interface";
+import { PostgresQuery, Tool } from "./tool.interface";
 
 const defaultName = "postgres-query-tool";
 
@@ -51,10 +52,7 @@ export class PostgresQueryTool implements Tool<"postgres-query-tool"> {
   readonly description: string;
   readonly schema: z.ZodSchema;
 
-  constructor(
-    private definition: PostgresQuery,
-    private options: ToolOptions,
-  ) {
+  constructor(private definition: PostgresQuery) {
     const baseDescription = `This tool allows to query a postgres database. 
     The user already wrote a SQL query for you and you only have to execute the tool.
     It is possible that the tool does or does not need variables values to be replaced in the query.
@@ -103,11 +101,24 @@ export class PostgresQueryTool implements Tool<"postgres-query-tool"> {
 
   async run(
     params: z.infer<typeof this.schema>,
+    options: NodeOptions,
   ): Promise<Result<string, Error>> {
     try {
       logger.debug(
         `running ${this.name} PostgresQueryTool: ${JSON.stringify(params)}`,
       );
+
+      options.onEvent("TOOL_STARTED", {
+        toolName: this.name,
+        inputs: params,
+        agentName: "default",
+        nodeId: this.id,
+      });
+
+      logger.debug("DATABASE URL", this.databaseUrl);
+      console.log("DB URL", this.databaseUrl);
+
+      console.log("PARAMS", params);
 
       const client = new Client({
         connectionString: this.databaseUrl,
@@ -135,6 +146,15 @@ export class PostgresQueryTool implements Tool<"postgres-query-tool"> {
         console.log("RESULT", result);
 
         await client.end();
+
+        options.onEvent("TOOL_COMPLETED", {
+          agentName: "default",
+          nodeId: this.id,
+          toolName: this.name,
+          inputs: params,
+          output: result.rows,
+        });
+
         return Result.ok(
           JSON.stringify({
             rows: result.rows,
@@ -145,9 +165,21 @@ export class PostgresQueryTool implements Tool<"postgres-query-tool"> {
         console.error("ERROR", error);
 
         await client.end();
+        options.onEvent("TOOL_FAILED", {
+          agentName: "default",
+          nodeId: this.id,
+          toolName: this.name,
+          error: error as string,
+        });
         return Result.error(new Error(`Failed to query database: ${error}`));
       }
     } catch (error) {
+      options.onEvent("TOOL_FAILED", {
+        agentName: "default",
+        nodeId: this.id,
+        toolName: this.name,
+        error: error as string,
+      });
       return Result.error(
         new Error(`Failed to run PostgresQueryTool: ${error}`),
       );
