@@ -128,11 +128,15 @@ export class PostgresQueryTool implements Tool<"postgres-query-tool"> {
       try {
         await client.connect();
       } catch (error: any) {
-        return Result.error(
-          new Error(
-            `We failed to connect to the database. If you are running Supallm inside docker-compose, make sure to replace "localhost" by "host.docker.internal" in the database URL. Here is the error: ${error?.message ?? error}`,
-          ),
-        );
+        const message = `We failed to connect to the database. If you are running Supallm inside docker-compose, make sure to replace "localhost" by "host.docker.internal" in the database URL. Here is the error: ${error?.message ?? error}`;
+        options.onEvent("TOOL_FAILED", {
+          agentName: "default",
+          nodeId: this.id,
+          toolName: this.name,
+          error: message,
+        });
+
+        return Result.error(new Error(message));
       }
 
       try {
