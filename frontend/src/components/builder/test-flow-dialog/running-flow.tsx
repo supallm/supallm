@@ -81,6 +81,7 @@ export function layoutGraphWithStandardHandles(
       draggable: true,
       data: {
         status: "idle" as const,
+        nodeData: node.data,
       },
     };
   });
@@ -134,6 +135,7 @@ export const RunningFlow: FC<{
               ...node,
               data: {
                 ...node.data,
+                nodeData: node.data,
                 status: "active",
                 input: data.nodeInput,
                 output: null,
@@ -245,9 +247,9 @@ export const RunningFlow: FC<{
 
     const unsubscribeNodeFail = flowSubscription.on(
       "nodeFail",
-      ({ nodeId, message }) => {
-        console.log("nodeFailed!", nodeId, message);
-        setFailedNode({ nodeId, nodeLogs: [], nodeOutput: message });
+      ({ nodeId, error }) => {
+        console.log("nodeFailed!", nodeId, error);
+        setFailedNode({ nodeId, nodeLogs: [], nodeOutput: error });
       },
     );
 

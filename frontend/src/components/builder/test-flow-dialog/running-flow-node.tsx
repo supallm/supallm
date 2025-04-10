@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { FC, memo } from "react";
 import { NodeType } from "../node-types";
+import { BaseNodeHeader } from "../nodes/common/base-node-header";
 
 export type RunningFlowNodeProps = NodeProps & {
   data: {
@@ -25,11 +26,15 @@ export type RunningFlowNodeProps = NodeProps & {
     input: unknown;
     output: unknown;
     logs: unknown[];
+    nodeData: Record<string, unknown>;
   };
   type: NodeType;
 };
 
-const NodeHeader: FC<{ nodeType: NodeType }> = ({ nodeType }) => {
+const NodeHeader: FC<{
+  nodeType: NodeType;
+  nodeData?: Record<string, unknown> | null;
+}> = ({ nodeType }) => {
   switch (nodeType) {
     case "code-executor":
       return (
@@ -95,10 +100,7 @@ const NodeHeader: FC<{ nodeType: NodeType }> = ({ nodeType }) => {
 
     case "ai-agent":
       return (
-        <>
-          <Bot className="w-4 h-4" />
-          <span className="font-medium text-sm">AI Agent</span>
-        </>
+        <BaseNodeHeader title="AI Agent" logo={<Bot className="w-4 h-4" />} />
       );
 
     case "model-openai":
@@ -155,10 +157,10 @@ const NodeHeader: FC<{ nodeType: NodeType }> = ({ nodeType }) => {
 
     case "postgres-query-tool":
       return (
-        <>
-          <PostgresLogo className="w-4 h-4" />
-          <span className="font-medium text-sm">Postgres query tool</span>
-        </>
+        <BaseNodeHeader
+          title="Postgres query toor"
+          logo={<PostgresLogo className="w-4 h-4" />}
+        />
       );
 
     default:
@@ -205,13 +207,13 @@ export const RunningFlowNode: FC<RunningFlowNodeProps> = ({
       )}
       style={{ width: `${NODE_WIDTH}px` }}
     >
-      <div className="flex flex-row items-center gap-2 py-2 px-3 justify-between">
+      <div className="flex flex-col items-center gap-2 py-2 px-3 justify-between">
         <div className="flex gap-2 items-center text-left">
-          <NodeHeader nodeType={type} />
+          <NodeHeader nodeType={type} nodeData={data.nodeData} />
         </div>
         {isCompleted && (
-          <div className="flex gap-1 text-xs group-hover:visible invisible">
-            inspect
+          <div className="flex gap-1 text-xs group-hover:font-medium">
+            click to inspect
             <Inspect className="w-4 h-4 text-gray-500" />
           </div>
         )}
