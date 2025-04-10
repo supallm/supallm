@@ -22,9 +22,9 @@ import { NodeType } from "../node-types";
 export type RunningFlowNodeProps = NodeProps & {
   data: {
     status: "idle" | "active" | "ended" | "failed";
-    input: any;
-    output: any;
-    logs: any[];
+    input: unknown;
+    output: unknown;
+    logs: unknown[];
   };
   type: NodeType;
 };

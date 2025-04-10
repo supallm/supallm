@@ -86,7 +86,7 @@ export const SDKNotifierToolAdvancedSettingsDialog: FC<
               <FormField
                 control={form.control}
                 name="outputFieldName"
-                render={({ field }) => (
+                render={() => (
                   <FormItem>
                     <FormLabel>Output field name</FormLabel>
                     <FormControl>
@@ -106,7 +106,7 @@ export const SDKNotifierToolAdvancedSettingsDialog: FC<
               <FormField
                 control={form.control}
                 name="outputDescription"
-                render={({ field }) => (
+                render={() => (
                   <FormItem>
                     <FormLabel>Output description</FormLabel>
                     <FormControl>

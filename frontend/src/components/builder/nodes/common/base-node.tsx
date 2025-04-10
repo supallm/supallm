@@ -137,6 +137,8 @@ const BaseNode: FC<PropsWithChildren<BaseNodeProps>> = ({
     outputHandles,
     deleteElements,
     getEdges,
+    configHandles,
+    capabilityHandles,
   ]);
 
   return (

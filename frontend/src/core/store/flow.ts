@@ -9,9 +9,9 @@ import { createCrudStore } from "./crud-store";
 interface CurrentFlowInspectorStoreState {
   inspectingNode: {
     nodeId: string;
-    nodeInput: any;
-    nodeOutput: any;
-    nodeLogs: string[];
+    nodeInput: unknown;
+    nodeOutput: unknown;
+    nodeLogs: unknown[];
   } | null;
   setInspectingNode: (
     data: CurrentFlowInspectorStoreState["inspectingNode"],

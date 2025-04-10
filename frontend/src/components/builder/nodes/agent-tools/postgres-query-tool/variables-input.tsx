@@ -14,7 +14,7 @@ export const VariablesInput: FC<{
     return value;
   }, [variables]);
 
-  const [_, setValues] = useState<{ name: string; description: string }[]>(
+  const [, setValues] = useState<{ name: string; description: string }[]>(
     deduplicatedVariables,
   );
 

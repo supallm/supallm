@@ -7,7 +7,7 @@ export const Chip: FC<{
   variant?: "outline" | "solid";
   size?: "sm" | "md" | "lg";
   closable?: boolean;
-}> = ({ children, variant = "outline", size = "md", closable = false }) => {
+}> = ({ children, closable = false }) => {
   return (
     <div className="px-2 py-1 rounded-sm bg-gray-100 text-xs text-gray-800 gap-2">
       {children}

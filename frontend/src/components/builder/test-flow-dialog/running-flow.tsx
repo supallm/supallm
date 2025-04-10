@@ -126,7 +126,7 @@ export const RunningFlow: FC<{
   const [nodes, setNodes, onNodesChange] = useNodesState(layoutedNodes);
 
   const setActiveNode = useCallback(
-    (data: { nodeId: string; nodeInput: any; nodeLogs: any[] }) => {
+    (data: { nodeId: string; nodeInput: unknown; nodeLogs: unknown[] }) => {
       setNodes((nds) => {
         return nds.map((node) => {
           if (node.id === data.nodeId) {
@@ -150,7 +150,7 @@ export const RunningFlow: FC<{
   );
 
   const setEndedNode = useCallback(
-    (data: { nodeId: string; nodeOutput: any }) => {
+    (data: { nodeId: string; nodeOutput: unknown }) => {
       setNodes((nds) => {
         return nds.map((node) => {
           if (node.id === data.nodeId) {
@@ -172,7 +172,7 @@ export const RunningFlow: FC<{
   );
 
   const setFailedNode = useCallback(
-    (data: { nodeId: string; nodeLogs: any[] }) => {
+    (data: { nodeId: string; nodeLogs: unknown[] }) => {
       setNodes((nds) => {
         return nds.map((node) => {
           if (node.id === data.nodeId) {

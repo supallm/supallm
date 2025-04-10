@@ -11,7 +11,7 @@ import { OpenAIModels } from "@/core/entities/flow/flow-openai";
 import { generateHandleId } from "@/lib/handles";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { NodeProps, useReactFlow, useUpdateNodeInternals } from "@xyflow/react";
-import { FC, memo, useEffect } from "react";
+import { FC, memo, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { ProviderLogo } from "../../../../logos/provider-logo";
@@ -66,13 +66,15 @@ const OpenAIChatCompletionNode: FC<OpenAIModelNodeProps> = ({
     updateNodeData(nodeId, data);
   });
 
-  const outputHandles = [
-    {
-      label: "AI Agent",
-      id: generateHandleId("ai-model", "ai-agent"),
-      type: "ai-model",
-    } as const,
-  ];
+  const outputHandles = useMemo(() => {
+    return [
+      {
+        label: "AI Agent",
+        id: generateHandleId("ai-model", "ai-agent"),
+        type: "ai-model",
+      } as const,
+    ];
+  }, []);
 
   useEffect(() => {
     /**

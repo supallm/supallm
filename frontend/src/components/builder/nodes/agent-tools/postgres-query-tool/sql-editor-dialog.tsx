@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import MonacoEditor, { useMonaco } from "@monaco-editor/react";
 import { BracesIcon } from "lucide-react";
-import { FC, PropsWithChildren, useEffect, useState } from "react";
+import { FC, PropsWithChildren, useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { VariablesInput } from "./variables-input";
@@ -150,7 +150,7 @@ export const SqlEditorDialog: FC<
 
       setIsMonacoSetup(true);
     }
-  }, [monaco]);
+  }, [monaco, isMonacoSetup]);
 
   const onOpenChange = (open: boolean) => {
     if (!open) {
@@ -181,24 +181,27 @@ export const SqlEditorDialog: FC<
 
   const variables = form.watch("variables");
 
-  const parseCodeForVariables = (code: string) => {
-    // here we extract all variables matching the pattern {{variable_name}}
+  const parseCodeForVariables = useCallback(
+    (code: string) => {
+      // here we extract all variables matching the pattern {{variable_name}}
 
-    const vars = code.match(/{{(\w+)}}/g);
+      const vars = code.match(/{{(\w+)}}/g);
 
-    return (
-      vars?.map((variable) => {
-        const name = variable.slice(2, -2);
-        const description =
-          variables.find((v) => v.name === name)?.description ?? "";
+      return (
+        vars?.map((variable) => {
+          const name = variable.slice(2, -2);
+          const description =
+            variables.find((v) => v.name === name)?.description ?? "";
 
-        return {
-          name,
-          description,
-        };
-      }) ?? []
-    );
-  };
+          return {
+            name,
+            description,
+          };
+        }) ?? []
+      );
+    },
+    [variables],
+  );
 
   const code = form.watch("code");
 
@@ -206,7 +209,7 @@ export const SqlEditorDialog: FC<
     const variables = parseCodeForVariables(code);
 
     form.setValue("variables", variables);
-  }, [code]);
+  }, [code, form, parseCodeForVariables]);
 
   const onCodeChange = (value: string | undefined) => {
     if (!value) return;

@@ -133,7 +133,7 @@ export const CodeEditorDialog: FC<
 
       setIsMonacoSetup(true);
     }
-  }, [monaco]);
+  }, [monaco, isMonacoSetup]);
 
   const onOpenChange = (open: boolean) => {
     if (!open) {

@@ -155,7 +155,7 @@ const NodeInspector: FC = () => {
         <div>
           <h1>Node input</h1>
           <JsonView
-            data={inspectingNode.nodeInput}
+            data={inspectingNode.nodeInput as object | string | object[]}
             shouldExpandNode={allExpanded}
             style={{
               ...defaultStyles,
@@ -166,7 +166,7 @@ const NodeInspector: FC = () => {
           <Spacer size="sm" />
           <h1>Node output</h1>
           <JsonView
-            data={inspectingNode.nodeOutput}
+            data={inspectingNode.nodeOutput as object | string | object[]}
             shouldExpandNode={allExpanded}
             style={{
               ...defaultStyles,
