@@ -17,7 +17,13 @@ import {
 import { NODE_WIDTH } from "../../constants";
 import { LabeledHandle } from "../../labeled-handle";
 
-export type BaseNodeHandleType = "text" | "image" | "any";
+export type BaseNodeHandleType =
+  | "text"
+  | "image"
+  | "any"
+  | "memory"
+  | "ai-model"
+  | "tools";
 
 export type BaseNodeHandle = {
   /**
@@ -30,21 +36,30 @@ export type BaseNodeHandle = {
   id: string;
   tooltip?: string | ReactNode;
   type: BaseNodeHandleType;
+  position?: Position;
 };
 
 export type BaseNodeProps = {
   nodeId: string;
   header: ReactNode;
+  configHandles?: BaseNodeHandle[];
   inputHandles: BaseNodeHandle[];
   outputHandles: BaseNodeHandle[];
+  capabilityHandles?: BaseNodeHandle[];
+  outputLabel?: string;
+  noLabel?: boolean;
 };
 
 const BaseNode: FC<PropsWithChildren<BaseNodeProps>> = ({
   nodeId,
   children,
   header,
+  configHandles = [],
+  capabilityHandles = [],
   inputHandles,
   outputHandles,
+  outputLabel = "Output",
+  noLabel = false,
 }) => {
   const updateNodeInternals = useUpdateNodeInternals();
 
@@ -62,7 +77,7 @@ const BaseNode: FC<PropsWithChildren<BaseNodeProps>> = ({
    */
   useEffect(() => {
     updateNodeInternals(nodeId);
-  }, [nodeId, updateNodeInternals, inputHandles, outputHandles]);
+  }, [nodeId, updateNodeInternals, inputHandles, outputHandles, configHandles]);
 
   useEffect(() => {
     updateNodeInternals(nodeId);
@@ -85,20 +100,29 @@ const BaseNode: FC<PropsWithChildren<BaseNodeProps>> = ({
 
     const ghostEdges: Edge[] = [];
 
+    // Important:
+    // We consider a config edge and an input edge as an ingoing edge.
     ingoingEdges.forEach((edge) => {
-      const isGhostEdge = !inputHandles.find(
-        (input) => input.id === edge.sourceHandle,
-      );
+      const isGhostEdge =
+        !inputHandles.find((input) => input.id === edge.sourceHandle) &&
+        !configHandles.find((config) => config.id === edge.sourceHandle) &&
+        !capabilityHandles.find(
+          (capability) => capability.id === edge.sourceHandle,
+        );
 
       if (isGhostEdge) {
         ghostEdges.push(edge);
       }
     });
 
+    // Important:
+    // We consider a capability edge and an output edge as an outgoing edge.
     outgoingEdges.forEach((edge) => {
-      const isGhostEdge = !outputHandles.find(
-        (output) => output.id === edge.targetHandle,
-      );
+      const isGhostEdge =
+        !outputHandles.find((output) => output.id === edge.targetHandle) &&
+        !capabilityHandles.find(
+          (capability) => capability.id === edge.targetHandle,
+        );
 
       if (isGhostEdge) {
         ghostEdges.push(edge);
@@ -113,6 +137,8 @@ const BaseNode: FC<PropsWithChildren<BaseNodeProps>> = ({
     outputHandles,
     deleteElements,
     getEdges,
+    configHandles,
+    capabilityHandles,
   ]);
 
   return (
@@ -141,18 +167,62 @@ const BaseNode: FC<PropsWithChildren<BaseNodeProps>> = ({
                 id={handle.id}
                 handleType={handle.type}
                 tooltip={handle.tooltip}
-                position={Position.Left}
+                position={handle.position ?? Position.Left}
+              />
+            ))}
+          </div>
+        </>
+      )}
+      {!!configHandles?.length && (
+        <>
+          <div className="flex flex-col gap-2 text-center py-1 bg-gray-50 border-y text-sm">
+            Configuration
+          </div>
+
+          <div className="py-3">
+            {configHandles.map((handle, index) => (
+              <LabeledHandle
+                key={`input-${handle.id}-${index}`}
+                title={handle.label}
+                type="source"
+                id={handle.id}
+                handleType={handle.type}
+                tooltip={handle.tooltip}
+                position={handle.position ?? Position.Left}
               />
             ))}
           </div>
         </>
       )}
       {!!children && <div className="p-3">{children}</div>}
-      {!!outputHandles.length && (
+      {!!capabilityHandles?.length && (
         <>
           <div className="flex flex-col gap-2 text-center py-1 bg-gray-50 border-y text-sm">
-            Output
+            Capabilities
           </div>
+
+          <div className="py-3">
+            {capabilityHandles.map((handle, index) => (
+              <LabeledHandle
+                key={`input-${handle.id}-${index}`}
+                title={handle.label}
+                type="target"
+                id={handle.id}
+                handleType={handle.type}
+                tooltip={handle.tooltip}
+                position={handle.position ?? Position.Right}
+              />
+            ))}
+          </div>
+        </>
+      )}
+      {!!outputHandles.length && (
+        <>
+          {!noLabel && (
+            <div className="flex flex-col gap-2 text-center py-1 bg-gray-50 border-y text-sm">
+              {outputLabel}
+            </div>
+          )}
           <div className="flex flex-col gap-2 text-center py-3 bg-gray-50 rounded-b-xl">
             {outputHandles.map((handle, index) => (
               <LabeledHandle
@@ -162,7 +232,7 @@ const BaseNode: FC<PropsWithChildren<BaseNodeProps>> = ({
                 id={handle.id}
                 handleType={handle.type}
                 tooltip={handle.tooltip}
-                position={Position.Right}
+                position={handle.position ?? Position.Right}
               />
             ))}
           </div>

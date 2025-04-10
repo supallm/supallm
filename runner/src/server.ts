@@ -1,7 +1,12 @@
 import { IContextService, RedisContextService } from "./services/context";
-import { RedisMemoryService } from "./services/llm-memory/redis-llm-memory-service";
 import { NodeManager } from "./services/node/node-manager";
-import { INotifier, RedisNotifier, WorkflowEvents } from "./services/notifier";
+import {
+  INotifier,
+  RedisNotifier,
+  WorkflowEvent,
+  WorkflowEvents,
+  WorkflowEventType,
+} from "./services/notifier";
 import {
   IQueueConsumer,
   RedisQueueConsumer,
@@ -19,15 +24,15 @@ export class RunnerServer {
   private readonly executor: WorkflowExecutor;
 
   constructor(config: RunnerConfig) {
-    this.queueConsumer = new RedisQueueConsumer(config.redisUrl, {
+    this.queueConsumer = new RedisQueueConsumer(config.redis, {
       maxParallelJobs: config.maxConcurrentJobs,
     });
-    const memoryService = new RedisMemoryService(config.redisUrl);
-    this.notifier = new RedisNotifier(config.redisUrl);
-    this.nodeManager = new NodeManager(memoryService);
-    this.contextService = new RedisContextService(config.redisUrl);
+    this.notifier = new RedisNotifier(config.redis);
+    this.nodeManager = new NodeManager();
+    this.contextService = new RedisContextService(config.redis);
     this.executor = new WorkflowExecutor(this.nodeManager, this.contextService);
 
+    this.executor.setMaxListeners(20);
     this.setupEventListeners();
   }
 
@@ -47,6 +52,7 @@ export class RunnerServer {
   }
 
   async stop(): Promise<void> {
+    this.executor.removeAllListeners();
     await this.queueConsumer.close();
     await this.notifier.close();
     logger.info("runner server stopped");
@@ -77,103 +83,31 @@ export class RunnerServer {
   }
 
   private setupEventListeners(): void {
-    const workflowEvents = [
+    const allEvents = [
       WorkflowEvents.WORKFLOW_STARTED,
       WorkflowEvents.WORKFLOW_COMPLETED,
       WorkflowEvents.WORKFLOW_FAILED,
       WorkflowEvents.NODE_STARTED,
       WorkflowEvents.NODE_COMPLETED,
       WorkflowEvents.NODE_FAILED,
+      WorkflowEvents.NODE_LOG,
+      WorkflowEvents.NODE_RESULT,
+      WorkflowEvents.TOOL_STARTED,
+      WorkflowEvents.TOOL_COMPLETED,
+      WorkflowEvents.TOOL_FAILED,
+      WorkflowEvents.AGENT_NOTIFICATION,
     ] as const;
 
-    for (const eventType of workflowEvents) {
-      this.executor.on(eventType, (data: any) =>
-        this.handleWorkflowEvent(eventType, data),
+    for (const eventType of allEvents) {
+      this.executor.on(eventType, (event: WorkflowEvent<typeof eventType>) =>
+        this.handleEvent(event),
       );
     }
-
-    this.executor.on(
-      WorkflowEvents.NODE_RESULT,
-      this.handleNodeResult.bind(this),
-    );
-
-    this.executor.on(WorkflowEvents.NODE_LOG, this.handleNodeLog.bind(this));
   }
 
-  private async handleWorkflowEvent(
-    eventType: (typeof WorkflowEvents)[keyof typeof WorkflowEvents],
-    data: any,
+  private async handleEvent<T extends WorkflowEventType>(
+    event: WorkflowEvent<T>,
   ): Promise<void> {
-    await this.notifier.publishWorkflowEvent({
-      type: eventType,
-      workflowId: data.workflowId,
-      triggerId: data.triggerId,
-      sessionId: data.sessionId,
-      data: this.extractEventData(eventType, data),
-    });
-  }
-
-  private extractEventData(
-    eventType: (typeof WorkflowEvents)[keyof typeof WorkflowEvents],
-    data: any,
-  ): any {
-    switch (eventType) {
-      case WorkflowEvents.WORKFLOW_STARTED:
-        return { inputs: data.inputs };
-      case WorkflowEvents.WORKFLOW_COMPLETED:
-        return { result: data.result };
-      case WorkflowEvents.WORKFLOW_FAILED:
-        return { error: data.error };
-      case WorkflowEvents.NODE_STARTED:
-        return {
-          nodeId: data.nodeId,
-          type: data.nodeType,
-          inputs: data.inputs,
-        };
-      case WorkflowEvents.NODE_COMPLETED:
-        return {
-          nodeId: data.nodeId,
-          nodeType: data.nodeType,
-          output: data.output,
-        };
-      case WorkflowEvents.NODE_FAILED:
-        return {
-          nodeId: data.nodeId,
-          nodeType: data.nodeType,
-          error: data.error,
-        };
-      default:
-        return data;
-    }
-  }
-
-  private async handleNodeResult(data: any): Promise<void> {
-    await this.notifier.publishWorkflowEvent({
-      type: WorkflowEvents.NODE_RESULT,
-      workflowId: data.workflowId,
-      triggerId: data.triggerId,
-      sessionId: data.sessionId,
-      data: {
-        nodeId: data.nodeId,
-        nodeType: data.nodeType,
-        outputField: data.outputField,
-        data: data.data,
-        type: data.type,
-      },
-    });
-  }
-
-  private async handleNodeLog(data: any): Promise<void> {
-    await this.notifier.publishNodeLog({
-      type: WorkflowEvents.NODE_LOG,
-      workflowId: data.workflowId,
-      triggerId: data.triggerId,
-      sessionId: data.sessionId,
-      data: {
-        nodeId: data.nodeId,
-        nodeType: data.nodeType,
-        message: data.message,
-      },
-    });
+    await this.notifier.publish(event);
   }
 }

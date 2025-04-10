@@ -1,10 +1,15 @@
 import dotenv from "dotenv";
 dotenv.config();
 
+export type RedisConfig = {
+  url: string;
+  password: string;
+};
+
 export interface RunnerConfig {
   nodeEnv: "development" | "production" | "test";
   maxConcurrentJobs: number;
-  redisUrl: string;
+  redis: RedisConfig;
   secretKey: string;
   nsJailCloneNewUser: "true" | "false";
   disableNsJail: boolean;
@@ -40,7 +45,10 @@ const getRedisUrl = (): string => {
 export const config: RunnerConfig = {
   nodeEnv: getStringEnv("NODE_ENV", "development") as RunnerConfig["nodeEnv"],
   maxConcurrentJobs: getNumberEnv("RUNNER_MAX_CONCURRENT_JOBS", 5),
-  redisUrl: getRedisUrl(),
+  redis: {
+    url: getRedisUrl(),
+    password: getKey("REDIS_PASSWORD"),
+  },
   secretKey: getKey("SECRET_KEY"),
   nsJailCloneNewUser:
     getStringEnv("NSJAIL_CLONE_NEW_USER", "true") !== "true" ? "false" : "true",

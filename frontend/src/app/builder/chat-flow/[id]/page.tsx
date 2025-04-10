@@ -4,6 +4,11 @@ import { AddNodeDialog } from "@/components/builder/add-node-dialog/add-node-dia
 import { AvailableNode } from "@/components/builder/add-node-dialog/available-nodes";
 import { NODE_WIDTH } from "@/components/builder/constants";
 import { NodeType } from "@/components/builder/node-types";
+import chatOpenaiAsToolNode from "@/components/builder/nodes/agent-tools/chat-openai-as-tool-node/chat-openai-as-tool-node";
+import e2bCodeInterpreterTool from "@/components/builder/nodes/agent-tools/e2b-code-interpreter-tool/e2b-code-interpreter-tool";
+import httpToolNode from "@/components/builder/nodes/agent-tools/http-tool-node/http-tool-node";
+import sdkNotifierToolNode from "@/components/builder/nodes/agent-tools/sdk-notifier-tool-node/sdk-notifier-tool-node";
+import aiAgentNode from "@/components/builder/nodes/agent/ai-agent-node/ai-agent-node";
 import anthropicChatCompletionNode from "@/components/builder/nodes/chat/anthropic-chat-completion-node/anthropic-chat-completion-node";
 import mistralChatCompletionNode from "@/components/builder/nodes/chat/mistral-chat-completion-node/mistral-chat-completion-node";
 import ollamaChatCompletionNode from "@/components/builder/nodes/chat/ollama-chat-completion-node/ollama-chat-completion-node";
@@ -11,6 +16,9 @@ import { default as openAIChatCompletionNode } from "@/components/builder/nodes/
 import codeExecutorNode from "@/components/builder/nodes/code/code-executor/code-executor-node";
 import entrypointNode from "@/components/builder/nodes/fixed/entrypoint-node";
 import resultNode from "@/components/builder/nodes/fixed/result-node";
+import userFeedbackNode from "@/components/builder/nodes/hitl/user-feedback-node";
+import localMemoryNode from "@/components/builder/nodes/memory/local-memory-node";
+import modelOpenai from "@/components/builder/nodes/model/model-openai/model-openai";
 import httpRequestNode from "@/components/builder/nodes/utilities/http-request-node/http-request-node";
 import { TestFlowDialog } from "@/components/builder/test-flow-dialog/test-flow-dialog";
 import { Button } from "@/components/ui/button";
@@ -43,6 +51,11 @@ import {
 import "@xyflow/react/dist/style.css";
 import { PlayIcon, PlusIcon } from "lucide-react";
 
+import AirtableTool from "@/components/builder/nodes/agent-tools/airtable-tool/airtable-tool";
+import ConfluenceTool from "@/components/builder/nodes/agent-tools/confluence-tool/confluence-tool";
+import notionDatabaseTool from "@/components/builder/nodes/agent-tools/notion-database-tool/notion-database-tool";
+import postgresQueryTool from "@/components/builder/nodes/agent-tools/postgres-query-tool/postgres-query-tool";
+import SlackTool from "@/components/builder/nodes/agent-tools/slack-tool/slack-tool";
 import { useCallback, useEffect, useMemo } from "react";
 
 const ChatFlowPage = () => {
@@ -137,6 +150,8 @@ const ChatFlowPage = () => {
 
   useEffect(() => {
     onSave(edges, nodes);
+    // Important: do not add onSave as a dependency, it will cause an infinite loop
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [edges, nodes]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -146,13 +161,31 @@ const ChatFlowPage = () => {
       result: resultNode,
       entrypoint: entrypointNode,
       "code-executor": codeExecutorNode,
-      "e2b-interpreter": () => null,
+      "e2b-interpreter-tool": () => null,
       "http-request": httpRequestNode,
       "chat-anthropic": anthropicChatCompletionNode,
       "chat-mistral": mistralChatCompletionNode,
       "chat-google": () => null,
       "chat-azure": () => null,
       "chat-ollama": ollamaChatCompletionNode,
+      "user-feedback": userFeedbackNode,
+      "local-memory": localMemoryNode,
+      "ai-agent": aiAgentNode,
+      "model-openai": modelOpenai,
+      "model-anthropic": () => null,
+      "model-google": () => null,
+      "model-azure": () => null,
+      "model-mistral": () => null,
+      "model-ollama": () => null,
+      "chat-openai-as-tool": chatOpenaiAsToolNode,
+      "http-tool": httpToolNode,
+      "sdk-notifier-tool": sdkNotifierToolNode,
+      "e2b-code-interpreter-tool": e2bCodeInterpreterTool,
+      "notion-database-tool": notionDatabaseTool,
+      "postgres-query-tool": postgresQueryTool,
+      "confluence-tool": ConfluenceTool,
+      "airtable-tool": AirtableTool,
+      "slack-tool": SlackTool,
     }),
     [],
   );

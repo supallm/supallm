@@ -1,36 +1,34 @@
 import Redis from "ioredis";
 import * as msgpack from "msgpack-lite";
+import { RedisConfig } from "../../utils/config";
 import { logger } from "../../utils/logger";
-import { INotifier, WorkflowEvent } from "./notifier.interface";
+import {
+  INotifier,
+  WorkflowEvent,
+  WorkflowEventType,
+} from "./notifier.interface";
 
-const DEFAULT_MAX_EVENTS_LENGTH = 500;
-const DEFAULT_MAX_RESULTS_LENGTH = 1000;
+const DEFAULT_MAX_EVENTS_LENGTH = 1000;
 const HEADER_MESSAGE_ID = "_watermill_message_uuid";
 
 const STREAMS = {
-  STORE: "workflows:upstream:events:store",
   DISPATCH: "workflows:upstream:events:dispatch",
-  NODE_RESULTS: "workflows:upstream:nodes:results",
 } as const;
 
 type RedisStreamId = string;
 type StreamName = (typeof STREAMS)[keyof typeof STREAMS];
-type EventContext = "dispatch workflow event" | "node result" | "node log";
 
 export class RedisNotifier implements INotifier {
   private redis: Redis;
   private readonly WORKFLOW_DISPATCH_STREAM = STREAMS.DISPATCH;
-  private readonly NODE_RESULTS_STREAM = STREAMS.NODE_RESULTS;
-  constructor(redisUrl: string) {
-    this.redis = this.initializeRedisClient(redisUrl);
+
+  constructor(config: RedisConfig) {
+    this.redis = this.initializeRedisClient(config);
   }
 
-  private initializeRedisClient(redisUrl: string): Redis {
-    const redisOptions = {
-      family: 0,
-      password: process.env["REDIS_PASSWORD"],
-    };
-    const redis = new Redis(redisUrl, redisOptions);
+  private initializeRedisClient(config: RedisConfig): Redis {
+    const redisOptions = { password: config.password, family: 0 };
+    const redis = new Redis(config.url, redisOptions);
 
     redis.on("error", (err) => {
       logger.error(`redis error: ${err}`);
@@ -49,36 +47,40 @@ export class RedisNotifier implements INotifier {
     }
   }
 
-  private async publish(
-    stream: StreamName,
-    maxStreamLength: number,
-    event: WorkflowEvent,
-    context: EventContext,
+  async publish<T extends WorkflowEventType>(
+    event: WorkflowEvent<T>,
   ): Promise<RedisStreamId> {
     try {
       const metadata = this.encodeMetadata(event);
+      if (event.type !== "NODE_RESULT") {
+        logger.info(
+          `publishing event ${event.type} to ${this.WORKFLOW_DISPATCH_STREAM} - with triggerId: ${event.triggerId}`,
+        );
+      }
       return await this.publishToStream(
-        stream,
-        maxStreamLength,
+        this.WORKFLOW_DISPATCH_STREAM,
+        DEFAULT_MAX_EVENTS_LENGTH,
         event,
         metadata,
       );
     } catch (err) {
-      logger.error(`failed to publish ${context}: ${err}`);
+      logger.error(`failed to publish event ${event.type}: ${err}`);
       throw err;
     }
   }
 
-  private encodeMetadata(event: WorkflowEvent): Buffer {
+  private encodeMetadata<T extends WorkflowEventType>(
+    event: WorkflowEvent<T>,
+  ): Buffer {
     return msgpack.encode({
       correlation_id: event.triggerId.toString(),
     });
   }
 
-  private async publishToStream(
+  private async publishToStream<T extends WorkflowEventType>(
     stream: StreamName,
     maxStreamLength: number,
-    event: WorkflowEvent,
+    event: WorkflowEvent<T>,
     metadata: Buffer,
   ): Promise<RedisStreamId> {
     const id = await this.redis.xadd(
@@ -98,29 +100,6 @@ export class RedisNotifier implements INotifier {
     return id || "";
   }
 
-  async publishWorkflowEvent(event: WorkflowEvent): Promise<RedisStreamId> {
-    logger.info(
-      `publishing workflow event ${event.type} to ${this.WORKFLOW_DISPATCH_STREAM} - with triggerId: ${event.triggerId}`,
-    );
-    // listenning by the backend without consumer group
-    // only the instance who has a client subscribed
-    // will dispatch the event to the SDK
-    return this.publish(
-      this.WORKFLOW_DISPATCH_STREAM,
-      DEFAULT_MAX_EVENTS_LENGTH,
-      event,
-      "dispatch workflow event",
-    );
-  }
-
-  async publishNodeLog(event: WorkflowEvent): Promise<RedisStreamId> {
-    return this.publish(
-      this.NODE_RESULTS_STREAM,
-      DEFAULT_MAX_RESULTS_LENGTH,
-      event,
-      "node log",
-    );
-  }
   async close(): Promise<void> {
     await this.redis.quit();
   }

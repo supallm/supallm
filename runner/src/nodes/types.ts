@@ -1,5 +1,11 @@
 import { Result } from "typescript-result";
-import { Tool } from "../tools";
+import { MemoryConfig } from "../memory/memory.interface";
+import {
+  WorkflowEvent,
+  WorkflowEvents,
+  WorkflowEventType,
+} from "../services/notifier";
+import { ToolConfig } from "../tools/tool.interface";
 
 type LLMProvider =
   | "chat-openai"
@@ -10,7 +16,12 @@ type LLMProvider =
   | "chat-deepseek"
   | "chat-ollama";
 
-export type NodeType = LLMProvider | "entrypoint" | "result" | "code-executor";
+export type NodeType =
+  | LLMProvider
+  | "entrypoint"
+  | "result"
+  | "code-executor"
+  | "ai-agent";
 
 export type NodeIOType = "text" | "image" | "any";
 
@@ -32,25 +43,36 @@ export interface NodeDefinition {
   type: NodeType;
   inputs: Record<string, NodeInputDef>;
   outputs: Record<string, NodeOutputDef>;
-  [key: string]: any; // for properties specific to each node type
+  tools: ToolConfig[] | undefined;
+  memory: MemoryConfig;
+  config: Record<string, any>;
 }
 
-export type NodeResultCallback = (
-  nodeId: string,
-  outputField: string,
-  data: string,
-  type: NodeIOType,
-) => Promise<void>;
+// Type des événements que les nodes peuvent émettre
+export type NodeEventType = Extract<
+  WorkflowEventType,
+  | typeof WorkflowEvents.NODE_RESULT
+  | typeof WorkflowEvents.AGENT_NOTIFICATION
+  | typeof WorkflowEvents.NODE_LOG
+  | typeof WorkflowEvents.TOOL_STARTED
+  | typeof WorkflowEvents.TOOL_COMPLETED
+  | typeof WorkflowEvents.TOOL_FAILED
+>;
 
-export type NodeLogCallback = (
-  nodeId: string,
-  message: string,
-) => Promise<void>;
+// Type pour les événements de node sans workflowId et triggerId
+export type NodeEvent<T extends NodeEventType> = Omit<
+  WorkflowEvent<T>,
+  "workflowId" | "triggerId"
+>;
 
 export type NodeOptions = {
   sessionId: string;
-  onNodeResult: NodeResultCallback;
-  onNodeLog: NodeLogCallback;
+  onEvent: <T extends NodeEventType>(
+    type: T,
+    data: Omit<NodeEvent<T>, "type" | "sessionId" | "nodeType" | "nodeId"> & {
+      nodeId?: string;
+    },
+  ) => Promise<void>;
 };
 
 export interface INode {
@@ -59,7 +81,6 @@ export interface INode {
     nodeId: string,
     definition: NodeDefinition,
     inputs: NodeInput,
-    tools: Record<string, Tool>,
     options: NodeOptions,
   ): Promise<Result<NodeOutput, Error>>;
 }

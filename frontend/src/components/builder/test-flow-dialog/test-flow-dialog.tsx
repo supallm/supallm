@@ -1,10 +1,17 @@
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { EntrypointNodeData } from "@/core/entities/flow/flow-entrypoint";
 import { useCurrentProjectOrThrow } from "@/hooks/use-current-project-or-throw";
 
 import { getAuthToken } from "@/actions";
+import { Chip } from "@/components/chip";
 import { useValidatedEnv } from "@/context/env/use-env";
 import { FlowNode } from "@/core/entities/flow";
+import { clearInspectingNode } from "@/core/store/flow";
 import { Label } from "@radix-ui/react-dropdown-menu";
 import { Edge } from "@xyflow/react";
 import { Pause, PlayIcon } from "lucide-react";
@@ -39,11 +46,24 @@ export const TestFlowDialog: FC<
 
   const [inputs, setInputs] = useState<Record<string, string>>({});
 
+  const [agentNotifications, setAgentNotifications] = useState<
+    {
+      data: string;
+      nodeId: string;
+      nodeType: string;
+      outputField: string;
+    }[]
+  >([]);
+
   const [unsubscribes, setUnsubscribes] = useState<Unsubscribe[]>([]);
 
   const [flowError, setFlowError] = useState<string | null>(null);
 
   const [runId, setRunId] = useState<string>(crypto.randomUUID());
+
+  const [sessionId, setSessionId] = useState<string | null>(
+    crypto.randomUUID(),
+  );
 
   const [flowSubscription, setFlowSubscription] =
     useState<FlowSubscription | null>(null);
@@ -73,6 +93,7 @@ export const TestFlowDialog: FC<
 
     setResults([]);
     setFlowError(null);
+    clearInspectingNode();
 
     const supallm = initSupallm(
       {
@@ -89,9 +110,10 @@ export const TestFlowDialog: FC<
     supallm.setUserToken(token);
 
     const subscription = supallm
-      .runFlow({
+      .run({
         flowId,
         inputs: inputs,
+        sessionId: sessionId ?? undefined,
       })
       .subscribe();
 
@@ -112,7 +134,27 @@ export const TestFlowDialog: FC<
       setIsRunning(false);
     });
 
-    setUnsubscribes([unsubscribeResult, unsubscribeFail, unsubscribeEnd]);
+    const unsubscribeAgentNotification = subscription.on(
+      "agentNotification",
+      (event) => {
+        setAgentNotifications((prev) => [
+          ...prev,
+          {
+            data: event.data,
+            nodeId: event.nodeId,
+            nodeType: event.nodeType,
+            outputField: event.outputField,
+          },
+        ]);
+      },
+    );
+
+    setUnsubscribes([
+      unsubscribeResult,
+      unsubscribeFail,
+      unsubscribeEnd,
+      unsubscribeAgentNotification,
+    ]);
   };
 
   const handlePause = () => {
@@ -120,9 +162,14 @@ export const TestFlowDialog: FC<
     unsubscribes.forEach((unsubscribe) => unsubscribe());
   };
 
+  const handleResetSession = () => {
+    setSessionId(crypto.randomUUID());
+  };
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>{children}</SheetTrigger>
+      <SheetTitle className="hidden">Test flow</SheetTitle>
       <SheetContent className="w-full gap-0">
         {/* Content */}
         <div className="flex justify-between h-full">
@@ -148,6 +195,23 @@ export const TestFlowDialog: FC<
                   ></EmptyState>
                 </>
               )}
+              <div className="w-2/3">
+                <Chip variant="outline" size="sm">
+                  <div className="flex justify-between items-center gap-2">
+                    <div className="text-xs truncate">
+                      Session ID: {sessionId}
+                    </div>
+                    <Button
+                      variant={"outline"}
+                      size={"xs"}
+                      onClick={handleResetSession}
+                    >
+                      Reset session
+                    </Button>
+                  </div>
+                </Chip>
+              </div>
+
               {!!data?.handles?.length && (
                 <>
                   {data.handles?.map((handle) => {
@@ -190,6 +254,7 @@ export const TestFlowDialog: FC<
             <div className="grow overflow-hidden">
               <TestFlowBottomPanel
                 events={results}
+                agentNotifications={agentNotifications}
                 isRunning={isRunning}
                 entrypointNodeData={data}
                 resultNodeData={data}

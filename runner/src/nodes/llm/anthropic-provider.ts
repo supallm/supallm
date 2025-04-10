@@ -2,7 +2,6 @@ import { ChatAnthropic } from "@langchain/anthropic";
 import { BaseMessage } from "@langchain/core/messages";
 import { Result } from "typescript-result";
 import { CryptoService } from "../../services/secret/crypto-service";
-import { Tool, ToolContext } from "../../tools";
 import { logger } from "../../utils/logger";
 import {
   INode,
@@ -18,7 +17,7 @@ import { ModelNotFoundError, ProviderAPIError } from "./llm.errors";
 interface AnthropicOptions extends LLMOptions {
   temperature: number;
   maxTokenToSample?: number;
-  streaming: boolean;
+  outputMode: "text-stream" | "text";
   systemPrompt?: string;
 }
 
@@ -36,10 +35,10 @@ export class AnthropicProvider implements INode {
   ): Result<AnthropicOptions, Error> {
     return Result.ok({
       ...config,
-      temperature: definition["temperature"],
-      maxTokenToSample: definition["maxTokenToSample"],
-      streaming: definition["streaming"],
-      systemPrompt: definition["systemPrompt"],
+      temperature: definition.config["temperature"],
+      maxTokenToSample: definition.config["maxTokenToSample"],
+      outputMode: definition.config["outputMode"],
+      systemPrompt: definition.config["systemPrompt"],
     });
   }
 
@@ -47,10 +46,8 @@ export class AnthropicProvider implements INode {
     nodeId: string,
     definition: NodeDefinition,
     inputs: NodeInput,
-    tools: Record<string, Tool>,
     options: NodeOptions,
   ): Promise<Result<NodeOutput, Error>> {
-    const toolContext = new ToolContext(this.type, tools);
     const validateAndPrepare = await this.utils.validateAndPrepare(
       definition,
       inputs,
@@ -70,11 +67,8 @@ export class AnthropicProvider implements INode {
     }
 
     const prepareMessages = await this.utils.prepareMessages(
-      nodeId,
-      toolContext,
       anthropicOptions.systemPrompt,
       resolvedInputs,
-      options.sessionId,
     );
     const [prepareMessagesResult, prepareMessagesError] =
       prepareMessages.toTuple();
@@ -99,25 +93,15 @@ export class AnthropicProvider implements INode {
 
       if (chunkContent) {
         if (outputField) {
-          await options.onNodeResult(
+          await options.onEvent("NODE_RESULT", {
             nodeId,
             outputField,
-            chunkContent,
-            resolvedOutputs.type,
-          );
+            data: chunkContent,
+            ioType: resolvedOutputs.type,
+          });
         }
         fullResponse += chunkContent;
       }
-    }
-
-    if (fullResponse) {
-      await this.utils.appendToMemory(
-        toolContext,
-        nodeId,
-        options.sessionId,
-        resolvedInputs.prompt,
-        fullResponse,
-      );
     }
 
     return Result.ok({ response: fullResponse });
@@ -133,7 +117,7 @@ export class AnthropicProvider implements INode {
         return Result.error(modelError);
       }
 
-      if (options.streaming) {
+      if (options.outputMode === "text-stream") {
         return LLMUtils.handleStreamingResponse(model, messages, (m, msgs) =>
           m.stream(msgs),
         );
@@ -158,7 +142,7 @@ export class AnthropicProvider implements INode {
           temperature: options.temperature,
           maxTokens: options.maxTokenToSample,
           anthropicApiKey: options.decryptedApiKey,
-          streaming: options.streaming,
+          streaming: options.outputMode === "text-stream",
         }),
       );
     } catch (error) {

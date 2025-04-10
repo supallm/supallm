@@ -1,5 +1,5 @@
 import { Result } from "typescript-result";
-import { Tool } from "../../tools";
+import { logger } from "../../utils/logger";
 import {
   INode,
   NodeDefinition,
@@ -13,11 +13,14 @@ import { MissingArgumentError } from "./nodejs-executor/executor.errors";
 import { Argument, NodejsExecutor } from "./nodejs-executor/nodejs-executor";
 
 interface CodeExecutorNodeDefinition {
-  code: string;
-  language: "typescript";
-  inputs: Record<string, string>;
-  expectedArguments: { id: string; label: string; type: string }[];
-  expectedOutputs: { id: string; label: string; type: string }[];
+  type: string;
+  config: {
+    code: string;
+    language?: "typescript";
+    inputs?: Record<string, string>;
+    expectedArguments: { id: string; label: string; type: string }[];
+    expectedOutputs: { id: string; label: string; type: string }[];
+  };
 }
 
 export class CodeExecutorNode implements INode {
@@ -27,12 +30,13 @@ export class CodeExecutorNode implements INode {
     nodeId: string,
     definition: NodeDefinition,
     inputs: NodeInput,
-    _tools: Record<string, Tool>,
     options: NodeOptions,
   ): Promise<Result<NodeOutput, Error>> {
     try {
-      const { code, expectedArguments } =
-        definition as unknown as CodeExecutorNodeDefinition;
+      const { config } = definition as unknown as CodeExecutorNodeDefinition;
+      const { code, expectedArguments } = config;
+
+      logger.debug(`expectedArguments: ${JSON.stringify(expectedArguments)}`);
 
       const sortedExpectedArgumentLabels = expectedArguments.map(
         (arg) => arg.label,
@@ -44,7 +48,10 @@ export class CodeExecutorNode implements INode {
         // TODO @val: you can add your error handling here
         if (!matchingInput) {
           const errorMessage = `Missing argument named ${label}. This is likely a mistake in your flow.`;
-          options.onNodeLog(nodeId, errorMessage);
+          options.onEvent("NODE_LOG", {
+            nodeId,
+            message: errorMessage,
+          });
           throw new MissingArgumentError(errorMessage);
         }
 
@@ -57,11 +64,6 @@ export class CodeExecutorNode implements INode {
 
       const language = "typescript";
 
-      console.log("CALLING EXECUTION NODE WITH:", {
-        code,
-        args,
-      });
-
       switch (language) {
         case "typescript":
           const executor = new NodejsExecutor();
@@ -69,10 +71,16 @@ export class CodeExecutorNode implements INode {
             code,
             args,
             (data) => {
-              options.onNodeLog(nodeId, data);
+              options.onEvent("NODE_LOG", {
+                nodeId,
+                message: data,
+              });
             },
             (data) => {
-              options.onNodeLog(nodeId, data);
+              options.onEvent("NODE_LOG", {
+                nodeId,
+                message: data,
+              });
             },
           );
 
@@ -85,7 +93,12 @@ export class CodeExecutorNode implements INode {
           Object.entries(parsedResult).forEach(([key, value]) => {
             const outputKey = this.getOutputKey(key, definition.outputs);
             if (outputKey) {
-              options.onNodeResult(nodeId, outputKey, value, "any");
+              options.onEvent("NODE_RESULT", {
+                nodeId,
+                outputField: outputKey,
+                data: value,
+                ioType: "any",
+              });
             }
           });
           return Result.ok(parsedResult);

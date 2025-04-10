@@ -1,12 +1,6 @@
 import { EventEmitter } from "events";
 import { Result } from "typescript-result";
-import {
-  NodeDefinition,
-  NodeInput,
-  NodeIOType,
-  NodeOutput,
-} from "../../nodes/types";
-import { Tool } from "../../tools";
+import { NodeDefinition, NodeInput, NodeOutput } from "../../nodes/types";
 import { logger } from "../../utils/logger";
 import {
   ExecutionContext,
@@ -15,7 +9,7 @@ import {
   NodeExecutionResult,
 } from "../context";
 import { NodeManager } from "../node/node-manager";
-import { WorkflowEvents, WorkflowExecutorEvents } from "../notifier";
+import { WorkflowEvent, WorkflowEvents, WorkflowEventType } from "../notifier";
 import { WorkflowDefinition, WorkflowExecutionOptions } from "./types";
 
 export class WorkflowExecutor extends EventEmitter {
@@ -40,7 +34,9 @@ export class WorkflowExecutor extends EventEmitter {
     );
 
     try {
-      this.emitWorkflowStarted(context);
+      await this.emitEvent(WorkflowEvents.WORKFLOW_STARTED, context, {
+        inputs: context.get.workflowInputs,
+      });
 
       const [output, outputError] = (
         await this.executeWorkflow(context, definition)
@@ -49,11 +45,14 @@ export class WorkflowExecutor extends EventEmitter {
         throw outputError;
       }
 
-      this.emitWorkflowCompleted(context, output);
+      await this.emitEvent(WorkflowEvents.WORKFLOW_COMPLETED, context, {
+        result: output,
+      });
     } catch (error) {
       logger.error(`error executing workflow ${workflowId}: ${error}`);
-      // TODO: handle error
-      this.emitWorkflowFailed(context, error as Error);
+      await this.emitEvent(WorkflowEvents.WORKFLOW_FAILED, context, {
+        error: (error as Error).message,
+      });
     }
   }
 
@@ -154,18 +153,8 @@ export class WorkflowExecutor extends EventEmitter {
       }
 
       const inputs = managedContext.resolveInputs(nodeId, node);
-      const [tools, toolsError] = managedContext
-        .resolveTools(nodeId, node)
-        .toTuple();
-      if (toolsError) {
-        return {
-          nodeId,
-          success: false,
-          error: toolsError,
-        };
-      }
       const [output, outputError] = (
-        await this.executeNode(nodeId, node, inputs, tools, managedContext)
+        await this.executeNode(nodeId, node, inputs, managedContext)
       ).toTuple();
 
       const success = outputError ? false : true;
@@ -189,41 +178,46 @@ export class WorkflowExecutor extends EventEmitter {
     nodeId: string,
     node: NodeDefinition,
     inputs: NodeInput,
-    tools: Record<string, Tool>,
     managedContext: ManagedExecutionContext,
   ): Promise<Result<NodeOutput, Error>> {
-    this.emitNodeStarted(nodeId, node, inputs, managedContext);
+    await this.emitEvent(WorkflowEvents.NODE_STARTED, managedContext, {
+      nodeId,
+      nodeType: node.type,
+      inputs,
+    });
 
     const [output, outputError] = (
-      await this.nodeManager.executeNode(nodeId, node, inputs, tools, {
+      await this.nodeManager.executeNode(nodeId, node, inputs, {
         sessionId: managedContext.get.sessionId,
-        onNodeResult: async (
-          nodeId: string,
-          outputField: string,
-          data: string,
-          type: NodeIOType,
-        ) => {
-          this.emitNodeResult(
-            nodeId,
-            node,
-            outputField,
-            data,
-            type,
-            managedContext,
-          );
-        },
-        onNodeLog: async (nodeId: string, message: string) => {
-          this.emitNodeLog(nodeId, node.type, message, managedContext);
+        onEvent: async (type, data) => {
+          const { nodeId: eventNodeId, ...eventData } = data;
+          await this.emitEvent(type, managedContext, {
+            nodeId: eventNodeId ?? nodeId,
+            nodeType: node.type,
+            ...eventData,
+          } as unknown as Omit<
+            WorkflowEvent<typeof type>,
+            "type" | "workflowId" | "triggerId" | "sessionId"
+          >);
         },
       })
     ).toTuple();
 
     if (outputError) {
-      this.emitNodeFailed(nodeId, node, outputError, managedContext);
+      await this.emitEvent(WorkflowEvents.NODE_FAILED, managedContext, {
+        nodeId,
+        nodeType: node.type,
+        error: outputError.message,
+      });
       return Result.error(outputError);
     }
 
-    this.emitNodeCompleted(nodeId, node, output, managedContext);
+    await this.emitEvent(WorkflowEvents.NODE_COMPLETED, managedContext, {
+      nodeId,
+      nodeType: node.type,
+      inputs,
+      output,
+    });
     return Result.ok(output);
   }
 
@@ -289,117 +283,55 @@ export class WorkflowExecutor extends EventEmitter {
     };
   }
 
-  private emitWorkflowStarted(context: ManagedExecutionContext): void {
-    this.emit(WorkflowEvents.WORKFLOW_STARTED, {
-      ...this.createBaseEventData(context.get),
-      inputs: context.get.workflowInputs,
-    });
-  }
-
-  private emitWorkflowCompleted(
+  private async emitEvent<T extends WorkflowEventType>(
+    eventType: T,
     context: ManagedExecutionContext,
-    result: Record<string, any> | null,
-  ): void {
-    this.emit(WorkflowEvents.WORKFLOW_COMPLETED, {
+    eventData: Omit<
+      WorkflowEvent<T>,
+      "type" | "workflowId" | "triggerId" | "sessionId"
+    >,
+  ): Promise<void> {
+    const baseEvent = {
+      type: eventType,
       ...this.createBaseEventData(context.get),
-      result,
-    });
+    };
+
+    const isNodeEvent =
+      eventType === WorkflowEvents.NODE_STARTED ||
+      eventType === WorkflowEvents.NODE_COMPLETED ||
+      eventType === WorkflowEvents.NODE_FAILED ||
+      eventType === WorkflowEvents.TOOL_STARTED ||
+      eventType === WorkflowEvents.TOOL_COMPLETED ||
+      eventType === WorkflowEvents.TOOL_FAILED ||
+      eventType === WorkflowEvents.NODE_RESULT ||
+      eventType === WorkflowEvents.NODE_LOG ||
+      eventType === WorkflowEvents.AGENT_NOTIFICATION;
+
+    // Extract common fields
+    const { nodeId, nodeType, ...specificData } = eventData as any;
+
+    // For local event emission and backend publication
+    const event = {
+      ...baseEvent,
+      data: {
+        ...(isNodeEvent ? { nodeId, nodeType } : {}),
+        ...specificData,
+      },
+    } as unknown as WorkflowEvent<T>;
+
+    this.emit(eventType, event);
   }
 
-  private emitWorkflowFailed(
-    context: ManagedExecutionContext,
-    error: Error,
-  ): void {
-    this.emit(WorkflowEvents.WORKFLOW_FAILED, {
-      ...this.createBaseEventData(context.get),
-      error: error.message,
-    });
-  }
-
-  private emitNodeStarted(
-    nodeId: string,
-    node: NodeDefinition,
-    inputs: NodeInput,
-    context: ManagedExecutionContext,
-  ): void {
-    this.emit(WorkflowEvents.NODE_STARTED, {
-      ...this.createBaseEventData(context.get),
-      nodeId,
-      nodeType: node.type,
-      inputs,
-    });
-  }
-
-  private emitNodeCompleted(
-    nodeId: string,
-    node: NodeDefinition,
-    output: NodeOutput,
-    context: ManagedExecutionContext,
-  ): void {
-    this.emit(WorkflowEvents.NODE_COMPLETED, {
-      ...this.createBaseEventData(context.get),
-      nodeId,
-      nodeType: node.type,
-      output,
-    });
-  }
-
-  private emitNodeFailed(
-    nodeId: string,
-    node: NodeDefinition,
-    error: Error,
-    context: ManagedExecutionContext,
-  ): void {
-    this.emit(WorkflowEvents.NODE_FAILED, {
-      ...this.createBaseEventData(context.get),
-      nodeId,
-      nodeType: node.type,
-      error: error.message,
-    });
-  }
-
-  private emitNodeResult(
-    nodeId: string,
-    node: NodeDefinition,
-    outputField: string,
-    data: string,
-    type: NodeIOType,
-    context: ManagedExecutionContext,
-  ): void {
-    this.emit(WorkflowEvents.NODE_RESULT, {
-      ...this.createBaseEventData(context.get),
-      nodeId,
-      nodeType: node.type,
-      outputField,
-      data,
-      type,
-    });
-  }
-
-  private emitNodeLog(
-    nodeId: string,
-    nodeType: string,
-    message: string,
-    context: ManagedExecutionContext,
-  ): void {
-    this.emit(WorkflowEvents.NODE_LOG, {
-      ...this.createBaseEventData(context.get),
-      nodeId,
-      nodeType,
-      message,
-    });
-  }
-
-  override emit<K extends keyof WorkflowExecutorEvents>(
-    event: K,
-    data: Parameters<WorkflowExecutorEvents[K]>[0],
+  override emit<T extends WorkflowEventType>(
+    event: T,
+    data: WorkflowEvent<T>,
   ): boolean {
     return super.emit(event, data);
   }
 
-  override on<K extends keyof WorkflowExecutorEvents>(
-    event: K,
-    listener: WorkflowExecutorEvents[K],
+  override on<T extends WorkflowEventType>(
+    event: T,
+    listener: (event: WorkflowEvent<T>) => void | Promise<void>,
   ): this {
     return super.on(event, listener);
   }

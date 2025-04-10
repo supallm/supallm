@@ -22,10 +22,13 @@ import { hookifyFunction } from "@/hooks/hookify-function";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { DialogTrigger } from "@radix-ui/react-dialog";
-import { FC, PropsWithChildren, useEffect, useState } from "react";
+import { FC, PropsWithChildren, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { ProviderCardList } from "./credentials/provider-card-list";
+import {
+  ProviderCardList,
+  ProviderInfoMap,
+} from "./credentials/provider-card-list";
 import { ProviderLogo } from "./logos/provider-logo";
 import { Card, CardContent, CardHeader } from "./ui/card";
 import { Input } from "./ui/input";
@@ -51,7 +54,15 @@ export const AddCredentialDialog: FC<
   const [selectedProvider, setSelectedProvider] = useState<ProviderType | null>(
     initialProviderType ?? null,
   );
-  console.log("selectedProvider", selectedProvider);
+
+  const selectedProviderConfig = useMemo(() => {
+    if (selectedProvider) {
+      return ProviderInfoMap[
+        selectedProvider as Exclude<ProviderType, "ollama">
+      ];
+    }
+    return null;
+  }, [selectedProvider]);
 
   useEffect(() => {
     setOpen(isOpen);
@@ -121,7 +132,9 @@ export const AddCredentialDialog: FC<
                 <CardHeader className="flex flex-row items-center justify-between">
                   <div className="flex flex-row gap-2 items-center">
                     <ProviderLogo name={selectedProvider} />
-                    <h2 className="text-lg font-medium">{selectedProvider}</h2>
+                    <h2 className="text-lg font-medium">
+                      {selectedProviderConfig?.name}
+                    </h2>
                   </div>
                   {!initialProviderType && (
                     <div>
@@ -164,18 +177,26 @@ export const AddCredentialDialog: FC<
                           name="apiKey"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>API Key</FormLabel>
+                              <FormLabel>
+                                {selectedProviderConfig?.apiKeyLabel ??
+                                  "API Key"}
+                              </FormLabel>
                               <FormControl>
                                 <Input
-                                  placeholder="Enter your API Key"
+                                  placeholder={
+                                    selectedProviderConfig?.apiKeyPlaceholder ??
+                                    "Enter your Key"
+                                  }
                                   type="password"
                                   {...field}
                                 />
                               </FormControl>
-                              <FormDescription>
-                                Your API key will be encrypted and stored
-                                securely.
-                              </FormDescription>
+                              {selectedProviderConfig?.apiKeyHint ?? (
+                                <FormDescription>
+                                  Your API key will be encrypted and stored
+                                  securely.
+                                </FormDescription>
+                              )}
                               <FormMessage />
                             </FormItem>
                           )}

@@ -4,7 +4,17 @@ import { FC, forwardRef, HTMLAttributes, ReactNode, useMemo } from "react";
 
 import { BaseHandle } from "@/components/base-handle";
 import { TooltipWraper } from "@/components/icon-tooltip";
-import { AlignJustify, Braces, ImageIcon } from "lucide-react";
+import { parseHandleId } from "@/lib/handles";
+import {
+  AlignJustify,
+  Braces,
+  BrainCircuit,
+  Database,
+  HandHelping,
+  ImageIcon,
+  ShieldCheck,
+  Wrench,
+} from "lucide-react";
 
 const flexDirections = {
   top: "flex-col",
@@ -13,7 +23,15 @@ const flexDirections = {
   left: "flex-row",
 };
 
-export type LabeledHandleType = "image" | "text" | "any";
+export type LabeledHandleType =
+  | "image"
+  | "text"
+  | "any"
+  | "memory"
+  | "ai-model"
+  | "handoffs"
+  | "tools"
+  | "guardrails";
 
 const HandleTypeIcon: FC<{ type: LabeledHandleType }> = ({
   type,
@@ -25,6 +43,16 @@ const HandleTypeIcon: FC<{ type: LabeledHandleType }> = ({
       return <AlignJustify className="w-4 h-4" />;
     case "any":
       return <Braces className="w-4 h-4" />;
+    case "memory":
+      return <Database className="w-4 h-4" />;
+    case "ai-model":
+      return <BrainCircuit className="w-4 h-4" />;
+    case "handoffs":
+      return <HandHelping className="w-4 h-4" />;
+    case "tools":
+      return <Wrench className="w-4 h-4" />;
+    case "guardrails":
+      return <ShieldCheck className="w-4 h-4" />;
     default:
       assertUnreachable(type);
   }
@@ -57,7 +85,8 @@ export const LabeledHandle = forwardRef<
     const connections = useNodeConnections();
 
     /**
-     * If this handle is already used as a targetHandle it means we shouldn't connect it twice.
+     * If this handle is already used as a targetHandle it means we shouldn't connect it twice
+     * except for some special cases like the agent tools node.
      */
     const isConnectable = useMemo(() => {
       if (!connections) return true;
@@ -65,6 +94,15 @@ export const LabeledHandle = forwardRef<
       const targetHandle = connections.find((c) => c.sourceHandle === props.id);
 
       if (!targetHandle) return true;
+
+      const { type: sourceHandleType } = parseHandleId(
+        targetHandle.sourceHandle!,
+      );
+      const { type: targetHandleType } = parseHandleId(props.id!);
+
+      if (sourceHandleType === "tools" && targetHandleType === "tools") {
+        return true;
+      }
 
       return false;
     }, [connections, props.id]);

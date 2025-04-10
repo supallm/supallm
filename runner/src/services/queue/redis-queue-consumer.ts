@@ -1,4 +1,5 @@
 import Redis from "ioredis";
+import { RedisConfig } from "../../utils/config";
 import { logger } from "../../utils/logger";
 import { IQueueConsumer, WorkflowMessage } from "./queuer.interface";
 import { PendingMessageInfo } from "./types";
@@ -36,25 +37,25 @@ export class RedisQueueConsumer implements IQueueConsumer {
   private activeJobs = 0;
   private isRunning = true;
 
-  constructor(redisUrl: string, options: RedisQueueOptions) {
-    this.redisBlocking = this.initializeRedisClient(redisUrl);
-    this.redisNonBlocking = this.initializeRedisClient(redisUrl);
+  constructor(redis: RedisConfig, options: RedisQueueOptions) {
+    this.redisBlocking = this.initializeRedisClient(redis);
+    this.redisNonBlocking = this.initializeRedisClient(redis);
     this.CONSUMER_NAME = this.generateConsumerName();
     this.MAX_PARALLEL_JOBS =
       options?.maxParallelJobs ?? DEFAULT_MAX_PARALLEL_JOBS;
   }
 
-  private initializeRedisClient(redisUrl: string): Redis {
+  private initializeRedisClient(config: RedisConfig): Redis {
     const redisOptions = {
       family: 0,
       db: 0,
-      password: process.env["REDIS_PASSWORD"],
+      password: config.password,
       retryStrategy: (times: number) => {
         return Math.min(times * 100, 3000); // retry with an increasing delay
       },
       maxRetriesPerRequest: 3,
     };
-    const redis = new Redis(redisUrl, redisOptions);
+    const redis = new Redis(config.url, redisOptions);
 
     redis.on("error", (err) => {
       logger.error(`redis error: ${err}`);

@@ -1,4 +1,5 @@
 import { FlowNode } from "@/core/entities/flow";
+import { parseHandleId } from "@/lib/handles";
 import {
   Background,
   BackgroundVariant,
@@ -12,7 +13,11 @@ import {
 import dagre from "dagre";
 import { FC, useCallback, useEffect, useMemo } from "react";
 import { FlowSubscription } from "supallm/browser";
-import { NodeType } from "../node-types";
+import {
+  isRunningFlowNodeType,
+  isToolNodeType,
+  RunningFlowNodeType,
+} from "../node-types";
 import RunningFlowNode from "./running-flow-node";
 
 const nodeWidth = 180;
@@ -37,11 +42,27 @@ export function layoutGraphWithStandardHandles(
   const dedupedEdges: Edge[] = [];
 
   rawEdges.forEach((edge) => {
+    const { type: targetType } = parseHandleId(edge.targetHandle ?? "");
+
     const key = `${edge.source}->${edge.target}`;
     if (!seen.has(key)) {
       seen.add(key);
-      dedupedEdges.push(edge);
-      dagreGraph.setEdge(edge.target, edge.source);
+      if (targetType === "tools") {
+        const edgeCpy = { ...edge };
+        const reversedEdge: Edge = {
+          id: edgeCpy.id,
+          source: edge.target,
+          target: edge.source,
+          sourceHandle: edge.targetHandle,
+          targetHandle: edge.sourceHandle,
+        };
+
+        dedupedEdges.push(reversedEdge);
+        dagreGraph.setEdge(reversedEdge.target, reversedEdge.source);
+      } else {
+        dedupedEdges.push(edge);
+        dagreGraph.setEdge(edge.target, edge.source);
+      }
     }
   });
 
@@ -60,6 +81,7 @@ export function layoutGraphWithStandardHandles(
       draggable: true,
       data: {
         status: "idle" as const,
+        nodeData: node.data,
       },
     };
   });
@@ -85,20 +107,39 @@ export const RunningFlow: FC<{
   flowSubscription: FlowSubscription | null;
 }> = ({ initialNodes, initialEdges, flowSubscription }) => {
   const { nodes: layoutedNodes, edges: layoutedEdges } =
-    layoutGraphWithStandardHandles(initialNodes, initialEdges, "TB");
+    layoutGraphWithStandardHandles(
+      initialNodes.filter((node) => {
+        return isRunningFlowNodeType(node.type) || isToolNodeType(node.type);
+      }),
+      initialEdges.filter((edge) => {
+        const { type: targetType } = parseHandleId(edge.targetHandle ?? "");
+        const { type: sourceType } = parseHandleId(edge.sourceHandle ?? "");
+
+        const edgesToAvoid = ["ai-model", "memory"];
+
+        return !(
+          edgesToAvoid.includes(targetType) && edgesToAvoid.includes(sourceType)
+        );
+      }),
+      "TB",
+    );
 
   const [nodes, setNodes, onNodesChange] = useNodesState(layoutedNodes);
 
   const setActiveNode = useCallback(
-    (nodeId: string) => {
+    (data: { nodeId: string; nodeInput: unknown; nodeLogs: unknown[] }) => {
       setNodes((nds) => {
         return nds.map((node) => {
-          if (node.id === nodeId) {
+          if (node.id === data.nodeId) {
             return {
               ...node,
               data: {
                 ...node.data,
+                nodeData: node.data,
                 status: "active",
+                input: data.nodeInput,
+                output: null,
+                logs: data.nodeLogs,
               },
             };
           }
@@ -111,15 +152,16 @@ export const RunningFlow: FC<{
   );
 
   const setEndedNode = useCallback(
-    (nodeId: string) => {
+    (data: { nodeId: string; nodeOutput: unknown }) => {
       setNodes((nds) => {
         return nds.map((node) => {
-          if (node.id === nodeId) {
+          if (node.id === data.nodeId) {
             return {
               ...node,
               data: {
                 ...node.data,
                 status: "ended",
+                output: data.nodeOutput,
               },
             };
           }
@@ -132,15 +174,17 @@ export const RunningFlow: FC<{
   );
 
   const setFailedNode = useCallback(
-    (nodeId: string) => {
+    (data: { nodeId: string; nodeLogs: unknown[]; nodeOutput: unknown }) => {
       setNodes((nds) => {
         return nds.map((node) => {
-          if (node.id === nodeId) {
+          if (node.id === data.nodeId) {
             return {
               ...node,
               data: {
                 ...node.data,
                 status: "failed",
+                output: data.nodeOutput,
+                logs: data.nodeLogs,
               },
             };
           }
@@ -177,33 +221,59 @@ export const RunningFlow: FC<{
     if (!flowSubscription) return;
 
     const unsubscribeFlowEnd = flowSubscription.on("flowEnd", () => {
-      console.log("flowEnd");
       setWorkflowOutputStatus("ended");
     });
 
     const unsubscribeFlowFail = flowSubscription.on("flowFail", () => {
-      console.log("flowFail");
       setWorkflowOutputStatus("failed");
     });
 
     const unsubscribeNodeStart = flowSubscription.on(
       "nodeStart",
-      ({ nodeId }) => {
-        setActiveNode(nodeId);
+      ({ nodeId, input }) => {
+        setActiveNode({ nodeId, nodeInput: input, nodeLogs: [] });
       },
     );
 
-    const unsubscribeNodeEnd = flowSubscription.on("nodeEnd", ({ nodeId }) => {
-      setEndedNode(nodeId);
-    });
+    const unsubscribeNodeEnd = flowSubscription.on(
+      "nodeEnd",
+      ({ nodeId, output }) => {
+        setEndedNode({
+          nodeId,
+          nodeOutput: output,
+        });
+      },
+    );
 
     const unsubscribeNodeFail = flowSubscription.on(
       "nodeFail",
-      ({ nodeId }) => {
-        console.log("nodeFail", nodeId);
-        setFailedNode(nodeId);
+      ({ nodeId, error }) => {
+        console.log("nodeFailed!", nodeId, error);
+        setFailedNode({ nodeId, nodeLogs: [], nodeOutput: error });
       },
     );
+
+    const unsubscribeToolStart = flowSubscription.on("toolStart", (tool) => {
+      const nodeId = tool.nodeId;
+      setActiveNode({ nodeId, nodeInput: tool.input, nodeLogs: [] });
+    });
+
+    const unsubscribeToolEnd = flowSubscription.on("toolEnd", (tool) => {
+      const nodeId = tool.nodeId;
+      setEndedNode({
+        nodeId,
+        nodeOutput: tool.output,
+      });
+    });
+
+    const unsubscribeToolFail = flowSubscription.on("toolFail", (tool) => {
+      const nodeId = tool.nodeId;
+      setFailedNode({
+        nodeId,
+        nodeLogs: [],
+        nodeOutput: tool.error,
+      });
+    });
 
     return () => {
       unsubscribeNodeStart();
@@ -211,6 +281,9 @@ export const RunningFlow: FC<{
       unsubscribeNodeFail();
       unsubscribeFlowEnd();
       unsubscribeFlowFail();
+      unsubscribeToolStart();
+      unsubscribeToolEnd();
+      unsubscribeToolFail();
     };
   }, [
     flowSubscription,
@@ -221,11 +294,12 @@ export const RunningFlow: FC<{
   ]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const nodeTypes: Record<NodeType, any> = useMemo(
+  const nodeTypes: Record<RunningFlowNodeType, any> = useMemo(
     () => ({
       "chat-openai": RunningFlowNode,
       result: RunningFlowNode,
       entrypoint: RunningFlowNode,
+      "user-feedback": RunningFlowNode,
       "code-executor": RunningFlowNode,
       "e2b-interpreter": RunningFlowNode,
       "http-request": RunningFlowNode,
@@ -234,6 +308,18 @@ export const RunningFlow: FC<{
       "chat-azure": RunningFlowNode,
       "chat-mistral": RunningFlowNode,
       "chat-ollama": RunningFlowNode,
+      "ai-agent": RunningFlowNode,
+      "model-openai": RunningFlowNode,
+      "http-tool": RunningFlowNode,
+      "chat-openai-as-tool": RunningFlowNode,
+      "sdk-notifier-tool": RunningFlowNode,
+      "e2b-interpreter-tool": RunningFlowNode,
+      "confluence-tool": RunningFlowNode,
+      "airtable-tool": RunningFlowNode,
+      "notion-database-tool": RunningFlowNode,
+      "postgres-query-tool": RunningFlowNode,
+      "slack-tool": RunningFlowNode,
+      "e2b-code-interpreter-tool": RunningFlowNode,
     }),
     [],
   );

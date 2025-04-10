@@ -2,7 +2,7 @@ import { BaseMessage } from "@langchain/core/messages";
 import { ChatOpenAI, OpenAI } from "@langchain/openai";
 import { Result } from "typescript-result";
 import { CryptoService } from "../../services/secret/crypto-service";
-import { Tool, ToolContext } from "../../tools";
+import { logger } from "../../utils/logger";
 import {
   INode,
   NodeDefinition,
@@ -13,11 +13,10 @@ import {
 } from "../types";
 import { GenerateResult, LLMOptions, LLMUtils } from "./llm-utils";
 import { ModelNotFoundError, ProviderAPIError } from "./llm.errors";
-
 interface OpenAIOptions extends LLMOptions {
   temperature: number;
   maxTokens?: number;
-  streaming: boolean;
+  outputMode: "text-stream" | "text";
   systemPrompt?: string;
 }
 
@@ -35,10 +34,10 @@ export class OpenAIProvider implements INode {
   ): Result<OpenAIOptions, Error> {
     return Result.ok({
       ...config,
-      temperature: definition["temperature"],
-      maxTokens: definition["maxCompletionTokens"],
-      streaming: definition["streaming"],
-      systemPrompt: definition["developerMessage"],
+      temperature: definition.config["temperature"],
+      maxTokens: definition.config["maxCompletionTokens"],
+      outputMode: definition.config["outputMode"],
+      systemPrompt: definition.config["developerMessage"],
     });
   }
 
@@ -46,10 +45,8 @@ export class OpenAIProvider implements INode {
     nodeId: string,
     definition: NodeDefinition,
     inputs: NodeInput,
-    tools: Record<string, Tool>,
     options: NodeOptions,
   ): Promise<Result<NodeOutput, Error>> {
-    const toolContext = new ToolContext(this.type, tools);
     const validateAndPrepare = await this.utils.validateAndPrepare(
       definition,
       inputs,
@@ -71,11 +68,8 @@ export class OpenAIProvider implements INode {
     }
 
     const prepareMessages = await this.utils.prepareMessages(
-      nodeId,
-      toolContext,
       openaiOptions.systemPrompt,
       resolvedInputs,
-      options.sessionId,
     );
     const [prepareMessagesResult, prepareMessagesError] =
       prepareMessages.toTuple();
@@ -100,25 +94,15 @@ export class OpenAIProvider implements INode {
 
       if (chunkContent) {
         if (outputField) {
-          await options.onNodeResult(
+          await options.onEvent("NODE_RESULT", {
             nodeId,
             outputField,
-            chunkContent,
-            resolvedOutputs.type,
-          );
+            data: chunkContent,
+            ioType: resolvedOutputs.type,
+          });
         }
         fullResponse += chunkContent;
       }
-    }
-
-    if (fullResponse) {
-      await this.utils.appendToMemory(
-        toolContext,
-        nodeId,
-        options.sessionId,
-        resolvedInputs.prompt,
-        fullResponse,
-      );
     }
 
     return Result.ok({ response: fullResponse });
@@ -129,12 +113,13 @@ export class OpenAIProvider implements INode {
     options: OpenAIOptions,
   ): Promise<GenerateResult> {
     try {
+      logger.info(`options ${JSON.stringify(options)}`);
       const [model, modelError] = this.createModel(options).toTuple();
       if (modelError) {
         return Result.error(modelError);
       }
 
-      if (model instanceof ChatOpenAI && options.streaming) {
+      if (model instanceof ChatOpenAI && options.outputMode === "text-stream") {
         return LLMUtils.handleStreamingResponse(model, messages, (m, msgs) =>
           m.stream(msgs),
         );
@@ -160,7 +145,7 @@ export class OpenAIProvider implements INode {
             temperature: options.temperature,
             maxTokens: options.maxTokens,
             openAIApiKey: options.decryptedApiKey,
-            streaming: options.streaming,
+            streaming: options.outputMode === "text-stream",
           }),
         );
       } else {
@@ -170,7 +155,7 @@ export class OpenAIProvider implements INode {
             temperature: options.temperature,
             maxTokens: options.maxTokens,
             openAIApiKey: options.decryptedApiKey,
-            streaming: options.streaming,
+            streaming: options.outputMode === "text-stream",
           }),
         );
       }

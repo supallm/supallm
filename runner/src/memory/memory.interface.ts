@@ -1,16 +1,20 @@
 import { BaseMessage } from "@langchain/core/messages";
 import { Result } from "typescript-result";
 
-export interface LLMMemoryService {
+export type MemoryType = "local-memory" | "none";
+
+export interface MemoryConfig {
+  type: MemoryType;
+  maxMessages?: number;
+  keepSystemMessage?: boolean;
+  ttl?: number;
+}
+
+export interface IMemory {
   getMessages(
     sessionId: string,
     nodeId: string,
   ): Promise<Result<BaseMessage[], Error>>;
-  addMessage(
-    sessionId: string,
-    nodeId: string,
-    message: BaseMessage,
-  ): Promise<Result<void, Error>>;
   addMessages(
     sessionId: string,
     nodeId: string,

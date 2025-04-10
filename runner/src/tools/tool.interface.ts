@@ -1,25 +1,85 @@
-import { BaseMessage } from "@langchain/core/messages";
 import { Result } from "typescript-result";
-import { NodeType } from "../nodes/types";
+import { z } from "zod";
+import { NodeOptions } from "../nodes/types";
 
-export type ToolType = "memory" | "retrieval";
-
-export type MemoryToolAction = "load" | "append";
-export type MemoryToolParams = {
-  sessionId: string;
+export type ToolOptions = {
   nodeId: string;
-  messages?: BaseMessage[];
+  sessionId: string;
+  nodeOptions: NodeOptions;
 };
-export type MemoryToolOutput = BaseMessage[] | null;
 
-export type Params = MemoryToolParams;
-export type RunOutput = MemoryToolOutput;
+export type ToolType =
+  | "chat-openai-as-tool"
+  | "discord_notifier"
+  | "http_request"
+  | "sdk-notifier-tool"
+  | "postgres-query-tool";
 
-export type ToolAction = MemoryToolAction;
-
-export interface Tool<T = RunOutput> {
+type Base = {
   id: string;
+  name: string;
+  description: string;
   type: ToolType;
-  canHandle(nodeType: NodeType): boolean;
-  run(action: ToolAction, params: Params): Promise<Result<T, Error>>;
+  config: Record<string, any>;
+};
+
+export interface Discord extends Base {
+  type: "discord_notifier";
+  config: {
+    webhookUrl: string;
+  };
+}
+
+export interface Http extends Base {
+  type: "http_request";
+  config: {
+    headers: Record<string, string>;
+    url: string;
+  };
+}
+
+export interface OpenAICompletion extends Base {
+  type: "chat-openai-as-tool";
+  config: {
+    model: string;
+    apiKey: string;
+    temperature?: number;
+    maxTokens?: number;
+    developerMessage?: string;
+  };
+}
+
+export interface SDKNotifier extends Base {
+  type: "sdk-notifier-tool";
+  config: {
+    outputFieldName: string;
+    outputDescription: string;
+  };
+}
+
+export interface PostgresQuery extends Base {
+  type: "postgres-query-tool";
+  config: {
+    query: string;
+    apiKey: string;
+    variables: { name: string; description: string }[];
+  };
+}
+
+export type ToolConfig =
+  | Discord
+  | Http
+  | OpenAICompletion
+  | SDKNotifier
+  | PostgresQuery;
+
+export type ToolOutput = string;
+
+export interface Tool<T extends ToolType = ToolType> {
+  readonly id: string;
+  readonly type: T;
+  readonly name: string;
+  readonly description: string;
+  readonly schema: z.ZodSchema;
+  run(params: any, options: NodeOptions): Promise<Result<ToolOutput, Error>>;
 }

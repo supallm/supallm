@@ -4,9 +4,13 @@ import { Spacer } from "@/components/spacer";
 import { Spinner } from "@/components/spinner";
 import { EntrypointNodeData } from "@/core/entities/flow/flow-entrypoint";
 import { ResultNodeData } from "@/core/entities/flow/flow-result";
+import {
+  getInspectingNode,
+  useCurrentFlowInspectorStore,
+} from "@/core/store/flow";
 import { useCurrentProjectOrThrow } from "@/hooks/use-current-project-or-throw";
 import { cn } from "@/lib/utils";
-import { BookCheck, BracesIcon, LogsIcon } from "lucide-react";
+import { BookCheck, Inspect, LogsIcon, MessageCircle } from "lucide-react";
 import { FC, useEffect, useMemo, useRef, useState } from "react";
 import { JsonView, allExpanded, defaultStyles } from "react-json-view-lite";
 import "react-json-view-lite/dist/index.css";
@@ -20,6 +24,12 @@ interface LogsPaneProps {
   flowId: string;
   inputs: { label: string; value: string }[];
   flowError: string | null;
+  agentNotifications: {
+    data: string;
+    nodeId: string;
+    nodeType: string;
+    outputField: string;
+  }[];
 }
 
 const PaneButton: FC<{
@@ -128,18 +138,120 @@ const FinalResult: FC<{ events: FlowResultStreamEvent[] }> = ({ events }) => {
   );
 };
 
+const NodeInspector: FC = () => {
+  const inspectingNode = getInspectingNode();
+
+  if (!inspectingNode) {
+    return (
+      <p className="text-muted-foreground text-sm">
+        Select a node to inspect once the flow is completed.
+      </p>
+    );
+  }
+
+  return (
+    <div className="h-full w-full">
+      {inspectingNode && (
+        <div>
+          <h1>Node input</h1>
+          <JsonView
+            data={inspectingNode.nodeInput as object | string | object[]}
+            shouldExpandNode={allExpanded}
+            style={{
+              ...defaultStyles,
+              container: "rounded-md bg-gray-300/30 mt-2 py-2",
+              label: "text-gray-800 font-medium",
+            }}
+          />
+          <Spacer size="sm" />
+          <h1>Node output</h1>
+          <JsonView
+            data={inspectingNode.nodeOutput as object | string | object[]}
+            shouldExpandNode={allExpanded}
+            style={{
+              ...defaultStyles,
+              container: "rounded-md bg-gray-300/30 mt-2 py-2",
+              label: "text-gray-800 font-medium",
+            }}
+          />
+        </div>
+      )}
+    </div>
+  );
+};
+
+const AgentNotifications: FC<{
+  agentNotifications: {
+    data: string;
+    nodeId: string;
+    nodeType: string;
+    outputField: string;
+  }[];
+}> = ({ agentNotifications }) => {
+  const numberOfLatestEvents = 10;
+  const reversedEvents = useMemo(() => {
+    return agentNotifications.reverse().slice(0, numberOfLatestEvents);
+  }, [agentNotifications]);
+
+  return (
+    <>
+      {reversedEvents.length === 0 ? (
+        <p className="text-muted-foreground text-sm">
+          No agent notifications available. Use the SDK notifier tool to allow
+          your AI Agent send notifications to the SDK.
+        </p>
+      ) : (
+        <>
+          <ul>
+            {reversedEvents.map((event, index) => (
+              <li
+                key={index}
+                className="text-muted-foreground space-y-2 flex flex-col gap-2"
+              >
+                <JsonView
+                  data={event}
+                  shouldExpandNode={allExpanded}
+                  style={{
+                    ...defaultStyles,
+                    container: "rounded-md bg-gray-300/30 mt-2 py-2",
+                    label: "text-gray-800 font-medium",
+                  }}
+                />
+              </li>
+            ))}
+          </ul>
+          <Spacer size="sm" />
+          <AlertMessage
+            variant="info"
+            size="sm"
+            message={`We only display the ${numberOfLatestEvents} latest notifications for performance reasons`}
+          />
+          <Spacer size="sm" />
+        </>
+      )}
+    </>
+  );
+};
+
 export const TestFlowBottomPanel: FC<LogsPaneProps> = ({
   events,
   isRunning,
   flowId,
   inputs,
   flowError,
+  agentNotifications,
 }) => {
   const [activePane, setActivePane] = useState<
-    "full-result" | "source-code" | "logs"
+    | "full-result"
+    | "source-code"
+    | "logs"
+    | "node-inspector"
+    | "agent-notifications"
   >("full-result");
 
   const { id: projectId } = useCurrentProjectOrThrow();
+
+  const flowInspectorStore = useCurrentFlowInspectorStore();
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isAutoScroll, setIsAutoScroll] = useState(true);
@@ -177,6 +289,12 @@ export const TestFlowBottomPanel: FC<LogsPaneProps> = ({
     }
   }, [events, activePane, flowError, isRunning, isAutoScroll]);
 
+  useEffect(() => {
+    if (flowInspectorStore.inspectingNode) {
+      setActivePane("node-inspector");
+    }
+  }, [flowInspectorStore]);
+
   return (
     <div className="bg-muted border-t flex flex-col max-h-full justify-start">
       <div className="pane-controls w-full flex justify-start gap-0 border-b items-center bg-gray-100 sticky top-0 z-10 shrink-0">
@@ -185,7 +303,7 @@ export const TestFlowBottomPanel: FC<LogsPaneProps> = ({
           onClick={() => setActivePane("full-result")}
           startContent={<BookCheck className="w-4 h-4" />}
         >
-          Full result
+          Flow result
         </PaneButton>
         <PaneButton
           active={activePane === "logs"}
@@ -194,12 +312,26 @@ export const TestFlowBottomPanel: FC<LogsPaneProps> = ({
         >
           Event streams
         </PaneButton>
-        <PaneButton
+        {/* <PaneButton
           active={activePane === "source-code"}
           onClick={() => setActivePane("source-code")}
           startContent={<BracesIcon className="w-4 h-4" />}
         >
           Integrate
+        </PaneButton> */}
+        <PaneButton
+          active={activePane === "agent-notifications"}
+          onClick={() => setActivePane("agent-notifications")}
+          startContent={<MessageCircle className="w-4 h-4" />}
+        >
+          Notifications
+        </PaneButton>
+        <PaneButton
+          active={activePane === "node-inspector"}
+          onClick={() => setActivePane("node-inspector")}
+          startContent={<Inspect className="w-4 h-4" />}
+        >
+          Inspect
         </PaneButton>
       </div>
 
@@ -221,6 +353,12 @@ export const TestFlowBottomPanel: FC<LogsPaneProps> = ({
           </div>
         )}
 
+        {activePane === "agent-notifications" && (
+          <div className="p-4">
+            <AgentNotifications agentNotifications={agentNotifications} />
+          </div>
+        )}
+
         {activePane === "source-code" && (
           <div className="p-4">
             <SdkCodeExample
@@ -230,6 +368,12 @@ export const TestFlowBottomPanel: FC<LogsPaneProps> = ({
               inputs={inputs}
               showInitSdk={false}
             ></SdkCodeExample>
+          </div>
+        )}
+
+        {activePane === "node-inspector" && (
+          <div className="p-4">
+            <NodeInspector></NodeInspector>
           </div>
         )}
       </div>

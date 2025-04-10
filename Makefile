@@ -22,11 +22,11 @@ api:
 
 runner:
 	@echo [ starting runner... ]
-	@docker compose -f docker-compose.dev.yml up supallm_runner
+	@docker compose -f docker-compose.dev.yml up supallm_runner --build
 
 frontend:
 	@echo [ starting frontend... ]
-	@docker compose -f docker-compose.dev.yml up supallm_frontend
+	@docker compose -f docker-compose.dev.yml up supallm_frontend --build
 
 ## Generate all code from specs | eq: sqlc + oapi
 gen: oapi sqlc
@@ -57,3 +57,10 @@ clean:
 	@docker compose down
 	@docker compose rm -f
 	@docker volume rm supallm_supallm_data supallm_supallm_redis_data
+
+
+
+
+
+
+

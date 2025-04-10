@@ -22,7 +22,7 @@ type (
 
 const (
 	Issuer = "supallm-api"
-	expiry = 24 * time.Hour
+	expiry = 30 * 24 * time.Hour
 )
 
 func (t Token) String() string {

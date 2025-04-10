@@ -104,6 +104,23 @@ function FormLabel({
   );
 }
 
+function FormSubLabel({
+  className,
+  ...props
+}: React.ComponentProps<typeof LabelPrimitive.Root>) {
+  const { error, formItemId } = useFormField();
+
+  return (
+    <Label
+      data-slot="form-sub-label"
+      data-error={!!error}
+      className={cn("text-muted-foreground text-xs", className)}
+      htmlFor={formItemId}
+      {...props}
+    />
+  );
+}
+
 function FormControl({ ...props }: React.ComponentProps<typeof Slot>) {
   const { error, formItemId, formDescriptionId, formMessageId } =
     useFormField();
@@ -164,5 +181,6 @@ export {
   FormItem,
   FormLabel,
   FormMessage,
+  FormSubLabel,
   useFormField,
 };

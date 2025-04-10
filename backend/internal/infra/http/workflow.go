@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/supallm/core/internal/application/command"
 	"github.com/supallm/core/internal/application/domain/model"
 	"github.com/supallm/core/internal/application/query"
@@ -119,10 +120,18 @@ func (s *Server) TriggerWorkflow(w http.ResponseWriter, r *http.Request, project
 		return
 	}
 
+	var sessionID uuid.UUID
+	if req.SessionId != nil {
+		sessionID = *req.SessionId
+	} else {
+		sessionID = uuid.New()
+	}
+
 	err = s.app.Commands.TriggerWorkflow.Handle(r.Context(), command.TriggerWorkflowCommand{
 		ProjectID:  projectID,
 		WorkflowID: model.WorkflowID(workflowID),
 		TriggerID:  req.TriggerId,
+		SessionID:  sessionID,
 		Inputs:     req.Inputs,
 	})
 	if err != nil {

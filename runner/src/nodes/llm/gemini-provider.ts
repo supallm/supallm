@@ -2,7 +2,6 @@ import { BaseMessage } from "@langchain/core/messages";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { Result } from "typescript-result";
 import { CryptoService } from "../../services/secret/crypto-service";
-import { Tool, ToolContext } from "../../tools";
 import {
   INode,
   NodeDefinition,
@@ -17,7 +16,7 @@ import { ModelNotFoundError, ProviderAPIError } from "./llm.errors";
 interface GeminiOptions extends LLMOptions {
   temperature: number;
   maxTokens?: number;
-  streaming: boolean;
+  outputMode: "text-stream" | "text";
   systemPrompt?: string;
 }
 
@@ -35,10 +34,10 @@ export class GeminiProvider implements INode {
   ): Result<GeminiOptions, Error> {
     return Result.ok({
       ...config,
-      temperature: definition["temperature"],
-      maxTokens: definition["maxTokens"],
-      streaming: definition["streaming"],
-      systemPrompt: definition["systemPrompt"],
+      temperature: definition.config["temperature"],
+      maxTokens: definition.config["maxTokens"],
+      outputMode: definition.config["outputMode"],
+      systemPrompt: definition.config["systemPrompt"],
     });
   }
 
@@ -46,10 +45,8 @@ export class GeminiProvider implements INode {
     nodeId: string,
     definition: NodeDefinition,
     inputs: NodeInput,
-    tools: Record<string, Tool>,
     options: NodeOptions,
   ): Promise<Result<NodeOutput, Error>> {
-    const toolContext = new ToolContext(this.type, tools);
     const validateAndPrepare = await this.utils.validateAndPrepare(
       definition,
       inputs,
@@ -71,11 +68,8 @@ export class GeminiProvider implements INode {
     }
 
     const prepareMessages = await this.utils.prepareMessages(
-      nodeId,
-      toolContext,
       geminiOptions.systemPrompt,
       resolvedInputs,
-      options.sessionId,
     );
     const [prepareMessagesResult, prepareMessagesError] =
       prepareMessages.toTuple();
@@ -100,25 +94,15 @@ export class GeminiProvider implements INode {
 
       if (chunkContent) {
         if (outputField) {
-          await options.onNodeResult(
+          await options.onEvent("NODE_RESULT", {
             nodeId,
             outputField,
-            chunkContent,
-            resolvedOutputs.type,
-          );
+            data: chunkContent,
+            ioType: resolvedOutputs.type,
+          });
         }
         fullResponse += chunkContent;
       }
-    }
-
-    if (fullResponse) {
-      await this.utils.appendToMemory(
-        toolContext,
-        nodeId,
-        options.sessionId,
-        resolvedInputs.prompt,
-        fullResponse,
-      );
     }
 
     return Result.ok({ response: fullResponse });
@@ -134,7 +118,7 @@ export class GeminiProvider implements INode {
         return Result.error(modelError);
       }
 
-      if (options.streaming) {
+      if (options.outputMode === "text-stream") {
         return LLMUtils.handleStreamingResponse(model, messages, (m, msgs) =>
           m.stream(msgs),
         );
@@ -158,7 +142,7 @@ export class GeminiProvider implements INode {
           temperature: options.temperature,
           maxOutputTokens: options.maxTokens,
           apiKey: options.decryptedApiKey,
-          streaming: options.streaming,
+          streaming: options.outputMode === "text-stream",
         }),
       );
     } catch (error) {
