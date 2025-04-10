@@ -1,11 +1,13 @@
 import { Result } from "typescript-result";
 import { assertUnreachable } from "../utils/type-safety";
+import { BraveSearchTool } from "./brave-search-tool";
 import { DiscordNotifierTool } from "./discord-notifier-tool";
 import { HttpTool } from "./http-tool";
 import { OpenAICompletionTool } from "./openai";
 import { PostgresQueryTool } from "./postgres-query-tool";
 import { SDKNotifierTool } from "./sdk-notifier-tool";
 import {
+  BraveSearch,
   Discord,
   Http,
   OpenAICompletion,
@@ -28,6 +30,8 @@ export class ToolRegistry {
         return Result.ok(new SDKNotifierTool(config as SDKNotifier));
       case "postgres-query-tool":
         return Result.ok(new PostgresQueryTool(config as PostgresQuery));
+      case "brave-search-tool":
+        return Result.ok(new BraveSearchTool(config as BraveSearch));
       default:
         return assertUnreachable(config);
     }

@@ -13,7 +13,8 @@ export type ToolType =
   | "discord_notifier"
   | "http_request"
   | "sdk-notifier-tool"
-  | "postgres-query-tool";
+  | "postgres-query-tool"
+  | "brave-search-tool";
 
 type Base = {
   id: string;
@@ -66,12 +67,21 @@ export interface PostgresQuery extends Base {
   };
 }
 
+export interface BraveSearch extends Base {
+  type: "brave-search-tool";
+  config: {
+    apiKey: string;
+    endpoint?: string;
+  };
+}
+
 export type ToolConfig =
   | Discord
   | Http
   | OpenAICompletion
   | SDKNotifier
-  | PostgresQuery;
+  | PostgresQuery
+  | BraveSearch;
 
 export type ToolOutput = string;
 
