@@ -1,6 +1,6 @@
 import Redis from "ioredis";
 import * as msgpack from "msgpack-lite";
-import { RedisConfig } from "../../utils/config";
+import { dbRedis, RedisConfig } from "../../utils/config";
 import { logger } from "../../utils/logger";
 import {
   INotifier,
@@ -27,7 +27,11 @@ export class RedisNotifier implements INotifier {
   }
 
   private initializeRedisClient(config: RedisConfig): Redis {
-    const redisOptions = { password: config.password, family: 0 };
+    const redisOptions = {
+      password: config.password,
+      family: 0,
+      db: dbRedis.EXECUTIONS,
+    };
     const redis = new Redis(config.url, redisOptions);
 
     redis.on("error", (err) => {

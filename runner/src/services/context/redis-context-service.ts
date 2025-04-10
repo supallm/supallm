@@ -1,6 +1,6 @@
 import Redis from "ioredis";
 import _ from "lodash";
-import { RedisConfig } from "../../utils/config";
+import { dbRedis, RedisConfig } from "../../utils/config";
 import { logger } from "../../utils/logger";
 import {
   WorkflowDefinition,
@@ -27,7 +27,7 @@ export class RedisContextService implements ContextService {
   private initializeRedisClient(config: RedisConfig): Redis {
     const redisOptions = {
       family: 0,
-      db: 1, // context db
+      db: dbRedis.CONTEXT,
       password: config.password,
       retryStrategy: (times: number) => {
         return Math.min(times * 100, 3000); // retry with an increasing delay

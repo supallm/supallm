@@ -2,11 +2,9 @@ import { AIMessage, BaseMessage, HumanMessage } from "@langchain/core/messages";
 import Redis from "ioredis";
 import { BaseMemory } from "langchain/memory";
 import { Result } from "typescript-result";
-import config from "../utils/config";
+import config, { dbRedis } from "../utils/config";
 import { logger } from "../utils/logger";
 import { IMemory } from "./memory.interface";
-
-const LOCAL_MEMORY_DB = 3;
 
 interface ConversationTurn {
   input: string;
@@ -28,7 +26,8 @@ export class LocalMemory extends BaseMemory implements IMemory {
 
   private initializeRedisClient(): Redis {
     const redisOptions = {
-      db: LOCAL_MEMORY_DB,
+      family: 0,
+      db: dbRedis.LOCAL_MEMORY,
       password: config.redis.password,
       retryStrategy: (times: number) => {
         return Math.min(times * 100, 3000);

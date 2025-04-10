@@ -1,5 +1,5 @@
 import Redis from "ioredis";
-import { RedisConfig } from "../../utils/config";
+import { dbRedis, RedisConfig } from "../../utils/config";
 import { logger } from "../../utils/logger";
 import { IQueueConsumer, WorkflowMessage } from "./queuer.interface";
 import { PendingMessageInfo } from "./types";
@@ -48,7 +48,7 @@ export class RedisQueueConsumer implements IQueueConsumer {
   private initializeRedisClient(config: RedisConfig): Redis {
     const redisOptions = {
       family: 0,
-      db: 0,
+      db: dbRedis.EXECUTIONS,
       password: config.password,
       retryStrategy: (times: number) => {
         return Math.min(times * 100, 3000); // retry with an increasing delay

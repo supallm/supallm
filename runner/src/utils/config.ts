@@ -6,6 +6,12 @@ export type RedisConfig = {
   password: string;
 };
 
+export const dbRedis = {
+  EXECUTIONS: 0,
+  CONTEXT: 1,
+  LOCAL_MEMORY: 2,
+};
+
 export interface RunnerConfig {
   nodeEnv: "development" | "production" | "test";
   maxConcurrentJobs: number;
