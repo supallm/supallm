@@ -150,6 +150,14 @@ export const availableNodes: AvailableNode[] = [
   },
   {
     category: "agent-tools",
+    type: "firecrawl-scraper-tool",
+    name: "Firecrawl Scraper",
+    description: "Scrape web pages using Firecrawl",
+    logo: <Firecrawl width={20} height={20} />,
+    commingSoon: false,
+  },
+  {
+    category: "agent-tools",
     type: "http-tool",
     name: "HTTP Client",
     description: "Allow the AI agent make HTTP requests",
@@ -230,14 +238,6 @@ export const availableNodes: AvailableNode[] = [
     description:
       "Send messages to Slack channels and interact with Slack workspaces",
     logo: <Slack width={40} height={40} />,
-    commingSoon: true,
-  },
-  {
-    category: "agent-tools",
-    type: "firecrawl-tool",
-    name: "Firecrawl",
-    description: "Crawl or scrape web pages using Firecrawl",
-    logo: <Firecrawl width={20} height={20} />,
     commingSoon: true,
   },
 ] as const;

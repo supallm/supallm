@@ -1,4 +1,3 @@
-import { AppSelect } from "@/components/app-select";
 import { Firecrawl } from "@/components/logos/firecrawl";
 import { SelectCredentials } from "@/components/select-credentials";
 import { Button } from "@/components/ui/button";
@@ -9,23 +8,44 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { generateHandleId } from "@/lib/handles";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { NodeProps, useReactFlow, useUpdateNodeInternals } from "@xyflow/react";
-import { Plus, Trash2 } from "lucide-react";
 import { FC, memo, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import BaseNode, { BaseNodeHandle } from "../../common/base-node";
 import { BaseNodeContent } from "../../common/base-node-content";
 import { BaseNodeHeader } from "../../common/base-node-header";
+import { FirecrawlAdvancedSettingsDialog } from "./advanced-settings-dialog";
+
+export type FirecrawlAdvancedSettings = {
+  jsonOptionsPrompt?: string | null;
+  country?: string | null;
+  url?: string | null;
+  mobile?: boolean | null;
+  timeout?: number | null;
+  removeBase64Images?: boolean | null;
+  blockAds?: boolean | null;
+  proxy?: "basic" | "stealth" | null;
+  formats?:
+    | (
+        | "markdown"
+        | "html"
+        | "rawHtml"
+        | "links"
+        | "screenshot"
+        | "screenshot@fullPage"
+        | "json"
+      )[]
+    | null;
+  onlyMainContent?: boolean | null;
+  waitFor?: number | null;
+};
 
 type FirecrawlNodeData = {
   credentialId: string;
-  urls: string[];
-  crawlerType: "crawl" | "scrape";
-};
+} & FirecrawlAdvancedSettings;
 
 type FirecrawlNodeProps = NodeProps & {
   data: FirecrawlNodeData;
@@ -37,8 +57,31 @@ const FirecrawlNode: FC<FirecrawlNodeProps> = ({ data, id: nodeId }) => {
 
   const formSchema = z.object({
     credentialId: z.string().min(2),
-    urls: z.array(z.string().url()),
-    crawlerType: z.enum(["crawl", "scrape"]),
+    advancedSettings: z.object({
+      jsonOptionsPrompt: z.string().nullable(),
+      country: z.string().nullable(),
+      url: z.string().url().nullable(),
+      mobile: z.boolean().nullable(),
+      timeout: z.number().nullable(),
+      removeBase64Images: z.boolean().nullable(),
+      blockAds: z.boolean().nullable(),
+      proxy: z.enum(["basic", "stealth"]).nullable(),
+      formats: z
+        .array(
+          z.enum([
+            "markdown",
+            "html",
+            "rawHtml",
+            "links",
+            "screenshot",
+            "screenshot@fullPage",
+            "json",
+          ]),
+        )
+        .nullable(),
+      onlyMainContent: z.boolean().nullable(),
+      waitFor: z.number().nullable(),
+    }),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -46,14 +89,31 @@ const FirecrawlNode: FC<FirecrawlNodeProps> = ({ data, id: nodeId }) => {
     mode: "onChange",
     defaultValues: {
       credentialId: data.credentialId ?? "",
-      urls: data.urls ?? [],
-      crawlerType: data.crawlerType ?? "crawl",
+      advancedSettings: {
+        jsonOptionsPrompt: data.jsonOptionsPrompt ?? null,
+        country: data.country ?? null,
+        url: data.url ?? null,
+        mobile: data.mobile ?? false,
+        timeout: data.timeout ?? null,
+        removeBase64Images: data.removeBase64Images ?? false,
+        blockAds: data.blockAds ?? false,
+        proxy: data.proxy ?? "basic",
+        formats: data.formats ?? [],
+        onlyMainContent: data.onlyMainContent ?? false,
+        waitFor: data.waitFor ?? null,
+      },
     },
   });
 
   form.watch(() => {
     const formValues = form.getValues();
-    updateNodeData(nodeId, formValues);
+
+    const data: FirecrawlNodeData = {
+      credentialId: formValues.credentialId,
+      ...formValues.advancedSettings,
+    };
+
+    updateNodeData(nodeId, data);
   });
 
   const outputHandles = useMemo<BaseNodeHandle[]>(() => {
@@ -69,19 +129,6 @@ const FirecrawlNode: FC<FirecrawlNodeProps> = ({ data, id: nodeId }) => {
   useEffect(() => {
     updateNodeInternals(nodeId);
   }, [nodeId, outputHandles, updateNodeInternals]);
-
-  const addUrl = () => {
-    const currentUrls = form.getValues("urls");
-    form.setValue("urls", [...currentUrls, ""]);
-  };
-
-  const removeUrl = (index: number) => {
-    const currentUrls = form.getValues("urls");
-    form.setValue(
-      "urls",
-      currentUrls.filter((_, i) => i !== index),
-    );
-  };
 
   return (
     <BaseNode
@@ -115,62 +162,22 @@ const FirecrawlNode: FC<FirecrawlNodeProps> = ({ data, id: nodeId }) => {
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
-                name="crawlerType"
+                name="advancedSettings"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Crawler Type</FormLabel>
-                    <AppSelect
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      choices={[
-                        { value: "crawl", label: "Crawl" },
-                        { value: "scrape", label: "Scrape" },
-                      ]}
-                    />
-                    <FormMessage />
-                  </FormItem>
+                  <FirecrawlAdvancedSettingsDialog
+                    data={field.value}
+                    onChange={(values: typeof field.value) => {
+                      field.onChange(values);
+                    }}
+                  >
+                    <Button variant="outline" size="xs" type="button">
+                      Advanced settings
+                    </Button>
+                  </FirecrawlAdvancedSettingsDialog>
                 )}
               />
-
-              <div className="space-y-2">
-                <FormLabel>URLs</FormLabel>
-                {form.getValues("urls").map((_, index) => (
-                  <FormField
-                    key={index}
-                    control={form.control}
-                    name={`urls.${index}`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <div className="flex gap-2">
-                          <Input {...field} placeholder="Enter URL" />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => removeUrl(index)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                ))}
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addUrl}
-                  className="w-full"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add URL
-                </Button>
-              </div>
             </form>
           </Form>
         </div>
