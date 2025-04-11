@@ -142,6 +142,14 @@ export const availableNodes: AvailableNode[] = [
   },
   {
     category: "agent-tools",
+    type: "sonar-search-tool",
+    name: "Sonar by Perplexity",
+    description: "Use Perplexity's Sonar API for advanced search and analysis",
+    logo: <Perplexity width={20} height={20} />,
+    commingSoon: false,
+  },
+  {
+    category: "agent-tools",
     type: "http-tool",
     name: "HTTP Client",
     description: "Allow the AI agent make HTTP requests",
@@ -231,13 +239,5 @@ export const availableNodes: AvailableNode[] = [
     description: "Crawl or scrape web pages using Firecrawl",
     logo: <Firecrawl width={20} height={20} />,
     commingSoon: true,
-  },
-  {
-    category: "agent-tools",
-    type: "sonar-search-tool",
-    name: "Sonar by Perplexity",
-    description: "Use Perplexity's Sonar API for advanced search and analysis",
-    logo: <Perplexity width={20} height={20} />,
-    commingSoon: false,
   },
 ] as const;
