@@ -1,4 +1,5 @@
 import { BaseHandle } from "@/components/base-handle";
+import { Brave } from "@/components/logos/brave";
 import { OpenAI } from "@/components/logos/openai";
 import { PostgresLogo } from "@/components/logos/postgres";
 import { ProviderLogo } from "@/components/logos/provider-logo";
@@ -160,6 +161,14 @@ const NodeHeader: FC<{
         <BaseNodeHeader
           title="Postgres query tool"
           logo={<PostgresLogo className="w-4 h-4" />}
+        />
+      );
+
+    case "brave-search-tool":
+      return (
+        <BaseNodeHeader
+          title="Brave Search"
+          logo={<Brave width={20} height={20} />}
         />
       );
 

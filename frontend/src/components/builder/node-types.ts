@@ -9,6 +9,8 @@ export const ToolNodeTypes = [
   "confluence-tool",
   "airtable-tool",
   "slack-tool",
+  "firecrawl-tool",
+  "brave-search-tool",
 ] as const;
 export const UtilityNodeTypes = ["local-memory", "model-openai"] as const;
 

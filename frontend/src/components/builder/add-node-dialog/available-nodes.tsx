@@ -1,6 +1,8 @@
 import { Airtable } from "@/components/logos/airtable";
+import { Brave } from "@/components/logos/brave";
 import { Confluence } from "@/components/logos/confluence";
 import { E2B } from "@/components/logos/e2b";
+import { Firecrawl } from "@/components/logos/firecrawl";
 import { Notion } from "@/components/logos/notion";
 import { PostgresLogo } from "@/components/logos/postgres";
 import { Slack } from "@/components/logos/slack";
@@ -131,6 +133,14 @@ export const availableNodes: AvailableNode[] = [
   },
   {
     category: "agent-tools",
+    type: "brave-search-tool",
+    name: "Brave Search",
+    description: "Use Brave Search API to perform web searches",
+    logo: <Brave width={20} height={20} />,
+    commingSoon: false,
+  },
+  {
+    category: "agent-tools",
     type: "http-tool",
     name: "HTTP Client",
     description: "Allow the AI agent make HTTP requests",
@@ -211,6 +221,14 @@ export const availableNodes: AvailableNode[] = [
     description:
       "Send messages to Slack channels and interact with Slack workspaces",
     logo: <Slack width={40} height={40} />,
+    commingSoon: true,
+  },
+  {
+    category: "agent-tools",
+    type: "firecrawl-tool",
+    name: "Firecrawl",
+    description: "Crawl or scrape web pages using Firecrawl",
+    logo: <Firecrawl width={20} height={20} />,
     commingSoon: true,
   },
 ] as const;

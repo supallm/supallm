@@ -20,15 +20,6 @@ const (
 	AuthProviderProviderSupabase AuthProviderProvider = "supabase"
 )
 
-// Defines values for ProviderType.
-const (
-	Anthropic ProviderType = "anthropic"
-	E2b       ProviderType = "e2b"
-	Mistral   ProviderType = "mistral"
-	Ollama    ProviderType = "ollama"
-	Openai    ProviderType = "openai"
-)
-
 // Defines values for UpdateAuthRequestProvider.
 const (
 	UpdateAuthRequestProviderClerk    UpdateAuthRequestProvider = "clerk"
@@ -125,7 +116,7 @@ type Project struct {
 }
 
 // ProviderType defines model for ProviderType.
-type ProviderType string
+type ProviderType = string
 
 // TriggerWorkflowRequest defines model for TriggerWorkflowRequest.
 type TriggerWorkflowRequest struct {

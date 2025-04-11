@@ -13,7 +13,9 @@ export type ToolType =
   | "discord_notifier"
   | "http_request"
   | "sdk-notifier-tool"
-  | "postgres-query-tool";
+  | "postgres-query-tool"
+  | "brave-search-tool"
+  | "sonar-search-tool";
 
 type Base = {
   id: string;
@@ -66,12 +68,35 @@ export interface PostgresQuery extends Base {
   };
 }
 
+export interface BraveSearch extends Base {
+  type: "brave-search-tool";
+  config: {
+    apiKey: string;
+    endpoint?: string;
+  };
+}
+
+export interface SonarSearch extends Base {
+  type: "sonar-search-tool";
+  config: {
+    apiKey: string;
+    model: string;
+    temperature?: number;
+    maxTokens?: number;
+    searchDomainFilter?: string[];
+    searchRecencyFilter?: string;
+    returnRelatedQuestions?: boolean;
+  };
+}
+
 export type ToolConfig =
   | Discord
   | Http
   | OpenAICompletion
   | SDKNotifier
-  | PostgresQuery;
+  | PostgresQuery
+  | BraveSearch
+  | SonarSearch;
 
 export type ToolOutput = string;
 

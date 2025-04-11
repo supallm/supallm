@@ -14,7 +14,7 @@ func queryCredentialToDTO(credential query.Credential) gen.Credential {
 		Id:        credential.ID,
 		Name:      credential.Name,
 		ApiKey:    credential.ObfuscatedAPIKey,
-		Provider:  gen.ProviderType(credential.Provider),
+		Provider:  credential.Provider,
 		CreatedAt: credential.CreatedAt,
 		UpdatedAt: credential.UpdatedAt,
 	}

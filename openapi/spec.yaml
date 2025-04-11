@@ -571,12 +571,6 @@ components:
 
     ProviderType:
       type: string
-      enum:
-        - openai
-        - anthropic
-        - mistral
-        - ollama
-        - e2b
 
     Credential:
       type: object

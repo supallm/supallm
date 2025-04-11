@@ -168,8 +168,8 @@ export const Sheets: FC<{ width: number; height: number }> = ({
           y2="50.5388"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stopColor="#263238" stop-opacity="0.2" />
-          <stop offset="1" stopColor="#263238" stop-opacity="0.02" />
+          <stop stopColor="#263238" stopOpacity="0.2" />
+          <stop offset="1" stopColor="#263238" stopOpacity="0.02" />
         </linearGradient>
         <radialGradient
           id="paint1_radial_1:52"
@@ -179,8 +179,8 @@ export const Sheets: FC<{ width: number; height: number }> = ({
           gradientUnits="userSpaceOnUse"
           gradientTransform="translate(3.48187 3.36121) scale(113.917)"
         >
-          <stop stopColor="white" stop-opacity="0.1" />
-          <stop offset="1" stopColor="white" stop-opacity="0" />
+          <stop stopColor="white" stopOpacity="0.1" />
+          <stop offset="1" stopColor="white" stopOpacity="0" />
         </radialGradient>
       </defs>
     </svg>
