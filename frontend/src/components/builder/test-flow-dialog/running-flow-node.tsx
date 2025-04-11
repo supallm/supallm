@@ -1,6 +1,7 @@
 import { BaseHandle } from "@/components/base-handle";
 import { Brave } from "@/components/logos/brave";
 import { OpenAI } from "@/components/logos/openai";
+import { Perplexity } from "@/components/logos/perplexity";
 import { PostgresLogo } from "@/components/logos/postgres";
 import { ProviderLogo } from "@/components/logos/provider-logo";
 import { setInspectingNode } from "@/core/store/flow";
@@ -120,7 +121,7 @@ const NodeHeader: FC<{
           <div className="shrink-0">
             <OpenAI width={10} height={10} />
           </div>
-          <span className="font-medium text-sm">OpenAI LLM as tool</span>
+          <span className="font-medium text-sm">OpenAI LLM</span>
         </>
       );
 
@@ -144,7 +145,7 @@ const NodeHeader: FC<{
       return (
         <>
           <Network className="w-4 h-4" />
-          <span className="font-medium text-sm">HTTP tool</span>
+          <span className="font-medium text-sm">HTTP</span>
         </>
       );
 
@@ -152,14 +153,14 @@ const NodeHeader: FC<{
       return (
         <>
           <MessageCircle className="w-4 h-4" />
-          <span className="font-medium text-sm">SDK notifier tool</span>
+          <span className="font-medium text-sm">SDK notifier</span>
         </>
       );
 
     case "postgres-query-tool":
       return (
         <BaseNodeHeader
-          title="Postgres query tool"
+          title="Postgres query"
           logo={<PostgresLogo className="w-4 h-4" />}
         />
       );
@@ -169,6 +170,14 @@ const NodeHeader: FC<{
         <BaseNodeHeader
           title="Brave Search"
           logo={<Brave width={20} height={20} />}
+        />
+      );
+
+    case "sonar-search-tool":
+      return (
+        <BaseNodeHeader
+          title="Sonar by Perplexity"
+          logo={<Perplexity width={20} height={20} />}
         />
       );
 

@@ -21,6 +21,14 @@ export const ProviderModels: Record<AIProviderType, Readonly<string[]>> = {
   azure: [],
   mistral: MistralModels,
   ollama: [],
+  perplexity: [
+    "sonar-deep-research",
+    "sonar-reasoning-pro",
+    "sonar-reasoning",
+    "sonar-pro",
+    "sonar",
+    "r1-1776",
+  ],
 };
 
 export const SelectModel: FC<{

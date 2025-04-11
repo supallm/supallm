@@ -24,7 +24,7 @@ export const CredentialChoiceCard: FC<CredentialChoiceCardProps> = ({
   return (
     <Card
       className={cn(
-        "bg-gradient-to-bl from-green-50 via-white to-gray-50 hover:scale-101 transition-all duration-300 cursor-pointer",
+        "bg-gradient-to-bl from-green-50 via-white to-gray-50 hover:scale-101 transition-all duration-300 cursor-pointer justify-between",
         commingSoon ? "opacity-50 cursor-default" : "",
       )}
     >

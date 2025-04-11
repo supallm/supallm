@@ -4,6 +4,7 @@ import { Confluence } from "@/components/logos/confluence";
 import { E2B } from "@/components/logos/e2b";
 import { Firecrawl } from "@/components/logos/firecrawl";
 import { Notion } from "@/components/logos/notion";
+import { Perplexity } from "@/components/logos/perplexity";
 import { PostgresLogo } from "@/components/logos/postgres";
 import { Slack } from "@/components/logos/slack";
 import {
@@ -230,5 +231,13 @@ export const availableNodes: AvailableNode[] = [
     description: "Crawl or scrape web pages using Firecrawl",
     logo: <Firecrawl width={20} height={20} />,
     commingSoon: true,
+  },
+  {
+    category: "agent-tools",
+    type: "sonar-search-tool",
+    name: "Sonar by Perplexity",
+    description: "Use Perplexity's Sonar API for advanced search and analysis",
+    logo: <Perplexity width={20} height={20} />,
+    commingSoon: false,
   },
 ] as const;

@@ -322,6 +322,7 @@ export const RunningFlow: FC<{
       "e2b-code-interpreter-tool": RunningFlowNode,
       "brave-search-tool": RunningFlowNode,
       "firecrawl-tool": RunningFlowNode,
+      "sonar-search-tool": RunningFlowNode,
     }),
     [],
   );

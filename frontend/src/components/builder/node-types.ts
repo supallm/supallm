@@ -11,6 +11,7 @@ export const ToolNodeTypes = [
   "slack-tool",
   "firecrawl-tool",
   "brave-search-tool",
+  "sonar-search-tool",
 ] as const;
 export const UtilityNodeTypes = ["local-memory", "model-openai"] as const;
 

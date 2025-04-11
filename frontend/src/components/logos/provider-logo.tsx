@@ -11,6 +11,7 @@ import { Mistral } from "./mistral";
 import { Notion } from "./notion";
 import { Ollama } from "./ollama";
 import { OpenAI } from "./openai";
+import { Perplexity } from "./perplexity";
 import { PostgresLogo } from "./postgres";
 import { Slack } from "./slack";
 
@@ -28,7 +29,8 @@ export type ProviderLogoName =
   | "airtable"
   | "slack"
   | "firecrawl"
-  | "brave";
+  | "brave"
+  | "perplexity";
 
 export const ProviderLogo: FC<{
   name: ProviderLogoName;
@@ -64,6 +66,8 @@ export const ProviderLogo: FC<{
       return <Firecrawl width={width} height={height} />;
     case "brave":
       return <Brave width={width} height={height} />;
+    case "perplexity":
+      return <Perplexity width={width} height={height} />;
     default:
       return null;
   }

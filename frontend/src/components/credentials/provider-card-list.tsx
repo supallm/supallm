@@ -162,6 +162,12 @@ export const ProviderInfoMap: Record<
     ),
     apiKeyPlaceholder: "Enter your Brave Search API key",
   },
+  perplexity: {
+    name: "Perplexity",
+    description: "Use the Perplexity API to access woldwide knowledge",
+    logo: <ProviderLogo name="perplexity" width={30} height={30} />,
+    commingSoon: false,
+  },
 } as const;
 
 export const ProviderCardList: FC<{

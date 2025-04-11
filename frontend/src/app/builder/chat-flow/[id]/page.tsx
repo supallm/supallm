@@ -58,6 +58,7 @@ import FirecrawlNode from "@/components/builder/nodes/agent-tools/firecrawl-tool
 import notionDatabaseTool from "@/components/builder/nodes/agent-tools/notion-database-tool/notion-database-tool";
 import postgresQueryTool from "@/components/builder/nodes/agent-tools/postgres-query-tool/postgres-query-tool";
 import SlackTool from "@/components/builder/nodes/agent-tools/slack-tool/slack-tool";
+import sonarToolNode from "@/components/builder/nodes/agent-tools/sonar-search-tool/sonar-search-tool-node";
 import { useCallback, useEffect, useMemo } from "react";
 
 const ChatFlowPage = () => {
@@ -190,6 +191,7 @@ const ChatFlowPage = () => {
       "slack-tool": SlackTool,
       "firecrawl-tool": FirecrawlNode,
       "brave-search-tool": BraveSearchTool,
+      "sonar-search-tool": sonarToolNode,
     }),
     [],
   );

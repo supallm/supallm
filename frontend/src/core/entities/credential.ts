@@ -5,6 +5,7 @@ export const AIProviderTypes = [
   "google",
   "azure",
   "ollama",
+  "perplexity",
 ] as const;
 
 export type AIProviderType = (typeof AIProviderTypes)[number];
@@ -23,6 +24,7 @@ export const ProviderTypes = [
   "slack",
   "firecrawl",
   "brave",
+  "perplexity",
 ] as const;
 
 export type ProviderType = (typeof ProviderTypes)[number];
@@ -50,6 +52,7 @@ export const ProviderTypeLabelMap: Record<ProviderType, string> = {
   slack: "Slack",
   firecrawl: "Firecrawl",
   brave: "Brave Search",
+  perplexity: "Perplexity",
 } as const;
 
 export const CredentialLabel = (name: ProviderType) => {
