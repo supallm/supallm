@@ -4,7 +4,6 @@ import (
 	"context"
 	"log/slog"
 	"os"
-	"time"
 
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill-redisstream/pkg/redisstream"
@@ -24,8 +23,8 @@ const (
 	// Internal topics
 	InternalEventsTopic = "workflows:internal:events" // merged workflow events for clients stream
 
-	CloseTimeout = 10 * time.Second
-	MaxQueueLen  = 400
+	maxQueueLen         = 400
+	outputChannelBuffer = 2500
 )
 
 type EventRouter struct {
@@ -52,7 +51,10 @@ func CreateRouter(config Config) *EventRouter {
 	useMiddlewares(router, config.Logger)
 
 	internalPubSub := gochannel.NewGoChannel(
-		gochannel.Config{},
+		gochannel.Config{
+			OutputChannelBuffer:            outputChannelBuffer,
+			BlockPublishUntilSubscriberAck: true,
+		},
 		config.Logger,
 	)
 
@@ -62,7 +64,7 @@ func CreateRouter(config Config) *EventRouter {
 		os.Exit(1)
 	}
 
-	runnerPublisher, err := createPublisher(config, MaxQueueLen)
+	runnerPublisher, err := createPublisher(config, maxQueueLen)
 	if err != nil {
 		slog.Error("error creating redis stream runner publisher", "error", err)
 		os.Exit(1)
