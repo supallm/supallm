@@ -22,6 +22,7 @@ export class BraveSearchTool implements Tool<"brave-search-tool"> {
     query: z.string().describe("The search query to execute"),
     count: z
       .number()
+      .max(20)
       .optional()
       .describe("Number of results to return (max 20)"),
     offset: z.number().optional().describe("Offset for pagination"),
