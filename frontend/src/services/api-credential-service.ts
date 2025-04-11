@@ -42,7 +42,7 @@ export class ApiCredentialService implements CredentialService {
     return credentials.map((credential) => ({
       id: credential.id,
       name: credential.name,
-      providerType: credential.provider,
+      providerType: credential.provider as ProviderType,
       apiKeyPreview: credential.apiKey,
       projectId: projectId,
     }));
