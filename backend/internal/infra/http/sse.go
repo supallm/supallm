@@ -71,7 +71,6 @@ func (p *workflowSSEAdapter) InitialStreamResponse(w http.ResponseWriter, r *htt
 		return nil, false
 	}
 
-	// Récupérer les events historiques
 	events, err := p.listWorkflowEvents.Handle(r.Context(), query.ListenWorkflowQuery{
 		TriggerID:  triggerID,
 		WorkflowID: model.WorkflowID(params.workflowID),
@@ -123,6 +122,13 @@ func (j workflowSSEMarshaller) Marshal(_ context.Context, payload any) (watermil
 	data, err := json.Marshal(payload)
 	if err != nil {
 		return watermillHTTP.ServerSentEvent{}, err
+	}
+
+	if _, ok := payload.([]event.WorkflowEventMessage); ok {
+		return watermillHTTP.ServerSentEvent{
+			Event: "resume",
+			Data:  data,
+		}, nil
 	}
 
 	return watermillHTTP.ServerSentEvent{
