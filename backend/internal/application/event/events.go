@@ -7,6 +7,7 @@ import (
 )
 
 type WorkflowEventMessage struct {
+	Sequence   uint64                  `json:"sequence,omitempty"`
 	Type       model.WorkflowEventType `json:"type"`
 	WorkflowID model.WorkflowID        `json:"workflowId"`
 	TriggerID  uuid.UUID               `json:"triggerId"`

@@ -3,10 +3,12 @@ package application
 import (
 	"context"
 	"log/slog"
+	"time"
 
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/supallm/core/internal/adapters/events"
 	"github.com/supallm/core/internal/adapters/execution"
 	"github.com/supallm/core/internal/adapters/project"
 	"github.com/supallm/core/internal/adapters/runner"
@@ -17,6 +19,10 @@ import (
 	"github.com/supallm/core/internal/pkg/config"
 	"github.com/supallm/core/internal/pkg/postgres"
 	"github.com/supallm/core/internal/pkg/redis"
+)
+
+const (
+	eventTTL = time.Minute * 5
 )
 
 type App struct {
@@ -57,8 +63,8 @@ type Queries struct {
 	ListCredentials query.ListCredentialsHandler
 	GetCredential   query.GetCredentialHandler
 
-	ListenWorkflow query.ListenWorkflowHandler
-	GetUser        query.GetUserHandler
+	ListenWorkflowEvents query.ListenWorkflowEventsHandler
+	GetUser              query.GetUserHandler
 
 	GetWorkflowExecutions query.GetWorkflowExecutionsHandler
 	GetTriggerExecution   query.GetTriggerExecutionHandler
@@ -78,10 +84,16 @@ func New(
 	if err != nil {
 		return nil, err
 	}
+	redisEvents, err := redis.NewClient(conf.Redis, redis.DBEvents)
+	if err != nil {
+		return nil, err
+	}
 
+	eventRepo := events.NewRedisEventStore(redisEvents, eventTTL)
 	router := event.CreateRouter(event.Config{
 		WorkflowsRedis: redisWorkflows,
 		Logger:         logger,
+		EventStore:     eventRepo,
 	})
 
 	projectRepo := project.NewRepository(ctx, pool)
@@ -121,8 +133,8 @@ func New(
 			ListWorkflows: query.NewListWorkflowsHandler(projectRepo),
 			GetWorkflow:   query.NewGetWorkflowHandler(projectRepo),
 
-			ListenWorkflow: query.NewListenWorkflowHandler(projectRepo),
-			GetUser:        query.NewGetUserHandler(userRepo),
+			ListenWorkflowEvents: query.NewListenWorkflowEventsHandler(eventRepo),
+			GetUser:              query.NewGetUserHandler(userRepo),
 
 			GetWorkflowExecutions: query.NewGetWorkflowExecutionsHandler(executionRepo),
 			GetTriggerExecution:   query.NewGetTriggerExecutionHandler(executionRepo),
