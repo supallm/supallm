@@ -28,6 +28,7 @@
     "@langchain/mistralai": "^0.2.0",
     "@langchain/ollama": "^0.2.0",
     "@langchain/openai": "^0.4.4",
+    "@mendable/firecrawl-js": "^1.22.1",
     "@node-redis/json": "^1.0.2",
     "dotenv": "^16.4.7",
     "ioredis": "^5.6.0",

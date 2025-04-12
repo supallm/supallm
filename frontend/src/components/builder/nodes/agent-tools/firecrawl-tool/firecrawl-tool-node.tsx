@@ -90,7 +90,11 @@ const FirecrawlNode: FC<FirecrawlNodeProps> = ({ data, id: nodeId }) => {
     defaultValues: {
       credentialId: data.credentialId ?? "",
       advancedSettings: {
-        jsonOptionsPrompt: data.jsonOptionsPrompt ?? null,
+        // We default to JSON because it's very easy to exceed content length limits with other formats.
+        formats: data.formats ?? ["json"],
+        jsonOptionsPrompt:
+          data.jsonOptionsPrompt ??
+          `Return a structured output of the page in the following JSON format: { "title": string, "content": string, "keyTakeaways": string[] }`,
         country: data.country ?? null,
         url: data.url ?? null,
         mobile: data.mobile ?? false,
@@ -98,8 +102,7 @@ const FirecrawlNode: FC<FirecrawlNodeProps> = ({ data, id: nodeId }) => {
         removeBase64Images: data.removeBase64Images ?? false,
         blockAds: data.blockAds ?? false,
         proxy: data.proxy ?? "basic",
-        formats: data.formats ?? [],
-        onlyMainContent: data.onlyMainContent ?? false,
+        onlyMainContent: data.onlyMainContent ?? true,
         waitFor: data.waitFor ?? null,
       },
     },

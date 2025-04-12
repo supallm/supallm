@@ -15,7 +15,8 @@ export type ToolType =
   | "sdk-notifier-tool"
   | "postgres-query-tool"
   | "brave-search-tool"
-  | "sonar-search-tool";
+  | "sonar-search-tool"
+  | "firecrawl-scraper-tool";
 
 type Base = {
   id: string;
@@ -76,6 +77,34 @@ export interface BraveSearch extends Base {
   };
 }
 
+export interface FirecrawlScraper extends Base {
+  type: "firecrawl-scraper-tool";
+  config: {
+    apiKey: string;
+    jsonOptionsPrompt?: string | null;
+    country?: string | null;
+    url?: string | null;
+    mobile?: boolean | null;
+    timeout?: number | null;
+    removeBase64Images?: boolean | null;
+    blockAds?: boolean | null;
+    proxy?: "basic" | "stealth" | null;
+    formats?:
+      | (
+          | "markdown"
+          | "html"
+          | "rawHtml"
+          | "links"
+          | "screenshot"
+          | "screenshot@fullPage"
+          | "json"
+        )[]
+      | null;
+    onlyMainContent?: boolean | null;
+    waitFor?: number | null;
+  };
+}
+
 export interface SonarSearch extends Base {
   type: "sonar-search-tool";
   config: {
@@ -96,7 +125,8 @@ export type ToolConfig =
   | SDKNotifier
   | PostgresQuery
   | BraveSearch
-  | SonarSearch;
+  | SonarSearch
+  | FirecrawlScraper;
 
 export type ToolOutput = string;
 

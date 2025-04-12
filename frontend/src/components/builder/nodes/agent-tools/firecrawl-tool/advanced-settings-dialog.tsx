@@ -1,3 +1,4 @@
+import { AlertMessage } from "@/components/alert-message";
 import { AppSelect } from "@/components/app-select";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,47 +21,61 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FC, PropsWithChildren, useState } from "react";
+import { FC, PropsWithChildren, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { FirecrawlAdvancedSettings } from "./firecrawl-tool-node";
 
-const formSchema = z.object({
-  jsonOptionsPrompt: z.string().nullable(),
-  country: z.string().nullable(),
-  url: z
-    .string()
-    .refine(
-      (value) =>
-        value.length === 0 || z.string().url().safeParse(value).success,
-      {
-        message: "The URL is invalid",
-      },
-    )
-    .nullable(),
-  mobile: z.boolean().nullable(),
-  timeout: z.number().nullable(),
-  removeBase64Images: z.boolean().nullable(),
-  blockAds: z.boolean().nullable(),
-  proxy: z.enum(["basic", "stealth"]).nullable(),
-  formats: z
-    .array(
-      z.enum([
-        "markdown",
-        "html",
-        "rawHtml",
-        "links",
-        "screenshot",
-        "screenshot@fullPage",
-        "json",
-      ]),
-    )
-    .nullable(),
-  onlyMainContent: z.boolean().nullable(),
-  waitFor: z.number().nullable(),
-});
+const formSchema = z
+  .object({
+    jsonOptionsPrompt: z.string().nullable(),
+    country: z.string().nullable(),
+    url: z
+      .string()
+      .refine(
+        (value) =>
+          value.length === 0 || z.string().url().safeParse(value).success,
+        {
+          message: "The URL is invalid",
+        },
+      )
+      .nullable(),
+    mobile: z.boolean().nullable(),
+    timeout: z.number().nullable(),
+    removeBase64Images: z.boolean().nullable(),
+    blockAds: z.boolean().nullable(),
+    proxy: z.enum(["basic", "stealth"]).nullable(),
+    formats: z
+      .array(
+        z.enum([
+          "markdown",
+          "html",
+          "rawHtml",
+          "links",
+          "screenshot",
+          "screenshot@fullPage",
+          "json",
+        ]),
+      )
+      .nullable(),
+    onlyMainContent: z.boolean().nullable(),
+    waitFor: z.number().nullable(),
+  })
+  .refine(
+    (data) => {
+      if (data.formats?.includes("json") && !data.jsonOptionsPrompt) {
+        return false;
+      }
+      return true;
+    },
+    {
+      path: ["jsonOptionsPrompt"],
+      message: "The JSON options prompt is required when the format is JSON",
+    },
+  );
 
 export const FirecrawlAdvancedSettingsDialog: FC<
   PropsWithChildren<{
@@ -100,6 +115,14 @@ export const FirecrawlAdvancedSettingsDialog: FC<
     await form.handleSubmit(onSubmit)();
   }
 
+  const formats = form.watch("formats");
+
+  useEffect(() => {
+    if (!formats?.includes("json")) {
+      form.setValue("jsonOptionsPrompt", null);
+    }
+  }, [formats]);
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>{children}</SheetTrigger>
@@ -118,7 +141,7 @@ export const FirecrawlAdvancedSettingsDialog: FC<
                 name="url"
                 render={() => (
                   <FormItem>
-                    <FormLabel>URL to scrape</FormLabel>
+                    <FormLabel>Force URL to scrape</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="e.g. 'https://example.com'"
@@ -136,24 +159,64 @@ export const FirecrawlAdvancedSettingsDialog: FC<
               />
               <FormField
                 control={form.control}
-                name="jsonOptionsPrompt"
-                render={() => (
+                name="formats"
+                render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Json options prompt</FormLabel>
+                    <FormLabel>Format</FormLabel>
                     <FormControl>
-                      <Textarea
-                        placeholder="e.g. 'Extract the title and the content of the page in the following JSON format: { title: string, content: string }'"
-                        {...form.register("jsonOptionsPrompt")}
+                      <AppSelect
+                        onValueChange={(value) => field.onChange([value])}
+                        defaultValue={field.value?.[0] ?? "markdown"}
+                        choices={[
+                          { value: "markdown", label: "Markdown" },
+                          { value: "html", label: "HTML" },
+                          { value: "rawHtml", label: "Raw HTML" },
+                          { value: "links", label: "Links" },
+                          { value: "json", label: "JSON" },
+                        ]}
                       />
                     </FormControl>
                     <FormDescription>
-                      Use this natural language prompt to specify how the
-                      Firecrawl API should extract the data.
+                      Specify the format of your output
                     </FormDescription>
                     <FormMessage />
+
+                    {!!formats?.length &&
+                      ["rawHtml", "html", "markdown"].includes(formats[0]) && (
+                        <AlertMessage
+                          size="sm"
+                          message="We recommend to use the JSON format for most use cases because markdown, html and rawHtml often result in exceeding the context length limit of the agent."
+                          variant="warning"
+                        />
+                      )}
                   </FormItem>
                 )}
               />
+
+              {formats?.includes("json") && (
+                <FormField
+                  control={form.control}
+                  name="jsonOptionsPrompt"
+                  render={() => (
+                    <FormItem>
+                      <FormLabel>Json options prompt</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="e.g. 'Extract the title and the content of the page in the following JSON format: { title: string, content: string }'"
+                          {...form.register("jsonOptionsPrompt")}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Use this natural language prompt to specify how the
+                        Firecrawl API should extract the data. We recommend to
+                        ask for content summarization in order to avoid
+                        exceeding the content length limit of the agent.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
               <FormField
                 control={form.control}
                 name="country"
@@ -181,15 +244,9 @@ export const FirecrawlAdvancedSettingsDialog: FC<
                   <FormItem>
                     <FormLabel>Mobile</FormLabel>
                     <FormControl>
-                      <AppSelect
-                        onValueChange={(value) =>
-                          field.onChange(Boolean(value))
-                        }
-                        defaultValue={field.value?.toString() ?? "false"}
-                        choices={[
-                          { value: "false", label: "False (default)" },
-                          { value: "true", label: "True" },
-                        ]}
+                      <Switch
+                        checked={field.value ?? false}
+                        onCheckedChange={(value) => field.onChange(value)}
                       />
                     </FormControl>
                     <FormDescription>
@@ -208,15 +265,9 @@ export const FirecrawlAdvancedSettingsDialog: FC<
                   <FormItem>
                     <FormLabel>Block ads</FormLabel>
                     <FormControl>
-                      <AppSelect
-                        onValueChange={(value) =>
-                          field.onChange(Boolean(value))
-                        }
-                        defaultValue={field.value?.toString() ?? "true"}
-                        choices={[
-                          { value: "true", label: "True (default)" },
-                          { value: "false", label: "False" },
-                        ]}
+                      <Switch
+                        checked={field.value ?? true}
+                        onCheckedChange={(value) => field.onChange(value)}
                       />
                     </FormControl>
                     <FormDescription>
@@ -230,20 +281,35 @@ export const FirecrawlAdvancedSettingsDialog: FC<
               />
               <FormField
                 control={form.control}
+                name="removeBase64Images"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Remove base64 images</FormLabel>
+                    <FormControl>
+                      <Switch
+                        checked={field.value ?? false}
+                        onCheckedChange={(value) => field.onChange(value)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                    <FormDescription>
+                      Removes all base 64 images from the output, which may be
+                      overwhelmingly long. The image's alt text remains in the
+                      output, but the URL is replaced with a placeholder.
+                    </FormDescription>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
                 name="onlyMainContent"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Only main content</FormLabel>
                     <FormControl>
-                      <AppSelect
-                        onValueChange={(value) =>
-                          field.onChange(Boolean(value))
-                        }
-                        defaultValue={field.value?.toString() ?? "true"}
-                        choices={[
-                          { value: "true", label: "True (default)" },
-                          { value: "false", label: "False" },
-                        ]}
+                      <Switch
+                        checked={field.value ?? true}
+                        onCheckedChange={(value) => field.onChange(value)}
                       />
                     </FormControl>
                     <FormDescription>
@@ -293,64 +359,6 @@ export const FirecrawlAdvancedSettingsDialog: FC<
                     <FormDescription>
                       Timeout in milliseconds for the request. (Default: 30000)
                     </FormDescription>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="removeBase64Images"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Remove base64 images</FormLabel>
-                    <FormControl>
-                      <AppSelect
-                        onValueChange={(value) =>
-                          field.onChange(Boolean(value))
-                        }
-                        defaultValue={field.value?.toString() ?? "false"}
-                        choices={[
-                          { value: "false", label: "False (default)" },
-                          { value: "true", label: "True" },
-                        ]}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                    <FormDescription>
-                      Removes all base 64 images from the output, which may be
-                      overwhelmingly long. The image's alt text remains in the
-                      output, but the URL is replaced with a placeholder.
-                    </FormDescription>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="formats"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Format</FormLabel>
-                    <FormControl>
-                      <AppSelect
-                        onValueChange={(value) => field.onChange([value])}
-                        defaultValue={field.value?.[0] ?? "json"}
-                        choices={[
-                          { value: "markdown", label: "Markdown" },
-                          { value: "html", label: "HTML" },
-                          { value: "rawHtml", label: "Raw HTML" },
-                          { value: "links", label: "Links" },
-                          { value: "screenshot", label: "Screenshot" },
-                          {
-                            value: "screenshot@fullPage",
-                            label: "Screenshot (full page)",
-                          },
-                          { value: "json", label: "JSON" },
-                        ]}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Specify the format you want to include in the output.
-                    </FormDescription>
-                    <FormMessage />
                   </FormItem>
                 )}
               />

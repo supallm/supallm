@@ -321,7 +321,7 @@ export const RunningFlow: FC<{
       "slack-tool": RunningFlowNode,
       "e2b-code-interpreter-tool": RunningFlowNode,
       "brave-search-tool": RunningFlowNode,
-      "firecrawl-tool": RunningFlowNode,
+      "firecrawl-scraper-tool": RunningFlowNode,
       "sonar-search-tool": RunningFlowNode,
     }),
     [],
