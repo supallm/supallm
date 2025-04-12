@@ -230,8 +230,7 @@ export const FirecrawlAdvancedSettingsDialog: FC<
                       />
                     </FormControl>
                     <FormDescription>
-                      ISO 3166-1 alpha-2 country code (e.g., 'US', 'AU', 'DE',
-                      'JP')
+                      ISO 3166-1 alpha-2 country code (e.g., US, AU, DE, JP)
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -287,15 +286,15 @@ export const FirecrawlAdvancedSettingsDialog: FC<
                     <FormLabel>Remove base64 images</FormLabel>
                     <FormControl>
                       <Switch
-                        checked={field.value ?? false}
+                        checked={field.value ?? true}
                         onCheckedChange={(value) => field.onChange(value)}
                       />
                     </FormControl>
                     <FormMessage />
                     <FormDescription>
                       Removes all base 64 images from the output, which may be
-                      overwhelmingly long. The image's alt text remains in the
-                      output, but the URL is replaced with a placeholder.
+                      overwhelmingly long. The image&apos;s alt text remains in
+                      the output, but the URL is replaced with a placeholder.
                     </FormDescription>
                   </FormItem>
                 )}
