@@ -1,5 +1,6 @@
 import { BaseHandle } from "@/components/base-handle";
 import { Brave } from "@/components/logos/brave";
+import { Firecrawl } from "@/components/logos/firecrawl";
 import { OpenAI } from "@/components/logos/openai";
 import { Perplexity } from "@/components/logos/perplexity";
 import { PostgresLogo } from "@/components/logos/postgres";
@@ -181,6 +182,13 @@ const NodeHeader: FC<{
         />
       );
 
+    case "firecrawl-scraper-tool":
+      return (
+        <BaseNodeHeader
+          title="Firecrawl"
+          logo={<Firecrawl width={20} height={20} />}
+        />
+      );
     default:
       return null;
   }
