@@ -41,7 +41,9 @@ func AddHandlers(mux *server.Server, app *application.App) {
 	}
 
 	//nolint:all
-	sseHandler := sseRouter.AddHandler(event.InternalEventsTopic, &workflowSSEAdapter{})
+	sseHandler := sseRouter.AddHandler(event.InternalEventsTopic, &workflowSSEAdapter{
+		listWorkflowEvents: s.app.Queries.ListenWorkflowEvents,
+	})
 	s.server.Router.Get(
 		"/projects/{projectId}/workflows/{workflowId}/listen/{triggerId}",
 		s.listenWorkflowEvents(sseHandler),

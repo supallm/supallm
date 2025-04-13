@@ -53,13 +53,6 @@ type Credential struct {
 	UpdatedAt        time.Time
 }
 
-type WorkflowEvent struct {
-	WorkflowID uuid.UUID
-	TriggerID  uuid.UUID
-	EventType  string
-	Data       map[string]any
-}
-
 type User struct {
 	ID        uuid.UUID
 	Email     string

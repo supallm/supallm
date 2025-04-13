@@ -15,6 +15,7 @@ import (
 const (
 	DBWorkflows  = 0
 	DBExecutions = 1
+	DBEvents     = 3
 
 	maxRetries   = 3
 	poolSize     = 100

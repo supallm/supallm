@@ -2,6 +2,7 @@ package event
 
 import (
 	"context"
+	"encoding/json"
 	"log/slog"
 	"os"
 
@@ -27,6 +28,10 @@ const (
 	outputChannelBuffer = 2500
 )
 
+type EventStore interface {
+	StoreEvent(ctx context.Context, event *WorkflowEventMessage) ([]byte, error)
+}
+
 type EventRouter struct {
 	router             *message.Router
 	InternalSubscriber message.Subscriber
@@ -38,6 +43,7 @@ type EventRouter struct {
 type Config struct {
 	WorkflowsRedis *redis.Client
 	Logger         watermill.LoggerAdapter
+	EventStore     EventStore
 }
 
 func CreateRouter(config Config) *EventRouter {
@@ -83,6 +89,17 @@ func CreateRouter(config Config) *EventRouter {
 				}
 			}()
 
+			var event WorkflowEventMessage
+			if err = json.Unmarshal(msg.Payload, &event); err != nil {
+				return nil, err
+			}
+
+			e, err := config.EventStore.StoreEvent(msg.Context(), &event)
+			if err != nil {
+				return nil, err
+			}
+
+			msg = message.NewMessage(msg.UUID, e)
 			return []*message.Message{msg}, nil
 		},
 	)

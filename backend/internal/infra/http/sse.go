@@ -5,12 +5,16 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"sync"
 
 	watermillHTTP "github.com/ThreeDotsLabs/watermill-http/v2/pkg/http"
 	watermillMsg "github.com/ThreeDotsLabs/watermill/message"
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
+	"github.com/supallm/core/internal/application/domain/model"
 	"github.com/supallm/core/internal/application/event"
+	"github.com/supallm/core/internal/application/query"
 )
 
 func (s *Server) listenWorkflowEvents(next http.Handler) http.HandlerFunc {
@@ -31,15 +35,18 @@ func (s *Server) listenWorkflowEvents(next http.Handler) http.HandlerFunc {
 	}
 }
 
-type connectionParams struct {
-	triggerID  string
-	workflowID string
-	projectID  string
-}
+type (
+	connectionParams struct {
+		triggerID  string
+		workflowID string
+		projectID  string
+	}
 
-type workflowSSEAdapter struct {
-	connections sync.Map // map[*http.Request]*connectionParams
-}
+	workflowSSEAdapter struct {
+		listWorkflowEvents query.ListenWorkflowEventsHandler
+		connections        sync.Map
+	}
+)
 
 func (p *workflowSSEAdapter) InitialStreamResponse(w http.ResponseWriter, r *http.Request) (response any, ok bool) {
 	params := &connectionParams{
@@ -50,11 +57,36 @@ func (p *workflowSSEAdapter) InitialStreamResponse(w http.ResponseWriter, r *htt
 
 	p.connections.Store(r, params)
 
-	return map[string]any{
-		"trigger_id":  params.triggerID,
-		"workflow_id": params.workflowID,
-		"project_id":  params.projectID,
-	}, true
+	fromSequence := uint64(0)
+	if seq := r.URL.Query().Get("sequence"); seq != "" {
+		//nolint
+		if parsed, err := strconv.ParseUint(seq, 10, 64); err == nil {
+			fromSequence = parsed
+		}
+	}
+
+	triggerID, err := uuid.Parse(params.triggerID)
+	if err != nil {
+		slog.Error("error parsing trigger ID", "error", err)
+		return nil, false
+	}
+
+	events, err := p.listWorkflowEvents.Handle(r.Context(), query.ListenWorkflowQuery{
+		TriggerID:  triggerID,
+		WorkflowID: model.WorkflowID(params.workflowID),
+		Sequence:   fromSequence,
+	})
+	if err != nil {
+		slog.Error("error listing workflow events", "error", err)
+		return nil, false
+	}
+
+	go func() {
+		<-r.Context().Done()
+		p.connections.Delete(r)
+	}()
+
+	return events, true
 }
 
 func (p *workflowSSEAdapter) NextStreamResponse(r *http.Request, msg *watermillMsg.Message) (response any, ok bool) {
@@ -90,6 +122,13 @@ func (j workflowSSEMarshaller) Marshal(_ context.Context, payload any) (watermil
 	data, err := json.Marshal(payload)
 	if err != nil {
 		return watermillHTTP.ServerSentEvent{}, err
+	}
+
+	if _, ok := payload.([]event.WorkflowEventMessage); ok {
+		return watermillHTTP.ServerSentEvent{
+			Event: "resume",
+			Data:  data,
+		}, nil
 	}
 
 	return watermillHTTP.ServerSentEvent{
