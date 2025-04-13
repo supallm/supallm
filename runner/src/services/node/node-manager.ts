@@ -1,5 +1,5 @@
 import { Result } from "typescript-result";
-import { Agent } from "../../nodes/agent/agent";
+import { AgentFactory } from "../../nodes/agent";
 import { EntrypointNode } from "../../nodes/base/entrypoint-node";
 import { ResultNode } from "../../nodes/base/result-node";
 import { CodeExecutorNode } from "../../nodes/code-executors/code-executor-node";
@@ -19,6 +19,7 @@ import {
   NodeType,
 } from "../../nodes/types";
 import { logger } from "../../utils/logger";
+
 export class NodeManager {
   private nodes: Map<NodeType, INode> = new Map();
 
@@ -34,7 +35,7 @@ export class NodeManager {
     this.registerNode(new EntrypointNode());
     this.registerNode(new ResultNode());
     this.registerNode(new CodeExecutorNode());
-    this.registerNode(new Agent());
+    this.registerNode(AgentFactory.create());
   }
 
   private registerNode(node: INode): void {

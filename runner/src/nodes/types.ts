@@ -6,6 +6,7 @@ import {
   WorkflowEventType,
 } from "../services/notifier";
 import { ToolConfig } from "../tools/tool.interface";
+import { AgentType } from "./agent";
 
 type LLMProvider =
   | "chat-openai"
@@ -45,7 +46,14 @@ export interface NodeDefinition {
   outputs: Record<string, NodeOutputDef>;
   tools: ToolConfig[] | undefined;
   memory: MemoryConfig;
-  config: Record<string, any>;
+  config: {
+    agentType?: AgentType; // Type d'agent (tool ou react)
+    instructions?: string; // Instructions pour l'agent
+    apiKey: string; // Clé API pour le LLM
+    model: string; // Modèle à utiliser
+    provider: string; // Fournisseur du LLM
+    [key: string]: any; // Autres configurations
+  };
 }
 
 // Type des événements que les nodes peuvent émettre

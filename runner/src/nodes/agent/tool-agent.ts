@@ -1,47 +1,30 @@
-import { ChatAnthropic } from "@langchain/anthropic";
 import {
   AIMessage,
   HumanMessage,
   SystemMessage,
   ToolMessage,
 } from "@langchain/core/messages";
-import { DynamicStructuredTool } from "@langchain/core/tools";
 import { MessagesAnnotation, StateGraph } from "@langchain/langgraph";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
-import { ChatOpenAI } from "@langchain/openai";
 import { Result } from "typescript-result";
-import { z } from "zod";
 import { MemoryRegistry } from "../../memory/memory-registry";
-import { CryptoService } from "../../services/secret/crypto-service";
-import { ToolConfig } from "../../tools";
-import { ToolRegistry } from "../../tools/tool-registry";
 import { logger } from "../../utils/logger";
-import {
-  INode,
-  NodeDefinition,
-  NodeInput,
-  NodeOptions,
-  NodeOutput,
-  NodeType,
-} from "../types";
+import { NodeDefinition, NodeInput, NodeOptions, NodeOutput } from "../types";
+import { BaseAgent } from "./base-agent";
 
-const defaultInstructions = `You are a helpful AI assistant that can analyze the sentiment of text.
+const defaultInstructions = `You are a helpful AI assistant that can use various tools to help users.
 
-When a user provides text for sentiment analysis, you should:
-1. Use the available sentiment analysis tool to analyze the text
-2. Return the result (Positive, Negative, or Neutral)
-3. If you need more context, ask for it politely
+When responding to users:
+1. If you have access to relevant tools that could help answer the query, use them immediately without asking for permission
+2. Start responding while you're using the tools
+3. Incorporate the tool results naturally into your response
+4. Be direct and action-oriented - don't announce what you're going to do, just do it
+5. Never ask for confirmation before using a tool
+6. If you need more context, just use the tools you have to gather it
 
-Do not mention anything about "missing tools" or "tool configuration" to the user - if you have access to the sentiment analysis tool, just use it.`;
+Remember: You have been given these tools for a reason - use them proactively to help the user.`;
 
-export class Agent implements INode {
-  type: NodeType = "ai-agent";
-  private cryptoService: CryptoService;
-
-  constructor() {
-    this.cryptoService = new CryptoService();
-  }
-
+export class ToolAgent extends BaseAgent {
   async execute(
     nodeId: string,
     definition: NodeDefinition,
@@ -70,43 +53,39 @@ export class Agent implements INode {
 
       // Function to handle model calls
       async function callModel(state: typeof MessagesAnnotation.State) {
-        // Create system message
         const systemMsg = new SystemMessage(
           definition.config["instructions"] || defaultInstructions,
         );
 
-        // Check if the last message has tool_calls
-        const lastMessage = state.messages[state.messages.length - 1];
+        const allMessages = state.messages.some(
+          (msg) => msg instanceof SystemMessage,
+        )
+          ? state.messages
+          : [systemMsg, ...state.messages];
 
-        // Only process tool calls from the most recent AI message
+        const lastMessage = state.messages[state.messages.length - 1];
         const toolCalls =
           lastMessage instanceof AIMessage ? lastMessage.tool_calls : undefined;
+
         if (toolCalls && toolCalls.length > 0) {
           const toolResponses = state.messages.filter(
             (msg): msg is ToolMessage => msg instanceof ToolMessage,
           );
 
-          // Check if we have responses for all tool calls in the LAST message
-          const missingToolCalls = toolCalls.filter(
+          const pendingTools = toolCalls.filter(
             (toolCall) =>
               !toolResponses.some(
                 (response) => response.tool_call_id === toolCall.id,
               ),
           );
 
-          if (missingToolCalls.length > 0) {
-            // Still waiting for some tool responses from the last message
-            return { messages: state.messages };
+          if (pendingTools.length === 0) {
+            const response = await model.invoke(allMessages);
+            return { messages: allMessages.concat([response]) };
           }
-        }
 
-        // All tool calls from the last message have been processed
-        // Combine all messages, ensuring system message is first
-        const allMessages = state.messages.some(
-          (msg) => msg instanceof SystemMessage,
-        )
-          ? state.messages
-          : [systemMsg, ...state.messages];
+          return { messages: state.messages };
+        }
 
         const response = await model.invoke(allMessages);
         return { messages: allMessages.concat([response]) };
@@ -121,7 +100,6 @@ export class Agent implements INode {
 
       const app = workflow.compile();
 
-      // Get conversation history
       const [historyMessages, historyError] = (
         await memory.getMessages(options.sessionId, nodeId)
       ).toTuple();
@@ -131,12 +109,10 @@ export class Agent implements INode {
         );
       }
 
-      // Create system message
       const systemMsg = new SystemMessage(
         definition.config["instructions"] || defaultInstructions,
       );
 
-      // Combine history with system message and new input
       const initialMessages = [
         systemMsg,
         ...(historyMessages || []),
@@ -172,7 +148,6 @@ export class Agent implements INode {
           }
         }
 
-        // Save the final conversation turn to memory
         await memory.addMessages(options.sessionId, nodeId, [
           new HumanMessage(inputs["prompt"]),
           new AIMessage(finalResponse),
@@ -193,69 +168,5 @@ export class Agent implements INode {
       return "tools";
     }
     return "__end__";
-  }
-
-  private convertToolsToLangChainFormat(
-    tools: ToolConfig[],
-    options: NodeOptions,
-  ): DynamicStructuredTool<any>[] {
-    return tools.map((toolConfig) => {
-      const [tool, toolError] = ToolRegistry.create(toolConfig).toTuple();
-      if (toolError) {
-        throw toolError;
-      }
-
-      return new DynamicStructuredTool({
-        name: `${tool.name}`,
-        description: tool.description,
-        schema: tool.schema,
-        func: async (params: z.infer<typeof tool.schema>) => {
-          const [result, resultError] = (
-            await tool.run(params, options)
-          ).toTuple();
-          if (resultError) {
-            throw resultError;
-          }
-          return result;
-        },
-      });
-    });
-  }
-
-  private createLLM(
-    definition: NodeDefinition,
-  ): Result<ChatOpenAI | ChatAnthropic, Error> {
-    const [apiKey, decryptedApiKeyError] = this.cryptoService
-      .decrypt(definition.config["apiKey"])
-      .toTuple();
-    if (decryptedApiKeyError) {
-      return Result.error(decryptedApiKeyError);
-    }
-
-    let model = definition.config["model"];
-    if (!model) {
-      return Result.error(new Error("No model provided"));
-    }
-
-    switch (definition.config["provider"]) {
-      case "openai":
-        return Result.ok(
-          new ChatOpenAI({
-            modelName: model,
-            temperature: 0,
-            openAIApiKey: apiKey,
-          }),
-        );
-      case "anthropic":
-        return Result.ok(
-          new ChatAnthropic({
-            modelName: model,
-            temperature: 0,
-            anthropicApiKey: apiKey,
-          }),
-        );
-      default:
-        return Result.error(new Error("Invalid agent LLM provider"));
-    }
   }
 }
