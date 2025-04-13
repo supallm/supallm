@@ -9,7 +9,7 @@ export const ToolNodeTypes = [
   "confluence-tool",
   "airtable-tool",
   "slack-tool",
-  "firecrawl-tool",
+  "firecrawl-scraper-tool",
   "brave-search-tool",
   "sonar-search-tool",
 ] as const;

@@ -189,7 +189,7 @@ const ChatFlowPage = () => {
       "confluence-tool": ConfluenceTool,
       "airtable-tool": AirtableTool,
       "slack-tool": SlackTool,
-      "firecrawl-tool": FirecrawlNode,
+      "firecrawl-scraper-tool": FirecrawlNode,
       "brave-search-tool": BraveSearchTool,
       "sonar-search-tool": sonarToolNode,
     }),

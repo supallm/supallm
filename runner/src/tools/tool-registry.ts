@@ -2,6 +2,7 @@ import { Result } from "typescript-result";
 import { assertUnreachable } from "../utils/type-safety";
 import { BraveSearchTool } from "./brave-search-tool";
 import { DiscordNotifierTool } from "./discord-notifier-tool";
+import { FirecrawlScraperTool } from "./firecrawl-scraper-tool";
 import { HttpTool } from "./http-tool";
 import { OpenAICompletionTool } from "./openai";
 import { PostgresQueryTool } from "./postgres-query-tool";
@@ -10,6 +11,7 @@ import { SonarSearchTool } from "./sonar-chat-tool";
 import {
   BraveSearch,
   Discord,
+  FirecrawlScraper,
   Http,
   OpenAICompletion,
   PostgresQuery,
@@ -36,6 +38,8 @@ export class ToolRegistry {
         return Result.ok(new BraveSearchTool(config as BraveSearch));
       case "sonar-search-tool":
         return Result.ok(new SonarSearchTool(config as SonarSearch));
+      case "firecrawl-scraper-tool":
+        return Result.ok(new FirecrawlScraperTool(config as FirecrawlScraper));
       default:
         return assertUnreachable(config);
     }
