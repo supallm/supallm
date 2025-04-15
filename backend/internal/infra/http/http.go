@@ -7,9 +7,7 @@ import (
 
 	"github.com/ThreeDotsLabs/watermill"
 	watermillHTTP "github.com/ThreeDotsLabs/watermill-http/v2/pkg/http"
-	"github.com/google/uuid"
 	"github.com/supallm/core/internal/application"
-	"github.com/supallm/core/internal/application/command"
 	"github.com/supallm/core/internal/application/event"
 	"github.com/supallm/core/internal/infra/http/gen"
 	"github.com/supallm/core/internal/pkg/server"
@@ -63,29 +61,29 @@ func AddHandlers(mux *server.Server, app *application.App) {
 
 	h := gen.HandlerWithOptions(s, gen.ChiServerOptions{
 		BaseURL: "",
-		Middlewares: []gen.MiddlewareFunc{
-			gen.MiddlewareFunc(s.server.JWTAuthMiddleware),
-		},
+		// Middlewares: []gen.MiddlewareFunc{
+		// 	gen.MiddlewareFunc(s.server.JWTAuthMiddleware),
+		// },
 	})
 	mux.Router.Mount("/", h)
 }
 
-func (s *Server) isAuthorize(
-	ctx context.Context,
-	projectID uuid.UUID,
-	fn func(ctx context.Context, cmd command.AuthorizeEventSubscriptionCommand) error,
-) error {
-	if s.server.IsDashboardOrigin(ctx) {
-		return nil
-	}
+// func (s *Server) isAuthorize(
+// 	ctx context.Context,
+// 	projectID uuid.UUID,
+// 	fn func(ctx context.Context, cmd command.AuthorizeEventSubscriptionCommand) error,
+// ) error {
+// 	if s.server.IsDashboardOrigin(ctx) {
+// 		return nil
+// 	}
 
-	secretKey, err := s.server.GetSecretKeyFromContext(ctx)
-	if err != nil {
-		return err
-	}
+// 	secretKey, err := s.server.GetSecretKeyFromContext(ctx)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	return fn(ctx, command.AuthorizeEventSubscriptionCommand{
-		ProjectID: projectID,
-		SecretKey: secretKey,
-	})
-}
+// 	return fn(ctx, command.AuthorizeEventSubscriptionCommand{
+// 		ProjectID: projectID,
+// 		SecretKey: secretKey,
+// 	})
+// }
